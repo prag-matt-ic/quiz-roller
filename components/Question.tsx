@@ -74,7 +74,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({ answer, position }) => {
 type AnswersProps = Record<string, never>
 
 const Question: FC<AnswersProps> = () => {
-  const currentQuestionId = useGameStore((s) => s.currentQuestionId)
+  const currentQuestionId = useGameStore((s) => s.nextQuestionId)
   const currentQuestion = useGameStore((s) =>
     s.questions.find((q) => q.id === currentQuestionId),
   )

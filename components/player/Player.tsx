@@ -108,10 +108,12 @@ const Player: FC = () => {
 
     if (otherUserData.type === 'answer') {
       setConfirmingAnswer(otherUserData.answer)
+      return
     }
 
     if (otherUserData.type === 'topic') {
       setConfirmingTopic(otherUserData.topic)
+      return
     }
   }
 

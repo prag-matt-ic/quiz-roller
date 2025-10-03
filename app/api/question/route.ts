@@ -37,8 +37,14 @@ export async function POST(req: Request) {
     prompt,
   })
 
-  const data = QuestionSchema.safeParse(result.object)
-  console.warn('Generated question:', data)
+  const parsedQuestion = QuestionSchema.safeParse(result.object)
 
-  return Response.json({ data })
+  if (!parsedQuestion.success) {
+    console.error('Failed to validate generated question', parsedQuestion.error)
+    return Response.json({ error: 'Failed to generate question.' }, { status: 500 })
+  }
+
+  console.warn('Generated question:', parsedQuestion.data)
+
+  return Response.json(parsedQuestion.data)
 }

@@ -18,8 +18,6 @@ const PlayerHUD: FC<Props> = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
   const onAnswerConfirmed = useGameStore((s) => s.onAnswerConfirmed)
 
-  console.log({ confirmingTopic, confirmingAnswer })
-
   const timelineRef = useRef<GSAPTimeline>(null)
 
   const onEnter = () => {

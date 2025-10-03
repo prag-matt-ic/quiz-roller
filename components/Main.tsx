@@ -1,8 +1,8 @@
 'use client'
 
-import { type FC, useEffect, useState } from 'react'
+import { type FC } from 'react'
 
-import { Question } from '@/model/schema'
+import { type Question, QuestionSchema } from '@/model/schema'
 
 import Game from './Game'
 import { GameProvider } from './GameProvider'
@@ -13,7 +13,7 @@ const Main: FC = () => {
     previousQuestions,
     difficulty,
   }: {
-    topic: string | null
+    topic: string
     previousQuestions: string[]
     difficulty: number
   }): Promise<Question> => {
@@ -30,7 +30,8 @@ const Main: FC = () => {
       throw new Error(`Error fetching question: ${response.statusText}`)
     }
     const data = await response.json()
-    return data.question as Question
+    console.warn('Fetch question payload:', data)
+    return QuestionSchema.parse(data)
   }
 
   return (

@@ -10,12 +10,20 @@ import { createStore, type StoreApi, useStore } from 'zustand'
 
 import { Answer, Question } from '@/model/schema'
 
+export enum Stage {
+  TOPIC = 'topic',
+  TERRAIN = 'terrain',
+  QUESTION = 'question',
+  GAME_OVER = 'game_over',
+}
+
 type GameState = {
+  stage: Stage
+
   // Questions
   currentDifficulty: number
+  nextQuestionId: string | null
   questions: Question[]
-  currentQuestionId: string | null
-  handleNewQuestion: (question: Question) => void
 
   // Player interaction
   topic: string | null
@@ -33,18 +41,20 @@ const GameContext = createContext<GameStore>(undefined!)
 
 const INITIAL_STATE: Pick<
   GameState,
+  | 'stage'
   | 'topic'
   | 'questions'
   | 'currentDifficulty'
-  | 'currentQuestionId'
+  | 'nextQuestionId'
   | 'confirmingTopic'
   | 'confirmingAnswer'
 > = {
+  stage: Stage.TOPIC,
   topic: null,
   confirmingTopic: null,
   currentDifficulty: 1,
   questions: [],
-  currentQuestionId: null,
+  nextQuestionId: null,
   confirmingAnswer: null,
 }
 
@@ -61,10 +71,6 @@ type CreateStoreParams = {
 }
 
 const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
-  const getNextQuestion = () => {
-    return fetchQuestion
-  }
-
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
@@ -73,32 +79,34 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       console.warn('Topic selected:', topic)
       set({ confirmingTopic: topic })
     },
-    onTopicConfirmed: () => {
+    onTopicConfirmed: async () => {
       const selectedTopic = get().confirmingTopic
       if (!selectedTopic) {
         console.error('No topic selected to confirm')
         return
       }
       console.log('Topic confirmed:', selectedTopic)
-      // FETCH FIRST QUESTION....
+
       set({ topic: selectedTopic, confirmingTopic: null })
-    },
-    // Questions
-    handleNewQuestion: (question: Question) => {
-      const questions = get().questions
-      // Avoid duplicates
-      console.warn('New question received:', question)
-      if (questions.find((q) => q.id === question.id)) {
-        console.warn('Duplicate question, ignoring:', question)
-        return
-      }
-      set({ questions: [...questions, question], currentQuestionId: question.id })
+
+      const nextQuestion = await fetchQuestion({
+        topic: selectedTopic,
+        previousQuestions: [],
+        difficulty: 1,
+      })
+
+      console.warn('First question received:', nextQuestion)
+      set({
+        stage: Stage.QUESTION,
+        questions: [nextQuestion],
+        nextQuestionId: nextQuestion.id,
+      })
     },
     setConfirmingAnswer: (answer: Answer | null) => {
       console.warn('Answer selected:', answer)
       set({ confirmingAnswer: answer })
     },
-    onAnswerConfirmed: () => {
+    onAnswerConfirmed: async () => {
       const selectedAnswer = get().confirmingAnswer
       if (!selectedAnswer) {
         console.error('No answer selected to confirm')
@@ -110,11 +118,26 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         console.warn('Wrong answer chosen!')
         return
       }
-      set({ confirmingAnswer: null, currentQuestionId: null })
+
       console.warn('Correct answer chosen! Increasing difficulty.')
       const difficulty = get().currentDifficulty
       const newDifficulty = Math.min(difficulty + 1, 10)
-      // sendMessage({ text: selectedAnswer.text }, { body: { currentDifficulty: newDifficulty } })
+
+      // Start obstacle course
+      set({ currentDifficulty: newDifficulty, confirmingAnswer: null, nextQuestionId: null })
+
+      const nextQuestion = await fetchQuestion({
+        topic: get().topic!,
+        previousQuestions: get().questions.map((q) => q.text),
+        difficulty: newDifficulty,
+      })
+
+      console.warn('Next question received:', nextQuestion)
+      set({
+        stage: Stage.QUESTION,
+        questions: [...get().questions, nextQuestion],
+        nextQuestionId: nextQuestion.id,
+      })
     },
   }))
 }
