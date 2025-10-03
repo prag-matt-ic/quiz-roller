@@ -26,6 +26,7 @@ type GameState = {
   currentDifficulty: number
   currentQuestionIndex: number
   questions: Question[]
+  getAndSetNextQuestion: () => Promise<void>
 
   // Player interaction
   topic: string | null
@@ -86,77 +87,60 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
-
-    setConfirmingTopic: (topic) => {
-      console.warn('Topic selected:', topic)
-      set({ confirmingTopic: topic })
-    },
-    onTopicConfirmed: async () => {
-      const { confirmingTopic, questions, currentQuestionIndex, goToStage } = get()
-      if (!confirmingTopic) {
-        console.error('No topic selected to confirm')
-        return
-      }
-
-      set({
-        topic: confirmingTopic,
-        confirmingTopic: null,
-      })
-
-      goToStage(Stage.TERRAIN)
-
+    getAndSetNextQuestion: async () => {
+      const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
       const nextQuestion = await fetchQuestion({
-        topic: confirmingTopic,
+        topic: topic!,
         previousQuestions: [],
-        difficulty: 1,
+        difficulty: currentDifficulty,
       })
-
-      console.warn('First question received:', nextQuestion)
+      console.warn('Question received:', nextQuestion)
       set({
         questions: [...questions, nextQuestion],
         currentQuestionIndex: currentQuestionIndex + 1,
       })
+    },
+    setConfirmingTopic: (topic) => {
+      const { topic: currentTopic } = get()
+      if (!!currentTopic) return // Topic already confirmed, ignore
+      set({ confirmingTopic: topic })
+    },
+    onTopicConfirmed: async () => {
+      const { confirmingTopic, getAndSetNextQuestion, goToStage } = get()
+      if (!confirmingTopic) {
+        console.error('No topic selected to confirm')
+        return
+      }
+      set({
+        topic: confirmingTopic,
+        confirmingTopic: null,
+      })
+      goToStage(Stage.TERRAIN)
+      getAndSetNextQuestion()
     },
     setConfirmingAnswer: (answer: Answer | null) => {
       console.warn('Answer selected:', answer)
       set({ confirmingAnswer: answer })
     },
     onAnswerConfirmed: async () => {
-      const { topic, confirmingAnswer, questions, currentQuestionIndex } = get()
-
+      const { confirmingAnswer, goToStage, getAndSetNextQuestion } = get()
       if (!confirmingAnswer) {
         console.error('No answer selected to confirm')
         return
       }
-      console.log('Answer confirmed:', confirmingAnswer)
-      // Send the confirmed answer using the provided sendAnswer function
       if (!confirmingAnswer.isCorrect) {
-        console.warn('Wrong answer chosen!')
+        console.warn('Wrong answer chosen! Game over.')
+        goToStage(Stage.GAME_OVER)
         return
       }
 
-      console.warn('Correct answer chosen! Increasing difficulty.')
+      console.log('Correct answer chosen:', confirmingAnswer)
       const currentDifficulty = get().currentDifficulty
       const newDifficulty = Math.min(currentDifficulty + 1, 10)
-
-      // Start obstacle course
       set({ currentDifficulty: newDifficulty, confirmingAnswer: null })
 
-      get().goToStage(Stage.TERRAIN)
-
-      const newQuestion = await fetchQuestion({
-        topic: topic!,
-        previousQuestions: questions.map((q) => q.text),
-        difficulty: newDifficulty,
-      })
-
-      const newQuestions = [...questions, newQuestion]
-
-      console.warn('Next question received:', newQuestion)
-      set({
-        currentQuestionIndex: newQuestions.length - 1,
-        questions: newQuestions,
-      })
+      goToStage(Stage.TERRAIN)
+      getAndSetNextQuestion()
     },
 
     goToStage: (stage: Stage) => {
@@ -164,7 +148,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       if (stage === Stage.QUESTION) {
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 3,
+          duration: 2,
           ease: 'power2.out',
           value: 0,
           onUpdate: () => {
@@ -180,9 +164,9 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       if (stage === Stage.TERRAIN) {
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 3,
+          duration: 2,
           ease: 'power2.out',
-          value: 4,
+          value: 5,
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
@@ -193,7 +177,18 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
 
       if (stage === Stage.GAME_OVER) {
-        set({ terrainSpeed: 0, stage: Stage.GAME_OVER })
+        speedTween?.kill()
+        speedTween = gsap.to(speedTweenTarget, {
+          duration: 4,
+          ease: 'power2.out',
+          value: 0,
+          onUpdate: () => {
+            set({ terrainSpeed: speedTweenTarget.value })
+          },
+          onComplete: () => {
+            set({ stage: Stage.GAME_OVER })
+          },
+        })
         return
       }
     },
