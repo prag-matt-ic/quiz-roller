@@ -37,8 +37,8 @@ const Level: FC = () => {
   return (
     <>
       <Terrain />
-      <Topics />
-      <Question />
+      {/* <Topics /> */}
+      {/* <Question /> */}
       <Player />
     </>
   )

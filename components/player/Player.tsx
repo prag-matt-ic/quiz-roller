@@ -1,6 +1,6 @@
 'use client'
 
-import { KinematicCharacterController, QueryFilterFlags } from '@dimforge/rapier3d-compat'
+import { KinematicCharacterController } from '@dimforge/rapier3d-compat'
 import { useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import {
@@ -61,37 +61,61 @@ const Player: FC = () => {
       dz /= len
     }
 
+    // Include gravity in the desired movement
     const desiredTranslationDelta = {
       x: dx * MOVEMENT_SPEED * delta,
       y: PLAYER_GRAVITY * delta,
       z: dz * MOVEMENT_SPEED * delta,
     }
 
+    // Use character controller to compute collision-aware movement
+    // Note: Need to allow kinematic-kinematic collisions for terrain
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
       desiredTranslationDelta,
-      QueryFilterFlags.EXCLUDE_SENSORS, //| QueryFilterFlags.EXCLUDE_KINEMATIC,
     )
-    const corrected = controllerRef.current.computedMovement()
+    const correctedMovement = controllerRef.current.computedMovement()
 
-    const t = bodyRef.current.translation()
-    const next = {
-      x: t.x + corrected.x,
-      y: t.y + corrected.y,
-      z: t.z + corrected.z,
+    // Apply the corrected movement to the kinematic rigid body
+    const currentPosition = bodyRef.current.translation()
+
+    // The character controller returns the actual movement we should apply
+    // NOT the final position, so we need to add it to current position
+    const newPosition = {
+      x: currentPosition.x + correctedMovement.x,
+      y: currentPosition.y + correctedMovement.y,
+      z: currentPosition.z + correctedMovement.z,
     }
-    bodyRef.current.setNextKinematicTranslation(next)
 
-    if (corrected.x === 0 && corrected.z === 0) return
+    // Debug: Check if correction is happening
+    if (Math.abs(correctedMovement.y - desiredTranslationDelta.y) > 0.001) {
+      console.warn('Gravity corrected by character controller:', {
+        desired: desiredTranslationDelta.y,
+        corrected: correctedMovement.y,
+        currentY: currentPosition.y,
+        newY: newPosition.y,
+        grounded: Math.abs(correctedMovement.y) < 0.001,
+      })
+    }
+
+    // Additional debug: check if player is falling too far
+    if (currentPosition.y < -10) {
+      console.error('Player fell through terrain! Position:', currentPosition)
+    }
+
+    bodyRef.current.setNextKinematicTranslation(newPosition)
+
+    // Only apply visual rolling if there's horizontal movement
+    const horizontalMovement = Math.hypot(correctedMovement.x, correctedMovement.z)
+    if (horizontalMovement === 0) return
 
     // Rolling axis is perpendicular to velocity on the ground plane (world space).
     // Use world-space rotation to avoid compounding local-axis drift when changing directions.
-    rotationAxis.current.set(corrected.z, 0, -corrected.x)
+    rotationAxis.current.set(correctedMovement.z, 0, -correctedMovement.x)
     if (rotationAxis.current.lengthSq() === 0) return
     rotationAxis.current.normalize()
     // Visual rolling of the sphere (purely cosmetic).
-    const dist = Math.hypot(corrected.x, corrected.z)
-    const rollAngle = dist / PLAYER_RADIUS // angle = arc length / radius
+    const rollAngle = horizontalMovement / PLAYER_RADIUS // angle = arc length / radius
     sphereMeshRef.current.rotateOnWorldAxis(rotationAxis.current, rollAngle)
     // Keep quaternion well-conditioned over time.
     sphereMeshRef.current.quaternion.normalize()
@@ -101,7 +125,6 @@ const Player: FC = () => {
   const setConfirmingTopic = useGameStore((state) => state.setConfirmingTopic)
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
-    console.log('Player INTERSECTION ENTER with', e)
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
 
     if (!otherUserData) return
@@ -139,7 +162,7 @@ const Player: FC = () => {
       userData={userData}
       restitution={0}
       colliders={false}
-      position={[0, PLAYER_RADIUS * 2.0, 0]}
+      position={[0, 2, -5]}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
@@ -173,12 +196,23 @@ function usePlayerController() {
 
     function setupController() {
       const controller = world.createCharacterController(0.01)
-      // Autostep to allow stepping on dynamic bodies.
-      controller.enableAutostep(0.2, PLAYER_RADIUS, true)
-      // Snap to the ground if the vertical distance to the ground is smaller than 0.2.
+
+      // Enable auto-stepping over small obstacles (like terrain gaps)
+      controller.enableAutostep(0.5, 0.2, true)
+
+      // Enable snap-to-ground to stick to terrain surfaces
       controller.enableSnapToGround(0.5)
-      // Allow some interaction with dynamic bodies we might hit.
+
+      // Set up vector (positive Y axis)
+      controller.setUp({ x: 0.0, y: 1.0, z: 0.0 })
+
+      // Configure slope handling
+      controller.setMaxSlopeClimbAngle((45 * Math.PI) / 180) // 45 degrees max climb
+      controller.setMinSlopeSlideAngle((30 * Math.PI) / 180) // 30 degrees min slide
+
+      // Allow interaction with dynamic bodies
       controller.setApplyImpulsesToDynamicBodies(true)
+
       controllerRef.current = controller
     }
 
