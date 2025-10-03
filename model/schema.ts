@@ -31,6 +31,10 @@ export type AnswerUserData = {
   answer: Answer
 }
 
+export type OutOfBoundsUserData = {
+  type: 'out-of-bounds'
+}
+
 export type RigidBodyUserData = PlayerUserData | AnswerUserData | TopicUserData
 
 export const TOPICS: string[] = [

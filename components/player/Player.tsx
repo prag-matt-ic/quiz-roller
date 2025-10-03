@@ -30,12 +30,17 @@ const Player: FC = () => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
-  const rotationAxis = useRef(new Vector3(0, 0, 0))
+  const terrainSpeed = useGameStore((state) => state.terrainSpeed)
+
+  // Multiplier to adjust rolling speed visually (tweak for aesthetics)
+  const ROLLING_SPEED_MULTIPLIER = 0.8
 
   const { controllerRef, input } = usePlayerController()
 
   const MOVEMENT_SPEED = 6.5 // units per second
   const PLAYER_GRAVITY = -9.81 // m/s²
+  const UP = new Vector3(0, 1, 0)
+  const EPS = 1e-6
 
   useFrame((_, delta) => {
     if (
@@ -88,27 +93,49 @@ const Player: FC = () => {
       z: currentPosition.z + correctedMovement.z,
     }
 
-    // Additional debug: check if player is falling too far
-    if (currentPosition.y < -10) {
-      console.error('Player fell through terrain! Position:', currentPosition)
-    }
-
     bodyRef.current.setNextKinematicTranslation(newPosition)
 
-    // Only apply visual rolling if there's horizontal movement
-    const horizontalMovement = Math.hypot(correctedMovement.x, correctedMovement.z)
-    if (horizontalMovement === 0) return
+    // Player world displacement this frame (already collision-corrected)
+    const disp = new Vector3(correctedMovement.x, correctedMovement.y, correctedMovement.z)
 
-    // Rolling axis is perpendicular to velocity on the ground plane (world space).
-    // Use world-space rotation to avoid compounding local-axis drift when changing directions.
-    rotationAxis.current.set(correctedMovement.z, 0, -correctedMovement.x)
-    if (rotationAxis.current.lengthSq() === 0) return
-    rotationAxis.current.normalize()
-    // Visual rolling of the sphere (purely cosmetic).
-    const rollAngle = horizontalMovement / PLAYER_RADIUS // angle = arc length / radius
-    sphereMeshRef.current.rotateOnWorldAxis(rotationAxis.current, rollAngle)
-    // Keep quaternion well-conditioned over time.
-    sphereMeshRef.current.quaternion.normalize()
+    // Convert displacement to velocity (units / second)
+    const vPlayer = disp.clone().divideScalar(Math.max(delta, EPS))
+
+    // Terrain scroll velocity.
+    // Convention: "forward" is -Z in your input mapping,
+    // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
+    // and the ball's *relative* forward velocity is -terrainSpeed on Z.
+    const vTerrain = new Vector3(0, 0, -terrainSpeed)
+
+    // Relative velocity of ball w.r.t. ground on the contact plane
+    const vRel = vPlayer.add(vTerrain)
+    vRel.y = 0 // constrain to the surface plane (assumes flat ground; swap for local normal on slopes)
+
+    if (input.current.backward && Math.abs(terrainSpeed) > EPS) {
+      // treat ball as static relative to ground: no rolling
+      vRel.set(0, 0, 0)
+    }
+
+    // compute effective world-space radius (handles parent/mesh scaling)
+    const worldScale = new Vector3()
+    sphereMeshRef.current.getWorldScale(worldScale)
+    // assume uniform scale for a sphere; if not uniform, pick the contact-plane scale
+    const effectiveRadius = PLAYER_RADIUS * worldScale.x
+
+    const speed = vRel.length()
+    if (speed > EPS && effectiveRadius > EPS) {
+      // 0.000001 to avoid NaN
+      // --- Rolling without slipping: ω = (n × v) / R ---
+      // Axis given by right-hand rule (surface normal × velocity)
+      const axis = new Vector3().copy(UP).cross(vRel).normalize()
+
+      // Angle this frame: θ = |v| * Δt / R  (scaled if you want)
+      // const angle = (speed * delta * ROLLING_SPEED_MULTIPLIER) / PLAYER_RADIUS
+      const angle = (speed * delta) / effectiveRadius
+
+      sphereMeshRef.current.rotateOnWorldAxis(axis, angle)
+      sphereMeshRef.current.quaternion.normalize()
+    }
   })
 
   const setConfirmingAnswer = useGameStore((state) => state.setConfirmingAnswer)
@@ -116,8 +143,6 @@ const Player: FC = () => {
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
-
-    console.warn('Player INTERSECTION ENTER with', otherUserData, e)
 
     if (!otherUserData) return
 
@@ -130,6 +155,11 @@ const Player: FC = () => {
       setConfirmingTopic(otherUserData.topic)
       return
     }
+
+    // if (otherUserData.type === 'ground') {
+    //   onGameOver(OutOfBoundsUserData.ground)
+    //   return
+    // }
   }
 
   const onIntersectionExit: IntersectionExitHandler = (e) => {
