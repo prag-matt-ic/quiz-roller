@@ -32,3 +32,19 @@ export type AnswerUserData = {
 }
 
 export type RigidBodyUserData = PlayerUserData | AnswerUserData | TopicUserData
+
+export const TOPICS: string[] = [
+  'UX/UI Design',
+  'Psychology',
+  'English',
+  'Artificial Intelligence',
+]
+
+export const topicQuestion: Question = {
+  id: 'topic',
+  text: 'Select a topic',
+  answers: TOPICS.map((topic) => ({
+    text: topic,
+    isCorrect: true,
+  })),
+}

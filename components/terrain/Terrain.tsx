@@ -1,73 +1,219 @@
 'use client'
 
+/**
+ * Terrain system overview
+ *
+ * The world scrolls forward along +Z using a fixed-size window of instanced
+ * boxes (rows x columns). Rows are recycled from in front of the camera to the
+ * far end, where they receive fresh heights. The content alternates between two
+ * logical sections:
+ *
+ * - "question" section: multiple rows are completely open to host the
+ *   question text and the four answer tiles.
+ * - "obstacles" section: many rows are procedurally generated with a safe
+ *   corridor that always remains traversable.
+ *
+ * Per-frame, both the terrain and the question elements move forward by the
+ * same Z step computed from `terrainSpeed * delta`. When a recycled row marks
+ * the start of a "question" section, the question/answers are repositioned to
+ * align with those open rows.
+ */
+
 import { useFrame } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
   RapierRigidBody,
-  RigidBody,
 } from '@react-three/rapier'
-import { type FC, useEffect, useRef, useState } from 'react'
+import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
 import { createNoise2D } from 'simplex-noise'
+import { Group } from 'three'
 
-import { useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
+import { AnswerTile, QuestionText } from '@/components/Question'
+import useThrottledLog from '@/hooks/useThrottledLog'
+import { type AnswerUserData, type Question, type TopicUserData } from '@/model/schema'
 
 // Grid configuration
 const COLUMNS = 16
 const ROWS = 24
 const BOX_SIZE = 1
 const BOX_SPACING = 1
-const NOISE_DATA_ROWS = 256
+
+// Camera/visibility thresholds
+const CAMERA_RECYCLE_THRESHOLD_Z = BOX_SIZE * 5
+const QUESTION_RESPAWN_NEAR_Z = CAMERA_RECYCLE_THRESHOLD_Z
+const QUESTION_RESPAWN_FAR_Z = -900
+
+// Section configuration
+const QUESTION_SECTION_ROWS = 8
+const OBSTACLE_SECTION_ROWS = 64
+
+// Heights
+const OPEN_HEIGHT = -BOX_SIZE / 2 // top of box at y=0
+const BLOCKED_HEIGHT = -16 // sunken obstacles
 
 const Terrain: FC = () => {
+  const stage = useGameStore((state) => state.stage)
+  const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
+  const questions = useGameStore((s) => s.questions)
+
+  const activeQuestion = useMemo<Question>(() => {
+    return questions[currentQuestionIndex]
+  }, [questions, currentQuestionIndex])
+
   const terrainSpeed = useGameStore((state) => state.terrainSpeed)
-  const rigidBodies = useRef<RapierRigidBody[]>(null)
-  const [terrainInstances, setTerrainInstances] = useState<InstancedRigidBodyProps[]>([])
+
+  const boxes = useRef<RapierRigidBody[]>(null)
+  const [boxInstances, setBoxInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
 
-  const noiseData = useRef<number[][]>([]) // [row][col] = height
-  const nextDataIndex = useRef(0) // Current row index in the noise data
+  // Row generation state
+  // Tracks which logical section we're in and how many rows remain before
+  // switching to the other section.
+  type SectionType = 'question' | 'obstacles'
+  const sectionRef = useRef<{
+    type: SectionType
+    rowsRemaining: number
+    sectionRowIndex: number
+  }>({ type: 'question', rowsRemaining: QUESTION_SECTION_ROWS, sectionRowIndex: 0 })
 
-  // ---------- Inside Terrain.useEffect() ----------
+  // Obstacle generator buffer
+  // Obstacle rows are generated in batches and consumed sequentially for
+  // performance and determinism across columns.
+  const obstacleBufferRef = useRef<{ rows: number[][]; index: number } | null>(null)
+
+  // Pending row being assigned across columns during recycling
+  // When a row is recycled, all columns should share the same freshly generated
+  // data. We cache that row here until all columns of that row are reassigned.
+  const pendingRowRef = useRef<null | {
+    heights: number[]
+    type: SectionType
+    isSectionStart: boolean
+    rowStartZ: number
+    assignedCols: number
+  }>(null)
+
+  // Absolute row index counter (for debugging/future use)
+  const rowIndexRef = useRef(0)
+
+  // Question/answers instance refs and spawn scheduling
+  // A single question group + four answer tiles are reused and moved along the
+  // Z axis with the terrain. At the start of a question section, they're
+  // repositioned to the new open rows.
+  const questionGroupRef = useRef<Group>(null)
+  const answerRefs = useRef([
+    createRef<RapierRigidBody>(),
+    createRef<RapierRigidBody>(),
+    createRef<RapierRigidBody>(),
+    createRef<RapierRigidBody>(),
+  ]).current
+
+  const qaNextSpawnRef = useRef<null | {
+    textPos: [number, number, number]
+    tilePositions: [number, number, number][]
+  }>(null)
+
+  // ---------- Helpers ----------
+  // TODO: Extract helpers (buffer management, section scheduler, placement) to
+  // a small module (e.g. components/terrain/terrain-logic.ts) to keep this
+  // component focused on rendering and movement.
+
+  // Ensure a fresh buffer of obstacle rows exists; generate a batch when empty.
+  function ensureObstacleBuffer(minRows: number) {
+    if (
+      !obstacleBufferRef.current ||
+      obstacleBufferRef.current.index >= obstacleBufferRef.current.rows.length
+    ) {
+      const rowsToGen = Math.max(minRows, OBSTACLE_SECTION_ROWS * 2)
+      obstacleBufferRef.current = {
+        rows: generateObstacleHeights({
+          rows: rowsToGen,
+          cols: COLUMNS,
+          minWidth: 4,
+          maxWidth: 8,
+          movePerRow: 1,
+          freq: 0.12,
+          notchChance: 0.1,
+          openHeight: OPEN_HEIGHT,
+          blockedHeight: BLOCKED_HEIGHT,
+        }),
+        index: 0,
+      }
+    }
+  }
+
+  /**
+   * Produce the next row of heights and section metadata.
+   *
+   * - Alternates sections when `rowsRemaining` reaches zero.
+   * - Question rows return all OPEN_HEIGHT to present a clean area.
+   * - Obstacle rows are consumed from the pre-generated buffer.
+   */
+  function getNextRow(): { heights: number[]; type: SectionType; isSectionStart: boolean } {
+    const s = sectionRef.current
+    // Switch section if depleted
+    if (s.rowsRemaining <= 0) {
+      if (s.type === 'question') {
+        sectionRef.current = {
+          type: 'obstacles',
+          rowsRemaining: OBSTACLE_SECTION_ROWS,
+          sectionRowIndex: 0,
+        }
+      } else {
+        sectionRef.current = {
+          type: 'question',
+          rowsRemaining: QUESTION_SECTION_ROWS,
+          sectionRowIndex: 0,
+        }
+      }
+    }
+    const curr = sectionRef.current
+    const isSectionStart = curr.sectionRowIndex === 0
+
+    let heights: number[]
+    if (curr.type === 'question') {
+      heights = new Array(COLUMNS).fill(OPEN_HEIGHT)
+    } else {
+      ensureObstacleBuffer(OBSTACLE_SECTION_ROWS)
+      const buf = obstacleBufferRef.current!
+      heights = buf.rows[buf.index++]
+      if (buf.index >= buf.rows.length) {
+        // Force refresh next call
+        obstacleBufferRef.current = null
+      }
+    }
+
+    // Advance section counters
+    curr.sectionRowIndex += 1
+    curr.rowsRemaining -= 1
+
+    return { heights, type: curr.type, isSectionStart }
+  }
+
+  // ---------- Setup initial rows ----------
+  // Pre-generate the visible window of rows. If a question section starts
+  // within the window, schedule question/answer placement immediately.
   useEffect(() => {
     if (isSetup.current) return
 
-    // Generate a guaranteed-safe corridor batch of 256 rows
-    const batch = generateObstacleHeights({
-      rows: NOISE_DATA_ROWS, // 256
-      cols: COLUMNS, // 12
-      minWidth: 3, // start easy at 4 → 3 later if you like
-      maxWidth: 4,
-      movePerRow: 1, // player can shift 1 col per row at current speed
-      freq: 0.2, // wiggle; raise with difficulty
-      notchChance: 0.1, // occasional nibble at corridor edge
-      openHeight: -0.5, // ground level (below player spawn)
-      blockedHeight: -16, // visible obstacle
-    })
-
-    noiseData.current = batch
-
-    // Generate initial instances starting from z=0 and extending backward
     const instances: InstancedRigidBodyProps[] = []
+    const zOffset = BOX_SIZE * 5
+
+    // Pre-generate visible window of rows
     for (let row = 0; row < ROWS; row++) {
+      const rowData = getNextRow()
+
+      // If this row starts a question section, schedule an immediate spawn
+      if (rowData.isSectionStart && rowData.type === 'question') {
+        const startZ = -row * BOX_SPACING + zOffset
+        qaNextSpawnRef.current = computeQuestionPlacement(startZ)
+      }
+
       for (let col = 0; col < COLUMNS; col++) {
-        const x = (col - COLUMNS / 2 + 0.5) * BOX_SPACING
-
-        const zOffset = BOX_SIZE * 5
+        const x = colToX(col)
         const z = -row * BOX_SPACING + zOffset
-        const y = noiseData.current[row][col]
-
-        // Debug: Log terrain at player starting position
-        if (row === 5 && col === Math.floor(COLUMNS / 2)) {
-          console.warn('Terrain at player start position:', {
-            row,
-            col,
-            x,
-            y,
-            z,
-            playerStart: [0, 'PLAYER_RADIUS * 2', -5],
-          })
-        }
+        const y = rowData.heights[col]
 
         instances.push({
           key: `terrain-${row}-${col}`,
@@ -75,72 +221,170 @@ const Terrain: FC = () => {
           userData: { type: 'terrain', rowIndex: row, colIndex: col },
         })
       }
+      rowIndexRef.current += 1
     }
 
-    setTerrainInstances(instances)
-    nextDataIndex.current = ROWS // Start sampling from row 24 onwards
+    setBoxInstances(instances)
     isSetup.current = true
   }, [])
 
-  useFrame(() => {
-    if (!rigidBodies.current) return
+  const throttledLog = useThrottledLog()
+  // TODO: Remove or use throttledLog; currently unused in this component.
 
-    // Move all terrain boxes forward manually and recycle when they pass behind
-    rigidBodies.current.forEach((body, index) => {
-      if (!body) return
+  // Recycle a row that has moved past the camera to the far end, assigning new
+  // heights from the current section while keeping all columns in sync.
+  function recycleBox({
+    body,
+    index,
+    position,
+  }: {
+    body: RapierRigidBody
+    index: number
+    position: { x: number; y: number; z: number }
+  }) {
+    const col = index % COLUMNS
+    const x = colToX(col)
+    const newZ = position.z - ROWS * BOX_SPACING
 
-      const position = body.translation()
+    // Lazily create a pending row assignment so all columns share the same row data
+    if (!pendingRowRef.current) {
+      const rowData = getNextRow()
+      pendingRowRef.current = {
+        heights: rowData.heights,
+        type: rowData.type,
+        isSectionStart: rowData.isSectionStart,
+        rowStartZ: newZ,
+        assignedCols: 0,
+      }
+    }
 
-      // If box has moved too far forward, recycle it to the back
-      if (position.z > 5) {
-        // Reduced threshold since we start from z=0
-        const col = index % COLUMNS
-        const x = (col - COLUMNS / 2 + 0.5) * BOX_SPACING
-        const newZ = position.z - ROWS * BOX_SPACING
+    const pending = pendingRowRef.current!
+    const y = pending.heights[col]
+    body.setTranslation({ x, y, z: newZ }, true)
+    pending.assignedCols += 1
 
-        // Sample from pre-generated noise data or use flat terrain
-        let y = 0
-        if (nextDataIndex.current < NOISE_DATA_ROWS) {
-          y = noiseData.current[nextDataIndex.current][col]
-        }
-        // If we've used all 256 rows, y remains 0 (flat)
+    // If we've finished assigning this row to all columns, finalize
+    if (pending.assignedCols >= COLUMNS) {
+      // If this row starts a question section, schedule Q/A spawn aligned to it
+      if (pending.isSectionStart && pending.type === 'question') {
+        qaNextSpawnRef.current = computeQuestionPlacement(pending.rowStartZ)
+      }
+      rowIndexRef.current += 1
+      pendingRowRef.current = null
+    }
+  }
 
-        body.setTranslation({ x, y, z: newZ }, true)
+  /**
+   * Per-frame terrain advancement. Moves visible rows along +Z and recycles
+   * them once they pass the camera threshold.
+   */
+  function updateBoxes(zStep: number) {
+    if (!boxes.current) return
+    const bodies = boxes.current
+    // Iterate by rows: sample column 0 to decide recycle vs move for whole row
+    for (let row = 0; row < ROWS; row++) {
+      const base = row * COLUMNS
+      const sample = bodies[base]
+      if (!sample) continue
+      const pos = sample.translation()
+      const shouldRecycle = pos.z > CAMERA_RECYCLE_THRESHOLD_Z
 
-        // Advance to next row when we've processed all columns of current row
-        if (col === COLUMNS - 1) {
-          nextDataIndex.current++
+      if (shouldRecycle) {
+        for (let col = 0; col < COLUMNS; col++) {
+          const index = base + col
+          const body = bodies[index]
+          if (!body) continue
+          const p = body.translation()
+          recycleBox({ body, index, position: p })
         }
       } else {
-        // Move the terrain forward manually since it's now fixed type
-        body.setTranslation(
-          {
-            x: position.x,
-            y: position.y,
-            z: position.z + terrainSpeed * (1 / 60),
-          },
-          true,
-        )
+        for (let col = 0; col < COLUMNS; col++) {
+          const body = bodies[base + col]
+          if (!body) continue
+          const p = body.translation()
+          body.setTranslation({ x: p.x, y: p.y, z: p.z + zStep }, true)
+        }
       }
-    })
+    }
+  }
+
+  /**
+   * Keep question text and answers moving with the terrain. When the text
+   * exits the play area and a spawn is queued, reposition both over the next
+   * question section.
+   */
+  function updateQuestionElements(zStep: number) {
+    // Move Question text and Answer tiles with terrain, and recycle when off screen
+    if (!questionGroupRef.current) return
+    // Move in the same direction/speed as terrain
+    questionGroupRef.current.position.z += zStep
+
+    // Answer tiles (rapier bodies)
+    for (const ref of answerRefs) {
+      if (!ref.current) continue
+      const translation = ref.current.translation()
+      ref.current.setTranslation(
+        {
+          x: translation.x,
+          y: translation.y,
+          z: translation.z + zStep,
+        },
+        true,
+      )
+    }
+
+    // If question has moved past the camera, and we have a queued spawn, recycle now
+    if (
+      qaNextSpawnRef.current &&
+      questionGroupRef.current &&
+      (questionGroupRef.current.position.z > QUESTION_RESPAWN_NEAR_Z ||
+        questionGroupRef.current.position.z < QUESTION_RESPAWN_FAR_Z)
+    ) {
+      const { textPos, tilePositions } = qaNextSpawnRef.current
+      // Place text
+      questionGroupRef.current.position.set(textPos[0], textPos[1], textPos[2])
+      // Place tiles
+      tilePositions.forEach((pos, i) => {
+        const ref = answerRefs[i].current
+        if (!ref) return
+        ref.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true)
+      })
+      qaNextSpawnRef.current = null
+    }
+  }
+
+  // Per-frame update: compute Z step from speed and frame delta, then move both
+  // terrain and question elements in lockstep.
+  useFrame(({}, delta) => {
+    const zStep = terrainSpeed * delta
+    updateBoxes(zStep)
+    updateQuestionElements(zStep)
   })
 
-  if (!terrainInstances.length) return null
+  // Derive current userData types for tiles
+  const tileUserData = useMemo<(AnswerUserData | TopicUserData)[]>(() => {
+    if (currentQuestionIndex === 0) {
+      // Topic selection uses TopicUserData for different intersection events.
+      return activeQuestion.answers.slice(0, 4).map((a) => ({ type: 'topic', topic: a.text }))
+    }
+    return activeQuestion.answers.slice(0, 4).map((a) => ({ type: 'answer', answer: a }))
+  }, [activeQuestion, currentQuestionIndex])
+
+  if (!boxInstances.length) return null
 
   return (
-    <group rotation={[0, 0, 0]}>
+    <group>
       <InstancedRigidBodies
-        ref={rigidBodies}
-        instances={terrainInstances}
+        ref={boxes}
+        instances={boxInstances}
         type="fixed"
         canSleep={false}
         sensor={false}
         colliders="cuboid"
-        restitution={0.0}
-        friction={0.7}>
+        friction={0.0}>
         <instancedMesh
-          args={[undefined, undefined, terrainInstances.length]}
-          count={terrainInstances.length}>
+          args={[undefined, undefined, boxInstances.length]}
+          count={boxInstances.length}>
           <boxGeometry args={[BOX_SIZE, BOX_SIZE, BOX_SIZE]} />
           <meshStandardMaterial
             color="grey"
@@ -150,11 +394,52 @@ const Terrain: FC = () => {
           />
         </instancedMesh>
       </InstancedRigidBodies>
+
+      {/* Question overlay positioned over open section; single instance recycled */}
+
+      <QuestionText
+        ref={questionGroupRef}
+        text={activeQuestion.text}
+        position={[0, 0.01, -999]}
+      />
+      {answerRefs.map((ref, i) => (
+        <AnswerTile
+          key={`ans-${i}`}
+          ref={ref}
+          answer={activeQuestion.answers[i]}
+          position={[0, -100, -100]} // off-screen until placed
+          userData={tileUserData[i]}
+        />
+      ))}
     </group>
   )
 }
 
 export default Terrain
+
+const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
+
+/**
+ * Decide where to place the question text and each answer tile relative to the
+ * front row (startZ) of the current question section.
+ * TODO: Move placement config (row offsets, columns) into named constants at
+ * the top of the file or into a config module.
+ */
+function computeQuestionPlacement(startZ: number) {
+  // Place within the 12 open rows that start at startZ and extend toward negative Z.
+  // Put question text slightly behind the leading edge so it's over boxes.
+  const textRowOffset = -4 // 4 rows behind the front row
+  const answersRowOffsets = [-8, -8, -10, -10]
+  const answerCols = [3, 12, 6, 9] // spread across grid
+
+  const textPos: [number, number, number] = [0, 0.01, startZ + textRowOffset * BOX_SPACING]
+  const tilePositions: [number, number, number][] = answersRowOffsets.map((off, i) => [
+    colToX(answerCols[i]),
+    0.001,
+    startZ + off * BOX_SPACING,
+  ])
+  return { textPos, tilePositions }
+}
 
 // ---------- Helper (place above Terrain component) ----------
 
@@ -186,6 +471,9 @@ function stepToward(curr: number, target: number, maxStep: number) {
 /**
  * Generate a batch of obstacle rows that ALWAYS contains a continuous safe corridor.
  * Returns heights[row][col] where blocked -> blockedHeight, open -> openHeight.
+ *
+ * TODO: Move this generator into its own module (e.g. model/obstacles.ts) and
+ * expose a pure function for testability.
  */
 function generateObstacleHeights(params: ObstacleParams): number[][] {
   const {

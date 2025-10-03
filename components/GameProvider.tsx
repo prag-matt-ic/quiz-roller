@@ -8,12 +8,12 @@ import {
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
-import { Answer, Question } from '@/model/schema'
+import { Answer, Question, topicQuestion } from '@/model/schema'
 
 export enum Stage {
-  TOPIC = 'topic',
-  TERRAIN = 'terrain',
+  INTRO = 'intro',
   QUESTION = 'question',
+  TERRAIN = 'terrain',
   GAME_OVER = 'game_over',
 }
 
@@ -23,7 +23,7 @@ type GameState = {
 
   // Questions
   currentDifficulty: number
-  nextQuestionId: string | null
+  currentQuestionIndex: number
   questions: Question[]
 
   // Player interaction
@@ -47,17 +47,17 @@ const INITIAL_STATE: Pick<
   | 'topic'
   | 'questions'
   | 'currentDifficulty'
-  | 'nextQuestionId'
+  | 'currentQuestionIndex'
   | 'confirmingTopic'
   | 'confirmingAnswer'
 > = {
-  stage: Stage.TOPIC,
+  stage: Stage.QUESTION,
   terrainSpeed: 0,
   topic: null,
   confirmingTopic: null,
   currentDifficulty: 1,
-  questions: [],
-  nextQuestionId: null,
+  questions: [topicQuestion],
+  currentQuestionIndex: 0,
   confirmingAnswer: null,
 }
 
@@ -83,26 +83,30 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       set({ confirmingTopic: topic })
     },
     onTopicConfirmed: async () => {
-      const selectedTopic = get().confirmingTopic
-      if (!selectedTopic) {
+      const { confirmingTopic, questions, currentQuestionIndex } = get()
+      if (!confirmingTopic) {
         console.error('No topic selected to confirm')
         return
       }
-      console.log('Topic confirmed:', selectedTopic)
+      console.log('Topic confirmed:', confirmingTopic)
 
-      set({ topic: selectedTopic, confirmingTopic: null, terrainSpeed: 2 })
+      set({
+        topic: confirmingTopic,
+        confirmingTopic: null,
+        terrainSpeed: 3,
+        stage: Stage.TERRAIN,
+      })
 
       const nextQuestion = await fetchQuestion({
-        topic: selectedTopic,
+        topic: confirmingTopic,
         previousQuestions: [],
         difficulty: 1,
       })
 
       console.warn('First question received:', nextQuestion)
       set({
-        stage: Stage.QUESTION,
-        questions: [nextQuestion],
-        nextQuestionId: nextQuestion.id,
+        questions: [...questions, nextQuestion],
+        currentQuestionIndex: currentQuestionIndex + 1,
       })
     },
     setConfirmingAnswer: (answer: Answer | null) => {
@@ -110,36 +114,38 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       set({ confirmingAnswer: answer })
     },
     onAnswerConfirmed: async () => {
-      const selectedAnswer = get().confirmingAnswer
-      if (!selectedAnswer) {
+      const { topic, confirmingAnswer, questions, currentQuestionIndex } = get()
+
+      if (!confirmingAnswer) {
         console.error('No answer selected to confirm')
         return
       }
-      console.log('Answer confirmed:', selectedAnswer)
+      console.log('Answer confirmed:', confirmingAnswer)
       // Send the confirmed answer using the provided sendAnswer function
-      if (!selectedAnswer.isCorrect) {
+      if (!confirmingAnswer.isCorrect) {
         console.warn('Wrong answer chosen!')
         return
       }
 
       console.warn('Correct answer chosen! Increasing difficulty.')
-      const difficulty = get().currentDifficulty
-      const newDifficulty = Math.min(difficulty + 1, 10)
+      const currentDifficulty = get().currentDifficulty
+      const newDifficulty = Math.min(currentDifficulty + 1, 10)
 
       // Start obstacle course
-      set({ currentDifficulty: newDifficulty, confirmingAnswer: null, nextQuestionId: null })
+      set({ currentDifficulty: newDifficulty, confirmingAnswer: null })
 
-      const nextQuestion = await fetchQuestion({
-        topic: get().topic!,
-        previousQuestions: get().questions.map((q) => q.text),
+      const newQuestion = await fetchQuestion({
+        topic: topic!,
+        previousQuestions: questions.map((q) => q.text),
         difficulty: newDifficulty,
       })
 
-      console.warn('Next question received:', nextQuestion)
+      const newQuestions = [...questions, newQuestion]
+
+      console.warn('Next question received:', newQuestion)
       set({
-        stage: Stage.QUESTION,
-        questions: [...get().questions, nextQuestion],
-        nextQuestionId: nextQuestion.id,
+        currentQuestionIndex: newQuestions.length - 1,
+        questions: newQuestions,
       })
     },
   }))

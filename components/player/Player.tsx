@@ -88,17 +88,6 @@ const Player: FC = () => {
       z: currentPosition.z + correctedMovement.z,
     }
 
-    // Debug: Check if correction is happening
-    if (Math.abs(correctedMovement.y - desiredTranslationDelta.y) > 0.001) {
-      console.warn('Gravity corrected by character controller:', {
-        desired: desiredTranslationDelta.y,
-        corrected: correctedMovement.y,
-        currentY: currentPosition.y,
-        newY: newPosition.y,
-        grounded: Math.abs(correctedMovement.y) < 0.001,
-      })
-    }
-
     // Additional debug: check if player is falling too far
     if (currentPosition.y < -10) {
       console.error('Player fell through terrain! Position:', currentPosition)
@@ -127,6 +116,8 @@ const Player: FC = () => {
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
+
+    console.warn('Player INTERSECTION ENTER with', otherUserData, e)
 
     if (!otherUserData) return
 
