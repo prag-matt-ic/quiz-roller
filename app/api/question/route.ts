@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     prompt,
   })
 
-  console.warn('Generated question:', result)
+  const data = QuestionSchema.safeParse(result.object)
+  console.warn('Generated question:', data)
 
-  return new Response({ question: result.object }, { status: 200 })
+  return Response.json({ data })
 }

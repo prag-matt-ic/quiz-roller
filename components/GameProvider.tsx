@@ -49,7 +49,15 @@ const INITIAL_STATE: Pick<
 }
 
 type CreateStoreParams = {
-  fetchQuestion: Promise<Question>
+  fetchQuestion: ({
+    topic,
+    previousQuestions,
+    difficulty,
+  }: {
+    topic: string
+    previousQuestions: string[]
+    difficulty: number
+  }) => Promise<Question>
 }
 
 const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
@@ -72,6 +80,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         return
       }
       console.log('Topic confirmed:', selectedTopic)
+      // FETCH FIRST QUESTION....
       set({ topic: selectedTopic, confirmingTopic: null })
     },
     // Questions
