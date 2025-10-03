@@ -8,8 +8,11 @@ import { Stage, useGameStore } from '@/components/GameProvider'
 
 const { ACTION } = CameraControlsImpl
 
-const MIN_POLAR_ANGLE = MathUtils.degToRad(30)
-const MAX_POLAR_ANGLE = MathUtils.degToRad(80)
+const MIN_POLAR_ANGLE = MathUtils.degToRad(20)
+const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
+
+const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
+const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
 export const CAMERA_POSITIONS: Record<Stage, { x: number; y: number; z: number }> = {
   [Stage.INTRO]: { x: 12, y: 10, z: 8 },
@@ -57,6 +60,8 @@ const Camera: FC<Props> = () => {
       ref={cameraControls}
       minPolarAngle={MIN_POLAR_ANGLE}
       maxPolarAngle={MAX_POLAR_ANGLE}
+      minAzimuthAngle={MIN_AZIMUTH_ANGLE}
+      maxAzimuthAngle={MAX_AZIMUTH_ANGLE}
       minDistance={3}
       maxDistance={11}
       minZoom={1}
