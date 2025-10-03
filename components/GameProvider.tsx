@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import {
   createContext,
   type FC,
@@ -8,7 +9,7 @@ import {
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
-import { Answer, Question, topicQuestion } from '@/model/schema'
+import { type Answer, type Question, topicQuestion } from '@/model/schema'
 
 export enum Stage {
   INTRO = 'intro',
@@ -79,6 +80,9 @@ type CreateStoreParams = {
 }
 
 const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
+  let speedTween: GSAPTween | null = null
+  const speedTweenTarget = { value: 0 }
+
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
@@ -158,16 +162,38 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     goToStage: (stage: Stage) => {
       // Basic function for now, can be expanded later
       if (stage === Stage.QUESTION) {
-        set({ terrainSpeed: 0 })
+        speedTween?.kill()
+        speedTween = gsap.to(speedTweenTarget, {
+          duration: 3,
+          ease: 'power2.out',
+          value: 0,
+          onUpdate: () => {
+            set({ terrainSpeed: speedTweenTarget.value })
+          },
+          onComplete: () => {
+            set({ stage: Stage.QUESTION })
+          },
+        })
         return
       }
 
       if (stage === Stage.TERRAIN) {
-        set({ terrainSpeed: 3 })
+        speedTween?.kill()
+        speedTween = gsap.to(speedTweenTarget, {
+          duration: 3,
+          ease: 'power2.out',
+          value: 4,
+          onUpdate: () => {
+            set({ terrainSpeed: speedTweenTarget.value })
+          },
+          onComplete: () => {
+            set({ stage: Stage.TERRAIN })
+          },
+        })
       }
 
       if (stage === Stage.GAME_OVER) {
-        set({ terrainSpeed: 0 })
+        set({ terrainSpeed: 0, stage: Stage.GAME_OVER })
         return
       }
     },

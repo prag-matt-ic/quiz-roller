@@ -17,6 +17,7 @@ import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 
 import { useGameStore } from '../GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
@@ -30,7 +31,7 @@ const Player: FC = () => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
-  const terrainSpeed = useGameStore((state) => state.terrainSpeed)
+  const { terrainSpeed } = useTerrainSpeed()
 
   // Multiplier to adjust rolling speed visually (tweak for aesthetics)
   const ROLLING_SPEED_MULTIPLIER = 0.8
@@ -105,13 +106,13 @@ const Player: FC = () => {
     // Convention: "forward" is -Z in your input mapping,
     // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
     // and the ball's *relative* forward velocity is -terrainSpeed on Z.
-    const vTerrain = new Vector3(0, 0, -terrainSpeed)
+    const vTerrain = new Vector3(0, 0, -terrainSpeed.current)
 
     // Relative velocity of ball w.r.t. ground on the contact plane
     const vRel = vPlayer.add(vTerrain)
     vRel.y = 0 // constrain to the surface plane (assumes flat ground; swap for local normal on slopes)
 
-    if (input.current.backward && Math.abs(terrainSpeed) > EPS) {
+    if (input.current.backward && Math.abs(terrainSpeed.current) > EPS) {
       // treat ball as static relative to ground: no rolling
       vRel.set(0, 0, 0)
     }

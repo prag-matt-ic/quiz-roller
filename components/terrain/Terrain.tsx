@@ -30,6 +30,7 @@ import { createNoise2D } from 'simplex-noise'
 import { Group } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { AnswerTile, QuestionText } from '@/components/Question'
 import useThrottledLog from '@/hooks/useThrottledLog'
 import { type AnswerUserData, type Question, type TopicUserData } from '@/model/schema'
@@ -44,7 +45,6 @@ const BOX_SPACING = 1
 const ANSWER_TILE_COLS = 5 // ensures 2 cols margin left/right and between tiles across 16 cols
 const ANSWER_TILE_ROWS = 2
 const ANSWER_TILE_SIDE_MARGIN_COLS = 2
-const ANSWER_TILE_GAP_COLS = 2
 const ANSWER_ROW_GAP_ROWS = 2 // vertical gap between answer rows when there are 4 tiles
 
 const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * BOX_SIZE
@@ -68,7 +68,13 @@ const OBSTACLE_SECTION_ROWS = 64
 
 // Heights
 const OPEN_HEIGHT = -BOX_SIZE / 2 // top of box at y=0
-const BLOCKED_HEIGHT = -16 // sunken obstacles
+const BLOCKED_HEIGHT = -40 // sunken obstacles
+
+// Placement tuning within the 12-row question section
+// Lower row indices place elements closer to the section start (nearer to player)
+const QUESTION_TEXT_ROW_OFFSET = 4 // was 6
+const ANSWER_4_TILE_TOP_ROW = 5 // was 7; bottom will be top + 4 (=9)
+const ANSWER_2_TILE_CENTER_ROW = 8 // was 10
 
 type SectionType = 'question' | 'obstacles'
 
@@ -88,7 +94,7 @@ const Terrain: FC = () => {
     return questions[currentQuestionIndex]
   }, [questions, currentQuestionIndex])
 
-  const terrainSpeed = useGameStore((state) => state.terrainSpeed)
+  const { terrainSpeed } = useTerrainSpeed()
   const goToStage = useGameStore((s) => s.goToStage)
 
   const boxes = useRef<RapierRigidBody[]>(null)
@@ -359,7 +365,7 @@ const Terrain: FC = () => {
   // Per-frame update: compute Z step from speed and frame delta, then move both
   // terrain and question elements in lockstep.
   useFrame(({}, delta) => {
-    const zStep = terrainSpeed * delta
+    const zStep = terrainSpeed.current * delta
     updateBoxes(zStep)
     updateQuestionElements(zStep)
   })
@@ -434,9 +440,8 @@ const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
 function computeQuestionPlacement(startZ: number, tileCount: number) {
   // Placement within the 12 open rows starting at startZ.
   // Question text centered across 8 columns and ~4 rows.
-  const TEXT_SPAN_COLS = QUESTION_TEXT_COLS
   const textCenterCol = COLUMNS / 2 - 0.5 // center of grid
-  const textCenterRowOffset = 6
+  const textCenterRowOffset = QUESTION_TEXT_ROW_OFFSET
   const textPos: [number, number, number] = [
     colToX(textCenterCol),
     0.01,
@@ -453,8 +458,8 @@ function computeQuestionPlacement(startZ: number, tileCount: number) {
 
   if (tileCount === 4) {
     // Top row center and bottom row center with 2 rows gap between tiles (center delta = height + gap)
-    const topCenterRow = 7
-    const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP_ROWS // 11
+    const topCenterRow = ANSWER_4_TILE_TOP_ROW
+    const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP_ROWS // 5 + 2 + 2 = 9
     tilePositions.push(
       [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
       [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
@@ -462,7 +467,7 @@ function computeQuestionPlacement(startZ: number, tileCount: number) {
       [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
     )
   } else {
-    const centerRow = 10
+    const centerRow = ANSWER_2_TILE_CENTER_ROW
     tilePositions.push(
       [colToX(leftCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
       [colToX(rightCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
