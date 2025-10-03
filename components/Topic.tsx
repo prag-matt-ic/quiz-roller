@@ -10,14 +10,16 @@ import {
 import { type FC } from 'react'
 import { type Vector3Tuple } from 'three'
 
-import { type AnswerUserData } from '@/model/schema'
+import { type TopicUserData } from '@/model/schema'
 
-type AnswerProps = {
-  text: string
+import { useGameStore } from './GameProvider'
+
+type TopicTileProps = {
+  topic: string
   position: Vector3Tuple
 }
 
-export const Answer: FC<AnswerProps> = ({ text, position }) => {
+export const TopicTile: FC<TopicTileProps> = ({ topic, position }) => {
   // Basic sizing heuristics for collider based on text length.
   const width = 2
   const height = 2 // visual plate height
@@ -30,7 +32,7 @@ export const Answer: FC<AnswerProps> = ({ text, position }) => {
     console.log('Exited answer:', e)
   }
 
-  const userData: AnswerUserData = { type: 'answer', text }
+  const userData: TopicUserData = { type: 'topic', topic }
 
   return (
     <group>
@@ -46,14 +48,14 @@ export const Answer: FC<AnswerProps> = ({ text, position }) => {
         onIntersectionEnter={onIntersectionEnter}
         onIntersectionExit={onIntersectionExit}>
         <CuboidCollider args={[width / 2, height / 2, 2]} sensor={true} mass={0} friction={0} />
-        {/* Visual background plate sits near ground */}
+        {/* Visual background tile sits near ground */}
         <mesh>
           <planeGeometry args={[width, height]} />
           <meshStandardMaterial color="#222" />
         </mesh>
       </RigidBody>
 
-      {/* Text - lifted slightly above plate */}
+      {/* Text - lifted slightly above the tile */}
       <Text
         color="white"
         fontSize={0.26}
@@ -63,7 +65,7 @@ export const Answer: FC<AnswerProps> = ({ text, position }) => {
         maxWidth={width - 0.2}
         position={[position[0], position[1] + 0.01, position[2]]}
         rotation={[-Math.PI / 2, 0, 0]}>
-        {text}
+        {topic}
       </Text>
     </group>
   )
@@ -71,36 +73,36 @@ export const Answer: FC<AnswerProps> = ({ text, position }) => {
 
 type AnswersProps = Record<string, never>
 
-const Answers: FC<AnswersProps> = () => {
-  // Placeholder answer texts; these can later be injected from game state.
-  const answers = [
-    {
-      text: 'UX/UI Design',
-      position: [-3, 0.001, -3] as [number, number, number],
-    },
-    {
-      text: 'Psychology',
-      position: [3, 0.001, -3] as [number, number, number],
-    },
-    { text: 'English', position: [-3, 0.001, 3] as [number, number, number] },
-    {
-      text: 'Artificial Intelligence',
-      position: [3, 0.001, 3] as [number, number, number],
-    },
-  ]
+const TOPICS: TopicTileProps[] = [
+  {
+    topic: 'UX/UI Design',
+    position: [-3, 0.001, -3] as [number, number, number],
+  },
+  {
+    topic: 'Psychology',
+    position: [3, 0.001, -3] as [number, number, number],
+  },
+  {
+    topic: 'English',
+    position: [-3, 0.001, 3] as [number, number, number],
+  },
+  {
+    topic: 'Artificial Intelligence',
+    position: [3, 0.001, 3] as [number, number, number],
+  },
+]
 
+const Topics: FC<AnswersProps> = () => {
+  const topic = useGameStore((s) => s.topic)
+
+  if (!!topic) return null
   return (
     <group>
-      {answers.map((a) => (
-        <Answer
-          key={a.text}
-          text={a.text}
-          // Slight lift so background doesn't Z-fight the plane
-          position={a.position}
-        />
+      {TOPICS.map(({ topic, position }) => (
+        <TopicTile key={topic} topic={topic} position={position} />
       ))}
     </group>
   )
 }
 
-export default Answers
+export default Topics

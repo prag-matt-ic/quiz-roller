@@ -12,23 +12,20 @@ import {
   RigidBody,
   useRapier,
 } from '@react-three/rapier'
-import { type FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { type FC, Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
+import { useGameStore } from '../GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
-
-type PlayerProps = {
-  onAnswerConfirmed: (text: string) => void
-}
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
 // https://rapier.rs/docs/user_guides/javascript/character_controller/
 
-const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
+const Player: FC = () => {
   const colorMap = useTexture(playerTexture.src)
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
@@ -41,7 +38,13 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
   const PLAYER_GRAVITY = -9.81 // m/s²
 
   useFrame((_, delta) => {
-    if (!bodyRef.current || !controllerRef.current || !ballColliderRef.current || !sphereMeshRef.current) return
+    if (
+      !bodyRef.current ||
+      !controllerRef.current ||
+      !ballColliderRef.current ||
+      !sphereMeshRef.current
+    )
+      return
 
     // Determine intended direction on X/Z plane
     let dx = 0
@@ -67,7 +70,7 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
       desiredTranslationDelta,
-      QueryFilterFlags.ONLY_FIXED,
+      QueryFilterFlags.EXCLUDE_SENSORS, //| QueryFilterFlags.EXCLUDE_KINEMATIC,
     )
     const corrected = controllerRef.current.computedMovement()
 
@@ -94,9 +97,8 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
     sphereMeshRef.current.quaternion.normalize()
   })
 
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
-
-  // console.debug("Player render", { isConfirmingAnswer, selectedAnswer });
+  const setConfirmingAnswer = useGameStore((state) => state.setConfirmingAnswer)
+  const setConfirmingTopic = useGameStore((state) => state.setConfirmingTopic)
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
     console.log('Player INTERSECTION ENTER with', e)
@@ -105,8 +107,11 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
     if (!otherUserData) return
 
     if (otherUserData.type === 'answer') {
-      if (!!selectedAnswer) return
-      setSelectedAnswer(otherUserData.text)
+      setConfirmingAnswer(otherUserData.answer)
+    }
+
+    if (otherUserData.type === 'topic') {
+      setConfirmingTopic(otherUserData.topic)
     }
   }
 
@@ -116,14 +121,11 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
     // console.debug("Player INTERSECTION EXIT with", otherUserData, e);
     if (!otherUserData) return
     if (otherUserData.type === 'answer') {
-      setSelectedAnswer(null)
+      setConfirmingAnswer(null)
     }
-  }
-
-  const onConfirmationComplete = () => {
-    if (!selectedAnswer) return
-    onAnswerConfirmed(selectedAnswer)
-    setSelectedAnswer(null)
+    if (otherUserData.type === 'topic') {
+      setConfirmingTopic(null)
+    }
   }
 
   const userData: PlayerUserData = { type: 'player' }
@@ -145,7 +147,7 @@ const Player: FC<PlayerProps> = ({ onAnswerConfirmed }) => {
           <meshLambertMaterial map={colorMap} />
         </mesh>
       </Suspense>
-      <PlayerHUD selectedAnswer={selectedAnswer} onConfirmationComplete={onConfirmationComplete} />
+      <PlayerHUD />
     </RigidBody>
   )
 }

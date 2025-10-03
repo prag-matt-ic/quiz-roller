@@ -8,6 +8,7 @@ export const AnswerSchema = z.object({
 
 // Question schema
 export const QuestionSchema = z.object({
+  id: z.string(),
   text: z.string(),
   answers: z.array(AnswerSchema),
 })
@@ -20,9 +21,14 @@ export type PlayerUserData = {
   type: 'player'
 }
 
-export type AnswerUserData = {
-  type: 'answer'
-  text: string
+export type TopicUserData = {
+  type: 'topic'
+  topic: string
 }
 
-export type RigidBodyUserData = PlayerUserData | AnswerUserData
+export type AnswerUserData = {
+  type: 'answer'
+  answer: Answer
+}
+
+export type RigidBodyUserData = PlayerUserData | AnswerUserData | TopicUserData
