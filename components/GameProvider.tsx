@@ -19,6 +19,7 @@ export enum Stage {
 
 type GameState = {
   stage: Stage
+  terrainSpeed: number // Speed of terrain movement
 
   // Questions
   currentDifficulty: number
@@ -42,6 +43,7 @@ const GameContext = createContext<GameStore>(undefined!)
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
+  | 'terrainSpeed'
   | 'topic'
   | 'questions'
   | 'currentDifficulty'
@@ -50,6 +52,7 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
 > = {
   stage: Stage.TOPIC,
+  terrainSpeed: 0,
   topic: null,
   confirmingTopic: null,
   currentDifficulty: 1,
@@ -87,7 +90,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
       console.log('Topic confirmed:', selectedTopic)
 
-      set({ topic: selectedTopic, confirmingTopic: null })
+      set({ topic: selectedTopic, confirmingTopic: null, terrainSpeed: 2 })
 
       const nextQuestion = await fetchQuestion({
         topic: selectedTopic,

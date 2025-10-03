@@ -1,6 +1,6 @@
 'use client'
 
-import { KinematicCharacterController } from '@dimforge/rapier3d-compat'
+import { KinematicCharacterController, QueryFilterFlags } from '@dimforge/rapier3d-compat'
 import { useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import {
@@ -73,6 +73,7 @@ const Player: FC = () => {
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
       desiredTranslationDelta,
+      QueryFilterFlags.EXCLUDE_SENSORS,
     )
     const correctedMovement = controllerRef.current.computedMovement()
 
@@ -162,7 +163,7 @@ const Player: FC = () => {
       userData={userData}
       restitution={0}
       colliders={false}
-      position={[0, 2, -5]}
+      position={[0, 3, 0]}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />

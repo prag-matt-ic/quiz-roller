@@ -19,8 +19,7 @@ const Game: FC = () => {
     <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
       camera={{ position: [0, 4, 8], fov: 60 }}>
-      <ambientLight />
-      <directionalLight position={[3, 8, 0]} intensity={3} />
+      <ambientLight intensity={2} />
       <OrbitControls />
       <Suspense>
         <Physics debug={true}>
@@ -37,8 +36,8 @@ const Level: FC = () => {
   return (
     <>
       <Terrain />
-      {/* <Topics /> */}
-      {/* <Question /> */}
+      <Topics />
+      <Question />
       <Player />
     </>
   )

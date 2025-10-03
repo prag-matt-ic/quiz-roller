@@ -10,30 +10,23 @@ import {
 import { type FC, useEffect, useRef, useState } from 'react'
 import { createNoise2D } from 'simplex-noise'
 
+import { useGameStore } from '@/components/GameProvider'
+
 // Grid configuration
 const COLUMNS = 16
 const ROWS = 24
 const BOX_SIZE = 1
 const BOX_SPACING = 1
-const TERRAIN_SPEED = 2
+const NOISE_DATA_ROWS = 256
 
 const Terrain: FC = () => {
+  const terrainSpeed = useGameStore((state) => state.terrainSpeed)
   const rigidBodies = useRef<RapierRigidBody[]>(null)
   const [terrainInstances, setTerrainInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
 
-  // 3D Noise configuration
-  const noise3D = useRef(createNoise2D())
-  const HEIGHT_MULTIPLIER = 1 // Multiply noise values to increase height variation
-  const PLATFORM_THRESHOLD = 0.3 // Heights above this become solid blocks
-
-  // Pre-generated noise data
-  const NOISE_DATA_ROWS = 256
   const noiseData = useRef<number[][]>([]) // [row][col] = height
   const nextDataIndex = useRef(0) // Current row index in the noise data
-
-  // Conveyor belt state
-  const zOffset = useRef(0) // Track how far the terrain has moved
 
   // ---------- Inside Terrain.useEffect() ----------
   useEffect(() => {
@@ -59,7 +52,9 @@ const Terrain: FC = () => {
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLUMNS; col++) {
         const x = (col - COLUMNS / 2 + 0.5) * BOX_SPACING
-        const z = -row * BOX_SPACING // Start from z=0 and go backward
+
+        const zOffset = BOX_SIZE * 5
+        const z = -row * BOX_SPACING + zOffset
         const y = noiseData.current[row][col]
 
         // Debug: Log terrain at player starting position
@@ -122,7 +117,7 @@ const Terrain: FC = () => {
           {
             x: position.x,
             y: position.y,
-            z: position.z + TERRAIN_SPEED * (1 / 60),
+            z: position.z + terrainSpeed * (1 / 60),
           },
           true,
         )
