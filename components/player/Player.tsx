@@ -140,6 +140,7 @@ const Player: FC = () => {
 
   const setConfirmingAnswer = useGameStore((state) => state.setConfirmingAnswer)
   const setConfirmingTopic = useGameStore((state) => state.setConfirmingTopic)
+  const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
@@ -147,6 +148,8 @@ const Player: FC = () => {
     if (!otherUserData) return
 
     if (otherUserData.type === 'answer') {
+      // Only allow confirming answers for the current active question index.
+      if (otherUserData.questionIndex !== currentQuestionIndex) return
       setConfirmingAnswer(otherUserData.answer)
       return
     }
@@ -168,6 +171,8 @@ const Player: FC = () => {
     // console.debug("Player INTERSECTION EXIT with", otherUserData, e);
     if (!otherUserData) return
     if (otherUserData.type === 'answer') {
+      // Only clear confirming answer for the current active question index.
+      if (otherUserData.questionIndex !== currentQuestionIndex) return
       setConfirmingAnswer(null)
     }
     if (otherUserData.type === 'topic') {

@@ -23,12 +23,11 @@ import { useFrame } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
-  RapierCollider,
   RapierRigidBody,
 } from '@react-three/rapier'
 import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
 import { createNoise2D } from 'simplex-noise'
-import { Group, type Vector3Tuple } from 'three'
+import { Group } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { AnswerTile, QuestionText } from '@/components/Question'
@@ -37,9 +36,26 @@ import { type AnswerUserData, type Question, type TopicUserData } from '@/model/
 
 // Grid configuration
 const COLUMNS = 16
-const ROWS = 32
+const ROWS = 40
 const BOX_SIZE = 1
 const BOX_SPACING = 1
+
+// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
+const ANSWER_TILE_COLS = 5 // ensures 2 cols margin left/right and between tiles across 16 cols
+const ANSWER_TILE_ROWS = 2
+const ANSWER_TILE_SIDE_MARGIN_COLS = 2
+const ANSWER_TILE_GAP_COLS = 2
+const ANSWER_ROW_GAP_ROWS = 2 // vertical gap between answer rows when there are 4 tiles
+
+const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * BOX_SIZE
+const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * BOX_SIZE
+
+// Question text footprint (distinct from answer tile sizing)
+const QUESTION_TEXT_COLS = 8
+const QUESTION_TEXT_ROWS = 4
+const QUESTION_TEXT_MAX_WIDTH = QUESTION_TEXT_COLS * BOX_SIZE
+// Approximate font size to visually fill ~4 grid rows while allowing wrapping
+const QUESTION_TEXT_FONT_SIZE = 0.38
 
 // Camera/visibility thresholds
 const CAMERA_RECYCLE_THRESHOLD_Z = BOX_SIZE * 5
@@ -56,7 +72,12 @@ const BLOCKED_HEIGHT = -16 // sunken obstacles
 
 type SectionType = 'question' | 'obstacles'
 
-type RowData = { type: SectionType; isSectionStart: boolean; heights: number[] }
+type RowData = {
+  heights: number[]
+  type: SectionType
+  isSectionStart: boolean
+  isSectionEnd: boolean
+}
 
 const Terrain: FC = () => {
   const stage = useGameStore((state) => state.stage)
@@ -68,27 +89,18 @@ const Terrain: FC = () => {
   }, [questions, currentQuestionIndex])
 
   const terrainSpeed = useGameStore((state) => state.terrainSpeed)
+  const goToStage = useGameStore((s) => s.goToStage)
 
   const boxes = useRef<RapierRigidBody[]>(null)
   const [boxInstances, setBoxInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
 
-  // Row generation state
-  // Tracks which logical section we're in and how many rows remain before
-  // switching to the other section.
-
-  const sectionRef = useRef<{
-    type: SectionType
-    rowsRemaining: number
-    sectionRowIndex: number
-  }>({ type: 'question', rowsRemaining: QUESTION_SECTION_ROWS, sectionRowIndex: 0 })
-
-  // Obstacle generator buffer
-  // Obstacle rows are generated in batches and consumed sequentially for
-  // performance and determinism across columns.
-  const obstacleBufferRef = useRef<{ rows: number[][]; index: number } | null>(null)
-
+  // Precomputed row sequence
+  const rowsDataRef = useRef<RowData[]>([])
+  // Next rowData index to consume when recycling a row
   const rowIndexRef = useRef(0)
+  // Tracks which RowData is currently assigned to each visible row slot (0..ROWS-1)
+  const assignedRowsRef = useRef<RowData[]>([])
 
   // Question/answers instance refs and spawn scheduling
   // A single question group + four answer tiles are reused and moved along the
@@ -102,86 +114,60 @@ const Terrain: FC = () => {
     createRef<RapierRigidBody>(),
   ]).current
 
+  // Queue for next question/answers spawn. We store the instanced row's base index
+  // so we can compute the exact Z at spawn time (prevents drift between schedule
+  // time and spawn time as terrain advances).
   const qaNextSpawnRef = useRef<{
-    textPos: Vector3Tuple
-    tilePositions: Vector3Tuple[]
-  }>(null)
+    startRowBaseIndex: number
+    tileCount: number
+  } | null>(null)
 
   // ---------- Helpers ----------
   // TODO: Extract helpers (buffer management, section scheduler, placement) to
   // a small module (e.g. components/terrain/terrain-logic.ts) to keep this
   // component focused on rendering and movement.
 
-  // Ensure a fresh buffer of obstacle rows exists; generate a batch when empty.
-  function ensureObstacleBuffer(minRows: number) {
-    if (
-      !obstacleBufferRef.current ||
-      obstacleBufferRef.current.index >= obstacleBufferRef.current.rows.length
-    ) {
-      const rowsToGen = Math.max(minRows, OBSTACLE_SECTION_ROWS * 2)
-      obstacleBufferRef.current = {
-        rows: generateObstacleHeights({
-          rows: rowsToGen,
-          cols: COLUMNS,
-          minWidth: 4,
-          maxWidth: 8,
-          movePerRow: 1,
-          freq: 0.12,
-          notchChance: 0.1,
-          openHeight: OPEN_HEIGHT,
-          blockedHeight: BLOCKED_HEIGHT,
-        }),
-        index: 0,
-      }
-    }
+  // Build a contiguous block of question rows
+  function buildQuestionRows(count: number): RowData[] {
+    return Array.from({ length: count }, (_, i) => ({
+      heights: new Array(COLUMNS).fill(OPEN_HEIGHT),
+      type: 'question',
+      isSectionStart: i === 0,
+      isSectionEnd: i === count - 1,
+    }))
   }
 
-  /**
-   * Produce the next row of heights and section metadata.
-   *
-   * - Alternates sections when `rowsRemaining` reaches zero.
-   * - Question rows return all OPEN_HEIGHT to present a clean area.
-   * - Obstacle rows are consumed from the pre-generated buffer.
-   */
-  function getNextRow(): RowData {
-    const isSectionEnded = sectionRef.current.rowsRemaining <= 0
-    // Switch section if depleted
-    if (isSectionEnded) {
-      if (sectionRef.current.type === 'question') {
-        sectionRef.current = {
-          type: 'obstacles',
-          rowsRemaining: OBSTACLE_SECTION_ROWS,
-          sectionRowIndex: 0,
-        }
-      } else {
-        sectionRef.current = {
-          type: 'question',
-          rowsRemaining: QUESTION_SECTION_ROWS,
-          sectionRowIndex: 0,
-        }
-      }
-    }
-    const isSectionStart = sectionRef.current.sectionRowIndex === 0
-
-    let heights: number[]
-    if (sectionRef.current.type === 'question') {
-      heights = new Array(COLUMNS).fill(OPEN_HEIGHT)
-    } else {
-      ensureObstacleBuffer(OBSTACLE_SECTION_ROWS)
-      const buf = obstacleBufferRef.current!
-      heights = buf.rows[buf.index++]
-      if (buf.index >= buf.rows.length) {
-        // Force refresh next call
-        obstacleBufferRef.current = null
-      }
-    }
-
-    // Advance section counters
-    sectionRef.current.sectionRowIndex += 1
-    sectionRef.current.rowsRemaining -= 1
-
-    return { heights, type: sectionRef.current.type, isSectionStart }
+  // Build a contiguous block of obstacle rows with a guaranteed corridor
+  function buildObstacleRows(count: number): RowData[] {
+    const heights = generateObstacleHeights({
+      rows: count,
+      cols: COLUMNS,
+      minWidth: 4,
+      maxWidth: 8,
+      movePerRow: 1,
+      freq: 0.12,
+      notchChance: 0.1,
+      openHeight: OPEN_HEIGHT,
+      blockedHeight: BLOCKED_HEIGHT,
+    })
+    return heights.map((h, i) => ({
+      heights: h,
+      type: 'obstacles',
+      isSectionStart: i === 0,
+      isSectionEnd: i === count - 1,
+    }))
   }
+
+  // Append a new block of rows for a given section type
+  function appendRowsForSection(type: SectionType) {
+    const block: RowData[] =
+      type === 'question'
+        ? buildQuestionRows(QUESTION_SECTION_ROWS)
+        : buildObstacleRows(OBSTACLE_SECTION_ROWS)
+    rowsDataRef.current = [...rowsDataRef.current, ...block]
+  }
+
+  // No incremental generator; rows are precomputed into rowsDataRef.
 
   // ---------- Setup initial rows ----------
   // Pre-generate the visible window of rows. If a question section starts
@@ -192,52 +178,99 @@ const Terrain: FC = () => {
     const instances: InstancedRigidBodyProps[] = []
     const zOffset = BOX_SIZE * 5
 
+    // Seed with one block of questions and one of obstacles
+    appendRowsForSection('question')
+    appendRowsForSection('obstacles')
+
     // Pre-generate visible window of rows
     for (let row = 0; row < ROWS; row++) {
-      const rowData = getNextRow()
+      const rowData = rowsDataRef.current[row]
+      // Track the row meta currently assigned to this visible slot
+      assignedRowsRef.current[row] = rowData
 
       // If this row starts a question section, schedule an immediate spawn
-      if (rowData.isSectionStart && rowData.type === 'question') {
-        const startZ = -row * BOX_SPACING + zOffset
-        qaNextSpawnRef.current = computeQuestionPlacement(startZ)
+      if (rowData.type === 'question' && rowData.isSectionStart) {
+        const tileCount = currentQuestionIndex === 0 ? 4 : 2
+        // Store which instanced row slot will represent this start row.
+        qaNextSpawnRef.current = {
+          startRowBaseIndex: row * COLUMNS,
+          tileCount,
+        }
       }
 
       for (let col = 0; col < COLUMNS; col++) {
         const x = colToX(col)
         const z = -row * BOX_SPACING + zOffset
         const y = rowData.heights[col]
-
         instances.push({
           key: `terrain-${row}-${col}`,
           position: [x, y, z],
           userData: { type: 'terrain', rowIndex: row, colIndex: col },
         })
       }
-      rowIndexRef.current += 1
+      // initial window only; consumption starts at ROWS
     }
 
     setBoxInstances(instances)
     isSetup.current = true
+    rowIndexRef.current = ROWS
   }, [])
 
-  // Recycle an entire row in one pass. All columns share the same target Z and
-  // the same freshly generated heights from getNextRow().
+  // Ensure the very first question/topic spawn aligns exactly to grid rows
+  // immediately after the physics instances are mounted, instead of waiting
+  // for off-screen recycling thresholds.
+  useEffect(() => {
+    // Run after instanced bodies mount
+    if (!boxes.current || !questionGroupRef.current) return
+    if (!qaNextSpawnRef.current) return
+    const { startRowBaseIndex, tileCount } = qaNextSpawnRef.current
+    const startBody = boxes.current[startRowBaseIndex]
+    if (!startBody) return
+    const startRowZ = startBody.translation().z
+    const { textPos, tilePositions } = computeQuestionPlacement(startRowZ, tileCount)
+    // Place text and tiles now for frame-0 correctness
+    questionGroupRef.current.position.set(textPos[0], textPos[1], textPos[2])
+    tilePositions.forEach((pos, i) => {
+      const ref = answerRefs[i].current
+      if (!ref) return
+      ref.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true)
+    })
+    qaNextSpawnRef.current = null
+  }, [answerRefs, boxInstances.length])
+
+  // Recycle an entire row in one pass using precomputed row data.
   function recycleRow({ base, samplePos }: { base: number; samplePos: any }) {
-    // Generate next row once for this recycled row
-    const nextRow = getNextRow()
     const newZ = samplePos.z - ROWS * BOX_SPACING
+    const nextRow = rowsDataRef.current[rowIndexRef.current]
+    const rowIdx = Math.floor(base / COLUMNS)
+
+    // If the row being recycled was the last obstacle row, the question has just
+    // reached the player. Trigger QUESTION stage to slow the terrain now.
+    const prevRow = assignedRowsRef.current[rowIdx]
+    if (prevRow && prevRow.type === 'obstacles' && prevRow.isSectionEnd) {
+      goToStage(Stage.QUESTION)
+    }
 
     for (let col = 0; col < COLUMNS; col++) {
       const body = boxes.current![base + col]
       if (!body) continue
+      body.userData = {}
       const x = colToX(col)
       const y = nextRow.heights[col]
       body.setTranslation({ x, y, z: newZ }, true)
     }
 
     // Finalize row assignment once for the row.
+    // Update the assigned meta for this slot to the newly applied row.
+    assignedRowsRef.current[rowIdx] = nextRow
     if (nextRow.isSectionStart && nextRow.type === 'question') {
-      qaNextSpawnRef.current = computeQuestionPlacement(newZ)
+      const tileCount = currentQuestionIndex === 0 ? 4 : 2
+      // The recycled row's base index becomes the new start row slot.
+      qaNextSpawnRef.current = { startRowBaseIndex: base, tileCount }
+    }
+    if (nextRow.isSectionEnd) {
+      // Alternate sections: after finishing a block, append the opposite type.
+      appendRowsForSection(nextRow.type === 'question' ? 'obstacles' : 'question')
     }
     rowIndexRef.current++
   }
@@ -303,15 +336,22 @@ const Terrain: FC = () => {
       (questionGroupRef.current.position.z > QUESTION_RESPAWN_NEAR_Z ||
         questionGroupRef.current.position.z < QUESTION_RESPAWN_FAR_Z)
     ) {
-      const { textPos, tilePositions } = qaNextSpawnRef.current
-      // Place text
-      questionGroupRef.current.position.set(textPos[0], textPos[1], textPos[2])
-      // Place tiles
-      tilePositions.forEach((pos, i) => {
-        const ref = answerRefs[i].current
-        if (!ref) return
-        ref.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true)
-      })
+      // Compute exact current Z for the start row using the instanced row slot
+      // we stored at schedule time. This ensures perfect alignment to cells.
+      const { startRowBaseIndex, tileCount } = qaNextSpawnRef.current
+      if (boxes.current && boxes.current[startRowBaseIndex]) {
+        const startRowZ = boxes.current[startRowBaseIndex].translation().z
+        const { textPos, tilePositions } = computeQuestionPlacement(startRowZ, tileCount)
+
+        // Place text
+        questionGroupRef.current.position.set(textPos[0], textPos[1], textPos[2])
+        // Place tiles
+        tilePositions.forEach((pos, i) => {
+          const ref = answerRefs[i].current
+          if (!ref) return
+          ref.setTranslation({ x: pos[0], y: pos[1], z: pos[2] }, true)
+        })
+      }
       qaNextSpawnRef.current = null
     }
   }
@@ -330,7 +370,11 @@ const Terrain: FC = () => {
     if (currentQuestionIndex === 0)
       return activeQuestion.answers.map((a) => ({ type: 'topic', topic: a.text }))
 
-    return activeQuestion.answers.map((a) => ({ type: 'answer', answer: a }))
+    return activeQuestion.answers.map((a) => ({
+      type: 'answer',
+      answer: a,
+      questionIndex: currentQuestionIndex,
+    }))
   }, [activeQuestion, currentQuestionIndex])
 
   if (!boxInstances.length) return null
@@ -349,12 +393,7 @@ const Terrain: FC = () => {
           args={[undefined, undefined, boxInstances.length]}
           count={boxInstances.length}>
           <boxGeometry args={[BOX_SIZE, BOX_SIZE, BOX_SIZE]} />
-          <meshStandardMaterial
-            color="grey"
-            wireframe={false}
-            transparent={true}
-            opacity={0.5}
-          />
+          <meshStandardMaterial color="grey" />
         </instancedMesh>
       </InstancedRigidBodies>
 
@@ -362,15 +401,20 @@ const Terrain: FC = () => {
       <QuestionText
         ref={questionGroupRef}
         text={activeQuestion.text}
+        maxWidth={QUESTION_TEXT_MAX_WIDTH}
+        fontSize={QUESTION_TEXT_FONT_SIZE}
         position={[0, 0.01, -999]}
       />
+      {/* TODO: do not unmount these tiles. they should be recycled / hidden. */}
       {answerRefs.map((ref, i) => (
         <AnswerTile
           key={`ans-${i}-${currentQuestionIndex}`}
           ref={ref}
-          userData={tileUserData?.[i] ?? null}
-          text={activeQuestion.answers[i]?.text ?? null}
-          position={[0, -100, -100]} // off-screen until placed
+          userData={tileUserData?.[i]}
+          text={activeQuestion.answers[i]?.text}
+          tileWidth={ANSWER_TILE_WIDTH}
+          tileHeight={ANSWER_TILE_HEIGHT}
+          position={[0, -100, -100]}
         />
       ))}
     </group>
@@ -387,19 +431,44 @@ const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
  * TODO: Move placement config (row offsets, columns) into named constants at
  * the top of the file or into a config module.
  */
-function computeQuestionPlacement(startZ: number) {
-  // Place within the 12 open rows that start at startZ and extend toward negative Z.
-  // Put question text slightly behind the leading edge so it's over boxes.
-  const textRowOffset = -4 // 4 rows behind the front row
-  const answersRowOffsets = [-8, -8, -10, -10]
-  const answerCols = [3, 12, 6, 9] // spread across grid
+function computeQuestionPlacement(startZ: number, tileCount: number) {
+  // Placement within the 12 open rows starting at startZ.
+  // Question text centered across 8 columns and ~4 rows.
+  const TEXT_SPAN_COLS = QUESTION_TEXT_COLS
+  const textCenterCol = COLUMNS / 2 - 0.5 // center of grid
+  const textCenterRowOffset = 6
+  const textPos: [number, number, number] = [
+    colToX(textCenterCol),
+    0.01,
+    startZ - textCenterRowOffset * BOX_SPACING,
+  ]
 
-  const textPos: [number, number, number] = [0, 0.01, startZ + textRowOffset * BOX_SPACING]
-  const tilePositions: [number, number, number][] = answersRowOffsets.map((off, i) => [
-    colToX(answerCols[i]),
-    0.001,
-    startZ + off * BOX_SPACING,
-  ])
+  // Answers: fixed tile sizes, 2 columns of margin on each side and between tiles.
+  const tilePositions: [number, number, number][] = []
+
+  const leftEdgeCol = ANSWER_TILE_SIDE_MARGIN_COLS
+  const rightEdgeCol = COLUMNS - ANSWER_TILE_SIDE_MARGIN_COLS - ANSWER_TILE_COLS
+  const leftCenterCol = leftEdgeCol + (ANSWER_TILE_COLS - 1) / 2
+  const rightCenterCol = rightEdgeCol + (ANSWER_TILE_COLS - 1) / 2
+
+  if (tileCount === 4) {
+    // Top row center and bottom row center with 2 rows gap between tiles (center delta = height + gap)
+    const topCenterRow = 7
+    const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP_ROWS // 11
+    tilePositions.push(
+      [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+      [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+    )
+  } else {
+    const centerRow = 10
+    tilePositions.push(
+      [colToX(leftCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
+    )
+  }
+
   return { textPos, tilePositions }
 }
 

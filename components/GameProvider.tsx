@@ -35,6 +35,9 @@ type GameState = {
   confirmingAnswer: Answer | null
   setConfirmingAnswer: (answer: Answer | null) => void
   onAnswerConfirmed: () => void
+  answerIds: string[] // Answers that have been confirmed
+
+  goToStage: (stage: Stage) => void
 }
 
 type GameStore = StoreApi<GameState>
@@ -50,6 +53,7 @@ const INITIAL_STATE: Pick<
   | 'currentQuestionIndex'
   | 'confirmingTopic'
   | 'confirmingAnswer'
+  | 'answerIds'
 > = {
   stage: Stage.QUESTION,
   terrainSpeed: 0,
@@ -59,6 +63,7 @@ const INITIAL_STATE: Pick<
   questions: [topicQuestion],
   currentQuestionIndex: 0,
   confirmingAnswer: null,
+  answerIds: [],
 }
 
 type CreateStoreParams = {
@@ -77,25 +82,24 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
-    // Topic
+
     setConfirmingTopic: (topic) => {
       console.warn('Topic selected:', topic)
       set({ confirmingTopic: topic })
     },
     onTopicConfirmed: async () => {
-      const { confirmingTopic, questions, currentQuestionIndex } = get()
+      const { confirmingTopic, questions, currentQuestionIndex, goToStage } = get()
       if (!confirmingTopic) {
         console.error('No topic selected to confirm')
         return
       }
-      console.log('Topic confirmed:', confirmingTopic)
 
       set({
         topic: confirmingTopic,
         confirmingTopic: null,
-        terrainSpeed: 3,
-        stage: Stage.TERRAIN,
       })
+
+      goToStage(Stage.TERRAIN)
 
       const nextQuestion = await fetchQuestion({
         topic: confirmingTopic,
@@ -134,6 +138,8 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       // Start obstacle course
       set({ currentDifficulty: newDifficulty, confirmingAnswer: null })
 
+      get().goToStage(Stage.TERRAIN)
+
       const newQuestion = await fetchQuestion({
         topic: topic!,
         previousQuestions: questions.map((q) => q.text),
@@ -147,6 +153,23 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         currentQuestionIndex: newQuestions.length - 1,
         questions: newQuestions,
       })
+    },
+
+    goToStage: (stage: Stage) => {
+      // Basic function for now, can be expanded later
+      if (stage === Stage.QUESTION) {
+        set({ terrainSpeed: 0 })
+        return
+      }
+
+      if (stage === Stage.TERRAIN) {
+        set({ terrainSpeed: 3 })
+      }
+
+      if (stage === Stage.GAME_OVER) {
+        set({ terrainSpeed: 0 })
+        return
+      }
     },
   }))
 }

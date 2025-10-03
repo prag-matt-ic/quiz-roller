@@ -29,6 +29,8 @@ export type TopicUserData = {
 export type AnswerUserData = {
   type: 'answer'
   answer: Answer
+  // Index into GameProvider.questions for which this tile belongs
+  questionIndex: number
 }
 
 export type OutOfBoundsUserData = {

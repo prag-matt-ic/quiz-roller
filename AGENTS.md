@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions
+# PRO CODER
 
 ## Project overview
 
@@ -43,7 +43,7 @@ The game uses Zustand wrapped in a React context (stores/GameProvider.tsx) to ho
 
 ### Physics & collision
 
-Physics are powered by Rapier with zero gravity. All bodies are kinematic and use sensor={true} so that collisions can be detected without physics response. Each physics body has a userData object (e.g. { type: 'obstacle' }) so collision handlers can discriminate between obstacles, gates, etc.
+Physics are powered by Rapier.
 
 ### Performance patterns
 
@@ -55,12 +55,7 @@ Object pooling – physics bodies are reused rather than created and destroyed e
 
 ### Input handling
 
-Player movement is discrete: arrow keys or WASD trigger a lane change rather than continuous translation. The input store compares the previous frame’s key states (stored in a ref) to detect presses. Lane movement uses THREE.MathUtils.damp to interpolate smoothly between lane positions.
-
-### Adding new game mechanics
-
-Read the README.md for an overview of the game architecture.
-Once you've made an update, reflect changes in the README.md to keep documentation current.
+Player movement is discrete: arrow keys or WASD trigger movement.
 
 ## Additional notes
 

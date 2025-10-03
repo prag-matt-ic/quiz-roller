@@ -26,6 +26,7 @@ const Game: FC = () => {
           INITIAL_CAMERA_POSITION.y,
           INITIAL_CAMERA_POSITION.z,
         ],
+        far: 40,
         fov: 60,
       }}>
       <ambientLight intensity={2} />
