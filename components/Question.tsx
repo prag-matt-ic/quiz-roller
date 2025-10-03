@@ -5,29 +5,30 @@ import {
   CuboidCollider,
   type IntersectionEnterHandler,
   type IntersectionExitHandler,
+  RapierCollider,
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
 import { type ForwardedRef, forwardRef } from 'react'
 import { Group, type Vector3Tuple } from 'three'
 
-import { type Answer, type AnswerUserData, type TopicUserData } from '@/model/schema'
+import { type AnswerUserData, type TopicUserData } from '@/model/schema'
 
 type AnswerTileProps = {
-  answer: Answer | null
+  text: string | null
   position: Vector3Tuple
-  userData: AnswerUserData | TopicUserData
+  userData: AnswerUserData | TopicUserData | undefined // Undefined when empty
 }
 // Basic sizing heuristics for collider based on text length.
 const width = 2
 const height = 2 // visual plate height
 
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
-  ({ answer, position, userData }, ref: ForwardedRef<RapierRigidBody>) => {
+  ({ text, position, userData }, ref: ForwardedRef<RapierRigidBody>) => {
     const onIntersectionEnter: IntersectionEnterHandler = (e) => {}
     const onIntersectionExit: IntersectionExitHandler = (e) => {}
 
-    console.warn('Rendering AnswerTile userData:', { answer, userData })
+    console.warn('Rendering AnswerTile userData:', { text, userData })
 
     return (
       <RigidBody
@@ -58,7 +59,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           maxWidth={width - 0.2}
           position={[0, 0.0, 0.01]}
           rotation={[0, 0, 0]}>
-          {answer?.text}
+          {text}
         </Text>
       </RigidBody>
     )
@@ -66,6 +67,43 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
 )
 
 AnswerTile.displayName = 'AnswerTile'
+
+// export const AnswerTileCollider = forwardRef<RapierCollider, AnswerTileProps>(
+//   ({ text, position, userData }, ref: ForwardedRef<RapierCollider>) => {
+//     console.warn('Rendering AnswerTile userData:', { text, userData })
+
+//     return (
+//       // Not attached to a rigid body, so static by default
+//       <CuboidCollider
+//         ref={ref}
+//         args={[width / 2, height / 2, 2]}
+//         sensor={true}
+//         position={position}
+//         mass={0}
+//         friction={0}>
+//         {/* Visual background tile sits near ground */}
+//         <mesh>
+//           <planeGeometry args={[width, height]} />
+//           <meshStandardMaterial color="#222" transparent={true} opacity={!!text ? 1 : 0} />
+//         </mesh>
+//         {/* Text - lifted slightly above the tile */}
+//         <Text
+//           color="white"
+//           fontSize={0.26}
+//           anchorX="center"
+//           anchorY="middle"
+//           textAlign="center"
+//           maxWidth={width - 0.2}
+//           position={[0, 0.0, 0.01]}
+//           rotation={[0, 0, 0]}>
+//           {text}
+//         </Text>
+//       </CuboidCollider>
+//     )
+//   },
+// )
+
+// AnswerTileCollider.displayName = 'AnswerTileCollider'
 
 type QuestionTextProps = {
   text: string

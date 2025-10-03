@@ -23,11 +23,12 @@ import { useFrame } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
+  RapierCollider,
   RapierRigidBody,
 } from '@react-three/rapier'
 import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
 import { createNoise2D } from 'simplex-noise'
-import { Group } from 'three'
+import { Group, type Vector3Tuple } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { AnswerTile, QuestionText } from '@/components/Question'
@@ -36,7 +37,7 @@ import { type AnswerUserData, type Question, type TopicUserData } from '@/model/
 
 // Grid configuration
 const COLUMNS = 16
-const ROWS = 24
+const ROWS = 32
 const BOX_SIZE = 1
 const BOX_SPACING = 1
 
@@ -46,12 +47,16 @@ const QUESTION_RESPAWN_NEAR_Z = CAMERA_RECYCLE_THRESHOLD_Z
 const QUESTION_RESPAWN_FAR_Z = -900
 
 // Section configuration
-const QUESTION_SECTION_ROWS = 8
+const QUESTION_SECTION_ROWS = 12
 const OBSTACLE_SECTION_ROWS = 64
 
 // Heights
 const OPEN_HEIGHT = -BOX_SIZE / 2 // top of box at y=0
 const BLOCKED_HEIGHT = -16 // sunken obstacles
+
+type SectionType = 'question' | 'obstacles'
+
+type RowData = { type: SectionType; isSectionStart: boolean; heights: number[] }
 
 const Terrain: FC = () => {
   const stage = useGameStore((state) => state.stage)
@@ -71,7 +76,7 @@ const Terrain: FC = () => {
   // Row generation state
   // Tracks which logical section we're in and how many rows remain before
   // switching to the other section.
-  type SectionType = 'question' | 'obstacles'
+
   const sectionRef = useRef<{
     type: SectionType
     rowsRemaining: number
@@ -83,18 +88,6 @@ const Terrain: FC = () => {
   // performance and determinism across columns.
   const obstacleBufferRef = useRef<{ rows: number[][]; index: number } | null>(null)
 
-  // Pending row being assigned across columns during recycling
-  // When a row is recycled, all columns should share the same freshly generated
-  // data. We cache that row here until all columns of that row are reassigned.
-  const pendingRowRef = useRef<null | {
-    heights: number[]
-    type: SectionType
-    isSectionStart: boolean
-    rowStartZ: number
-    assignedCols: number
-  }>(null)
-
-  // Absolute row index counter (for debugging/future use)
   const rowIndexRef = useRef(0)
 
   // Question/answers instance refs and spawn scheduling
@@ -109,9 +102,9 @@ const Terrain: FC = () => {
     createRef<RapierRigidBody>(),
   ]).current
 
-  const qaNextSpawnRef = useRef<null | {
-    textPos: [number, number, number]
-    tilePositions: [number, number, number][]
+  const qaNextSpawnRef = useRef<{
+    textPos: Vector3Tuple
+    tilePositions: Vector3Tuple[]
   }>(null)
 
   // ---------- Helpers ----------
@@ -150,11 +143,11 @@ const Terrain: FC = () => {
    * - Question rows return all OPEN_HEIGHT to present a clean area.
    * - Obstacle rows are consumed from the pre-generated buffer.
    */
-  function getNextRow(): { heights: number[]; type: SectionType; isSectionStart: boolean } {
-    const s = sectionRef.current
+  function getNextRow(): RowData {
+    const isSectionEnded = sectionRef.current.rowsRemaining <= 0
     // Switch section if depleted
-    if (s.rowsRemaining <= 0) {
-      if (s.type === 'question') {
+    if (isSectionEnded) {
+      if (sectionRef.current.type === 'question') {
         sectionRef.current = {
           type: 'obstacles',
           rowsRemaining: OBSTACLE_SECTION_ROWS,
@@ -168,11 +161,10 @@ const Terrain: FC = () => {
         }
       }
     }
-    const curr = sectionRef.current
-    const isSectionStart = curr.sectionRowIndex === 0
+    const isSectionStart = sectionRef.current.sectionRowIndex === 0
 
     let heights: number[]
-    if (curr.type === 'question') {
+    if (sectionRef.current.type === 'question') {
       heights = new Array(COLUMNS).fill(OPEN_HEIGHT)
     } else {
       ensureObstacleBuffer(OBSTACLE_SECTION_ROWS)
@@ -185,10 +177,10 @@ const Terrain: FC = () => {
     }
 
     // Advance section counters
-    curr.sectionRowIndex += 1
-    curr.rowsRemaining -= 1
+    sectionRef.current.sectionRowIndex += 1
+    sectionRef.current.rowsRemaining -= 1
 
-    return { heights, type: curr.type, isSectionStart }
+    return { heights, type: sectionRef.current.type, isSectionStart }
   }
 
   // ---------- Setup initial rows ----------
@@ -228,50 +220,26 @@ const Terrain: FC = () => {
     isSetup.current = true
   }, [])
 
-  const throttledLog = useThrottledLog()
-  // TODO: Remove or use throttledLog; currently unused in this component.
+  // Recycle an entire row in one pass. All columns share the same target Z and
+  // the same freshly generated heights from getNextRow().
+  function recycleRow({ base, samplePos }: { base: number; samplePos: any }) {
+    // Generate next row once for this recycled row
+    const nextRow = getNextRow()
+    const newZ = samplePos.z - ROWS * BOX_SPACING
 
-  // Recycle a row that has moved past the camera to the far end, assigning new
-  // heights from the current section while keeping all columns in sync.
-  function recycleBox({
-    body,
-    index,
-    position,
-  }: {
-    body: RapierRigidBody
-    index: number
-    position: { x: number; y: number; z: number }
-  }) {
-    const col = index % COLUMNS
-    const x = colToX(col)
-    const newZ = position.z - ROWS * BOX_SPACING
-
-    // Lazily create a pending row assignment so all columns share the same row data
-    if (!pendingRowRef.current) {
-      const rowData = getNextRow()
-      pendingRowRef.current = {
-        heights: rowData.heights,
-        type: rowData.type,
-        isSectionStart: rowData.isSectionStart,
-        rowStartZ: newZ,
-        assignedCols: 0,
-      }
+    for (let col = 0; col < COLUMNS; col++) {
+      const body = boxes.current![base + col]
+      if (!body) continue
+      const x = colToX(col)
+      const y = nextRow.heights[col]
+      body.setTranslation({ x, y, z: newZ }, true)
     }
 
-    const pending = pendingRowRef.current!
-    const y = pending.heights[col]
-    body.setTranslation({ x, y, z: newZ }, true)
-    pending.assignedCols += 1
-
-    // If we've finished assigning this row to all columns, finalize
-    if (pending.assignedCols >= COLUMNS) {
-      // If this row starts a question section, schedule Q/A spawn aligned to it
-      if (pending.isSectionStart && pending.type === 'question') {
-        qaNextSpawnRef.current = computeQuestionPlacement(pending.rowStartZ)
-      }
-      rowIndexRef.current += 1
-      pendingRowRef.current = null
+    // Finalize row assignment once for the row.
+    if (nextRow.isSectionStart && nextRow.type === 'question') {
+      qaNextSpawnRef.current = computeQuestionPlacement(newZ)
     }
+    rowIndexRef.current++
   }
 
   /**
@@ -280,29 +248,24 @@ const Terrain: FC = () => {
    */
   function updateBoxes(zStep: number) {
     if (!boxes.current) return
-    const bodies = boxes.current
     // Iterate by rows: sample column 0 to decide recycle vs move for whole row
     for (let row = 0; row < ROWS; row++) {
       const base = row * COLUMNS
-      const sample = bodies[base]
+      const sample = boxes.current[base]
       if (!sample) continue
-      const pos = sample.translation()
-      const shouldRecycle = pos.z > CAMERA_RECYCLE_THRESHOLD_Z
+      const samplePos = sample.translation()
+      const shouldRecycleRow = samplePos.z > CAMERA_RECYCLE_THRESHOLD_Z
 
-      if (shouldRecycle) {
-        for (let col = 0; col < COLUMNS; col++) {
-          const index = base + col
-          const body = bodies[index]
-          if (!body) continue
-          const p = body.translation()
-          recycleBox({ body, index, position: p })
-        }
+      if (shouldRecycleRow) {
+        recycleRow({ base, samplePos })
       } else {
+        // Move forward
+        const newZ = samplePos.z + zStep
         for (let col = 0; col < COLUMNS; col++) {
-          const body = bodies[base + col]
+          const body = boxes.current[base + col]
           if (!body) continue
           const p = body.translation()
-          body.setTranslation({ x: p.x, y: p.y, z: p.z + zStep }, true)
+          body.setTranslation({ x: p.x, y: p.y, z: newZ }, true)
         }
       }
     }
@@ -363,11 +326,11 @@ const Terrain: FC = () => {
 
   // Derive current userData types for tiles
   const tileUserData = useMemo<(AnswerUserData | TopicUserData)[]>(() => {
-    if (currentQuestionIndex === 0) {
-      // Topic selection uses TopicUserData for different intersection events.
-      return activeQuestion.answers.slice(0, 4).map((a) => ({ type: 'topic', topic: a.text }))
-    }
-    return activeQuestion.answers.slice(0, 4).map((a) => ({ type: 'answer', answer: a }))
+    // Topic selection uses TopicUserData for different intersection events.
+    if (currentQuestionIndex === 0)
+      return activeQuestion.answers.map((a) => ({ type: 'topic', topic: a.text }))
+
+    return activeQuestion.answers.map((a) => ({ type: 'answer', answer: a }))
   }, [activeQuestion, currentQuestionIndex])
 
   if (!boxInstances.length) return null
@@ -396,7 +359,6 @@ const Terrain: FC = () => {
       </InstancedRigidBodies>
 
       {/* Question overlay positioned over open section; single instance recycled */}
-
       <QuestionText
         ref={questionGroupRef}
         text={activeQuestion.text}
@@ -404,11 +366,11 @@ const Terrain: FC = () => {
       />
       {answerRefs.map((ref, i) => (
         <AnswerTile
-          key={`ans-${i}`}
+          key={`ans-${i}-${currentQuestionIndex}`}
           ref={ref}
-          answer={activeQuestion.answers[i]}
+          userData={tileUserData?.[i] ?? null}
+          text={activeQuestion.answers[i]?.text ?? null}
           position={[0, -100, -100]} // off-screen until placed
-          userData={tileUserData[i]}
         />
       ))}
     </group>
