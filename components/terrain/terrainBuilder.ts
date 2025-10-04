@@ -7,7 +7,7 @@ export const BOX_SIZE = 1
 export const BOX_SPACING = 1
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const ANSWER_TILE_COLS = 5 // ensures 2 cols margin left/right and between tiles across 16 cols
+export const ANSWER_TILE_COLS = 5
 export const ANSWER_TILE_ROWS = 2
 export const ANSWER_TILE_SIDE_MARGIN_COLS = 2
 export const ANSWER_ROW_GAP_ROWS = 2 // vertical gap between answer rows when there are 4 tiles
@@ -135,45 +135,37 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
   return heights
 }
 
+// --- Shared placement helpers ---
+
+// Convert a grid column index (can be fractional for centers) to world X.
 export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
 
-// Placement tuning within the 12-row question section
-// Lower row indices place elements closer to the section start (nearer to player)
-// Place question text centered on the same grid row as the top answer tiles
-// for clear visual alignment during initial placement and respawns.
-const QUESTION_TEXT_ROW_OFFSET = 5 // previously 4 (and 6 before that)
-const ANSWER_4_TILE_TOP_ROW = 5 // was 7; bottom will be top + 4 (=9)
-const ANSWER_2_TILE_CENTER_ROW = 8 // was 10
-
-/**
- * Decide where to place the question text and each answer tile relative to the
- * front row (startZ) of the current question section.
- * TODO: Move placement config (row offsets, columns) into named constants at
- * the top of the file or into a config module.
- */
+// Compute world positions for question text and answer tiles within a 12-row question section.
+// Rows are indexed front (near player) to back relative to startZ:
+// 0,1 empty; 2-4 text; 5 empty; answers from row 6 onward.
 export function computeQuestionPlacement(startZ: number, tileCount: number) {
-  // Placement within the 12 open rows starting at startZ.
-  // Question text centered across 8 columns and ~4 rows.
-  const textCenterCol = COLUMNS / 2 - 0.5 // center of grid
-  const textCenterRowOffset = QUESTION_TEXT_ROW_OFFSET
+  // Columns: two tiles per row, each spanning 4 columns, starting at col 1 and 7
+
+  const LEFT_START_COL = 2
+  const RIGHT_START_COL = 9
+  const leftCenterCol = LEFT_START_COL + (ANSWER_TILE_COLS - 1) / 2 // 2.5
+  const rightCenterCol = RIGHT_START_COL + (ANSWER_TILE_COLS - 1) / 2 // 8.5
+
+  // Text spans rows 2,3,4 — center at row 3
+  const TEXT_CENTER_ROW = 3
   const textPos: [number, number, number] = [
-    colToX(textCenterCol),
+    colToX(COLUMNS / 2 - 0.5),
     0.01,
-    startZ - textCenterRowOffset * BOX_SPACING,
+    startZ - TEXT_CENTER_ROW * BOX_SPACING,
   ]
 
-  // Answers: fixed tile sizes, 2 columns of margin on each side and between tiles.
+  // Answer tiles: height = 2 rows. Placement bands:
+  // - 2 answers: rows 6..8 reserved -> center row = 7
+  // - 4 answers: two rows: 6..7 (center 6.5), gap at 8, and 9..10 (center 9.5)
   const tilePositions: [number, number, number][] = []
-
-  const leftEdgeCol = ANSWER_TILE_SIDE_MARGIN_COLS
-  const rightEdgeCol = COLUMNS - ANSWER_TILE_SIDE_MARGIN_COLS - ANSWER_TILE_COLS
-  const leftCenterCol = leftEdgeCol + (ANSWER_TILE_COLS - 1) / 2
-  const rightCenterCol = rightEdgeCol + (ANSWER_TILE_COLS - 1) / 2
-
   if (tileCount === 4) {
-    // Top row center and bottom row center with 2 rows gap between tiles (center delta = height + gap)
-    const topCenterRow = ANSWER_4_TILE_TOP_ROW
-    const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP_ROWS // 5 + 2 + 2 = 9
+    const topCenterRow = 6.5
+    const bottomCenterRow = 9.5
     tilePositions.push(
       [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
       [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
@@ -181,7 +173,7 @@ export function computeQuestionPlacement(startZ: number, tileCount: number) {
       [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
     )
   } else {
-    const centerRow = ANSWER_2_TILE_CENTER_ROW
+    const centerRow = 9
     tilePositions.push(
       [colToX(leftCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
       [colToX(rightCenterCol), 0.001, startZ - centerRow * BOX_SPACING],

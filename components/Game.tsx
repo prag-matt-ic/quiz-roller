@@ -20,6 +20,7 @@ const Game: FC = () => {
   return (
     <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
+      onContextMenu={(e) => e.preventDefault()}
       camera={{
         position: [
           INITIAL_CAMERA_POSITION.x,
@@ -29,11 +30,12 @@ const Game: FC = () => {
         far: 40,
         fov: 60,
       }}>
-      <ambientLight intensity={2} />
+      <ambientLight intensity={1} />
+      <pointLight position={[0, 5, -0.5]} intensity={16} />
       {/* <OrbitControls /> */}
       <Camera isMobile={false} />
       <Suspense>
-        <Physics debug={true}>
+        <Physics debug={false}>
           <Level />
         </Physics>
       </Suspense>

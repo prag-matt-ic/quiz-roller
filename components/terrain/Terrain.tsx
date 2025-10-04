@@ -354,7 +354,7 @@ const Terrain: FC = () => {
           args={[undefined, undefined, boxInstances.length]}
           count={boxInstances.length}>
           <boxGeometry args={[BOX_SIZE, BOX_SIZE, BOX_SIZE]} />
-          <meshStandardMaterial color="grey" />
+          <meshLambertMaterial color="grey" />
         </instancedMesh>
       </InstancedRigidBodies>
 
