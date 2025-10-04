@@ -217,18 +217,6 @@ const Terrain: FC = () => {
       nextRowIndex: nextRowIndex.current,
     })
 
-    // TODO: Review this - it should go to stage when the row being recycled is the last obstacle row,
-    if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-      console.warn('terrain ended, switching to QUESTION stage')
-      goToStage(Stage.QUESTION)
-      insertObstacleRows()
-    }
-
-    if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
-      console.warn('Inserting new question section')
-      insertQuestionRows()
-    }
-
     for (let col = 0; col < COLUMNS; col++) {
       const firstBodyIndex = rowIndex * COLUMNS
       const body = boxRigidBodies.current![firstBodyIndex + col]
@@ -237,6 +225,18 @@ const Terrain: FC = () => {
       const x = colToX(col)
       const y = newRowData.heights[col]
       body.setTranslation({ x, y, z: newZ }, true)
+    }
+
+    // TODO: Review this - it should go to stage when the row being recycled is the last obstacle row,
+    if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
+      console.warn('terrain ended, switching to QUESTION stage')
+      insertObstacleRows()
+      goToStage(Stage.QUESTION)
+    }
+
+    if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
+      console.warn('Inserting new question section')
+      insertQuestionRows()
     }
 
     // Finalize row assignment once for the row.
@@ -332,7 +332,7 @@ const Terrain: FC = () => {
         <instancedMesh
           args={[undefined, undefined, boxInstances.length]}
           count={boxInstances.length}>
-          <boxGeometry args={[BOX_SIZE, BOX_SIZE, BOX_SIZE]} />
+          <boxGeometry args={[BOX_SIZE, 0.16, BOX_SIZE]} />
           <meshLambertMaterial color="grey" />
         </instancedMesh>
       </InstancedRigidBodies>

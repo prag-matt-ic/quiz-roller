@@ -72,7 +72,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           maxWidth={ANSWER_TILE_WIDTH - 0.2}
           position={[0, 0.0, 0.01]}
           rotation={[0, 0, 0]}>
-          {index}. {text}
+          {text}
         </Text>
       </RigidBody>
     )

@@ -16,7 +16,7 @@ import { type FC, Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
-import { useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
@@ -32,6 +32,8 @@ const Player: FC = () => {
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
   const { terrainSpeed } = useTerrainSpeed()
+  const stage = useGameStore((s) => s.stage)
+  const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
 
   // Multiplier to adjust rolling speed visually (tweak for aesthetics)
   const ROLLING_SPEED_MULTIPLIER = 0.8
@@ -43,6 +45,13 @@ const Player: FC = () => {
   const UP = new Vector3(0, 1, 0)
   const EPS = 1e-6
 
+  const dispRef = useRef(new Vector3())
+  const vPlayerRef = useRef(new Vector3())
+  const vTerrainRef = useRef(new Vector3())
+  const vRelRef = useRef(new Vector3())
+  const axisRef = useRef(new Vector3())
+  const worldScaleRef = useRef(new Vector3())
+
   useFrame((_, delta) => {
     if (
       !bodyRef.current ||
@@ -51,6 +60,8 @@ const Player: FC = () => {
       !sphereMeshRef.current
     )
       return
+
+    if (stage === Stage.INTRO || stage === Stage.GAME_OVER) return
 
     // Determine intended direction on X/Z plane
     let dx = 0
@@ -97,49 +108,46 @@ const Player: FC = () => {
     bodyRef.current.setNextKinematicTranslation(newPosition)
 
     // Player world displacement this frame (already collision-corrected)
-    const disp = new Vector3(correctedMovement.x, correctedMovement.y, correctedMovement.z)
+    dispRef.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
 
     // Convert displacement to velocity (units / second)
-    const vPlayer = disp.clone().divideScalar(Math.max(delta, EPS))
+    vPlayerRef.current.copy(dispRef.current).divideScalar(Math.max(delta, EPS))
 
     // Terrain scroll velocity.
     // Convention: "forward" is -Z in your input mapping,
     // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
-    // and the ball's *relative* forward velocity is -terrainSpeed on Z.
-    const vTerrain = new Vector3(0, 0, -terrainSpeed.current)
+    // and the ball's relative forward velocity is -terrainSpeed on Z.
+    vTerrainRef.current.set(0, 0, -terrainSpeed.current)
 
     // Relative velocity of ball w.r.t. ground on the contact plane
-    const vRel = vPlayer.add(vTerrain)
-    vRel.y = 0 // constrain to the surface plane (assumes flat ground; swap for local normal on slopes)
+    vRelRef.current.copy(vPlayerRef.current).add(vTerrainRef.current)
+    vRelRef.current.y = 0 // constrain to surface plane (assumes flat ground)
 
     if (input.current.backward && Math.abs(terrainSpeed.current) > EPS) {
       // treat ball as static relative to ground: no rolling
-      vRel.set(0, 0, 0)
+      vRelRef.current.set(0, 0, 0)
     }
 
     // compute effective world-space radius (handles parent/mesh scaling)
-    const worldScale = new Vector3()
-    sphereMeshRef.current.getWorldScale(worldScale)
+    sphereMeshRef.current.getWorldScale(worldScaleRef.current)
     // assume uniform scale for a sphere; if not uniform, pick the contact-plane scale
-    const effectiveRadius = PLAYER_RADIUS * worldScale.x
+    const effectiveRadius = PLAYER_RADIUS * worldScaleRef.current.x
 
-    const speed = vRel.length()
+    const speed = vRelRef.current.length()
     if (speed > EPS && effectiveRadius > EPS) {
       // 0.000001 to avoid NaN
       // --- Rolling without slipping: ω = (n × v) / R ---
       // Axis given by right-hand rule (surface normal × velocity)
-      const axis = new Vector3().copy(UP).cross(vRel).normalize()
+      axisRef.current.copy(UP).cross(vRelRef.current).normalize()
 
       // Angle this frame: θ = |v| * Δt / R  (scaled if you want)
       // const angle = (speed * delta * ROLLING_SPEED_MULTIPLIER) / PLAYER_RADIUS
       const angle = (speed * delta) / effectiveRadius
 
-      sphereMeshRef.current.rotateOnWorldAxis(axis, angle)
+      sphereMeshRef.current.rotateOnWorldAxis(axisRef.current, angle)
       sphereMeshRef.current.quaternion.normalize()
     }
   })
-
-  const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
@@ -147,6 +155,7 @@ const Player: FC = () => {
     if (!otherUserData) return
 
     if (otherUserData.type === 'answer') {
+      if (stage !== Stage.QUESTION) return // only allow during question stage
       setConfirmingAnswer(otherUserData)
       return
     }
@@ -175,7 +184,7 @@ const Player: FC = () => {
       userData={userData}
       restitution={0}
       colliders={false}
-      position={[0, 3, 0]}
+      position={[0, 2.5, 0]}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
