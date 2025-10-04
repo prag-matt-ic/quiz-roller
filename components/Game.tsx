@@ -35,7 +35,7 @@ const Game: FC = () => {
       {/* <OrbitControls /> */}
       <Camera isMobile={false} />
       <Suspense>
-        <Physics debug={false}>
+        <Physics debug={true}>
           <Level />
         </Physics>
       </Suspense>

@@ -13,8 +13,8 @@ export async function POST(req: Request) {
   }: { topic: string; previousQuestions: string[]; difficulty: number } = await req.json()
 
   const getDifficultyDescription = (level: number) => {
-    if (level <= 3) return 'very easy, basic knowledge'
-    if (level <= 6) return 'moderate difficulty, intermediate knowledge'
+    if (level <= 1) return 'very easy, basic knowledge'
+    if (level <= 5) return 'moderate difficulty, intermediate knowledge'
     if (level <= 8) return 'challenging, advanced knowledge'
     return 'very difficult, expert level knowledge'
   }

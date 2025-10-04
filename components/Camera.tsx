@@ -16,7 +16,7 @@ const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
 export const CAMERA_POSITIONS: Record<Stage, { x: number; y: number; z: number }> = {
   [Stage.INTRO]: { x: 12, y: 10, z: 8 },
-  [Stage.QUESTION]: { x: 0, y: 14, z: 6 },
+  [Stage.QUESTION]: { x: 0, y: 14, z: 8 },
   [Stage.TERRAIN]: { x: 0, y: 7, z: 6 },
   [Stage.GAME_OVER]: { x: 0, y: 16, z: 4 },
 }

@@ -6,6 +6,8 @@ import { forwardRef } from 'react'
 import { Group, type Vector3Tuple } from 'three'
 
 import { type AnswerUserData, type TopicUserData } from '@/model/schema'
+import { QUESTION_TEXT_MAX_WIDTH, QUESTION_TEXT_ROWS } from './terrain/terrainBuilder'
+import { PLAYER_RADIUS } from './player/PlayerHUD'
 
 type AnswerTileProps = {
   text: string | null
@@ -41,7 +43,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         colliders={false}
         userData={userData}>
         <CuboidCollider
-          args={[tileWidth / 2, tileHeight / 2, 0.25]}
+          args={[tileWidth / 2, tileHeight / 2, PLAYER_RADIUS * 2]}
           sensor={true}
           mass={0}
           friction={0}
@@ -79,6 +81,10 @@ export const QuestionText = forwardRef<Group, QuestionTextProps>(
   ({ text, position = [0, 0.01, 0], maxWidth = 4, fontSize = 0.26 }, ref) => {
     return (
       <group ref={ref} position={position}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+          <planeGeometry args={[QUESTION_TEXT_MAX_WIDTH, QUESTION_TEXT_ROWS]} />
+          <meshStandardMaterial color="#fff" transparent={true} opacity={0.1} />
+        </mesh>
         <Text
           color="#000"
           fontSize={fontSize}

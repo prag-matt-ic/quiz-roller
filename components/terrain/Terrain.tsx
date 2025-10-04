@@ -22,20 +22,15 @@ import {
   BOX_SPACING,
   colToX,
   COLUMNS,
-  computeQuestionPlacement,
   generateObstacleHeights,
+  MAX_Z,
+  OBSTACLE_SECTION_ROWS,
+  positionQuestionAndAnswerTiles,
+  QUESTION_SECTION_ROWS,
+  QUESTION_TEXT_FONT_SIZE,
   QUESTION_TEXT_MAX_WIDTH,
   ROWS_VISIBLE,
 } from './terrainBuilder'
-
-// Approximate font size to visually fill ~4 grid rows while allowing wrapping
-const QUESTION_TEXT_FONT_SIZE = 0.38
-
-// Camera/visibility thresholds
-const CAMERA_RECYCLE_THRESHOLD_Z = BOX_SIZE * 6
-// Section configuration
-const QUESTION_SECTION_ROWS = 12
-const OBSTACLE_SECTION_ROWS = 64
 
 // Heights
 const OPEN_HEIGHT = -BOX_SIZE / 2 // top of box at y=0
@@ -94,6 +89,10 @@ const Terrain: FC = () => {
       isSectionEnd: i === QUESTION_SECTION_ROWS - 1,
     }))
     rowsData.current = [...rowsData.current, ...blocks]
+    console.warn(`Inserted question section`, {
+      blocks,
+      rowsData: rowsData.current,
+    })
   }
 
   // Build a contiguous block of obstacle rows with a guaranteed corridor
@@ -115,6 +114,10 @@ const Terrain: FC = () => {
       isSectionEnd: i === OBSTACLE_SECTION_ROWS - 1,
     }))
     rowsData.current = [...rowsData.current, ...blocks]
+    console.warn(`Inserted obstacle section`, {
+      blocks,
+      rowsData: rowsData.current,
+    })
   }
 
   // No incremental generator; rows are precomputed into rowsDataRef.
@@ -126,6 +129,8 @@ const Terrain: FC = () => {
     function setupInitialRowsAndInstances() {
       // Seed with initial sections of row data
       insertQuestionRows(true)
+      insertObstacleRows()
+      insertQuestionRows()
       insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
@@ -157,10 +162,11 @@ const Terrain: FC = () => {
     setupInitialRowsAndInstances()
   }, [])
 
-  // Positions the question text and answer tiles over the question section rows.
+  // This is called when the first row in the question section becomes visible.
+  // Positioning the Q&A elements over the proceeding rows.
   function repositionQuestionElements(startRowZ: number, answerCount = 2) {
     if (!questionGroupRef.current || !boxRigidBodies.current) return
-    const { textPos, tilePositions } = computeQuestionPlacement(startRowZ, answerCount)
+    const { textPos, tilePositions } = positionQuestionAndAnswerTiles(startRowZ, answerCount)
 
     console.warn(
       `Repositioning question elements at z=${startRowZ} with ${answerCount} answer tiles`,
@@ -218,6 +224,12 @@ const Terrain: FC = () => {
     if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
       console.warn('terrain ended, switching to QUESTION stage')
       goToStage(Stage.QUESTION)
+      insertObstacleRows()
+    }
+
+    if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
+      console.warn('Inserting new question section')
+      insertQuestionRows()
     }
 
     for (let col = 0; col < COLUMNS; col++) {
@@ -235,24 +247,16 @@ const Terrain: FC = () => {
     activeRowsData.current[rowIndex] = newRowData
     nextRowIndex.current++
 
-    // If the new row is the end of a section, insert the next block of rows.
-    if (newRowData.type === 'obstacles' && newRowData.isSectionEnd) {
-      console.warn('Inserting new obstacle section')
-      insertObstacleRows()
-      return
-    }
-
-    if (newRowData.type === 'question' && newRowData.isSectionEnd) {
-      console.warn('Inserting new question section')
-      insertQuestionRows()
-      return
-    }
+    // If the new row is the end of a section, insert the next block of rows for that section.
+    // if (newRowData.type === 'obstacles' && newRowData.isSectionEnd) {
+    //   console.warn('Inserting new obstacle section')
+    //   insertObstacleRows()
+    // }
 
     // If this new row starts a question section, schedule a spawn of the Q/A
     if (newRowData.type === 'question' && newRowData.isSectionStart) {
       console.warn('Scheduling question elements respawn')
       repositionQuestionElements(newZ, 2)
-      return
     }
   }
 
@@ -269,7 +273,7 @@ const Terrain: FC = () => {
       const rigidBody = boxRigidBodies.current[firstBodyIndex]
       if (!rigidBody) continue
       const samplePos = rigidBody.translation()
-      const shouldRecycleRow = samplePos.z > CAMERA_RECYCLE_THRESHOLD_Z
+      const shouldRecycleRow = samplePos.z > MAX_Z
 
       if (shouldRecycleRow) {
         recycleRow({ rowIndex, samplePos })
@@ -291,18 +295,12 @@ const Terrain: FC = () => {
    */
   function moveQuestionElements(zStep: number) {
     if (!questionGroupRef.current) return
-    // Moves question and answers in the same direction & speed as terrain
-    let shouldStopMovement = false
 
+    questionGroupRef.current.position.z += zStep
     // Answer tiles (rapier bodies)
     for (const ref of answerRefs) {
       if (!ref.current) continue
       const translation = ref.current.translation()
-
-      if (translation.z > CAMERA_RECYCLE_THRESHOLD_Z) {
-        shouldStopMovement = true
-        break
-      }
       ref.current.setTranslation(
         {
           x: translation.x,
@@ -312,9 +310,6 @@ const Terrain: FC = () => {
         true,
       )
     }
-
-    if (shouldStopMovement) return
-    questionGroupRef.current.position.z += zStep
   }
 
   // Per-frame update: compute Z step from speed and frame delta, then move both

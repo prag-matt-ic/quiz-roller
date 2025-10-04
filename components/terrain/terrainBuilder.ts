@@ -6,15 +6,19 @@ export const ROWS_VISIBLE = 40
 export const BOX_SIZE = 1
 export const BOX_SPACING = 1
 
+export const QUESTION_SECTION_ROWS = 16
+export const OBSTACLE_SECTION_ROWS = 64
+
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const ANSWER_TILE_COLS = 5
-export const ANSWER_TILE_ROWS = 2
-export const ANSWER_TILE_SIDE_MARGIN_COLS = 2
-export const ANSWER_ROW_GAP_ROWS = 2 // vertical gap between answer rows when there are 4 tiles
-
+export const ANSWER_TILE_ROWS = 3
 export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * BOX_SIZE
 export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * BOX_SIZE
 export const QUESTION_TEXT_MAX_WIDTH = 8 * BOX_SIZE
+export const QUESTION_TEXT_FONT_SIZE = 0.4
+export const QUESTION_TEXT_ROWS = 4
+
+export const MAX_Z = BOX_SIZE * 6
 
 type ObstacleParams = {
   rows: number // e.g. 256
@@ -60,13 +64,21 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     blockedHeight = -1000,
   } = params
 
-  const SAFE_PADDING_ROWS = 2 // First rows always fully unblocked
+  const SAFE_PADDING_ROWS = 1
 
   // Use simplex 2D as 1D noise by fixing Y=seed
   const noise2D = createNoise2D()
   const noise1D = (i: number) => noise2D(i * freq, seed) // [-1, 1]
 
   const heights: number[][] = new Array(rows)
+
+  console.warn('Generating obstacle heights with params:', params)
+
+  // First rows always fully open
+  for (let i = 0; i < SAFE_PADDING_ROWS; i++) {
+    heights[i] = new Array<number>(COLUMNS).fill(openHeight)
+  }
+
   const centerStart = Math.floor(COLUMNS / 2)
   let cPrev = centerStart
 
@@ -79,19 +91,8 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     return clamp(Math.round(base - knock), minWidth, maxWidth)
   }
 
-  for (let i = 0; i < rows; i++) {
-    // First rows always fully open
-    if (i < SAFE_PADDING_ROWS) {
-      heights[i] = new Array<number>(COLUMNS).fill(openHeight)
-      continue
-    }
-
-    // Last rows always fully open
-    if (i > rows - SAFE_PADDING_ROWS) {
-      heights[i] = new Array<number>(COLUMNS).fill(openHeight)
-      continue
-    }
-
+  // Generate obstacle rows between the leading and trailing padding zones.
+  for (let i = SAFE_PADDING_ROWS; i < rows - SAFE_PADDING_ROWS; i++) {
     const rowHeights = new Array<number>(COLUMNS).fill(blockedHeight)
 
     // Soft target center from noise, then cap drift for reachability
@@ -132,6 +133,13 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     cPrev = c
   }
 
+  // Last rows always fully open
+  for (let i = rows - SAFE_PADDING_ROWS; i < rows; i++) {
+    heights[i] = new Array<number>(COLUMNS).fill(openHeight)
+  }
+
+  console.log('Generated obstacle heights:', { heights })
+
   return heights
 }
 
@@ -143,42 +151,64 @@ export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
 // Compute world positions for question text and answer tiles within a 12-row question section.
 // Rows are indexed front (near player) to back relative to startZ:
 // 0,1 empty; 2-4 text; 5 empty; answers from row 6 onward.
-export function computeQuestionPlacement(startZ: number, tileCount: number) {
-  // Columns: two tiles per row, each spanning 4 columns, starting at col 1 and 7
+export function positionQuestionAndAnswerTiles(
+  startZ: number,
+  tileCount: number,
+): {
+  textPos: [number, number, number]
+  tilePositions: [number, number, number][]
+} {
+  if (tileCount === 2) return positionTwoAnswerTiles(startZ)
+  return positionFourAnswerTiles(startZ)
+}
 
-  const LEFT_START_COL = 2
-  const RIGHT_START_COL = 9
-  const leftCenterCol = LEFT_START_COL + (ANSWER_TILE_COLS - 1) / 2 // 2.5
-  const rightCenterCol = RIGHT_START_COL + (ANSWER_TILE_COLS - 1) / 2 // 8.5
-
-  // Text spans rows 2,3,4 — center at row 3
-  const TEXT_CENTER_ROW = 3
+function positionFourAnswerTiles(startZ: number): {
+  textPos: [number, number, number]
+  tilePositions: [number, number, number][]
+} {
+  const textCenterRowIndex = 3.5
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
     0.01,
-    startZ - TEXT_CENTER_ROW * BOX_SPACING,
+    startZ - textCenterRowIndex * BOX_SPACING,
   ]
 
-  // Answer tiles: height = 2 rows. Placement bands:
-  // - 2 answers: rows 6..8 reserved -> center row = 7
-  // - 4 answers: two rows: 6..7 (center 6.5), gap at 8, and 9..10 (center 9.5)
   const tilePositions: [number, number, number][] = []
-  if (tileCount === 4) {
-    const topCenterRow = 6.5
-    const bottomCenterRow = 9.5
-    tilePositions.push(
-      [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
-      [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
-      [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
-      [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
-    )
-  } else {
-    const centerRow = 9
-    tilePositions.push(
-      [colToX(leftCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
-      [colToX(rightCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
-    )
-  }
+  const leftCenterCol = 2 + (ANSWER_TILE_COLS - 1) / 2 // 2.5
+  const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2 // 8.5
+
+  const topCenterRow = 8
+  const bottomCenterRow = 12
+  tilePositions.push(
+    [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+    [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+    [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+    [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+  )
+
+  return { textPos, tilePositions }
+}
+
+function positionTwoAnswerTiles(startZ: number): {
+  textPos: [number, number, number]
+  tilePositions: [number, number, number][]
+} {
+  const textCenterRowIndex = 5.5
+  const textPos: [number, number, number] = [
+    colToX(COLUMNS / 2 - 0.5),
+    0.01,
+    startZ - textCenterRowIndex * BOX_SPACING,
+  ]
+
+  const tilePositions: [number, number, number][] = []
+  const leftCenterCol = 2 + (ANSWER_TILE_COLS - 1) / 2
+  const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
+
+  const tilesCenterRow = 10
+  tilePositions.push(
+    [colToX(leftCenterCol), 0.001, startZ - tilesCenterRow * BOX_SPACING],
+    [colToX(rightCenterCol), 0.001, startZ - tilesCenterRow * BOX_SPACING],
+  )
 
   return { textPos, tilePositions }
 }
