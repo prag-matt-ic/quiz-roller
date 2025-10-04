@@ -58,7 +58,7 @@ const PlayerHUD: FC = () => {
       zIndexRange={[1000, 0]}
       distanceFactor={5}
       transform={true}
-      position={[1.0, PLAYER_RADIUS * 2, PLAYER_RADIUS]}
+      position={[PLAYER_RADIUS, PLAYER_RADIUS * 6, PLAYER_RADIUS]}
       className="pointer-events-none relative select-none">
       <Transition
         in={!!confirmingAnswer}
@@ -70,12 +70,12 @@ const PlayerHUD: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative flex w-fit origin-bottom-left flex-col gap-1 rounded-2xl bg-white p-2.5">
-          <div className="animate-pulse text-2xl font-semibold text-black">Confirming</div>
+          className="relative flex w-fit origin-bottom-left flex-col gap-2.5 rounded-2xl bg-white p-5">
+          <div className="text-2xl font-medium tracking-wide text-black">Confirming</div>
           <div className="relative h-5 w-32 overflow-hidden rounded-full bg-white/20">
             <div
               id="progress-bar"
-              className="absolute h-full w-full -translate-x-full bg-white"
+              className="absolute h-full w-full -translate-x-full bg-linear-90 from-blue-600 to-teal-400"
             />
           </div>
         </div>
