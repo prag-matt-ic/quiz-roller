@@ -22,17 +22,18 @@ export async function POST(req: Request) {
   console.warn(`Generating question on topic "${topic}" with difficulty ${difficulty}`)
 
   let prompt = `
-    You are a graduate-level expert in the field of ${topic}.
+    Quiz Roller - You are a graduate-level expert in the field of ${topic}.
     Generate a multiple choice question about: ${topic}.
     The difficulty should be ${getDifficultyDescription(difficulty)} (level ${difficulty}/10).
     Provide two possible answers, one correct and one incorrect.
-    The incorrect answer needs to sound plasusible, perhaps a common misconception.
+    The incorrect answer needs to sound plausible, perhaps a common misconception.
     Adjust the complexity, vocabulary, and depth of knowledge required based on the difficulty level.
-    Do not indicate which answer is correct in the question text.`
+    Do not indicate which answer is correct in the question text.
+    The answer should not reveal it's correctness in its wording.`
 
   // Add previous questions to avoid repeats
   if (previousQuestions.length > 0) {
-    prompt += `\n Do not repeat any of these previous questions:\n${previousQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
+    prompt += `\n **Do not repeat** any of these previous questions, and use these to mix up the sub-topic:\n${previousQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
   }
 
   const result = await generateObject({

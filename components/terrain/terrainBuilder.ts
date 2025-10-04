@@ -188,6 +188,47 @@ function positionFourAnswerTiles(startZ: number): {
   return { textPos, tilePositions }
 }
 
+// Generate question section heights. For the first question (four-tile layout),
+// leave all cells open. For subsequent questions (two-tile layout), close
+// cells outside the answer tile footprints across the tile row band so the
+// player must pass over a tile to proceed.
+export function generateQuestionHeights(params: {
+  isFirstQuestion: boolean
+  openHeight?: number
+  blockedHeight?: number
+}): number[][] {
+  const { isFirstQuestion, openHeight = 0, blockedHeight = -1000 } = params
+
+  // Start fully open
+  const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
+    new Array<number>(COLUMNS).fill(openHeight),
+  )
+
+  if (isFirstQuestion) return heights
+
+  // Derive the two-tile footprint used by positionTwoAnswerTiles()
+  const leftStartCol = 1
+  const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
+  const rightStartCol = 9
+  const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
+
+  const tilesCenterRow = 10.5
+  const startRow = Math.ceil(tilesCenterRow - ANSWER_TILE_ROWS / 2)
+  const endRow = startRow + ANSWER_TILE_ROWS - 1
+
+  for (let r = startRow; r <= endRow; r++) {
+    if (r < 0 || r >= QUESTION_SECTION_ROWS) continue
+    const row = heights[r]
+    for (let c = 0; c < COLUMNS; c++) {
+      const inLeft = c >= leftStartCol && c <= leftEndCol
+      const inRight = c >= rightStartCol && c <= rightEndCol
+      if (!inLeft && !inRight) row[c] = blockedHeight
+    }
+  }
+
+  return heights
+}
+
 function positionTwoAnswerTiles(startZ: number): {
   textPos: [number, number, number]
   tilePositions: [number, number, number][]

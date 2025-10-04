@@ -20,6 +20,7 @@ import {
   colToX,
   COLUMNS,
   generateObstacleHeights,
+  generateQuestionHeights,
   MAX_Z,
   OBSTACLE_SECTION_ROWS,
   positionQuestionAndAnswerTiles,
@@ -64,11 +65,17 @@ const Terrain: FC = () => {
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  // Entry lift animation config (rows -> world units via BOX_SIZE)
+  const ENTRY_LIFT_UNITS = BOX_SIZE * 2 // set them down by 1 unit
+  const ENTRY_FRONT_OFFSET_ROWS = 8 // finish lifting this many rows before MAX_Z (player) during terrain
+  const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
   // Obstacle section precomputation buffer
   const obstacleSectionBuffer = useRef<RowData[][]>([])
   const obstacleTopUpScheduled = useRef(false)
   const OBSTACLE_BUFFER_SECTIONS = 10
   const OBSTACLE_TOPUP_THRESHOLD = 4
+
+  // During question phase, extend front offset so all 16 rows are up.
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
@@ -91,8 +98,13 @@ const Terrain: FC = () => {
 
   // Build a contiguous block of question rows
   function insertQuestionRows(isFirstQuestion = false) {
-    const blocks: RowData[] = Array.from({ length: QUESTION_SECTION_ROWS }, (_, i) => ({
-      heights: new Array(COLUMNS).fill(OPEN_HEIGHT),
+    const heights = generateQuestionHeights({
+      isFirstQuestion,
+      openHeight: OPEN_HEIGHT,
+      blockedHeight: BLOCKED_HEIGHT,
+    })
+    const blocks: RowData[] = heights.map((row, i) => ({
+      heights: row,
       type: 'question',
       isSectionStart: i === 0,
       isSectionEnd: i === QUESTION_SECTION_ROWS - 1,
@@ -299,6 +311,12 @@ const Terrain: FC = () => {
     scrollZ.current += zStep
 
     // For each visible row slot, compute wrapped Z and apply any content wraps deterministically
+    // Precompute thresholds once per frame
+    // Use a longer front offset during question stage so all 16 rows are up
+    const entryFrontOffsetRows = stage === Stage.QUESTION ? QUESTION_SECTION_ROWS : ENTRY_FRONT_OFFSET_ROWS
+    const entryEndZ = MAX_Z - entryFrontOffsetRows * BOX_SIZE
+    const entryStartZ = entryEndZ - ENTRY_RAISE_DURATION_ROWS * BOX_SIZE
+
     for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
       const firstBodyIndex = rowIndex * COLUMNS
       // Wrapped Z for this row slot
@@ -316,6 +334,17 @@ const Terrain: FC = () => {
         wrapCountByRow.current[rowIndex] = wraps
       }
 
+      // Compute per-row Y offset for entry lift animation
+      let yOffset = -ENTRY_LIFT_UNITS
+      if (z >= entryStartZ) {
+        if (z >= entryEndZ) {
+          yOffset = 0
+        } else {
+          const t = (z - entryStartZ) / (entryEndZ - entryStartZ)
+          yOffset = -ENTRY_LIFT_UNITS * (1 - t)
+        }
+      }
+
       // Move all column boxes in this row to the computed absolute position
       for (let col = 0; col < COLUMNS; col++) {
         const body = boxRigidBodies.current[firstBodyIndex + col]
@@ -323,7 +352,8 @@ const Terrain: FC = () => {
         const bodyIndex = firstBodyIndex + col
         const t = tmpTranslation.current
         t.x = xByBodyIndex.current[bodyIndex]
-        t.y = yByBodyIndex.current[bodyIndex]
+        const baseY = yByBodyIndex.current[bodyIndex]
+        t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
         t.z = z
         body.setTranslation(t, true)
       }
