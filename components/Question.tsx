@@ -2,34 +2,42 @@
 
 import { Text } from '@react-three/drei'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { forwardRef } from 'react'
+import { forwardRef, useMemo } from 'react'
 import { Group, type Vector3Tuple } from 'three'
 
-import { type AnswerUserData, type TopicUserData } from '@/model/schema'
-import { QUESTION_TEXT_MAX_WIDTH, QUESTION_TEXT_ROWS } from './terrain/terrainBuilder'
+import { type AnswerUserData } from '@/model/schema'
+
+import { useGameStore } from './GameProvider'
 import { PLAYER_RADIUS } from './player/PlayerHUD'
+import {
+  ANSWER_TILE_HEIGHT,
+  ANSWER_TILE_WIDTH,
+  QUESTION_TEXT_MAX_WIDTH,
+  QUESTION_TEXT_ROWS,
+} from './terrain/terrainBuilder'
 
 type AnswerTileProps = {
-  text: string | null
   position: Vector3Tuple
-  userData?: AnswerUserData | TopicUserData
-  tileWidth?: number
-  tileHeight?: number
+  index: number
 }
-const DEFAULT_TILE_WIDTH = 2
-const DEFAULT_TILE_HEIGHT = 2
 
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
-  (
-    {
-      text,
-      position,
-      userData,
-      tileWidth = DEFAULT_TILE_WIDTH,
-      tileHeight = DEFAULT_TILE_HEIGHT,
-    },
-    ref,
-  ) => {
+  ({ position, index }, ref) => {
+    const currentQuestion = useGameStore((s) => s.questions[s.currentQuestionIndex])
+
+    const answer = currentQuestion.answers[index]
+
+    const userData = useMemo<AnswerUserData | undefined>(() => {
+      if (!answer) return undefined
+      return {
+        type: 'answer',
+        answer,
+        questionId: currentQuestion.id,
+      }
+    }, [answer, currentQuestion.id])
+
+    const text = answer?.text ?? ''
+
     return (
       <RigidBody
         ref={ref}
@@ -43,13 +51,13 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         colliders={false}
         userData={userData}>
         <CuboidCollider
-          args={[tileWidth / 2, tileHeight / 2, PLAYER_RADIUS * 2]}
+          args={[ANSWER_TILE_WIDTH / 2, ANSWER_TILE_HEIGHT / 2, PLAYER_RADIUS * 2]}
           sensor={true}
           mass={0}
           friction={0}
         />
         <mesh>
-          <planeGeometry args={[tileWidth, tileHeight]} />
+          <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
           <meshStandardMaterial color="#fff" transparent={true} opacity={0.7} />
         </mesh>
         <Text
@@ -58,7 +66,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           anchorX="center"
           anchorY="middle"
           textAlign="center"
-          maxWidth={tileWidth - 0.2}
+          maxWidth={ANSWER_TILE_WIDTH - 0.2}
           position={[0, 0.0, 0.01]}
           rotation={[0, 0, 0]}>
           {text}

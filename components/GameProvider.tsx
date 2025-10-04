@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
-import { type Answer, type Question, topicQuestion } from '@/model/schema'
+import { type Answer, AnswerUserData, type Question, topicQuestion } from '@/model/schema'
 
 export enum Stage {
   INTRO = 'intro',
@@ -22,22 +22,18 @@ type GameState = {
   stage: Stage
   terrainSpeed: number // Speed of terrain movement
 
+  topic: string | null
+
   // Questions
   currentDifficulty: number
   currentQuestionIndex: number
   questions: Question[]
   getAndSetNextQuestion: () => Promise<void>
 
-  // Player interaction
-  topic: string | null
-  confirmingTopic: string | null
-  setConfirmingTopic: (topic: string | null) => void
-  onTopicConfirmed: () => void
-
-  confirmingAnswer: Answer | null
-  setConfirmingAnswer: (answer: Answer | null) => void
+  confirmingAnswer: AnswerUserData | null
+  setConfirmingAnswer: (data: AnswerUserData | null) => void
   onAnswerConfirmed: () => void
-  answerIds: string[] // Answers that have been confirmed
+  confirmedAnswers: AnswerUserData[] // Answers that have been confirmed
 
   goToStage: (stage: Stage) => void
 }
@@ -53,19 +49,17 @@ const INITIAL_STATE: Pick<
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
-  | 'confirmingTopic'
   | 'confirmingAnswer'
-  | 'answerIds'
+  | 'confirmedAnswers'
 > = {
   stage: Stage.QUESTION,
   terrainSpeed: 0,
   topic: null,
-  confirmingTopic: null,
-  currentDifficulty: 1,
+  currentDifficulty: 0,
   questions: [topicQuestion],
   currentQuestionIndex: 0,
   confirmingAnswer: null,
-  answerIds: [],
+  confirmedAnswers: [],
 }
 
 type CreateStoreParams = {
@@ -100,27 +94,17 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         currentQuestionIndex: currentQuestionIndex + 1,
       })
     },
-    setConfirmingTopic: (topic) => {
-      const { topic: currentTopic } = get()
-      if (!!currentTopic) return // Topic already confirmed, ignore
-      set({ confirmingTopic: topic })
-    },
-    onTopicConfirmed: async () => {
-      const { confirmingTopic, getAndSetNextQuestion, goToStage } = get()
-      if (!confirmingTopic) {
-        console.error('No topic selected to confirm')
+    setConfirmingAnswer: (data: AnswerUserData | null) => {
+      if (!data) {
+        set({ confirmingAnswer: null })
         return
       }
-      set({
-        topic: confirmingTopic,
-        confirmingTopic: null,
-      })
-      goToStage(Stage.TERRAIN)
-      getAndSetNextQuestion()
-    },
-    setConfirmingAnswer: (answer: Answer | null) => {
-      console.warn('Answer selected:', answer)
-      set({ confirmingAnswer: answer })
+      const { confirmedAnswers: answers } = get()
+      if (answers.find((a) => a.questionId === data.questionId)) {
+        console.warn('Answer already confirmed for this question:', data)
+        return
+      }
+      set({ confirmingAnswer: data })
     },
     onAnswerConfirmed: async () => {
       const { confirmingAnswer, goToStage, getAndSetNextQuestion } = get()
@@ -128,17 +112,22 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         console.error('No answer selected to confirm')
         return
       }
-      if (!confirmingAnswer.isCorrect) {
+      if (!confirmingAnswer.answer.isCorrect) {
         console.warn('Wrong answer chosen! Game over.')
+        set((s) => ({ ...s, confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer] }))
         goToStage(Stage.GAME_OVER)
         return
       }
 
-      console.log('Correct answer chosen:', confirmingAnswer)
       const currentDifficulty = get().currentDifficulty
       const newDifficulty = Math.min(currentDifficulty + 1, 10)
-      set({ currentDifficulty: newDifficulty, confirmingAnswer: null })
-
+      set((s) => ({
+        ...s,
+        currentDifficulty: newDifficulty,
+        confirmingAnswer: null,
+        confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
+        topic: s.topic ?? confirmingAnswer.answer.text, // 1st correct answer becomes the topic
+      }))
       goToStage(Stage.TERRAIN)
       getAndSetNextQuestion()
     },

@@ -13,11 +13,9 @@ import { Stage, useGameStore } from '@/components/GameProvider'
 import { AnswerTile, QuestionText } from '@/components/Question'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import useThrottledLog from '@/hooks/useThrottledLog'
-import { type AnswerUserData, type Question, type TopicUserData } from '@/model/schema'
+import { type Question } from '@/model/schema'
 
 import {
-  ANSWER_TILE_HEIGHT,
-  ANSWER_TILE_WIDTH,
   BOX_SIZE,
   BOX_SPACING,
   colToX,
@@ -320,19 +318,6 @@ const Terrain: FC = () => {
     moveQuestionElements(zStep)
   })
 
-  // Derive current userData types for tiles
-  const tileUserData = useMemo<(AnswerUserData | TopicUserData)[]>(() => {
-    // Topic selection uses TopicUserData for different intersection events.
-    if (currentQuestionIndex === 0)
-      return activeQuestion.answers.map((a) => ({ type: 'topic', topic: a.text }))
-
-    return activeQuestion.answers.map((a) => ({
-      type: 'answer',
-      answer: a,
-      questionIndex: currentQuestionIndex,
-    }))
-  }, [activeQuestion, currentQuestionIndex])
-
   if (!boxInstances.length) return null
 
   return (
@@ -363,15 +348,7 @@ const Terrain: FC = () => {
       />
       {/* Do not conditionally mount these tiles */}
       {answerRefs.map((ref, i) => (
-        <AnswerTile
-          key={`ans-${i}-${currentQuestionIndex}`}
-          ref={ref}
-          userData={tileUserData?.[i]}
-          text={activeQuestion.answers[i]?.text}
-          tileWidth={ANSWER_TILE_WIDTH}
-          tileHeight={ANSWER_TILE_HEIGHT}
-          position={[0, -100, -100]}
-        />
+        <AnswerTile key={`answer-tile-${i}`} ref={ref} index={i} position={[0, -100, -100]} />
       ))}
     </group>
   )
