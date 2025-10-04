@@ -13,7 +13,7 @@ import {
 } from 'ai'
 import { z } from 'zod'
 
-import { QuestionSchema } from './schema'
+import { LLMQuestionSchema } from './schema'
 
 export const generateQuestion = tool({
   description: 'Generate a quiz question with multiple choice answers for a given topic',
@@ -25,7 +25,7 @@ export const generateQuestion = tool({
       .max(10)
       .describe('The difficulty level of the question, from 1 (easy) to 10 (hard)'),
   }),
-  outputSchema: QuestionSchema,
+  outputSchema: LLMQuestionSchema,
   execute: async ({ topic, difficulty }, { messages }) => {
     // Extract previous questions (as text) from tool results in messages to avoid repeats
     const previousQuestions: string[] = []
@@ -64,7 +64,7 @@ export const generateQuestion = tool({
 
     const result = await generateObject({
       model: openai('gpt-5-mini'),
-      schema: QuestionSchema,
+      schema: LLMQuestionSchema,
       prompt,
     })
     return result.object

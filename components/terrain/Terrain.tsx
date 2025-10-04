@@ -17,7 +17,6 @@ import { type Question } from '@/model/schema'
 
 import {
   BOX_SIZE,
-  BOX_SPACING,
   colToX,
   COLUMNS,
   generateObstacleHeights,
@@ -142,7 +141,7 @@ const Terrain: FC = () => {
 
         for (let col = 0; col < COLUMNS; col++) {
           const x = colToX(col)
-          const z = -rowIndex * BOX_SPACING + zOffset
+          const z = -rowIndex * BOX_SIZE + zOffset
           const y = rowData.heights[col]
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
@@ -204,8 +203,8 @@ const Terrain: FC = () => {
   }, [answerRefs, boxInstances.length, boxRigidBodies.current])
 
   // Recycle an entire row in one pass using precomputed row data.
-  function recycleRow({ rowIndex, samplePos }: { rowIndex: number; samplePos: any }) {
-    const newZ = samplePos.z - ROWS_VISIBLE * BOX_SPACING
+  function recycleRow({ rowIndex }: { rowIndex: number }) {
+    const newZ = MAX_Z - ROWS_VISIBLE * BOX_SIZE
     const newRowData = rowsData.current[nextRowIndex.current]
 
     // If the row being recycled was the last obstacle row, the question has just
@@ -271,10 +270,10 @@ const Terrain: FC = () => {
       const rigidBody = boxRigidBodies.current[firstBodyIndex]
       if (!rigidBody) continue
       const samplePos = rigidBody.translation()
-      const shouldRecycleRow = samplePos.z > MAX_Z
+      const shouldRecycleRow = samplePos.z >= MAX_Z
 
       if (shouldRecycleRow) {
-        recycleRow({ rowIndex, samplePos })
+        recycleRow({ rowIndex })
       } else {
         // Move all column boxes in this row forward
         const newZ = samplePos.z + zStep

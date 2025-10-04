@@ -4,14 +4,13 @@ import { createNoise2D } from 'simplex-noise'
 export const COLUMNS = 16
 export const ROWS_VISIBLE = 40
 export const BOX_SIZE = 1
-export const BOX_SPACING = 1
 
 export const QUESTION_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const ANSWER_TILE_COLS = 5
-export const ANSWER_TILE_ROWS = 3
+export const ANSWER_TILE_COLS = 6
+export const ANSWER_TILE_ROWS = 4
 export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * BOX_SIZE
 export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * BOX_SIZE
 export const QUESTION_TEXT_MAX_WIDTH = 8 * BOX_SIZE
@@ -146,7 +145,7 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
 // --- Shared placement helpers ---
 
 // Convert a grid column index (can be fractional for centers) to world X.
-export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
+export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SIZE
 
 // Compute world positions for question text and answer tiles within a 12-row question section.
 // Rows are indexed front (near player) to back relative to startZ:
@@ -170,20 +169,20 @@ function positionFourAnswerTiles(startZ: number): {
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
     0.01,
-    startZ - textCenterRowIndex * BOX_SPACING,
+    startZ - textCenterRowIndex * BOX_SIZE,
   ]
 
   const tilePositions: [number, number, number][] = []
-  const leftCenterCol = 2 + (ANSWER_TILE_COLS - 1) / 2 // 2.5
+  const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2 // 2.5
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2 // 8.5
 
-  const topCenterRow = 8
-  const bottomCenterRow = 12
+  const topCenterRow = 7.5
+  const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + 1 // spacing row
   tilePositions.push(
-    [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
-    [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
-    [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
-    [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+    [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SIZE],
+    [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SIZE],
+    [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SIZE],
+    [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SIZE],
   )
 
   return { textPos, tilePositions }
@@ -197,17 +196,17 @@ function positionTwoAnswerTiles(startZ: number): {
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
     0.01,
-    startZ - textCenterRowIndex * BOX_SPACING,
+    startZ - textCenterRowIndex * BOX_SIZE,
   ]
 
   const tilePositions: [number, number, number][] = []
-  const leftCenterCol = 2 + (ANSWER_TILE_COLS - 1) / 2
+  const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
 
-  const tilesCenterRow = 10
+  const tilesCenterRow = 10.5
   tilePositions.push(
-    [colToX(leftCenterCol), 0.001, startZ - tilesCenterRow * BOX_SPACING],
-    [colToX(rightCenterCol), 0.001, startZ - tilesCenterRow * BOX_SPACING],
+    [colToX(leftCenterCol), 0.001, startZ - tilesCenterRow * BOX_SIZE],
+    [colToX(rightCenterCol), 0.001, startZ - tilesCenterRow * BOX_SIZE],
   )
 
   return { textPos, tilePositions }

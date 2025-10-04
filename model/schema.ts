@@ -7,10 +7,13 @@ export const AnswerSchema = z.object({
 })
 
 // Question schema
-export const QuestionSchema = z.object({
-  id: z.string(),
+export const LLMQuestionSchema = z.object({
   text: z.string(),
   answers: z.array(AnswerSchema),
+})
+
+export const QuestionSchema = LLMQuestionSchema.extend({
+  id: z.string(),
 })
 
 // TypeScript types inferred from the schemas

@@ -25,18 +25,21 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
     const currentQuestion = useGameStore((s) => s.questions[s.currentQuestionIndex])
 
-    const answer = currentQuestion.answers[index]
+    const { text, userData } = useMemo(() => {
+      const answer = currentQuestion.answers[index]
 
-    const userData = useMemo<AnswerUserData | undefined>(() => {
-      if (!answer) return undefined
-      return {
-        type: 'answer',
-        answer,
-        questionId: currentQuestion.id,
-      }
-    }, [answer, currentQuestion.id])
+      const userData: AnswerUserData | undefined = !!answer
+        ? {
+            type: 'answer',
+            answer,
+            questionId: currentQuestion.id,
+          }
+        : undefined
 
-    const text = answer?.text ?? ''
+      const text = answer?.text ?? ''
+
+      return { text, userData }
+    }, [currentQuestion, index])
 
     return (
       <RigidBody
@@ -69,7 +72,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           maxWidth={ANSWER_TILE_WIDTH - 0.2}
           position={[0, 0.0, 0.01]}
           rotation={[0, 0, 0]}>
-          {text}
+          {index}. {text}
         </Text>
       </RigidBody>
     )
