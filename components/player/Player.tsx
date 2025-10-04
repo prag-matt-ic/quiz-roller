@@ -16,10 +16,10 @@ import { type FC, Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
-import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import { useGameStore } from '@/components/GameProvider'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
-import { useGameStore } from '../GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
@@ -139,8 +139,8 @@ const Player: FC = () => {
     }
   })
 
-  const setConfirmingAnswer = useGameStore((state) => state.setConfirmingAnswer)
-  const setConfirmingTopic = useGameStore((state) => state.setConfirmingTopic)
+  const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
+  const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
 
   const onIntersectionEnter: IntersectionEnterHandler = (e) => {
