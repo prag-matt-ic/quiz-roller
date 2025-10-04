@@ -75,8 +75,7 @@ const Terrain: FC = () => {
     return questions[currentQuestionIndex]
   }, [questions, currentQuestionIndex])
 
-  // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
-  const { terrainSpeed } = useTerrainSpeed((normalized) => {
+  function onTerrainSpeedChange(normalized: number) {
     // Interpolate entry window based on normalized speed.
     // 0 => question section fully raised; 1 => terrain entry offset used.
     const frontOffsetRows =
@@ -89,7 +88,10 @@ const Terrain: FC = () => {
       tileShaderRef.current.uEntryStartZ = startZ
       tileShaderRef.current.uEntryEndZ = endZ
     }
-  })
+  }
+
+  // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
+  const { terrainSpeed } = useTerrainSpeed(onTerrainSpeedChange)
   const goToStage = useGameStore((s) => s.goToStage)
   // Track game-over in a ref to avoid re-renders and allow fast checks in frame loop
   const isGameOverRef = useRef(false)
@@ -111,7 +113,6 @@ const Terrain: FC = () => {
   const instancedMeshRef = useRef<InstancedMesh>(null)
 
   const tileShaderRef = useRef<typeof TileFadeShaderMaterial & TileShaderUniforms>(null)
-  // Stable player position vector (shared with shader uniform)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   // Entry lift animation config (rows -> world units via TILE_SIZE)
@@ -197,6 +198,8 @@ const Terrain: FC = () => {
   }
 
   function scheduleObstacleTopUpIfNeeded() {
+    // TODO: return out..
+    // Use React start transition instead of setTimeout?
     if (
       obstacleSectionBuffer.current.length <= OBSTACLE_TOPUP_THRESHOLD &&
       !obstacleTopUpScheduled.current
@@ -472,7 +475,7 @@ const Terrain: FC = () => {
 
   // Per-frame update: compute Z step from speed and frame delta, then move both
   // terrain and question elements in lockstep.
-  useFrame(({}, delta) => {
+  useFrame((_, delta) => {
     if (!isSetup.current) return
     if (!tileShaderRef.current) return
     // Convert normalized speed to world units per second
