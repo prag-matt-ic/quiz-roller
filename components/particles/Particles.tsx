@@ -86,13 +86,13 @@ type Props = {
   isMobile: boolean
 }
 
-const TunnelParticles: FC<Props> = ({ isMobile }) => {
+const Particles: FC<Props> = ({ isMobile }) => {
   const dpr = useThree((s) => s.viewport.dpr)
   const performance = useThree((s) => s.performance).current
   const renderer = useThree((s) => s.gl)
 
   const particlesCount = useMemo(
-    () => Math.pow(isMobile ? 12 : 24 * performance, 2),
+    () => Math.pow(isMobile ? 12 : 40 * performance, 2),
     [isMobile, performance],
   )
   const points = useRef<Points>(null)
@@ -277,7 +277,7 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
   )
 }
 
-export default TunnelParticles
+export default Particles
 
 // Helper function to fill position texture with initial particle data
 const fillPositionTexture = (texturePosition: DataTexture) => {

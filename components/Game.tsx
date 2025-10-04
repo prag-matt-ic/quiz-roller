@@ -11,7 +11,7 @@ import Terrain from '@/components/terrain/Terrain'
 
 import Camera, { CAMERA_POSITIONS } from './Camera'
 import { Stage } from './GameProvider'
-import TunnelParticles from './tunnelParticles/TunnelParticles'
+import Particles from './particles/Particles'
 
 gsap.registerPlugin(useGSAP)
 
@@ -40,7 +40,7 @@ const Game: FC = () => {
           <Level />
         </Physics>
       </Suspense>
-      <TunnelParticles isMobile={false} />
+      <Particles isMobile={false} />
     </Canvas>
   )
 }
