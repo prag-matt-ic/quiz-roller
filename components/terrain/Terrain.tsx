@@ -54,6 +54,8 @@ const Terrain: FC = () => {
 
   const { terrainSpeed } = useTerrainSpeed()
   const goToStage = useGameStore((s) => s.goToStage)
+  // Track game-over in a ref to avoid re-renders and allow fast checks in frame loop
+  const isGameOverRef = useRef(false)
 
   const boxRigidBodies = useRef<RapierRigidBody[]>(null)
   const [boxInstances, setBoxInstances] = useState<InstancedRigidBodyProps[]>([])
@@ -67,7 +69,7 @@ const Terrain: FC = () => {
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   // Entry lift animation config (rows -> world units via BOX_SIZE)
   const ENTRY_LIFT_UNITS = BOX_SIZE * 2 // set them down by 1 unit
-  const ENTRY_FRONT_OFFSET_ROWS = 8 // finish lifting this many rows before MAX_Z (player) during terrain
+  const ENTRY_FRONT_OFFSET_ROWS = 12 // finish lifting this many rows before MAX_Z (player) during terrain
   const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
   // Obstacle section precomputation buffer
   const obstacleSectionBuffer = useRef<RowData[][]>([])
@@ -249,6 +251,11 @@ const Terrain: FC = () => {
   }
 
   useEffect(() => {
+    // Keep a ref in sync with stage for use inside frame loop
+    isGameOverRef.current = stage === Stage.GAME_OVER
+  }, [stage])
+
+  useEffect(() => {
     if (!questionGroupRef.current) return
     if (!boxInstances.length) return
     if (!boxRigidBodies.current) return
@@ -313,7 +320,8 @@ const Terrain: FC = () => {
     // For each visible row slot, compute wrapped Z and apply any content wraps deterministically
     // Precompute thresholds once per frame
     // Use a longer front offset during question stage so all 16 rows are up
-    const entryFrontOffsetRows = stage === Stage.QUESTION ? QUESTION_SECTION_ROWS : ENTRY_FRONT_OFFSET_ROWS
+    const entryFrontOffsetRows =
+      stage === Stage.QUESTION ? QUESTION_SECTION_ROWS : ENTRY_FRONT_OFFSET_ROWS
     const entryEndZ = MAX_Z - entryFrontOffsetRows * BOX_SIZE
     const entryStartZ = entryEndZ - ENTRY_RAISE_DURATION_ROWS * BOX_SIZE
 
@@ -334,14 +342,16 @@ const Terrain: FC = () => {
         wrapCountByRow.current[rowIndex] = wraps
       }
 
-      // Compute per-row Y offset for entry lift animation
+      // Compute per-row Y offset for entry lift animation (ignored during game over)
       let yOffset = -ENTRY_LIFT_UNITS
-      if (z >= entryStartZ) {
-        if (z >= entryEndZ) {
-          yOffset = 0
-        } else {
-          const t = (z - entryStartZ) / (entryEndZ - entryStartZ)
-          yOffset = -ENTRY_LIFT_UNITS * (1 - t)
+      if (!isGameOverRef.current) {
+        if (z >= entryStartZ) {
+          if (z >= entryEndZ) {
+            yOffset = 0
+          } else {
+            const tLift = (z - entryStartZ) / (entryEndZ - entryStartZ)
+            yOffset = -ENTRY_LIFT_UNITS * (1 - tLift)
+          }
         }
       }
 
@@ -352,8 +362,13 @@ const Terrain: FC = () => {
         const bodyIndex = firstBodyIndex + col
         const t = tmpTranslation.current
         t.x = xByBodyIndex.current[bodyIndex]
-        const baseY = yByBodyIndex.current[bodyIndex]
-        t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
+        if (isGameOverRef.current) {
+          // Force closed height while game over is active
+          t.y = BLOCKED_HEIGHT
+        } else {
+          const baseY = yByBodyIndex.current[bodyIndex]
+          t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
+        }
         t.z = z
         body.setTranslation(t, true)
       }

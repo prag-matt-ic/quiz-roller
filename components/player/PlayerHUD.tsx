@@ -2,19 +2,15 @@
 
 import { Html } from '@react-three/drei'
 import gsap from 'gsap'
-import { type FC, memo, useRef } from 'react'
+import { type FC, useRef } from 'react'
 import { Transition } from 'react-transition-group'
 
-import { useGameStore } from '../GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 
 export const PLAYER_RADIUS = 0.5
 const CONFIRMATION_DURATION_S = 2 // seconds
 
-type Props = {}
-
-const PlayerHUD: FC<Props> = () => {
-  const confirmingTopic = useGameStore((s) => s.confirmingTopic)
-  const onTopicConfirmed = useGameStore((s) => s.onTopicConfirmed)
+const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
   const onAnswerConfirmed = useGameStore((s) => s.onAnswerConfirmed)
 
@@ -37,7 +33,6 @@ const PlayerHUD: FC<Props> = () => {
           duration: CONFIRMATION_DURATION_S,
           ease: 'linear',
           onComplete: () => {
-            if (!!confirmingTopic) onTopicConfirmed()
             if (!!confirmingAnswer) onAnswerConfirmed()
           },
         },
@@ -66,8 +61,8 @@ const PlayerHUD: FC<Props> = () => {
       position={[1.0, PLAYER_RADIUS * 2, PLAYER_RADIUS]}
       className="pointer-events-none relative select-none">
       <Transition
-        in={!!confirmingAnswer || !!confirmingTopic}
-        timeout={{ enter: 0, exit: 250 }}
+        in={!!confirmingAnswer}
+        timeout={{ enter: 0, exit: 300 }}
         mountOnEnter={true}
         unmountOnExit={true}
         onEnter={onEnter}
@@ -75,9 +70,9 @@ const PlayerHUD: FC<Props> = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative flex w-fit origin-bottom-left flex-col gap-1 rounded-xl border-2 border-black bg-black/80 p-2.5">
-          <div className="animate-pulse text-sm font-semibold">Confirming</div>
-          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+          className="relative flex w-fit origin-bottom-left flex-col gap-1 rounded-2xl bg-white p-2.5">
+          <div className="animate-pulse text-2xl font-semibold text-black">Confirming</div>
+          <div className="relative h-5 w-32 overflow-hidden rounded-full bg-white/20">
             <div
               id="progress-bar"
               className="absolute h-full w-full -translate-x-full bg-white"

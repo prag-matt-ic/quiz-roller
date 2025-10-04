@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
-import { type Answer, AnswerUserData, type Question, topicQuestion } from '@/model/schema'
+import { type AnswerUserData, type Question, topicQuestion } from '@/model/schema'
 
 export enum Stage {
   INTRO = 'intro',
@@ -114,7 +114,11 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
       if (!confirmingAnswer.answer.isCorrect) {
         console.warn('Wrong answer chosen! Game over.')
-        set((s) => ({ ...s, confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer] }))
+        set((s) => ({
+          ...s,
+          confirmingAnswer: null,
+          confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
+        }))
         goToStage(Stage.GAME_OVER)
         return
       }
@@ -135,6 +139,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     goToStage: (stage: Stage) => {
       // Basic function for now, can be expanded later
       if (stage === Stage.QUESTION) {
+        set({ stage: Stage.QUESTION })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
           duration: 2,
@@ -143,14 +148,13 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {
-            set({ stage: Stage.QUESTION })
-          },
+          onComplete: () => {},
         })
         return
       }
 
       if (stage === Stage.TERRAIN) {
+        set({ stage: Stage.TERRAIN })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
           duration: 2,
@@ -159,13 +163,12 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {
-            set({ stage: Stage.TERRAIN })
-          },
+          onComplete: () => {},
         })
       }
 
       if (stage === Stage.GAME_OVER) {
+        set({ stage: Stage.GAME_OVER })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
           duration: 4,
@@ -174,9 +177,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {
-            set({ stage: Stage.GAME_OVER })
-          },
+          onComplete: () => {},
         })
         return
       }
