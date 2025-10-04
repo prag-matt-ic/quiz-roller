@@ -36,9 +36,6 @@ const Player: FC = () => {
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
 
-  // Multiplier to adjust rolling speed visually (tweak for aesthetics)
-  const ROLLING_SPEED_MULTIPLIER = 0.8
-
   const { controllerRef, input } = usePlayerController()
 
   const MOVEMENT_SPEED = 6.5 // units per second

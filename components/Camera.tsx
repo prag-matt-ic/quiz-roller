@@ -60,7 +60,8 @@ const Camera: FC<Props> = () => {
   }, [stage, playerPosition])
 
   useFrame((_, delta) => {
-    if (stage === Stage.TERRAIN && cameraControls.current) {
+    if (!cameraControls.current) return
+    if (stage === Stage.TERRAIN || stage === Stage.QUESTION) {
       // Smoothly follow player x position
       const targetX = playerPosition.current.x
       cameraControls.current.setLookAt(
