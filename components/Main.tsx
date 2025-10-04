@@ -14,7 +14,7 @@ const Main: FC = () => {
     difficulty,
   }: {
     topic: string
-    previousQuestions: string[]
+    previousQuestions: Array<Question & { difficulty?: number }>
     difficulty: number
   }): Promise<Question> => {
     const response = await fetch('/api/question', {

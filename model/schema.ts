@@ -2,18 +2,21 @@ import { z } from 'zod'
 
 // Answer schema
 export const AnswerSchema = z.object({
-  text: z.string(),
+  text: z.string().min(1),
   isCorrect: z.boolean(),
 })
 
-// Question schema
+// LLM response schema (strict two-option MCQ with subtopic)
 export const LLMQuestionSchema = z.object({
-  text: z.string(),
-  answers: z.array(AnswerSchema),
+  text: z.string().min(1),
+  subtopic: z.string().min(1),
+  answers: z.array(AnswerSchema).length(2),
 })
 
+// App-level question schema (allows >2 options for initial topic selection)
 export const QuestionSchema = LLMQuestionSchema.extend({
   id: z.string(),
+  difficulty: z.number().min(0).max(10),
 })
 
 // TypeScript types inferred from the schemas
@@ -45,6 +48,8 @@ export const TOPICS: string[] = [
 
 export const topicQuestion: Question = {
   id: 'topic',
+  subtopic: '-',
+  difficulty: 0,
   text: 'Select a topic to begin rolling',
   answers: TOPICS.map((topic) => ({
     text: topic,

@@ -1,7 +1,7 @@
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 
 uniform float uTime;
-uniform float uTimeMultiplier;
+uniform float uTerrainSpeed; // 0..1 from gameplay
 uniform float uDeltaTime;
 uniform bool uIsIdle;
 
@@ -22,7 +22,7 @@ void main() {
     vec3 velocity = currentVel.xyz;
     float life = currentPos.w;
 
-    if (uIsIdle) {gl_FragColor = vec4(velocity, 1.0); return;}
+    if (uIsIdle) { gl_FragColor = vec4(velocity, 1.0); return; }
     
     // If particle is dead or behind player, reset velocity
     if (life <= 0.0 || currentPos.z > 5.0) {
@@ -37,7 +37,10 @@ void main() {
             vec3 noiseForce = noise3D(vec3(currentPos.xy * 0.1, uTime * 0.2)) * 3.0;
             
             // Apply forces
-            velocity += noiseForce * uDeltaTime * uTimeMultiplier;
+            // Compute a subtle force scale that keeps some motion even at speed 0
+            float s = smoothstep(0.0, 0.6, clamp(uTerrainSpeed, 0.0, 1.0));
+            float forceMul = mix(0.12, 1.0, s);
+            velocity += noiseForce * uDeltaTime * forceMul;
             
             // Maintain forward momentum but allow some drift
             velocity.z = mix(velocity.z, 15.0, 0.02); // Slowly return to base forward speed

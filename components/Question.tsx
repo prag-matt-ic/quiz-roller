@@ -59,9 +59,10 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           mass={0}
           friction={0}
         />
+        {/* Hidden intentionally */}
         <mesh>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
-          <meshStandardMaterial color="#fff" transparent={true} opacity={0.7} />
+          <meshStandardMaterial color="#fff" transparent={true} opacity={0.3} />
         </mesh>
         <Text
           color="#000"

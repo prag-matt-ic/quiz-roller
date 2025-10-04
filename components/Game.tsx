@@ -40,6 +40,7 @@ const Game: FC = () => {
           <Level />
         </Physics>
       </Suspense>
+      <TunnelParticles isMobile={false} />
     </Canvas>
   )
 }
@@ -51,7 +52,6 @@ const Level: FC = () => {
     <>
       <Terrain />
       <Player />
-      {/* <TunnelParticles isMobile={false} /> */}
     </>
   )
 }

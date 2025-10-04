@@ -1,19 +1,25 @@
-// Instanced box fade vertex shader
+// Instanced tile fade vertex shader
 // - instanceOpen: 1.0 for open tiles, 0.0 for blocked
 // - instanceBaseY: base Y assigned for the instance (for reference/extension)
 // - uEntryStartZ/uEntryEndZ: world-Z window over which open tiles fade in
+// - uPlayerWorldPos: player world-space position for simple tile highlighting
 
 attribute float instanceOpen;
 attribute float instanceBaseY;
 
 uniform float uEntryStartZ;
 uniform float uEntryEndZ;
+uniform vec3 uPlayerWorldPos;
 
 varying float vAlpha;
+varying vec3 vInstanceCenter;
 
 void main() {
   // Compute world position for current vertex of the instance
   vec4 worldPos = modelMatrix * instanceMatrix * vec4(position, 1.0);
+
+  // Compute instance center in world space once per vertex (constant per instance)
+  vInstanceCenter = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 
   // Fade only for open tiles as they enter the threshold window
   float denom = max(0.0001, (uEntryEndZ - uEntryStartZ));
@@ -23,4 +29,3 @@ void main() {
 
   gl_Position = projectionMatrix * viewMatrix * worldPos;
 }
-

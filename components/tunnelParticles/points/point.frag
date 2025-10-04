@@ -18,7 +18,7 @@ void main() {
     falloff = pow(falloff, 2.0); // Apply power of 2 for sharper falloff
     
     // Combine with life for final alpha
-    float alpha = falloff * vLife * 0.9;
+    float alpha = falloff * vLife;
     
     // Color variation based on seed
     vec3 baseColor = vec3(0.0, 1.0, 0.8); // Teal

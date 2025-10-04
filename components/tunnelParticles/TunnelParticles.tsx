@@ -58,14 +58,14 @@ type PositionShaderUniforms = {
   uIsIdle: { value: boolean }
   uTime: { value: number }
   uDeltaTime: { value: number }
-  uTimeMultiplier: { value: number }
+  uTerrainSpeed: { value: number }
 }
 
 type VelocityShaderUniforms = {
   uIsIdle: { value: boolean }
   uTime: { value: number }
   uDeltaTime: { value: number }
-  uTimeMultiplier: { value: number }
+  uTerrainSpeed: { value: number }
 }
 
 const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
@@ -110,7 +110,7 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
 
   const isPlaying = useGameStore((s) => s.stage !== Stage.INTRO)
   const { terrainSpeed } = useTerrainSpeed()
-  const lastTime = useRef(0)
+  const accumTime = useRef(0)
 
   // ------------------
   // PARTICLE GEOMETRY SETUP
@@ -186,7 +186,7 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
         positionUniforms.current.uIsIdle = { value: true }
         positionUniforms.current.uTime = { value: 0.0 }
         positionUniforms.current.uDeltaTime = { value: 0.016 }
-        positionUniforms.current.uTimeMultiplier = { value: 1.0 }
+        positionUniforms.current.uTerrainSpeed = { value: 0.0 }
       }
 
       // Set velocity uniforms
@@ -196,7 +196,7 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
         velocityUniforms.current.uIsIdle = { value: true }
         velocityUniforms.current.uTime = { value: 0.0 }
         velocityUniforms.current.uDeltaTime = { value: 0.016 }
-        velocityUniforms.current.uTimeMultiplier = { value: 1.0 }
+        velocityUniforms.current.uTerrainSpeed = { value: 0.0 }
       }
 
       // Initialize GPU compute
@@ -207,7 +207,7 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
     }
   }, [renderer, textureSize, seeds])
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     if (
       !pointsShaderMaterial.current ||
       !gpuCompute.current ||
@@ -218,21 +218,21 @@ const TunnelParticles: FC<Props> = ({ isMobile }) => {
     )
       return
 
-    const time = gameTime.current
-    const deltaTime = time - lastTime.current
-    lastTime.current = time
+    const clampedDt = Math.min(dt, 0.033) // Cap at ~30fps to stabilize sim
+    accumTime.current += clampedDt
+    const time = accumTime.current
 
     // Update position uniforms
     positionUniforms.current.uIsIdle.value = !isPlaying
     positionUniforms.current.uTime.value = time
-    positionUniforms.current.uDeltaTime.value = Math.min(deltaTime, 0.033) // Cap at ~30fps
-    positionUniforms.current.uTimeMultiplier.value = timeMultiplier.current
+    positionUniforms.current.uDeltaTime.value = clampedDt
+    positionUniforms.current.uTerrainSpeed.value = terrainSpeed.current
 
     // Update velocity uniforms
     velocityUniforms.current.uIsIdle.value = !isPlaying
     velocityUniforms.current.uTime.value = time
-    velocityUniforms.current.uDeltaTime.value = Math.min(deltaTime, 0.033)
-    velocityUniforms.current.uTimeMultiplier.value = timeMultiplier.current
+    velocityUniforms.current.uDeltaTime.value = clampedDt
+    velocityUniforms.current.uTerrainSpeed.value = terrainSpeed.current
 
     // Compute the simulation
     gpuCompute.current.compute()
@@ -284,18 +284,17 @@ const fillPositionTexture = (texturePosition: DataTexture) => {
   const posArray = texturePosition.image.data as Float32Array
 
   for (let k = 0, kl = posArray.length; k < kl; k += 4) {
-    // Random position within tunnel radius (6.4 meters)
-    const angle = Math.random() * Math.PI * 2
-    const radius = Math.random() * 6.0 // Slightly smaller than tunnel radius for safety
-    const x = Math.cos(angle) * radius
-    const y = Math.sin(angle) * radius
-    const z = -40 - Math.random() * 20 // Start around spawn zone with some variation
+    // Spawn inside a wide, short box above terrain (terrain at y=0)
+    // X in [-6, 6] (width ~12), Y in [0.5, 4.5] (height ~4), Z in [-60, -40]
+    const x = -6 + Math.random() * 12
+    const y = 0.5 + Math.random() * 4.0
+    const z = -60 + Math.random() * 20
 
     // Position (xyz) and life (w)
     posArray[k + 0] = x
     posArray[k + 1] = y
     posArray[k + 2] = z
-    posArray[k + 3] = Math.random() // Random initial life
+    posArray[k + 3] = 0.8 + Math.random() * 0.2 // Start with fairly high life
   }
 
   texturePosition.needsUpdate = true

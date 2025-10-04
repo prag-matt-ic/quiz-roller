@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
 
+// Returns a ref to the current normalized terrain speed [0,1].
+// Optionally accepts a callback invoked on changes (and once on mount).
 export function useTerrainSpeed(onTerrainSpeedChange?: (speed: number) => void) {
   const gameStoreAPI = useGameStoreAPI()
 
@@ -18,6 +20,11 @@ export function useTerrainSpeed(onTerrainSpeedChange?: (speed: number) => void) 
     return unsubscribe
   }, [gameStoreAPI, onTerrainSpeedChange])
 
+  // Fire once on mount with the current value so consumers can initialize.
+  useEffect(() => {
+    onTerrainSpeedChange?.(terrainSpeed.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return { terrainSpeed }
 }
-

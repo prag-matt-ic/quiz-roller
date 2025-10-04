@@ -20,7 +20,9 @@ export enum Stage {
 
 type GameState = {
   stage: Stage
-  terrainSpeed: number // Speed of terrain movement
+  // Normalized terrain speed in range [0, 1].
+  // Consumers can scale by a constant to get world units per second.
+  terrainSpeed: number
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
@@ -73,7 +75,7 @@ type CreateStoreParams = {
     difficulty,
   }: {
     topic: string
-    previousQuestions: string[]
+    previousQuestions: Question[]
     difficulty: number
   }) => Promise<Question>
 }
@@ -88,16 +90,17 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
+
       const nextQuestion = await fetchQuestion({
         topic: topic!,
-        previousQuestions: [],
+        previousQuestions: questions,
         difficulty: currentDifficulty,
       })
       console.warn('Question received:', nextQuestion)
-      set({
-        questions: [...questions, nextQuestion],
+      set((s) => ({
+        questions: [...s.questions, nextQuestion],
         currentQuestionIndex: currentQuestionIndex + 1,
-      })
+      }))
     },
     setConfirmingAnswer: (data: AnswerUserData | null) => {
       if (!data) {
@@ -149,7 +152,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         speedTween = gsap.to(speedTweenTarget, {
           duration: 2,
           ease: 'power2.out',
-          value: 0,
+          value: 0, // normalized
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
@@ -164,7 +167,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         speedTween = gsap.to(speedTweenTarget, {
           duration: 2,
           ease: 'power2.out',
-          value: 5,
+          value: 1, // normalized
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
@@ -178,7 +181,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         speedTween = gsap.to(speedTweenTarget, {
           duration: 4,
           ease: 'power2.out',
-          value: 0,
+          value: 0, // normalized
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },

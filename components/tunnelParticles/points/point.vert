@@ -7,9 +7,10 @@ attribute float seed;
 varying float vLife;
 varying float vSeed;
 
-const float MIN_PT_SIZE = 8.0;
-const float LG_PT_SIZE = 40.0;
-const float XL_PT_SIZE = 80.0;
+// Increased sizes for better visibility
+const float MIN_PT_SIZE = 12.0;
+const float LG_PT_SIZE = 56.0;
+const float XL_PT_SIZE = 112.0;
 
 void main() {
     // DPR adjusted point sizes (ensuring uniformity across devices)

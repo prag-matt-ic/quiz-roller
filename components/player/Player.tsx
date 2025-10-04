@@ -16,7 +16,8 @@ import { type FC, Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
-import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
+import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
@@ -118,17 +119,18 @@ const Player: FC = () => {
     // Convert displacement to velocity (units / second)
     vPlayerRef.current.copy(dispRef.current).divideScalar(Math.max(delta, EPS))
 
-    // Terrain scroll velocity.
+    // Terrain scroll velocity (scale normalized speed by base units).
     // Convention: "forward" is -Z in your input mapping,
     // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
     // and the ball's relative forward velocity is -terrainSpeed on Z.
-    vTerrainRef.current.set(0, 0, -terrainSpeed.current)
+    const terrainSpeedUnits = terrainSpeed.current * TERRAIN_SPEED_UNITS
+    vTerrainRef.current.set(0, 0, -terrainSpeedUnits)
 
     // Relative velocity of ball w.r.t. ground on the contact plane
     vRelRef.current.copy(vPlayerRef.current).add(vTerrainRef.current)
     vRelRef.current.y = 0 // constrain to surface plane (assumes flat ground)
 
-    if (input.current.backward && Math.abs(terrainSpeed.current) > EPS) {
+    if (input.current.backward && Math.abs(terrainSpeedUnits) > EPS) {
       // treat ball as static relative to ground: no rolling
       vRelRef.current.set(0, 0, 0)
     }

@@ -10,35 +10,47 @@ export async function POST(req: Request) {
     topic,
     previousQuestions = [],
     difficulty = 1,
-  }: { topic: string; previousQuestions: string[]; difficulty: number } = await req.json()
-
-  const getDifficultyDescription = (level: number) => {
-    if (level <= 1) return 'very easy, basic knowledge'
-    if (level <= 5) return 'moderate difficulty, intermediate knowledge'
-    if (level <= 8) return 'challenging, advanced knowledge'
-    return 'very difficult, expert level knowledge'
-  }
+  }: {
+    topic: string
+    previousQuestions: Question[]
+    difficulty: number
+  } = await req.json()
 
   console.warn(`Generating question on topic "${topic}" with difficulty ${difficulty}`)
 
-  let prompt = `
-    Quiz Roller - You are a graduate-level expert in the field of ${topic}.
-    Generate a multiple choice question about: ${topic}.
-    The difficulty should be ${getDifficultyDescription(difficulty)} (level ${difficulty}/10).
-    Provide two possible answers, one correct and one incorrect.
-    The incorrect answer needs to sound plausible, perhaps a common misconception.
-    Adjust the complexity, vocabulary, and depth of knowledge required based on the difficulty level.
-    Do not indicate which answer is correct in the question text.
-    The answer should not reveal it's correctness in its wording.`
+  // const getDifficultyDescription = (difficulty: number) => {
+  //   if (difficulty <= 1) return 'easy, basic knowledge'
+  //   if (difficulty <= 5) return 'moderate difficulty, intermediate knowledge'
+  //   if (difficulty <= 8) return 'challenging, advanced knowledge'
+  //   return 'very difficult, expert level knowledge'
+  // }
 
-  // Add previous questions to avoid repeats
-  if (previousQuestions.length > 0) {
-    prompt += `\n **Do not repeat** any of these previous questions, and use these to mix up the sub-topic:\n${previousQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
-  }
+  const system =
+    'You create one two-option multiple-choice question at a time for a quiz game. Use British English.'
+
+  const task = `Task:\n- Topic: ${topic}\n- Target difficulty: ${difficulty}/10  (use simpler wording for lower levels; allow slightly more context for higher levels)\n- Choose a clear, concise subtopic within the topic (1-6 words).`
+
+  const authoringRules = `Authoring rules:\n1) Write a single question (the stem) about the chosen subtopic.\n2) Provide exactly two answer options: one correct and one incorrect.\n3) Make the incorrect option plausible (prefer a common misconception).\n4) Do NOT reveal which option is correct (no “(correct)”, ticks/emojis, hints, or asymmetric phrasing).\n5) Avoid negations like “Which of the following is NOT…”.\n6) Keep the stem concise and aligned to the difficulty (shorter/simpler for easier questions; modest context allowed for harder ones).\n7) Do not repeat or closely paraphrase any of the previous questions listed below; also avoid reusing their subtopics.`
+
+  const previousBlock =
+    previousQuestions.length > 0
+      ? `Previous questions to avoid repeating:\n${previousQuestions
+          .map((q, i) => {
+            const diff = q.difficulty != null ? `${q.difficulty}/10` : '—'
+            const sub = q.subtopic ? q.subtopic : '—'
+            return `${i + 1}. [Difficulty: ${diff}] [Subtopic: ${sub}]\n  Stem: ${q.text}`
+          })
+          .join('\n')}`
+      : ''
+
+  const prompt = [task, authoringRules, previousBlock]
+    .filter((s) => s && s.trim().length > 0)
+    .join('\n\n')
 
   const result = await generateObject({
     model: openai('gpt-5-mini'),
     schema: LLMQuestionSchema,
+    system,
     prompt,
   })
 
@@ -51,6 +63,7 @@ export async function POST(req: Request) {
 
   const questionWithId: Question = {
     id: crypto.randomUUID(),
+    difficulty,
     ...parsedQuestion.data,
   }
 

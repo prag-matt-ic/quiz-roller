@@ -1,7 +1,7 @@
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 
 uniform float uTime;
-uniform float uTimeMultiplier;
+uniform float uTerrainSpeed; // 0..1 from gameplay
 uniform float uDeltaTime;
 uniform bool uIsIdle;
 
@@ -24,27 +24,32 @@ void main() {
     vec3 velocity = currentVel.xyz;
     float life = currentPos.w;
     
+    // Compute a movement multiplier that still gives subtle motion at speed 0
+    // Smoothly ramps up around low speeds for a natural feel.
+    float s = smoothstep(0.0, 0.6, clamp(uTerrainSpeed, 0.0, 1.0));
+    float moveMul = mix(0.12, 1.0, s); // 0.12 at rest, 1.0 at full speed
+    
     // If particle is dead or behind player, respawn it
     if (life <= 0.0 || position.z > 5.0) {
-        // Generate new random position within tunnel radius (6.4 meters)
-        vec3 seed = vec3(uv * 100.0, uTime);
-        float angle = noise(seed + vec3(1.0, 0.0, 0.0)) * 6.28318; // 2*PI
-        float radius = noise(seed + vec3(0.0, 1.0, 0.0)) * 6.0; // Within tunnel radius
-        
-        position = vec3(
-            cos(angle) * radius,
-            sin(angle) * radius,
-            -40.0 - noise(seed + vec3(0.0, 0.0, 1.0)) * 20.0 // Spawn around -40 to -60
-        );
+        // Spawn inside a wide, short box above terrain (terrain at y=0)
+        // Box extents: X in [-6, 6] (width ~12), Y in [0.5, 4.5] (height ~4), Z in [-60, -40]
+        vec3 seed = vec3(uv * 123.0, uTime * 0.37);
+        float rx = noise(seed + vec3(1.0, 0.0, 0.0));
+        float ry = noise(seed + vec3(0.0, 1.0, 0.0));
+        float rz = noise(seed + vec3(0.0, 0.0, 1.0));
+
+        float x = mix(-6.0, 6.0, rx);
+        float y = mix(0.5, 4.5, ry);
+        float z = mix(-40.0, -30.0, rz);
+
+        position = vec3(x, y, z);
         life = 1.0; // Reset life
     } else {
-        if (!uIsIdle) {
-            // Use velocity for movement
-            position += velocity * uDeltaTime * uTimeMultiplier;
-        }
-        
-        // Decrease life over time (slower decay = longer life)
-        life -= uDeltaTime * 0.1 * uTimeMultiplier;
+        // Always integrate with a multiplier so particles subtly move even when idle/at 0 speed
+        position += velocity * uDeltaTime * moveMul;
+
+        // Decrease life over time (slower decay = longer life), scale with movement
+        life -= uDeltaTime * 0.1 * moveMul;
     }
     
     gl_FragColor = vec4(position, life);
