@@ -57,6 +57,18 @@ const Terrain: FC = () => {
   const boxRigidBodies = useRef<RapierRigidBody[]>(null)
   const [boxInstances, setBoxInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
+  // Deterministic scrolling state
+  const scrollZ = useRef(0)
+  const baseZByRow = useRef<number[]>([])
+  const wrapCountByRow = useRef<number[]>([])
+  const xByBodyIndex = useRef<number[]>([])
+  const yByBodyIndex = useRef<number[]>([])
+  const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  // Obstacle section precomputation buffer
+  const obstacleSectionBuffer = useRef<RowData[][]>([])
+  const obstacleTopUpScheduled = useRef(false)
+  const OBSTACLE_BUFFER_SECTIONS = 10
+  const OBSTACLE_TOPUP_THRESHOLD = 4
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
@@ -92,10 +104,12 @@ const Terrain: FC = () => {
     })
   }
 
-  // Build a contiguous block of obstacle rows with a guaranteed corridor
-  function insertObstacleRows() {
+  // Build a contiguous block of obstacle rows with a guaranteed corridor (pure)
+  function buildObstacleSection(): RowData[] {
     const heights = generateObstacleHeights({
       rows: OBSTACLE_SECTION_ROWS,
+      // Provide explicit seed so consecutive sections differ deterministically
+      seed: Math.floor(Math.random() * 1_000_000),
       minWidth: 4,
       maxWidth: 8,
       movePerRow: 1,
@@ -104,17 +118,44 @@ const Terrain: FC = () => {
       openHeight: OPEN_HEIGHT,
       blockedHeight: BLOCKED_HEIGHT,
     })
-    const blocks: RowData[] = heights.map((h, i) => ({
+    return heights.map((h, i) => ({
       heights: h,
       type: 'obstacles',
       isSectionStart: i === 0,
       isSectionEnd: i === OBSTACLE_SECTION_ROWS - 1,
     }))
+  }
+
+  function topUpObstacleBuffer(count: number) {
+    for (let i = 0; i < count; i++) obstacleSectionBuffer.current.push(buildObstacleSection())
+  }
+
+  function scheduleObstacleTopUpIfNeeded() {
+    if (
+      obstacleSectionBuffer.current.length <= OBSTACLE_TOPUP_THRESHOLD &&
+      !obstacleTopUpScheduled.current
+    ) {
+      obstacleTopUpScheduled.current = true
+      // Defer heavy generation outside the frame loop
+      setTimeout(() => {
+        try {
+          const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
+          if (needed > 0) topUpObstacleBuffer(needed)
+        } finally {
+          obstacleTopUpScheduled.current = false
+        }
+      }, 0)
+    }
+  }
+
+  // Append a precomputed obstacle section to the rows stream
+  function insertObstacleRows() {
+    const blocks = obstacleSectionBuffer.current.shift() ?? buildObstacleSection()
     rowsData.current = [...rowsData.current, ...blocks]
-    console.warn(`Inserted obstacle section`, {
-      blocks,
-      rowsData: rowsData.current,
+    console.warn(`Inserted obstacle section from buffer`, {
+      bufferSize: obstacleSectionBuffer.current.length,
     })
+    scheduleObstacleTopUpIfNeeded()
   }
 
   // No incremental generator; rows are precomputed into rowsDataRef.
@@ -124,6 +165,9 @@ const Terrain: FC = () => {
     if (isSetup.current) return
 
     function setupInitialRowsAndInstances() {
+      // Precompute obstacle sections up front
+      topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
+
       // Seed with initial sections of row data
       insertQuestionRows(true)
       insertObstacleRows()
@@ -138,11 +182,17 @@ const Terrain: FC = () => {
         const rowData = rowsData.current[rowIndex]
         // Track the row meta currently assigned to this visible slot
         activeRowsData.current[rowIndex] = rowData
+        // Initialize deterministic scroll baselines
+        baseZByRow.current[rowIndex] = -rowIndex * BOX_SIZE + zOffset
+        wrapCountByRow.current[rowIndex] = 0
 
         for (let col = 0; col < COLUMNS; col++) {
           const x = colToX(col)
           const z = -rowIndex * BOX_SIZE + zOffset
           const y = rowData.heights[col]
+          const bodyIndex = rowIndex * COLUMNS + col
+          xByBodyIndex.current[bodyIndex] = x
+          yByBodyIndex.current[bodyIndex] = y
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
             position: [x, y, z],
@@ -202,58 +252,38 @@ const Terrain: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answerRefs, boxInstances.length, boxRigidBodies.current])
 
-  // Recycle an entire row in one pass using precomputed row data.
-  function recycleRow({ rowIndex }: { rowIndex: number }) {
-    const newZ = MAX_Z - ROWS_VISIBLE * BOX_SIZE
-    const newRowData = rowsData.current[nextRowIndex.current]
+  // Deterministic row-content advance: apply N wraps worth of content updates for a row
+  function applyRowWraps(rowIndex: number, wrapsToApply: number, wrappedZ: number) {
+    for (let n = 0; n < wrapsToApply; n++) {
+      const currentRowData = activeRowsData.current[rowIndex]
 
-    // If the row being recycled was the last obstacle row, the question has just
-    // reached the player. Trigger QUESTION stage to slow the terrain now.
-    const currentRowData = activeRowsData.current[rowIndex]
+      // Section boundary hooks for the row that's leaving the front
+      if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
+        console.warn('terrain ended, switching to QUESTION stage')
+        insertObstacleRows()
+        goToStage(Stage.QUESTION)
+      }
+      if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
+        console.warn('Inserting new question section')
+        insertQuestionRows()
+      }
 
-    console.warn(`Recycling row ${rowIndex}`, {
-      currentRowData,
-      newRowData,
-      nextRowIndex: nextRowIndex.current,
-    })
+      const newRowData = rowsData.current[nextRowIndex.current]
+      activeRowsData.current[rowIndex] = newRowData
+      nextRowIndex.current++
 
-    for (let col = 0; col < COLUMNS; col++) {
-      const firstBodyIndex = rowIndex * COLUMNS
-      const body = boxRigidBodies.current![firstBodyIndex + col]
-      if (!body) continue
-      body.userData = {}
-      const x = colToX(col)
-      const y = newRowData.heights[col]
-      body.setTranslation({ x, y, z: newZ }, true)
+      // Update Y for all bodies in this row slot to match new content
+      for (let col = 0; col < COLUMNS; col++) {
+        const bodyIndex = rowIndex * COLUMNS + col
+        yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
+      }
     }
 
-    // TODO: Review this - it should go to stage when the row being recycled is the last obstacle row,
-    if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-      console.warn('terrain ended, switching to QUESTION stage')
-      insertObstacleRows()
-      goToStage(Stage.QUESTION)
-    }
-
-    if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
-      console.warn('Inserting new question section')
-      insertQuestionRows()
-    }
-
-    // Finalize row assignment once for the row.
-    // Update the assigned meta for this slot to the newly applied row.
-    activeRowsData.current[rowIndex] = newRowData
-    nextRowIndex.current++
-
-    // If the new row is the end of a section, insert the next block of rows for that section.
-    // if (newRowData.type === 'obstacles' && newRowData.isSectionEnd) {
-    //   console.warn('Inserting new obstacle section')
-    //   insertObstacleRows()
-    // }
-
-    // If this new row starts a question section, schedule a spawn of the Q/A
-    if (newRowData.type === 'question' && newRowData.isSectionStart) {
-      console.warn('Scheduling question elements respawn')
-      repositionQuestionElements(newZ, 2)
+    // If, after applying wraps, the assigned row starts a question section, position Q/A elements
+    const assigned = activeRowsData.current[rowIndex]
+    if (wrapsToApply > 0 && assigned.type === 'question' && assigned.isSectionStart) {
+      console.warn('Scheduling question elements respawn (deterministic)')
+      repositionQuestionElements(wrappedZ, 2)
     }
   }
 
@@ -261,28 +291,41 @@ const Terrain: FC = () => {
    * Per-frame terrain advancement. Moves visible rows along +Z and recycles
    * them once they pass the camera threshold.
    */
-  // This is working well - do not edit without explicit instruction.
   function updateBoxes(zStep: number) {
     if (!boxRigidBodies.current) return
-    // Iterate by rows: sample column 0 to decide recycle vs move for whole row
+    const cycle = ROWS_VISIBLE * BOX_SIZE
+
+    // Advance global scroll
+    scrollZ.current += zStep
+
+    // For each visible row slot, compute wrapped Z and apply any content wraps deterministically
     for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
       const firstBodyIndex = rowIndex * COLUMNS
-      const rigidBody = boxRigidBodies.current[firstBodyIndex]
-      if (!rigidBody) continue
-      const samplePos = rigidBody.translation()
-      const shouldRecycleRow = samplePos.z >= MAX_Z
+      // Wrapped Z for this row slot
+      let z = baseZByRow.current[rowIndex] + scrollZ.current
+      let wraps = 0
+      while (z >= MAX_Z) {
+        z -= cycle
+        wraps++
+      }
 
-      if (shouldRecycleRow) {
-        recycleRow({ rowIndex })
-      } else {
-        // Move all column boxes in this row forward
-        const newZ = samplePos.z + zStep
-        for (let col = 0; col < COLUMNS; col++) {
-          const body = boxRigidBodies.current[firstBodyIndex + col]
-          if (!body) continue
-          const p = body.translation()
-          body.setTranslation({ x: p.x, y: p.y, z: newZ }, true)
-        }
+      // If this row crossed the boundary, advance its assigned content rows accordingly
+      const prevWraps = wrapCountByRow.current[rowIndex]
+      if (wraps > prevWraps) {
+        applyRowWraps(rowIndex, wraps - prevWraps, z)
+        wrapCountByRow.current[rowIndex] = wraps
+      }
+
+      // Move all column boxes in this row to the computed absolute position
+      for (let col = 0; col < COLUMNS; col++) {
+        const body = boxRigidBodies.current[firstBodyIndex + col]
+        if (!body) continue
+        const bodyIndex = firstBodyIndex + col
+        const t = tmpTranslation.current
+        t.x = xByBodyIndex.current[bodyIndex]
+        t.y = yByBodyIndex.current[bodyIndex]
+        t.z = z
+        body.setTranslation(t, true)
       }
     }
   }
