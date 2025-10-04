@@ -5,6 +5,8 @@ import React, { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import { useFrame } from '@react-three/fiber'
 
 const { ACTION } = CameraControlsImpl
 
@@ -35,6 +37,7 @@ type Props = {
 const Camera: FC<Props> = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
+  const { playerPosition } = usePlayerPosition()
 
   // useEffect(() => {
   //   const animateIntro = async () => {
@@ -51,9 +54,26 @@ const Camera: FC<Props> = () => {
   useEffect(() => {
     if (!cameraControls.current) return
     const { x, y, z } = CAMERA_POSITIONS[stage]
-    cameraControls.current.setLookAt(x, y, z, 0, 0, 0, true)
+    const targetX = stage === Stage.TERRAIN ? playerPosition.current.x : 0
+    cameraControls.current.setLookAt(x, y, z, targetX, 0, 0, true)
     cameraControls.current.zoomTo(CAMERA_ZOOMS[stage], true)
-  }, [stage])
+  }, [stage, playerPosition])
+
+  useFrame((_, delta) => {
+    if (stage === Stage.TERRAIN && cameraControls.current) {
+      // Smoothly follow player x position
+      const targetX = playerPosition.current.x
+      cameraControls.current.setLookAt(
+        targetX,
+        CAMERA_POSITIONS[stage].y,
+        CAMERA_POSITIONS[stage].z,
+        playerPosition.current.x,
+        0,
+        0,
+        true,
+      )
+    }
+  })
 
   return (
     <CameraControls

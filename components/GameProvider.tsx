@@ -21,6 +21,8 @@ export enum Stage {
 type GameState = {
   stage: Stage
   terrainSpeed: number // Speed of terrain movement
+  playerPosition: { x: number; y: number; z: number }
+  setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
   topic: string | null
 
@@ -45,6 +47,7 @@ const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
   | 'terrainSpeed'
+  | 'playerPosition'
   | 'topic'
   | 'questions'
   | 'currentDifficulty'
@@ -54,6 +57,7 @@ const INITIAL_STATE: Pick<
 > = {
   stage: Stage.QUESTION,
   terrainSpeed: 0,
+  playerPosition: { x: 0, y: 0, z: 0 },
   topic: null,
   currentDifficulty: 0,
   questions: [topicQuestion],
@@ -81,6 +85,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
+    setPlayerPosition: (pos) => set({ playerPosition: pos }),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
       const nextQuestion = await fetchQuestion({

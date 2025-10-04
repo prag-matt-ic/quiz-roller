@@ -16,7 +16,7 @@ import { type FC, Suspense, useEffect, useLayoutEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import playerTexture from '@/assets/player-texture.png'
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
@@ -34,6 +34,7 @@ const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
+  const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
 
   // Multiplier to adjust rolling speed visually (tweak for aesthetics)
   const ROLLING_SPEED_MULTIPLIER = 0.8
@@ -51,6 +52,7 @@ const Player: FC = () => {
   const vRelRef = useRef(new Vector3())
   const axisRef = useRef(new Vector3())
   const worldScaleRef = useRef(new Vector3())
+  const nextPosRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   useFrame((_, delta) => {
     if (
@@ -99,13 +101,19 @@ const Player: FC = () => {
 
     // The character controller returns the actual movement we should apply
     // NOT the final position, so we need to add it to current position
-    const newPosition = {
-      x: currentPosition.x + correctedMovement.x,
-      y: currentPosition.y + correctedMovement.y,
-      z: currentPosition.z + correctedMovement.z,
-    }
+    nextPosRef.current.x = currentPosition.x + correctedMovement.x
+    nextPosRef.current.y = currentPosition.y + correctedMovement.y
+    nextPosRef.current.z = currentPosition.z + correctedMovement.z
 
-    bodyRef.current.setNextKinematicTranslation(newPosition)
+    bodyRef.current.setNextKinematicTranslation(nextPosRef.current)
+
+    // Update global playerPosition in store (immutable update)
+    // Note: use a fresh object to adhere to immutability rules
+    setPlayerPosition({
+      x: nextPosRef.current.x,
+      y: nextPosRef.current.y,
+      z: nextPosRef.current.z,
+    })
 
     // Player world displacement this frame (already collision-corrected)
     dispRef.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
