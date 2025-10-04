@@ -1,13 +1,14 @@
 'use client'
 
-import { useFrame } from '@react-three/fiber'
+import { shaderMaterial } from '@react-three/drei'
+import { extend, useFrame } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
   RapierRigidBody,
 } from '@react-three/rapier'
 import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
-import { Group } from 'three'
+import { Group, InstancedBufferAttribute, InstancedMesh } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { AnswerTile, QuestionText } from '@/components/Question'
@@ -15,6 +16,8 @@ import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import useThrottledLog from '@/hooks/useThrottledLog'
 import { type Question } from '@/model/schema'
 
+import boxFadeFragment from './shaders/boxFade.frag'
+import boxFadeVertex from './shaders/boxFade.vert'
 import {
   BOX_SIZE,
   colToX,
@@ -33,6 +36,16 @@ import {
 // Heights
 const OPEN_HEIGHT = -BOX_SIZE / 2 // top of box at y=0
 const BLOCKED_HEIGHT = -40 // sunken obstacles
+
+// Shader material for fade-in (mirrors TunnelParticles pattern)
+type BoxShaderUniforms = { uEntryStartZ: number; uEntryEndZ: number }
+const INITIAL_BOX_UNIFORMS: BoxShaderUniforms = { uEntryStartZ: -9999, uEntryEndZ: -9999 }
+const CustomBoxShaderMaterial = shaderMaterial(
+  INITIAL_BOX_UNIFORMS,
+  boxFadeVertex,
+  boxFadeFragment,
+)
+const BoxFadeShaderMaterial = extend(CustomBoxShaderMaterial)
 
 type SectionType = 'question' | 'obstacles'
 
@@ -66,6 +79,14 @@ const Terrain: FC = () => {
   const wrapCountByRow = useRef<number[]>([])
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
+  // Per-instance GPU attributes: open mask + base Y (at assignment time)
+  const instanceOpenMask = useRef<Float32Array | null>(null)
+  const instanceBaseY = useRef<Float32Array | null>(null)
+  const instanceOpenAttrRef = useRef<InstancedBufferAttribute>(null)
+  const instanceBaseYAttrRef = useRef<InstancedBufferAttribute>(null)
+  const instancedMeshRef = useRef<InstancedMesh>(null)
+
+  const boxShaderRef = useRef<typeof BoxFadeShaderMaterial & BoxShaderUniforms>(null)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   // Entry lift animation config (rows -> world units via BOX_SIZE)
   const ENTRY_LIFT_UNITS = BOX_SIZE * 2 // set them down by 1 unit
@@ -192,6 +213,10 @@ const Terrain: FC = () => {
       const zOffset = BOX_SIZE * 5
 
       // Pre-generate visible window of rows
+      const totalInstances = ROWS_VISIBLE * COLUMNS
+      instanceOpenMask.current = new Float32Array(totalInstances)
+      instanceBaseY.current = new Float32Array(totalInstances)
+
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
         // Track the row meta currently assigned to this visible slot
@@ -207,6 +232,10 @@ const Terrain: FC = () => {
           const bodyIndex = rowIndex * COLUMNS + col
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
+          if (instanceOpenMask.current && instanceBaseY.current) {
+            instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
+            instanceBaseY.current[bodyIndex] = y
+          }
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
             position: [x, y, z],
@@ -295,7 +324,14 @@ const Terrain: FC = () => {
       for (let col = 0; col < COLUMNS; col++) {
         const bodyIndex = rowIndex * COLUMNS + col
         yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
+        if (instanceOpenMask.current && instanceBaseY.current) {
+          const y = newRowData.heights[col]
+          instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
+          instanceBaseY.current[bodyIndex] = y
+        }
       }
+      if (instanceOpenAttrRef.current) instanceOpenAttrRef.current.needsUpdate = true
+      if (instanceBaseYAttrRef.current) instanceBaseYAttrRef.current.needsUpdate = true
     }
 
     // If, after applying wraps, the assigned row starts a question section, position Q/A elements
@@ -403,6 +439,16 @@ const Terrain: FC = () => {
     const zStep = terrainSpeed.current * delta
     updateBoxes(zStep)
     moveQuestionElements(zStep)
+
+    // Drive shader entry window with same thresholds as CPU logic
+    const entryFrontOffsetRows =
+      stage === Stage.QUESTION ? QUESTION_SECTION_ROWS : ENTRY_FRONT_OFFSET_ROWS
+    const entryEndZ = MAX_Z - entryFrontOffsetRows * BOX_SIZE
+    const entryStartZ = entryEndZ - ENTRY_RAISE_DURATION_ROWS * BOX_SIZE
+    if (boxShaderRef.current) {
+      boxShaderRef.current.uEntryStartZ = entryStartZ
+      boxShaderRef.current.uEntryEndZ = entryEndZ
+    }
   })
 
   if (!boxInstances.length) return null
@@ -418,10 +464,29 @@ const Terrain: FC = () => {
         colliders="cuboid"
         friction={0.0}>
         <instancedMesh
+          ref={instancedMeshRef}
           args={[undefined, undefined, boxInstances.length]}
           count={boxInstances.length}>
-          <boxGeometry args={[BOX_SIZE, 0.16, BOX_SIZE]} />
-          <meshLambertMaterial color="grey" />
+          <boxGeometry args={[BOX_SIZE, 0.16, BOX_SIZE]}>
+            <instancedBufferAttribute
+              ref={instanceOpenAttrRef}
+              attach="attributes-instanceOpen"
+              args={[instanceOpenMask.current!, 1]}
+            />
+            <instancedBufferAttribute
+              ref={instanceBaseYAttrRef}
+              attach="attributes-instanceBaseY"
+              args={[instanceBaseY.current!, 1]}
+            />
+          </boxGeometry>
+          <BoxFadeShaderMaterial
+            ref={boxShaderRef}
+            key={(CustomBoxShaderMaterial as any).key}
+            transparent
+            depthWrite
+            uEntryStartZ={INITIAL_BOX_UNIFORMS.uEntryStartZ}
+            uEntryEndZ={INITIAL_BOX_UNIFORMS.uEntryEndZ}
+          />
         </instancedMesh>
       </InstancedRigidBodies>
 
