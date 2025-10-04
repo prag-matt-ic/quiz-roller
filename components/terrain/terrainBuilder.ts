@@ -14,6 +14,7 @@ export const ANSWER_ROW_GAP_ROWS = 2 // vertical gap between answer rows when th
 
 export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * BOX_SIZE
 export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * BOX_SIZE
+export const QUESTION_TEXT_MAX_WIDTH = 8 * BOX_SIZE
 
 type ObstacleParams = {
   rows: number // e.g. 256
@@ -132,4 +133,60 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
   }
 
   return heights
+}
+
+export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * BOX_SPACING
+
+// Placement tuning within the 12-row question section
+// Lower row indices place elements closer to the section start (nearer to player)
+// Place question text centered on the same grid row as the top answer tiles
+// for clear visual alignment during initial placement and respawns.
+const QUESTION_TEXT_ROW_OFFSET = 5 // previously 4 (and 6 before that)
+const ANSWER_4_TILE_TOP_ROW = 5 // was 7; bottom will be top + 4 (=9)
+const ANSWER_2_TILE_CENTER_ROW = 8 // was 10
+
+/**
+ * Decide where to place the question text and each answer tile relative to the
+ * front row (startZ) of the current question section.
+ * TODO: Move placement config (row offsets, columns) into named constants at
+ * the top of the file or into a config module.
+ */
+export function computeQuestionPlacement(startZ: number, tileCount: number) {
+  // Placement within the 12 open rows starting at startZ.
+  // Question text centered across 8 columns and ~4 rows.
+  const textCenterCol = COLUMNS / 2 - 0.5 // center of grid
+  const textCenterRowOffset = QUESTION_TEXT_ROW_OFFSET
+  const textPos: [number, number, number] = [
+    colToX(textCenterCol),
+    0.01,
+    startZ - textCenterRowOffset * BOX_SPACING,
+  ]
+
+  // Answers: fixed tile sizes, 2 columns of margin on each side and between tiles.
+  const tilePositions: [number, number, number][] = []
+
+  const leftEdgeCol = ANSWER_TILE_SIDE_MARGIN_COLS
+  const rightEdgeCol = COLUMNS - ANSWER_TILE_SIDE_MARGIN_COLS - ANSWER_TILE_COLS
+  const leftCenterCol = leftEdgeCol + (ANSWER_TILE_COLS - 1) / 2
+  const rightCenterCol = rightEdgeCol + (ANSWER_TILE_COLS - 1) / 2
+
+  if (tileCount === 4) {
+    // Top row center and bottom row center with 2 rows gap between tiles (center delta = height + gap)
+    const topCenterRow = ANSWER_4_TILE_TOP_ROW
+    const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP_ROWS // 5 + 2 + 2 = 9
+    tilePositions.push(
+      [colToX(leftCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - topCenterRow * BOX_SPACING],
+      [colToX(leftCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - bottomCenterRow * BOX_SPACING],
+    )
+  } else {
+    const centerRow = ANSWER_2_TILE_CENTER_ROW
+    tilePositions.push(
+      [colToX(leftCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
+      [colToX(rightCenterCol), 0.001, startZ - centerRow * BOX_SPACING],
+    )
+  }
+
+  return { textPos, tilePositions }
 }
