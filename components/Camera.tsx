@@ -16,20 +16,40 @@ const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
-export const CAMERA_POSITIONS: Record<Stage, { x: number; y: number; z: number }> = {
-  [Stage.SPLASH]: { x: 0, y: 10, z: 8 },
-  [Stage.ENTRY]: { x: 0, y: 10, z: 4 },
-  [Stage.QUESTION]: { x: 0, y: 12, z: 5 },
-  [Stage.TERRAIN]: { x: 0, y: 6, z: 6 },
-  [Stage.GAME_OVER]: { x: 0, y: 16, z: 4 },
-}
-
-const CAMERA_ZOOMS: Record<Stage, number> = {
-  [Stage.SPLASH]: 1,
-  [Stage.ENTRY]: 1.5,
-  [Stage.TERRAIN]: 0.75,
-  [Stage.QUESTION]: 1,
-  [Stage.GAME_OVER]: 1,
+// Unified camera configuration per stage
+export const CAMERA_CONFIG: Record<
+  Stage,
+  {
+    position: { x: number; y: number; z: number }
+    target: { x: number; y: number; z: number }
+    zoom: number
+  }
+> = {
+  [Stage.SPLASH]: {
+    position: { x: 0, y: 10, z: 8 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1,
+  },
+  [Stage.ENTRY]: {
+    position: { x: 0, y: 10, z: 4 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1.5,
+  },
+  [Stage.QUESTION]: {
+    position: { x: 0, y: 12, z: 5 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1,
+  },
+  [Stage.TERRAIN]: {
+    position: { x: 0, y: 6, z: 6 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 0.75,
+  },
+  [Stage.GAME_OVER]: {
+    position: { x: 0, y: 16, z: 4 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1,
+  },
 }
 
 type Props = {
@@ -39,37 +59,72 @@ type Props = {
 const Camera: FC<Props> = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
+  const goToStage = useGameStore((s) => s.goToStage)
   const { playerPosition } = usePlayerPosition()
 
-  // useEffect(() => {
-  //   const animateIntro = async () => {
-  //     if (!cameraControls.current) return
-  //     const { x, y, z } = CAMERA_POSITIONS[Stage.OUTER]
-  //     await cameraControls.current.setLookAt(x, y, z, 0, 0, 0, true)
-  //     setTimeout(() => {
-  //       setStage(Stage.OUTER)
-  //     }, 1800)
-  //   }
-  //   if (stage === Stage.INTRO) animateIntro()
-  // }, [stage, setStage])
+  // Intro animation: wide arc sweep from side
+  useEffect(() => {
+    const animateIntro = async () => {
+      if (!cameraControls.current) return
 
+      const { position, target, zoom } = CAMERA_CONFIG[Stage.SPLASH]
+
+      // Set initial position without transition (instantly place camera)
+      await cameraControls.current.setLookAt(
+        position.x,
+        position.y,
+        position.z,
+        target.x,
+        target.y,
+        target.z,
+        false,
+      )
+
+      // Sweep to entry position with smooth transition
+      const entryPos = CAMERA_CONFIG[Stage.ENTRY].position
+      const entryTarget = CAMERA_CONFIG[Stage.ENTRY].target
+
+      await cameraControls.current.setLookAt(
+        entryPos.x,
+        entryPos.y,
+        entryPos.z,
+        entryTarget.x,
+        entryTarget.y,
+        entryTarget.z,
+        true,
+      )
+
+      // Transition to entry stage after animation completes
+      setTimeout(() => {
+        goToStage(Stage.ENTRY)
+      }, 200)
+    }
+
+    if (stage === Stage.SPLASH) animateIntro()
+  }, [stage, goToStage])
+
+  // Update camera position when stage changes
   useEffect(() => {
     if (!cameraControls.current) return
-    const { x, y, z } = CAMERA_POSITIONS[stage]
-    const targetX = stage === Stage.TERRAIN ? playerPosition.current.x : 0
-    cameraControls.current.setLookAt(x, y, z, targetX, 0, 0, true)
-    cameraControls.current.zoomTo(CAMERA_ZOOMS[stage], true)
+    if (stage === Stage.SPLASH || stage === Stage.ENTRY) return // Skip for intro animation
+
+    const { x, y, z } = CAMERA_CONFIG[stage].position
+    const target = CAMERA_CONFIG[stage].target
+    const targetX = stage === Stage.TERRAIN ? playerPosition.current.x : target.x
+
+    cameraControls.current.setLookAt(x, y, z, targetX, target.y, target.z, true)
+    cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
   }, [stage, playerPosition])
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!cameraControls.current) return
     if (stage === Stage.TERRAIN || stage === Stage.QUESTION) {
       // Smoothly follow player x position
       const targetX = playerPosition.current.x
       cameraControls.current.setLookAt(
         targetX,
-        CAMERA_POSITIONS[stage].y,
-        CAMERA_POSITIONS[stage].z,
+        CAMERA_CONFIG[stage].position.y,
+        CAMERA_CONFIG[stage].position.z,
         playerPosition.current.x,
         0,
         0,

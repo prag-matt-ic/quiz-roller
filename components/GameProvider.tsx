@@ -230,8 +230,6 @@ export const GameProvider: FC<Props> = ({ children, ...storeParams }) => {
   const store = useRef<GameStore>(createGameStore(storeParams))
 
   useEffect(() => {
-    // Kick off the entry movement tween on mount
-    store.current.getState().goToStage(Stage.ENTRY)
     return () => {
       // Any cleanup logic if needed when Provider is unmounted
     }
