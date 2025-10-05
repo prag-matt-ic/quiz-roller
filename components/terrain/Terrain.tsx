@@ -195,7 +195,7 @@ const Terrain: FC = () => {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
       // Seed with initial sections of row data
-      insertQuestionRows()
+      insertQuestionRows(true)
       insertObstacleRows()
       insertQuestionRows()
       insertObstacleRows()
@@ -452,7 +452,7 @@ const Terrain: FC = () => {
         <instancedMesh
           args={[undefined, undefined, tileInstances.length]}
           count={tileInstances.length}>
-          <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE]}>
+          <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
             <instancedBufferAttribute
               ref={instanceVisibilityAttrRef}
               attach="attributes-instanceVisibility"
