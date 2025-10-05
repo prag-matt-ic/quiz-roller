@@ -29,6 +29,7 @@ import {
   QUESTION_TEXT_MAX_WIDTH,
   ROWS_VISIBLE,
   TILE_SIZE,
+  TILE_THICKNESS,
   colToX,
   generateObstacleHeights,
   generateQuestionHeights,
@@ -501,7 +502,7 @@ const Terrain: FC = () => {
           ref={instancedMeshRef}
           args={[undefined, undefined, tileInstances.length]}
           count={tileInstances.length}>
-          <boxGeometry args={[TILE_SIZE, 0.16, TILE_SIZE]}>
+          <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE]}>
             <instancedBufferAttribute
               ref={instanceOpenAttrRef}
               attach="attributes-instanceOpen"

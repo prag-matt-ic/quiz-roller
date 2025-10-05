@@ -24,6 +24,11 @@ type AnswerTileProps = {
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
     const currentQuestion = useGameStore((s) => s.questions[s.currentQuestionIndex])
+    const isBeingConfirmed = useGameStore(
+      (s) => s.confirmingAnswer?.answer.text === currentQuestion.answers[index]?.text,
+    )
+
+    console.warn('Rendering AnswerTile:', { position, index, isBeingConfirmed })
 
     const { text, userData } = useMemo(() => {
       const answer = currentQuestion.answers[index]
@@ -59,9 +64,9 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           mass={0}
           friction={0}
         />
-        {/* Hidden intentionally */}
         <mesh>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
+          {/* TODO: replace with a custom shader material.. */}
           <meshStandardMaterial color="#fff" transparent={true} opacity={0.3} />
         </mesh>
         <Text
@@ -93,10 +98,10 @@ export const QuestionText = forwardRef<Group, QuestionTextProps>(
   ({ text, position = [0, 0.01, 0], maxWidth = 4, fontSize = 0.26 }, ref) => {
     return (
       <group ref={ref} position={position}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        {/* <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[QUESTION_TEXT_MAX_WIDTH, QUESTION_TEXT_ROWS]} />
           <meshStandardMaterial color="#fff" transparent={true} opacity={0.1} />
-        </mesh>
+        </mesh> */}
         <Text
           color="#000"
           fontSize={fontSize}

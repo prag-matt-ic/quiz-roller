@@ -1,8 +1,8 @@
 'use client'
 
 import { QueryFilterFlags } from '@dimforge/rapier3d-compat'
-import { useTexture } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { shaderMaterial } from '@react-three/drei'
+import { extend, useFrame } from '@react-three/fiber'
 import {
   BallCollider,
   type IntersectionEnterHandler,
@@ -11,27 +11,38 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, Suspense, useRef } from 'react'
+import { type FC, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
-import playerTexture from '@/assets/player-texture.png'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
+import fragment from './shaders/player.frag'
+import vertex from './shaders/player.vert'
 import usePlayerController from './usePlayerController'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
 // https://rapier.rs/docs/user_guides/javascript/character_controller/
 
+type ShaderUniforms = {
+  uTime: number
+}
+const INITIAL_UNIFORMS: ShaderUniforms = {
+  uTime: 0,
+}
+// TODO: import .vert and .frag files
+const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
+const PlayerShaderMaterial = extend(PlayerShader)
+
 const Player: FC = () => {
-  const colorMap = useTexture(playerTexture.src)
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
+  const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
@@ -51,15 +62,22 @@ const Player: FC = () => {
   const axisRef = useRef(new Vector3())
   const worldScaleRef = useRef(new Vector3())
   const nextPosRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  const timeRef = useRef(0)
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
+    // Always advance shader time, even during intro/game-over
+
     if (
+      !playerShaderRef.current ||
       !bodyRef.current ||
       !controllerRef.current ||
       !ballColliderRef.current ||
       !sphereMeshRef.current
     )
       return
+
+    timeRef.current += delta
+    playerShaderRef.current.uTime = timeRef.current
 
     if (stage === Stage.INTRO || stage === Stage.GAME_OVER) return
 
@@ -195,12 +213,16 @@ const Player: FC = () => {
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
-      <Suspense>
-        <mesh ref={sphereMeshRef}>
-          <sphereGeometry args={[PLAYER_RADIUS, 24, 24]} />
-          <meshLambertMaterial map={colorMap} />
-        </mesh>
-      </Suspense>
+      <mesh ref={sphereMeshRef}>
+        <sphereGeometry args={[PLAYER_RADIUS, 24, 24]} />
+        <PlayerShaderMaterial
+          key={PlayerShader.key}
+          ref={playerShaderRef}
+          uTime={INITIAL_UNIFORMS.uTime}
+          transparent={false}
+          depthWrite={true}
+        />
+      </mesh>
       <PlayerHUD />
     </RigidBody>
   )

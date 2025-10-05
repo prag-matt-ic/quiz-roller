@@ -13,10 +13,12 @@ uniform vec3 uPlayerWorldPos;
 
 varying float vAlpha;
 varying vec3 vInstanceCenter;
+varying vec3 vWorldPos;
 
 void main() {
   // Compute world position for current vertex of the instance
   vec4 worldPos = modelMatrix * instanceMatrix * vec4(position, 1.0);
+  vWorldPos = worldPos.xyz;
 
   // Compute instance center in world space once per vertex (constant per instance)
   vInstanceCenter = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
