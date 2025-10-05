@@ -14,7 +14,6 @@ import { type AnswerUserData, type Question, topicQuestion } from '@/model/schem
 
 export enum Stage {
   SPLASH = 'splash',
-  INTRO = 'intro',
   ENTRY = 'entry',
   QUESTION = 'question',
   TERRAIN = 'terrain',
@@ -66,7 +65,7 @@ const INITIAL_STATE: Pick<
   | 'confirmedAnswers'
   | 'isAwaitingQuestion'
 > = {
-  stage: Stage.INTRO,
+  stage: Stage.SPLASH,
   terrainSpeed: 0,
   playerPosition: {
     x: PLAYER_INITIAL_POSITION[0],
@@ -163,21 +162,6 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
 
     goToStage: (stage: Stage) => {
       // Basic function for now, can be expanded later
-      if (stage === Stage.INTRO) {
-        set({ stage: Stage.INTRO })
-        speedTween?.kill()
-        speedTween = gsap.to(speedTweenTarget, {
-          duration: 2,
-          ease: 'power2.out',
-          value: 1, // normalized
-          onUpdate: () => {
-            set({ terrainSpeed: speedTweenTarget.value })
-          },
-          onComplete: () => {},
-        })
-        return
-      }
-
       if (stage === Stage.ENTRY) {
         set({ stage: Stage.ENTRY })
         speedTween?.kill()
@@ -247,7 +231,7 @@ export const GameProvider: FC<Props> = ({ children, ...storeParams }) => {
 
   useEffect(() => {
     // Kick off the entry movement tween on mount
-    store.current.getState().goToStage(Stage.INTRO)
+    store.current.getState().goToStage(Stage.ENTRY)
     return () => {
       // Any cleanup logic if needed when Provider is unmounted
     }
