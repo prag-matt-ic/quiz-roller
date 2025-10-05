@@ -41,7 +41,7 @@ void main() {
 
   float borderColourP = sin(vUv.x + uTime * 0.4) * 0.5 + 0.5;
   vec3 borderColour = getColourFromPalette(borderColourP);
-  vec4 baseColour = mix(BASE_COLOUR, vec4(1.0), uConfirmingProgress);
+  vec4 baseColour = mix(BASE_COLOUR, vec4(1.0, 1.0, 1.0, 0.0), uConfirmingProgress);
   vec4 color = mix(baseColour, vec4(borderColour, 1.0), borderMask);
 
   gl_FragColor = color;
