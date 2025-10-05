@@ -13,7 +13,9 @@ import { createStore, type StoreApi, useStore } from 'zustand'
 import { type AnswerUserData, type Question, topicQuestion } from '@/model/schema'
 
 export enum Stage {
+  SPLASH = 'splash',
   INTRO = 'intro',
+  ENTRY = 'entry',
   QUESTION = 'question',
   TERRAIN = 'terrain',
   GAME_OVER = 'game_over',
@@ -64,7 +66,7 @@ const INITIAL_STATE: Pick<
   | 'confirmedAnswers'
   | 'isAwaitingQuestion'
 > = {
-  stage: Stage.QUESTION,
+  stage: Stage.INTRO,
   terrainSpeed: 0,
   playerPosition: {
     x: PLAYER_INITIAL_POSITION[0],
@@ -161,12 +163,42 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
 
     goToStage: (stage: Stage) => {
       // Basic function for now, can be expanded later
-      if (stage === Stage.QUESTION) {
-        set({ stage: Stage.QUESTION })
+      if (stage === Stage.INTRO) {
+        set({ stage: Stage.INTRO })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
           duration: 2,
           ease: 'power2.out',
+          value: 1, // normalized
+          onUpdate: () => {
+            set({ terrainSpeed: speedTweenTarget.value })
+          },
+          onComplete: () => {},
+        })
+        return
+      }
+
+      if (stage === Stage.ENTRY) {
+        set({ stage: Stage.ENTRY })
+        speedTween?.kill()
+        speedTween = gsap.to(speedTweenTarget, {
+          duration: 2,
+          ease: 'power2.out',
+          value: 1, // normalized
+          onUpdate: () => {
+            set({ terrainSpeed: speedTweenTarget.value })
+          },
+          onComplete: () => {},
+        })
+        return
+      }
+
+      if (stage === Stage.QUESTION) {
+        set({ stage: Stage.QUESTION })
+        speedTween?.kill()
+        speedTween = gsap.to(speedTweenTarget, {
+          duration: 0.5,
+          ease: 'power1.out',
           value: 0, // normalized
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
@@ -180,7 +212,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         set({ stage: Stage.TERRAIN })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 2,
+          duration: 2.5,
           ease: 'power2.out',
           value: 1, // normalized
           onUpdate: () => {
@@ -214,6 +246,8 @@ export const GameProvider: FC<Props> = ({ children, ...storeParams }) => {
   const store = useRef<GameStore>(createGameStore(storeParams))
 
   useEffect(() => {
+    // Kick off the entry movement tween on mount
+    store.current.getState().goToStage(Stage.INTRO)
     return () => {
       // Any cleanup logic if needed when Provider is unmounted
     }

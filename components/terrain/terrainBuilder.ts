@@ -13,6 +13,7 @@ export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world 
 export const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
 
 export const QUESTION_SECTION_ROWS = 16
+export const ENTRY_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
@@ -168,15 +169,41 @@ export const colToX = (col: number) => (col - COLUMNS / 2 + 0.5) * TILE_SIZE
 
 const ANSWER_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
 
-export type SectionType = 'question' | 'obstacles'
+export type SectionType = 'entry' | 'question' | 'obstacles'
 
 export type RowData = {
   heights: number[]
   type: SectionType
   isSectionStart: boolean
   isSectionEnd: boolean
+  // When true, this row becoming fully raised should trigger transition to QUESTION stage
+  isQuestionTrigger?: boolean
   questionTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
   answerTilePositions?: [number, number, number][] // If true, when this row is visible, position answer tiles here
+}
+
+// --- Entry section ---
+// 16 rows with a 6-column central safe corridor; everything else sunken.
+const ENTRY_OPEN_COLS = 6
+export function generateEntrySectionRowData(): RowData[] {
+  const rows: RowData[] = new Array(ENTRY_SECTION_ROWS)
+
+  const startCol = Math.floor((COLUMNS - ENTRY_OPEN_COLS) / 2)
+  const endCol = startCol + ENTRY_OPEN_COLS - 1
+
+  for (let i = 0; i < ENTRY_SECTION_ROWS; i++) {
+    const heights = new Array<number>(COLUMNS).fill(UNSAFE_HEIGHT)
+    for (let c = startCol; c <= endCol; c++) heights[c] = SAFE_HEIGHT
+
+    rows[i] = {
+      heights,
+      type: 'entry',
+      isSectionStart: i === 0,
+      isSectionEnd: i === ENTRY_SECTION_ROWS - 1,
+    }
+  }
+
+  return rows
 }
 
 export function generateFirstQuestionSectionRowData(): RowData[] {
@@ -208,6 +235,7 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
+      isQuestionTrigger: i === textTriggerRow,
     }
     if (i === textTriggerRow) {
       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
@@ -265,6 +293,7 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
+      isQuestionTrigger: i - 3 === textTriggerRow,
     }
     if (i === textTriggerRow) {
       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]

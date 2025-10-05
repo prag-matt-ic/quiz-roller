@@ -70,14 +70,11 @@ const PlayerHUD: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative flex w-fit origin-bottom-left flex-col gap-2.5 rounded-md bg-white p-4">
-          <div className="text-xl font-semibold tracking-wide text-black">Confirming</div>
-          <div className="relative h-5 w-40 overflow-hidden rounded-full bg-teal-100">
-            <div
-              id="progress-bar"
-              className="absolute h-full w-full -translate-x-full rounded-full bg-linear-90 from-blue-600 to-teal-400"
-            />
-          </div>
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-teal-100">
+          <div
+            id="progress-bar"
+            className="absolute h-full w-full -translate-x-full rounded-full bg-linear-90 from-blue-600 to-teal-400"
+          />
         </div>
       </Transition>
     </Html>
