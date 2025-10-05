@@ -7,8 +7,8 @@ uniform float uTime;
 
 varying vec2 vUv;
 
-const float BORDER_FRACTION = 0.06; // fraction of full height
-const vec4 BASE_COLOUR = vec4(1.0, 1.0, 1.0, 0.6);
+const float BORDER_FRACTION = 0.04; // fraction of full height
+const vec4 BASE_COLOUR = vec4(1.0, 1.0, 1.0, 0.5);
 
 float sdBox(in vec2 p, in vec2 b) {
     vec2 d = abs(p)-b;
@@ -41,7 +41,8 @@ void main() {
 
   float borderColourP = sin(vUv.x + uTime * 0.4) * 0.5 + 0.5;
   vec3 borderColour = getColourFromPalette(borderColourP);
-  vec4 color = mix(BASE_COLOUR, vec4(borderColour, 1.0), borderMask);
+  vec4 baseColour = mix(BASE_COLOUR, vec4(1.0), uConfirmingProgress);
+  vec4 color = mix(baseColour, vec4(borderColour, 1.0), borderMask);
 
   gl_FragColor = color;
 }
