@@ -31,7 +31,7 @@ void main() {
   float bgInput = clamp(bgNoise * 0.5 + 0.5, 0.0, 1.0);
   vec3 bgColour = palette(bgInput, a, b, c, d);
 
-  vec3 background = mix(vec3(1.0), bgColour, 0.1);
+  vec3 background = mix(vec3(1.0), bgColour, 0.16);
 
   if (highlight > 0.01) {
     float highlightNoise = noise(worldPosScaled);

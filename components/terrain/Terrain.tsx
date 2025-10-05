@@ -1,7 +1,15 @@
 /* eslint-disable simple-import-sort/imports */
 'use client'
 
-import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createRef,
+  type FC,
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import {
@@ -12,7 +20,8 @@ import {
 import { Group, InstancedBufferAttribute, InstancedMesh, Vector3 } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import { AnswerTile, QuestionText } from '@/components/Question'
+import { QuestionText } from '@/components/QuestionText'
+import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
@@ -68,7 +77,8 @@ type RowData = {
 }
 
 const Terrain: FC = () => {
-  const stage = useGameStore((state) => state.stage)
+  const stage = useGameStore((s) => s.stage)
+  const isGameOver = stage === Stage.GAME_OVER
   const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
   const questions = useGameStore((s) => s.questions)
 
@@ -94,9 +104,6 @@ const Terrain: FC = () => {
   // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
   const { terrainSpeed } = useTerrainSpeed(onTerrainSpeedChange)
   const goToStage = useGameStore((s) => s.goToStage)
-  // Track game-over in a ref to avoid re-renders and allow fast checks in frame loop
-  const isGameOverRef = useRef(false)
-
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
@@ -201,21 +208,20 @@ const Terrain: FC = () => {
 
   function scheduleObstacleTopUpIfNeeded() {
     // TODO: return out..
-    // Use React start transition instead of setTimeout?
     if (
       obstacleSectionBuffer.current.length <= OBSTACLE_TOPUP_THRESHOLD &&
       !obstacleTopUpScheduled.current
     ) {
       obstacleTopUpScheduled.current = true
       // Defer heavy generation outside the frame loop
-      setTimeout(() => {
+      startTransition(() => {
         try {
           const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
           if (needed > 0) topUpObstacleBuffer(needed)
         } finally {
           obstacleTopUpScheduled.current = false
         }
-      }, 0)
+      })
     }
   }
 
@@ -223,9 +229,6 @@ const Terrain: FC = () => {
   function insertObstacleRows() {
     const blocks = obstacleSectionBuffer.current.shift() ?? buildObstacleSection()
     rowsData.current = [...rowsData.current, ...blocks]
-    console.warn(`Inserted obstacle section from buffer`, {
-      bufferSize: obstacleSectionBuffer.current.length,
-    })
     scheduleObstacleTopUpIfNeeded()
   }
 
@@ -254,11 +257,6 @@ const Terrain: FC = () => {
       instanceBaseY.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
 
-      // Deterministic per-instance seed in [0,1]
-      const seedForIndex = (i: number) => {
-        return Math.random()
-      }
-
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
         // Track the row meta currently assigned to this visible slot
@@ -277,7 +275,7 @@ const Terrain: FC = () => {
           if (instanceOpenMask.current && instanceBaseY.current && instanceSeed.current) {
             instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
             instanceBaseY.current[bodyIndex] = y
-            instanceSeed.current[bodyIndex] = seedForIndex(bodyIndex)
+            instanceSeed.current[bodyIndex] = Math.random()
           }
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
@@ -324,11 +322,6 @@ const Terrain: FC = () => {
       )
     })
   }
-
-  useEffect(() => {
-    // Keep a ref in sync with stage for use inside frame loop
-    isGameOverRef.current = stage === Stage.GAME_OVER
-  }, [stage])
 
   // Subscribe to player position and update the uniform vector in-place (no allocations per frame)
   usePlayerPosition((pos) => {
@@ -429,14 +422,13 @@ const Terrain: FC = () => {
 
       // Compute per-row Y offset for entry lift animation (ignored during game over)
       let yOffset = -ENTRY_LIFT_UNITS
-      if (!isGameOverRef.current) {
-        if (z >= entryStartZ) {
-          if (z >= entryEndZ) {
-            yOffset = 0
-          } else {
-            const tLift = (z - entryStartZ) / (entryEndZ - entryStartZ)
-            yOffset = -ENTRY_LIFT_UNITS * (1 - tLift)
-          }
+
+      if (z >= entryStartZ) {
+        if (z >= entryEndZ) {
+          yOffset = 0
+        } else {
+          const tLift = (z - entryStartZ) / (entryEndZ - entryStartZ)
+          yOffset = -ENTRY_LIFT_UNITS * (1 - tLift)
         }
       }
 
@@ -447,13 +439,8 @@ const Terrain: FC = () => {
         const bodyIndex = firstBodyIndex + col
         const t = tmpTranslation.current
         t.x = xByBodyIndex.current[bodyIndex]
-        if (isGameOverRef.current) {
-          // Force closed height while game over is active
-          t.y = BLOCKED_HEIGHT
-        } else {
-          const baseY = yByBodyIndex.current[bodyIndex]
-          t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
-        }
+        const baseY = yByBodyIndex.current[bodyIndex]
+        t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
         t.z = z
         body.setTranslation(t, true)
       }
