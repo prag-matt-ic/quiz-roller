@@ -26,14 +26,14 @@ export const CAMERA_CONFIG: Record<
   }
 > = {
   [Stage.SPLASH]: {
-    position: { x: 0, y: 10, z: 8 },
+    position: { x: 10, y: 10, z: 8 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1,
+    zoom: 1.5,
   },
   [Stage.ENTRY]: {
     position: { x: 0, y: 10, z: 4 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.5,
+    zoom: 1.25,
   },
   [Stage.QUESTION]: {
     position: { x: 0, y: 12, z: 5 },
@@ -41,7 +41,7 @@ export const CAMERA_CONFIG: Record<
     zoom: 1,
   },
   [Stage.TERRAIN]: {
-    position: { x: 0, y: 6, z: 6 },
+    position: { x: 0, y: 6, z: 7 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.75,
   },
@@ -70,7 +70,7 @@ const Camera: FC<Props> = () => {
       const { position, target, zoom } = CAMERA_CONFIG[Stage.SPLASH]
 
       // Set initial position without transition (instantly place camera)
-      await cameraControls.current.setLookAt(
+      cameraControls.current.setLookAt(
         position.x,
         position.y,
         position.z,
@@ -80,11 +80,16 @@ const Camera: FC<Props> = () => {
         false,
       )
 
-      // Sweep to entry position with smooth transition
-      const entryPos = CAMERA_CONFIG[Stage.ENTRY].position
-      const entryTarget = CAMERA_CONFIG[Stage.ENTRY].target
+      cameraControls.current.zoomTo(zoom, false)
 
-      await cameraControls.current.setLookAt(
+      // Sweep to entry position with smooth transition
+      const {
+        position: entryPos,
+        target: entryTarget,
+        zoom: entryZoom,
+      } = CAMERA_CONFIG[Stage.ENTRY]
+
+      cameraControls.current.setLookAt(
         entryPos.x,
         entryPos.y,
         entryPos.z,
@@ -93,6 +98,8 @@ const Camera: FC<Props> = () => {
         entryTarget.z,
         true,
       )
+
+      await cameraControls.current.zoomTo(entryZoom, true)
 
       // Transition to entry stage after animation completes
       setTimeout(() => {
@@ -118,16 +125,27 @@ const Camera: FC<Props> = () => {
 
   useFrame(() => {
     if (!cameraControls.current) return
-    if (stage === Stage.TERRAIN || stage === Stage.QUESTION) {
-      // Smoothly follow player x position
-      const targetX = playerPosition.current.x
+    if (stage === Stage.QUESTION) {
+      // Follow player position
       cameraControls.current.setLookAt(
-        targetX,
+        playerPosition.current.x,
+        CAMERA_CONFIG[stage].position.y,
+        playerPosition.current.z + 5,
+        playerPosition.current.x,
+        0,
+        playerPosition.current.z,
+        true,
+      )
+    }
+    if (stage === Stage.TERRAIN) {
+      // Follow player X, but with some lag/smoothing
+      cameraControls.current.setLookAt(
+        playerPosition.current.x,
         CAMERA_CONFIG[stage].position.y,
         CAMERA_CONFIG[stage].position.z,
         playerPosition.current.x,
         0,
-        0,
+        playerPosition.current.z,
         true,
       )
     }
