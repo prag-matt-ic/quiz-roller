@@ -13,7 +13,7 @@ import Terrain from '@/components/terrain/Terrain'
 import Camera, { CAMERA_POSITIONS } from './Camera'
 import { Stage } from './GameProvider'
 import Particles from './particles/Particles'
-import FloatingTiles from './floatingTiles/FloatingTiles'
+// import FloatingTiles from './floatingTiles/FloatingTiles'
 
 gsap.registerPlugin(useGSAP)
 
@@ -52,7 +52,7 @@ export default Game
 const Level: FC = () => {
   return (
     <>
-      <FloatingTiles isMobile={false} />
+      {/* <FloatingTiles isMobile={false} /> */}
       <Terrain />
       {/* <Particles isMobile={false} /> */}
       <Player />
