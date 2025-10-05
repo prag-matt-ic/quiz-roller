@@ -183,7 +183,7 @@ function positionFourAnswerTiles(startZ: number): {
   textPos: [number, number, number]
   tilePositions: [number, number, number][]
 } {
-  const textCenterRowIndex = 3.5
+  const textCenterRowIndex = 2.5
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
     ANSWER_TILE_Y,
@@ -194,8 +194,8 @@ function positionFourAnswerTiles(startZ: number): {
   const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2 // 2.5
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2 // 8.5
 
-  const topCenterRow = 7.5
-  const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + 1 // spacing row
+  const topCenterRow = 6.5
+  const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + 2 // spacing row
   tilePositions.push(
     [colToX(leftCenterCol), ANSWER_TILE_Y, startZ - topCenterRow * TILE_SIZE],
     [colToX(rightCenterCol), ANSWER_TILE_Y, startZ - topCenterRow * TILE_SIZE],

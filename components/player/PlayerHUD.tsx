@@ -8,7 +8,7 @@ import { Transition } from 'react-transition-group'
 import { useGameStore } from '@/components/GameProvider'
 
 export const PLAYER_RADIUS = 0.5
-const CONFIRMATION_DURATION_S = 2 // seconds
+export const CONFIRMATION_DURATION_S = 3
 
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)

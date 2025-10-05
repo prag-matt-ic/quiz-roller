@@ -1,24 +1,32 @@
 'use client'
 
+import { useGSAP } from '@gsap/react'
 import { shaderMaterial, Text } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { forwardRef, useMemo, useRef } from 'react'
+import gsap from 'gsap'
+import { forwardRef, useEffect, useMemo, useRef } from 'react'
 import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { CONFIRMATION_DURATION_S, PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/components/terrain/terrainBuilder'
 import { type AnswerUserData } from '@/model/schema'
 
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
 
+const ANSWER_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
+
 type AnswerTileShaderUniforms = {
+  uConfirmingProgress: number
+  uTileAspect: number
   uTime: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
+  uConfirmingProgress: 0,
+  uTileAspect: ANSWER_TILE_ASPECT,
   uTime: 0,
 }
 
@@ -37,38 +45,40 @@ type AnswerTileProps = {
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
     const currentQuestion = useGameStore((s) => s.questions[s.currentQuestionIndex])
-    const isBeingConfirmed = useGameStore(
+    const isConfirming = useGameStore(
       (s) => s.confirmingAnswer?.answer.text === currentQuestion.answers[index]?.text,
     )
 
-    console.warn('Rendering AnswerTile:', { position, index, isBeingConfirmed })
+    const { text, userData }: { text: string; userData: AnswerUserData | undefined } =
+      useMemo(() => {
+        const answer = currentQuestion.answers[index]
+        if (!answer) return { text: '', userData: undefined }
+        const userData: AnswerUserData = {
+          type: 'answer',
+          answer,
+          questionId: currentQuestion.id,
+        }
+        const text = answer.text
+        return { text, userData }
+      }, [currentQuestion, index])
 
-    const answerTileShaderRef = useRef<
-      typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms
-    >(null)
+    const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
+    const confirmingProgress = useRef({ value: 0 })
+    const confirmingProgressTween = useRef<GSAPTween | null>(null)
 
-    const { text, userData } = useMemo(() => {
-      const answer = currentQuestion.answers[index]
-
-      const userData: AnswerUserData | undefined = !!answer
-        ? {
-            type: 'answer',
-            answer,
-            questionId: currentQuestion.id,
-          }
-        : undefined
-
-      const text = answer?.text ?? ''
-
-      return { text, userData }
-    }, [currentQuestion, index])
+    useEffect(() => {
+      confirmingProgressTween.current?.kill()
+      confirmingProgressTween.current = gsap.to(confirmingProgress.current, {
+        value: isConfirming ? 1 : 0,
+        duration: isConfirming ? CONFIRMATION_DURATION_S : 0.4,
+        ease: 'power2.out',
+      })
+    }, [isConfirming])
 
     useFrame(({ clock }) => {
-      if (!answerTileShaderRef.current) return
-      if (isBeingConfirmed) {
-        // Drive pulsation via elapsed time only while confirming
-        answerTileShaderRef.current.uTime = clock.elapsedTime
-      }
+      if (!shader.current) return
+      shader.current.uConfirmingProgress = confirmingProgress.current.value
+      shader.current.uTime = clock.elapsedTime
     })
 
     return (
@@ -93,10 +103,10 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
           <AnswerTileShaderMaterial
             key={AnswerTileShader.key}
-            ref={answerTileShaderRef}
-            uTime={INITIAL_ANSWER_TILE_UNIFORMS.uTime}
+            ref={shader}
             transparent={true}
             depthWrite={true}
+            uConfirmingProgress={0}
           />
         </mesh>
         <Text
