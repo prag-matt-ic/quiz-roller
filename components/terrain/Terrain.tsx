@@ -1,16 +1,32 @@
 /* eslint-disable simple-import-sort/imports */
 'use client'
 
-import { createRef, type FC, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createRef,
+  type FC,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend, useFrame, useThree } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
   RapierRigidBody,
 } from '@react-three/rapier'
-import { Group, InstancedBufferAttribute, InstancedMesh, Vector3 } from 'three'
-
+import {
+  DataTexture,
+  Group,
+  InstancedBufferAttribute,
+  InstancedMesh,
+  Vector3,
+  Texture,
+  WebGLRenderer,
+} from 'three'
+import positionFragmentShader from './shaders/position.frag'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { AnswerTile, QuestionText } from '@/components/Question'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
@@ -34,6 +50,10 @@ import {
   generateQuestionHeights,
   positionQuestionAndAnswerTiles,
 } from './terrainBuilder'
+import {
+  GPUComputationRenderer,
+  Variable,
+} from 'three/examples/jsm/misc/GPUComputationRenderer.js'
 
 // Heights
 const OPEN_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
@@ -44,11 +64,28 @@ type TileShaderUniforms = {
   uEntryStartZ: number
   uEntryEndZ: number
   uPlayerWorldPos: Vector3
+  uPositions: Texture | null
+  // Grid and movement uniforms for analytic placement in vertex shader
+  uColumns: number
+  uRowsVisible: number
+  uTileSize: number
+  uBaseZOffset: number
+  uZFront: number
+  uScrollZ: number
+  uEntryLift: number
 }
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uEntryStartZ: -9999,
   uEntryEndZ: -9999,
   uPlayerWorldPos: new Vector3(0, 0, 0),
+  uPositions: null,
+  uColumns: COLUMNS,
+  uRowsVisible: ROWS_VISIBLE,
+  uTileSize: TILE_SIZE,
+  uBaseZOffset: TILE_SIZE * 5,
+  uZFront: MAX_Z,
+  uScrollZ: 0,
+  uEntryLift: TILE_SIZE * 2,
 }
 const CustomTileShaderMaterial = shaderMaterial(
   INITIAL_TILE_UNIFORMS,
@@ -67,6 +104,7 @@ type RowData = {
 }
 
 const Terrain: FC = () => {
+  const renderer = useThree((s) => s.gl)
   const stage = useGameStore((state) => state.stage)
   const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
   const questions = useGameStore((s) => s.questions)
@@ -78,16 +116,15 @@ const Terrain: FC = () => {
   function onTerrainSpeedChange(normalized: number) {
     // Interpolate entry window based on normalized speed.
     // 0 => question section fully raised; 1 => terrain entry offset used.
+    if (!tileShaderRef.current) return
     const frontOffsetRows =
       QUESTION_SECTION_ROWS + (ENTRY_FRONT_OFFSET_ROWS - QUESTION_SECTION_ROWS) * normalized
     const endZ = MAX_Z - frontOffsetRows * TILE_SIZE
     const startZ = endZ - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
     entryStartZRef.current = startZ
     entryEndZRef.current = endZ
-    if (tileShaderRef.current) {
-      tileShaderRef.current.uEntryStartZ = startZ
-      tileShaderRef.current.uEntryEndZ = endZ
-    }
+    tileShaderRef.current.uEntryStartZ = startZ
+    tileShaderRef.current.uEntryEndZ = endZ
   }
 
   // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
@@ -129,6 +166,9 @@ const Terrain: FC = () => {
   const obstacleTopUpScheduled = useRef(false)
   const OBSTACLE_BUFFER_SECTIONS = 10
   const OBSTACLE_TOPUP_THRESHOLD = 4
+
+  // GPU sim for subtle per-tile Y offset (visual only, Stage 1)
+  const { computePosition, positionTexture, gridSize } = useSimulation(renderer)
 
   // During question phase, extend front offset so all 16 rows are up.
 
@@ -182,8 +222,6 @@ const Terrain: FC = () => {
       movePerRow: 1,
       freq: 0.12,
       notchChance: 0.1,
-      openHeight: OPEN_HEIGHT,
-      blockedHeight: BLOCKED_HEIGHT,
     })
     return heights.map((h, i) => ({
       heights: h,
@@ -480,9 +518,13 @@ const Terrain: FC = () => {
     if (!tileShaderRef.current) return
     // Convert normalized speed to world units per second
     const zStep = terrainSpeed.current * TERRAIN_SPEED_UNITS * delta
+    // Step GPU simulation (visual Y jitter only in Stage 1)
+    computePosition(delta, terrainSpeed.current)
     updateTiles(zStep)
     moveQuestionElements(zStep)
     tileShaderRef.current.uPlayerWorldPos = playerWorldPosRef.current
+    tileShaderRef.current.uScrollZ = scrollZ.current
+    tileShaderRef.current.uPositions = positionTexture.current
   })
 
   if (!tileInstances.length) return null
@@ -515,12 +557,20 @@ const Terrain: FC = () => {
           </boxGeometry>
           <TileFadeShaderMaterial
             ref={tileShaderRef}
-            key={(CustomTileShaderMaterial as unknown as { key: string }).key}
-            transparent
-            depthWrite
+            key={CustomTileShaderMaterial.key}
+            transparent={true}
+            depthWrite={true}
             uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
             uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
             uPlayerWorldPos={playerWorldPosRef.current}
+            uPositions={null}
+            uColumns={COLUMNS}
+            uRowsVisible={ROWS_VISIBLE}
+            uTileSize={TILE_SIZE}
+            uBaseZOffset={INITIAL_TILE_UNIFORMS.uBaseZOffset}
+            uZFront={MAX_Z}
+            uScrollZ={0}
+            uEntryLift={INITIAL_TILE_UNIFORMS.uEntryLift}
           />
         </instancedMesh>
       </InstancedRigidBodies>
@@ -542,3 +592,108 @@ const Terrain: FC = () => {
 }
 
 export default Terrain
+
+type PositionShaderUniforms = {
+  uTime: { value: number }
+  uDeltaTime: { value: number }
+  uTerrainSpeed: { value: number }
+}
+
+function useSimulation(renderer: WebGLRenderer | null) {
+  // Grid dimensions map 1:1 to tile instances
+  const gridWidth = COLUMNS
+  const gridHeight = ROWS_VISIBLE
+  const tileCount = gridWidth * gridHeight
+
+  // GPUComputationRenderer setup
+  const gpuCompute = useRef<GPUComputationRenderer | null>(null)
+  const positionVariable = useRef<Variable>(null)
+  const positionUniforms = useRef<PositionShaderUniforms | null>(null)
+  const accumTime = useRef(0)
+
+  // Current output texture from compute pass
+  const positionTexture = useRef<Texture | null>(null)
+
+  // ------------------
+  // SIMULATION SETUP
+  // ------------------
+  useLayoutEffect(() => {
+    if (!renderer) return
+
+    try {
+      gpuCompute.current = new GPUComputationRenderer(gridWidth, gridHeight, renderer)
+
+      // Create initial textures
+      const dtPosition = gpuCompute.current.createTexture()
+      fillPositionTexture(dtPosition, tileCount)
+
+      // Add variable to GPU compute
+      positionVariable.current = gpuCompute.current.addVariable(
+        'texturePosition',
+        positionFragmentShader,
+        dtPosition,
+      )
+
+      // Set dependencies (self)
+      gpuCompute.current.setVariableDependencies(positionVariable.current, [
+        positionVariable.current,
+      ])
+
+      // Set uniforms
+      positionUniforms.current = positionVariable.current.material
+        .uniforms as PositionShaderUniforms
+      if (positionUniforms.current) {
+        positionUniforms.current.uTime = { value: 0.0 }
+        positionUniforms.current.uDeltaTime = { value: 0.016 }
+        positionUniforms.current.uTerrainSpeed = { value: 0.0 }
+      }
+
+      // Initialize GPU compute
+      const error = gpuCompute.current.init()
+      if (error !== null) throw new Error(error)
+
+      // Prime current texture
+      positionTexture.current = gpuCompute.current.getCurrentRenderTarget(
+        positionVariable.current,
+      ).texture
+    } catch (error) {
+      console.error('Error initializing Terrain GPUComputationRenderer:', error)
+    }
+  }, [renderer])
+
+  function computePosition(dt: number, normalizedSpeed: number) {
+    if (!gpuCompute.current || !positionUniforms.current || !positionVariable.current) return
+    const clampedDt = Math.min(dt, 0.033)
+    accumTime.current += clampedDt
+
+    positionUniforms.current.uTime.value = accumTime.current
+    positionUniforms.current.uDeltaTime.value = clampedDt
+    positionUniforms.current.uTerrainSpeed.value = normalizedSpeed
+
+    gpuCompute.current.compute()
+    positionTexture.current = gpuCompute.current.getCurrentRenderTarget(
+      positionVariable.current,
+    ).texture
+  }
+
+  return {
+    computePosition,
+    positionTexture,
+    gridSize: { width: gridWidth, height: gridHeight },
+  }
+}
+
+// Helper: initialize position texture for tiles
+const fillPositionTexture = (texturePosition: DataTexture, tileCount: number) => {
+  const posArray = texturePosition.image.data as Float32Array
+
+  // Each texel: (x, y, z, w) => (unused, yOffset, seed, opacity)
+  for (let i = 0, k = 0; i < tileCount; i++, k += 4) {
+    posArray[k + 0] = 0.0 // unused in Stage 1
+    posArray[k + 1] = 0.0 // initial y offset
+    posArray[k + 2] = Math.random() // seed for stagger/phase
+    posArray[k + 3] = 1.0 // opacity (for future use)
+  }
+
+  texturePosition.needsUpdate = true
+}
