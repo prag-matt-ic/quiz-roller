@@ -55,16 +55,24 @@ const Player: FC = () => {
   const UP = new Vector3(0, 1, 0)
   const EPS = 1e-6
 
-  const dispRef = useRef(new Vector3())
-  const vPlayerRef = useRef(new Vector3())
-  const vTerrainRef = useRef(new Vector3())
-  const vRelRef = useRef(new Vector3())
-  const axisRef = useRef(new Vector3())
-  const worldScaleRef = useRef(new Vector3())
-  const nextPosRef = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  const timeRef = useRef(0)
+  // Player world displacement over the last frame (collision-corrected by the controller)
+  const frameDisplacement = useRef(new Vector3())
+  // Player velocity this frame in world units per second
+  const playerVelocity = useRef(new Vector3())
+  // Terrain scrolling velocity in world units per second
+  const terrainVelocity = useRef(new Vector3())
+  // Player velocity relative to the terrain (used for rolling)
+  const relativeVelocity = useRef(new Vector3())
+  // World-space axis to roll the sphere around this frame
+  const rollAxis = useRef(new Vector3())
+  // World-scale of the sphere mesh (used to compute effective radius)
+  const worldScale = useRef(new Vector3())
+  // Next kinematic translation to apply to the rigid body
+  const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  // Accumulated shader time uniform
+  const shaderTime = useRef(0)
 
-  useFrame(({ clock }, delta) => {
+  useFrame((_, delta) => {
     // Always advance shader time, even during intro/game-over
     if (
       !playerShaderRef.current ||
@@ -75,8 +83,8 @@ const Player: FC = () => {
     )
       return
 
-    timeRef.current += delta
-    playerShaderRef.current.uTime = timeRef.current
+    shaderTime.current += delta
+    playerShaderRef.current.uTime = shaderTime.current
 
     if (stage === Stage.INTRO || stage === Stage.GAME_OVER) return
 
@@ -116,59 +124,59 @@ const Player: FC = () => {
 
     // The character controller returns the actual movement we should apply
     // NOT the final position, so we need to add it to current position
-    nextPosRef.current.x = currentPosition.x + correctedMovement.x
-    nextPosRef.current.y = currentPosition.y + correctedMovement.y
-    nextPosRef.current.z = currentPosition.z + correctedMovement.z
+    nextPosition.current.x = currentPosition.x + correctedMovement.x
+    nextPosition.current.y = currentPosition.y + correctedMovement.y
+    nextPosition.current.z = currentPosition.z + correctedMovement.z
 
-    bodyRef.current.setNextKinematicTranslation(nextPosRef.current)
+    bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
     // Update global playerPosition in store (immutable update)
     // Note: use a fresh object to adhere to immutability rules
     setPlayerPosition({
-      x: nextPosRef.current.x,
-      y: nextPosRef.current.y,
-      z: nextPosRef.current.z,
+      x: nextPosition.current.x,
+      y: nextPosition.current.y,
+      z: nextPosition.current.z,
     })
 
     // Player world displacement this frame (already collision-corrected)
-    dispRef.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
+    frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
 
     // Convert displacement to velocity (units / second)
-    vPlayerRef.current.copy(dispRef.current).divideScalar(Math.max(delta, EPS))
+    playerVelocity.current.copy(frameDisplacement.current).divideScalar(Math.max(delta, EPS))
 
     // Terrain scroll velocity (scale normalized speed by base units).
     // Convention: "forward" is -Z in your input mapping,
     // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
     // and the ball's relative forward velocity is -terrainSpeed on Z.
     const terrainSpeedUnits = terrainSpeed.current * TERRAIN_SPEED_UNITS
-    vTerrainRef.current.set(0, 0, -terrainSpeedUnits)
+    terrainVelocity.current.set(0, 0, -terrainSpeedUnits)
 
     // Relative velocity of ball w.r.t. ground on the contact plane
-    vRelRef.current.copy(vPlayerRef.current).add(vTerrainRef.current)
-    vRelRef.current.y = 0 // constrain to surface plane (assumes flat ground)
+    relativeVelocity.current.copy(playerVelocity.current).add(terrainVelocity.current)
+    relativeVelocity.current.y = 0 // constrain to surface plane (assumes flat ground)
 
     if (input.current.backward && Math.abs(terrainSpeedUnits) > EPS) {
       // treat ball as static relative to ground: no rolling
-      vRelRef.current.set(0, 0, 0)
+      relativeVelocity.current.set(0, 0, 0)
     }
 
     // compute effective world-space radius (handles parent/mesh scaling)
-    sphereMeshRef.current.getWorldScale(worldScaleRef.current)
+    sphereMeshRef.current.getWorldScale(worldScale.current)
     // assume uniform scale for a sphere; if not uniform, pick the contact-plane scale
-    const effectiveRadius = PLAYER_RADIUS * worldScaleRef.current.x
+    const effectiveRadius = PLAYER_RADIUS * worldScale.current.x
 
-    const speed = vRelRef.current.length()
+    const speed = relativeVelocity.current.length()
     if (speed > EPS && effectiveRadius > EPS) {
       // 0.000001 to avoid NaN
       // --- Rolling without slipping: ω = (n × v) / R ---
       // Axis given by right-hand rule (surface normal × velocity)
-      axisRef.current.copy(UP).cross(vRelRef.current).normalize()
+      rollAxis.current.copy(UP).cross(relativeVelocity.current).normalize()
 
       // Angle this frame: θ = |v| * Δt / R  (scaled if you want)
       // const angle = (speed * delta * ROLLING_SPEED_MULTIPLIER) / PLAYER_RADIUS
       const angle = (speed * delta) / effectiveRadius
 
-      sphereMeshRef.current.rotateOnWorldAxis(axisRef.current, angle)
+      sphereMeshRef.current.rotateOnWorldAxis(rollAxis.current, angle)
       sphereMeshRef.current.quaternion.normalize()
     }
   })
