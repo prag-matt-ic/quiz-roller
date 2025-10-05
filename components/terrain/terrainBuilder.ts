@@ -63,23 +63,15 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     notchChance,
   } = params
 
-  const SAFE_PADDING_ROWS = 1
+  // Hard-coded taper band lengths for easing in/out of the obstacle corridor
+  const TAPER_IN_ROWS = 8
+  const TAPER_OUT_ROWS = 8
 
   // Use simplex 2D as 1D noise by fixing Y=seed
   const noise2D = createNoise2D()
   const noise1D = (i: number) => noise2D(i * freq, seed) // [-1, 1]
 
   const heights: number[][] = new Array(rows)
-
-  console.warn('Generating obstacle heights with params:', params)
-
-  // First rows always fully open
-  for (let i = 0; i < SAFE_PADDING_ROWS; i++) {
-    heights[i] = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
-  }
-
-  const centerStart = Math.floor(COLUMNS / 2)
-  let cPrev = centerStart
 
   // width "breathes" and gently shrinks across the batch
   const widthAt = (i: number) => {
@@ -90,19 +82,47 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     return clamp(Math.round(base - knock), minWidth, maxWidth)
   }
 
-  // Generate obstacle rows between the leading and trailing padding zones.
-  for (let i = SAFE_PADDING_ROWS; i < rows - SAFE_PADDING_ROWS; i++) {
+  const centerStart = Math.floor(COLUMNS / 2)
+  let cPrev = centerStart
+  // Pre-compute band and clamp taper sizes (no explicit padding rows)
+  const innerStart = 0
+  const innerEnd = rows - 1 // inclusive
+  const innerCount = Math.max(0, rows)
+  // Ensure taper bands never overlap even on very small batches
+  const tIn = clamp(Math.floor(TAPER_IN_ROWS), 0, Math.floor(innerCount / 2))
+  const tOut = clamp(Math.floor(TAPER_OUT_ROWS), 0, Math.floor(innerCount / 2))
+  const taperOutStart = innerEnd - tOut + 1 // first row index of taper-out band
+
+  // Generate obstacle rows across the full section (taper handles easing)
+  for (let i = innerStart; i <= innerEnd; i++) {
     const rowHeights = new Array<number>(COLUMNS).fill(UNSAFE_HEIGHT)
 
     // Soft target center from noise, then cap drift for reachability
     const n = noise1D(i) // [-1,1]
     const target = Math.round((n + 1) * 0.5 * (COLUMNS - 3)) + 1 // keep off hard edges
     const c = clamp(stepToward(cPrev, target, movePerRow), 0, COLUMNS - 1)
-    const w = widthAt(i)
+    const wBase = widthAt(i)
+
+    // Compute effective width with tapering near the ends
+    let wEff = wBase
+    const inTaperIn = tIn > 0 && i < innerStart + tIn
+    const inTaperOut = tOut > 0 && i >= taperOutStart
+    if (inTaperIn) {
+      // Ease from fully open (COLUMNS) down to the base width
+      const t = (i - innerStart + 1) / (tIn + 1)
+      wEff = Math.round(lerp(COLUMNS, wBase, t))
+    } else if (inTaperOut) {
+      // Ease from base width back up to fully open
+      const t = (i - taperOutStart + 1) / (tOut + 1)
+      wEff = Math.round(lerp(wBase, COLUMNS, t))
+    }
+
+    // Keep effective width within sensible bounds
+    wEff = clamp(wEff, Math.max(1, minWidth), COLUMNS)
 
     // Corridor indices
-    const halfL = Math.floor((w - 1) / 2)
-    const halfR = Math.ceil((w - 1) / 2)
+    const halfL = Math.floor((wEff - 1) / 2)
+    const halfR = Math.ceil((wEff - 1) / 2)
     const L = clamp(c - halfL, 0, COLUMNS - 1)
     const R = clamp(c + halfR, 0, COLUMNS - 1)
 
@@ -110,9 +130,10 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     for (let col = L; col <= R; col++) rowHeights[col] = SAFE_HEIGHT
 
     // Optional notch: nibble corridor edge but never seal it
-    if (Math.random() < notchChance && w >= 2) {
+    // Skip notches during taper rows to keep the transition clean
+    if (!inTaperIn && !inTaperOut && Math.random() < notchChance && wEff >= 2) {
       const sideLeft = Math.random() < 0.5
-      const notchWidth = Math.min(2, w - 1) // preserve ≥1 open cell
+      const notchWidth = Math.min(2, wEff - 1) // preserve ≥1 open cell
       if (sideLeft) {
         for (let k = 0; k < notchWidth; k++) rowHeights[L + k] = UNSAFE_HEIGHT
       } else {
@@ -130,11 +151,6 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
 
     heights[i] = rowHeights
     cPrev = c
-  }
-
-  // Last rows always fully open
-  for (let i = rows - SAFE_PADDING_ROWS; i < rows; i++) {
-    heights[i] = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
   }
 
   console.log('Generated obstacle heights:', { heights })
