@@ -1,15 +1,7 @@
 /* eslint-disable simple-import-sort/imports */
 'use client'
 
-import {
-  createRef,
-  type FC,
-  startTransition,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import {
@@ -17,7 +9,7 @@ import {
   InstancedRigidBodyProps,
   RapierRigidBody,
 } from '@react-three/rapier'
-import { Group, InstancedBufferAttribute, InstancedMesh, Vector3 } from 'three'
+import { Group, InstancedBufferAttribute, Vector3 } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { QuestionText } from '@/components/QuestionText'
@@ -25,17 +17,16 @@ import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
-import { type Question } from '@/model/schema'
 
 import tileFadeFragment from './shaders/tile.frag'
 import tileFadeVertex from './shaders/tile.vert'
 import {
   COLUMNS,
+  ENTRY_Y_OFFSET,
+  ENTRY_RAISE_DURATION_ROWS,
   MAX_Z,
   OBSTACLE_SECTION_ROWS,
   QUESTION_SECTION_ROWS,
-  QUESTION_TEXT_FONT_SIZE,
-  QUESTION_TEXT_MAX_WIDTH,
   ROWS_VISIBLE,
   SAFE_HEIGHT,
   TILE_SIZE,
@@ -76,26 +67,23 @@ type RowData = {
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isGameOver = stage === Stage.GAME_OVER
-  const currentQuestionIndex = useGameStore((s) => s.currentQuestionIndex)
-  const questions = useGameStore((s) => s.questions)
-
-  const activeQuestion = useMemo<Question>(() => {
-    return questions[currentQuestionIndex]
-  }, [questions, currentQuestionIndex])
+  const isQuestionStage = stage === Stage.QUESTION
+  const isAwaitingQuestion = useGameStore((s) => s.isAwaitingQuestion)
+  const currentQuestion = useGameStore((s) => s.currentQuestion)
 
   function onTerrainSpeedChange(normalized: number) {
+    if (!tileShader.current) return
     // Interpolate entry window based on normalized speed.
     // 0 => question section fully raised; 1 => terrain entry offset used.
-    const frontOffsetRows =
-      QUESTION_SECTION_ROWS + (ENTRY_FRONT_OFFSET_ROWS - QUESTION_SECTION_ROWS) * normalized
+    const frontOffsetRows = QUESTION_SECTION_ROWS + (12 - QUESTION_SECTION_ROWS) * normalized
+
     const endZ = MAX_Z - frontOffsetRows * TILE_SIZE
     const startZ = endZ - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
+
     entryStartZRef.current = startZ
     entryEndZRef.current = endZ
-    if (tileShaderRef.current) {
-      tileShaderRef.current.uEntryStartZ = startZ
-      tileShaderRef.current.uEntryEndZ = endZ
-    }
+    tileShader.current.uEntryStartZ = startZ
+    tileShader.current.uEntryEndZ = endZ
   }
 
   // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
@@ -110,25 +98,18 @@ const Terrain: FC = () => {
   const wrapCountByRow = useRef<number[]>([])
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
-  // Per-instance GPU attributes: open mask + base Y (at assignment time)
-  const instanceOpenMask = useRef<Float32Array | null>(null)
-  const instanceBaseY = useRef<Float32Array | null>(null)
+  // Per-instance GPU attributes
   const instanceSeed = useRef<Float32Array | null>(null)
-  const instanceOpenAttrRef = useRef<InstancedBufferAttribute>(null)
-  const instanceBaseYAttrRef = useRef<InstancedBufferAttribute>(null)
-  const instancedMeshRef = useRef<InstancedMesh>(null)
+  // Single visibility channel in [0,1] replacing open mask + baseY attribute
+  const instanceVisibility = useRef<Float32Array | null>(null)
+  const instanceVisibilityAttrRef = useRef<InstancedBufferAttribute>(null)
 
-  const tileShaderRef = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
+  const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  // Entry lift animation config (rows -> world units via TILE_SIZE)
-  const ENTRY_LIFT_UNITS = TILE_SIZE * 2 // set them down by 1 unit
-  const ENTRY_FRONT_OFFSET_ROWS = 12 // finish lifting this many rows before MAX_Z (player) during terrain
-  const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
+
   // Interpolated entry window refs (kept in sync with terrain speed changes)
-  const entryStartZRef = useRef<number>(
-    MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE,
-  )
+  const entryStartZRef = useRef<number>(MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE)
   const entryEndZRef = useRef<number>(MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE)
   // Obstacle section precomputation buffer
   const obstacleSectionBuffer = useRef<RowData[][]>([])
@@ -208,12 +189,9 @@ const Terrain: FC = () => {
       obstacleTopUpScheduled.current = true
       // Defer heavy generation outside the frame loop
       startTransition(() => {
-        try {
-          const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
-          if (needed > 0) topUpObstacleBuffer(needed)
-        } finally {
-          obstacleTopUpScheduled.current = false
-        }
+        const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
+        if (needed > 0) topUpObstacleBuffer(needed)
+        obstacleTopUpScheduled.current = false
       })
     }
   }
@@ -240,14 +218,15 @@ const Terrain: FC = () => {
       insertObstacleRows()
       insertQuestionRows()
       insertObstacleRows()
+      insertQuestionRows()
+      insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
       const zOffset = TILE_SIZE * 5
 
       // Pre-generate visible window of rows
       const totalInstances = ROWS_VISIBLE * COLUMNS
-      instanceOpenMask.current = new Float32Array(totalInstances)
-      instanceBaseY.current = new Float32Array(totalInstances)
+      instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
 
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
@@ -265,11 +244,10 @@ const Terrain: FC = () => {
           const bodyIndex = rowIndex * COLUMNS + col
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
-          if (instanceOpenMask.current && instanceBaseY.current && instanceSeed.current) {
-            instanceOpenMask.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
-            instanceBaseY.current[bodyIndex] = y
-            instanceSeed.current[bodyIndex] = Math.random()
-          }
+
+          instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+          instanceSeed.current[bodyIndex] = Math.random()
+
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
             position: [x, y, z],
@@ -361,14 +339,11 @@ const Terrain: FC = () => {
       for (let col = 0; col < COLUMNS; col++) {
         const bodyIndex = rowIndex * COLUMNS + col
         yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
-        if (instanceOpenMask.current && instanceBaseY.current) {
-          const y = newRowData.heights[col]
-          instanceOpenMask.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
-          instanceBaseY.current[bodyIndex] = y
-        }
+        const y = newRowData.heights[col]
+        instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
       }
-      if (instanceOpenAttrRef.current) instanceOpenAttrRef.current.needsUpdate = true
-      if (instanceBaseYAttrRef.current) instanceBaseYAttrRef.current.needsUpdate = true
+
+      instanceVisibilityAttrRef.current!.needsUpdate = true
     }
 
     // If, after applying wraps, the assigned row starts a question section, position Q/A elements
@@ -414,14 +389,14 @@ const Terrain: FC = () => {
       }
 
       // Compute per-row Y offset for entry lift animation (ignored during game over)
-      let yOffset = -ENTRY_LIFT_UNITS
+      let yOffset = -ENTRY_Y_OFFSET
 
       if (z >= entryStartZ) {
         if (z >= entryEndZ) {
           yOffset = 0
         } else {
           const tLift = (z - entryStartZ) / (entryEndZ - entryStartZ)
-          yOffset = -ENTRY_LIFT_UNITS * (1 - tLift)
+          yOffset = -ENTRY_Y_OFFSET * (1 - tLift)
         }
       }
 
@@ -446,11 +421,24 @@ const Terrain: FC = () => {
   function moveQuestionElements(zStep: number) {
     if (!questionGroupRef.current) return
 
-    questionGroupRef.current.position.z += zStep
+    const isQuestionBehindCamera = questionGroupRef.current.position.z > MAX_Z
+    if (isQuestionBehindCamera) {
+      // Move out of view until next repositioning
+      questionGroupRef.current.position.z = 40
+      questionGroupRef.current.position.y = -40
+    } else {
+      questionGroupRef.current.position.z += zStep
+    }
+
     // Answer tiles (rapier bodies)
     for (const ref of answerRefs) {
       if (!ref.current) continue
       const translation = ref.current.translation()
+      if (translation.z > MAX_Z) {
+        // Move out of view until next repositioning
+        ref.current.setTranslation({ x: translation.x, y: -40, z: 40 }, false)
+        continue
+      }
       ref.current.setTranslation(
         {
           x: translation.x,
@@ -466,12 +454,12 @@ const Terrain: FC = () => {
   // terrain and question elements in lockstep.
   useFrame((_, delta) => {
     if (!isSetup.current) return
-    if (!tileShaderRef.current) return
+    if (!tileShader.current) return
     // Convert normalized speed to world units per second
     const zStep = terrainSpeed.current * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
-    tileShaderRef.current.uPlayerWorldPos = playerWorldPosRef.current
+    tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
   })
 
   if (!tileInstances.length) return null
@@ -487,19 +475,13 @@ const Terrain: FC = () => {
         colliders="cuboid"
         friction={0.0}>
         <instancedMesh
-          ref={instancedMeshRef}
           args={[undefined, undefined, tileInstances.length]}
           count={tileInstances.length}>
           <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE]}>
             <instancedBufferAttribute
-              ref={instanceOpenAttrRef}
-              attach="attributes-instanceOpen"
-              args={[instanceOpenMask.current!, 1]}
-            />
-            <instancedBufferAttribute
-              ref={instanceBaseYAttrRef}
-              attach="attributes-instanceBaseY"
-              args={[instanceBaseY.current!, 1]}
+              ref={instanceVisibilityAttrRef}
+              attach="attributes-instanceVisibility"
+              args={[instanceVisibility.current!, 1]}
             />
             <instancedBufferAttribute
               attach="attributes-instanceSeed"
@@ -507,7 +489,7 @@ const Terrain: FC = () => {
             />
           </boxGeometry>
           <TileShaderMaterial
-            ref={tileShaderRef}
+            ref={tileShader}
             key={(CustomTileShaderMaterial as unknown as { key: string }).key}
             transparent
             depthWrite
@@ -521,9 +503,7 @@ const Terrain: FC = () => {
       {/* Question overlay positioned over open section; single instance recycled */}
       <QuestionText
         ref={questionGroupRef}
-        text={activeQuestion.text}
-        maxWidth={QUESTION_TEXT_MAX_WIDTH}
-        fontSize={QUESTION_TEXT_FONT_SIZE}
+        text={currentQuestion.text}
         position={[0, 0.01, -999]}
       />
       {/* Do not conditionally mount these tiles */}

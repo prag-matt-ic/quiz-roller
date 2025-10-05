@@ -13,7 +13,7 @@ void main() {
 
   // Distance-based highlight precomputed in vertex shader
   float highlight = vPlayerHighlight;
-  vec3 worldPosScaled = vWorldPos * 0.2;
+  vec3 worldPosScaled = vWorldPos * 0.12;
 
   // Compute noise with slight per-instance offset using seed
   vec3 bgNoisePos = (worldPosScaled + vec3(vSeed * 0.3, 0.0, vSeed * 0.3));

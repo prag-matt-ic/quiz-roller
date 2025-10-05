@@ -1,6 +1,5 @@
 'use client'
 
-import { useGSAP } from '@gsap/react'
 import { shaderMaterial, Text } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
@@ -44,14 +43,19 @@ type AnswerTileProps = {
 
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
-    const currentQuestion = useGameStore((s) => s.questions[s.currentQuestionIndex])
-    const isConfirming = useGameStore(
-      (s) => s.confirmingAnswer?.answer.text === currentQuestion.answers[index]?.text,
-    )
+    const currentQuestion = useGameStore((s) => s.currentQuestion)
+    const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
+    const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
+
+    const isConfirming: boolean = useMemo(() => {
+      if (!confirmingAnswer) return false
+      if (!currentQuestion.answers[index]) return false
+      return confirmingAnswer.answer.text === currentQuestion.answers[index].text
+    }, [confirmingAnswer, currentQuestion, index])
 
     const { text, userData }: { text: string; userData: AnswerUserData | undefined } =
       useMemo(() => {
-        const answer = currentQuestion.answers[index]
+        const answer = currentQuestion?.answers[index]
         if (!answer) return { text: '', userData: undefined }
         const userData: AnswerUserData = {
           type: 'answer',
@@ -61,6 +65,13 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         const text = answer.text
         return { text, userData }
       }, [currentQuestion, index])
+
+    const wasConfirmed: boolean = useMemo(
+      () => confirmedAnswers.some((a) => a.answer.text === text),
+      [confirmedAnswers, text],
+    )
+
+    console.log('Answer Tile', { text, isConfirming, wasConfirmed })
 
     const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
     const confirmingProgress = useRef({ value: 0 })

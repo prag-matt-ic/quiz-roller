@@ -66,7 +66,6 @@ const Player: FC = () => {
 
   useFrame(({ clock }, delta) => {
     // Always advance shader time, even during intro/game-over
-
     if (
       !playerShaderRef.current ||
       !bodyRef.current ||

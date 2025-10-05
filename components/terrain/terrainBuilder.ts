@@ -2,12 +2,15 @@ import { createNoise2D } from 'simplex-noise'
 
 // Grid configuration
 export const COLUMNS = 16
-export const ROWS_VISIBLE = 40
+export const ROWS_VISIBLE = 32
 export const TILE_SIZE = 1
 export const TILE_THICKNESS = 0.16
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
 export const UNSAFE_HEIGHT = -40 // sunken obstacles
+// Entry lift animation config (rows -> world units via TILE_SIZE)
+export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world units)
+export const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
 
 export const QUESTION_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
@@ -21,7 +24,7 @@ export const QUESTION_TEXT_MAX_WIDTH = 8 * TILE_SIZE
 export const QUESTION_TEXT_FONT_SIZE = 0.4
 export const QUESTION_TEXT_ROWS = 4
 
-export const MAX_Z = TILE_SIZE * 6
+export const MAX_Z = TILE_SIZE * 8
 
 type ObstacleParams = {
   rows: number // e.g. 256

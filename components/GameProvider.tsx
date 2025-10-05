@@ -32,6 +32,7 @@ type GameState = {
   currentDifficulty: number
   currentQuestionIndex: number
   isAwaitingQuestion: boolean
+  currentQuestion: Question
   questions: Question[]
   getAndSetNextQuestion: () => Promise<void>
 
@@ -55,6 +56,7 @@ const INITIAL_STATE: Pick<
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
+  | 'currentQuestion'
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'isAwaitingQuestion'
@@ -65,6 +67,7 @@ const INITIAL_STATE: Pick<
   topic: null,
   currentDifficulty: 0,
   questions: [topicQuestion],
+  currentQuestion: topicQuestion,
   currentQuestionIndex: 0,
   confirmingAnswer: null,
   confirmedAnswers: [],
@@ -104,6 +107,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         questions: [...s.questions, nextQuestion],
         currentQuestionIndex: currentQuestionIndex + 1,
         isAwaitingQuestion: false,
+        currentQuestion: nextQuestion,
       }))
     },
     setConfirmingAnswer: (data: AnswerUserData | null) => {

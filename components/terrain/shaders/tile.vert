@@ -1,11 +1,9 @@
 // Instanced tile fade vertex shader
-// - instanceOpen: 1.0 for open tiles, 0.0 for blocked
-// - instanceBaseY: base Y assigned for the instance (for reference/extension)
+// - instanceVisibility: 1.0 for open (safe) tiles, 0.0 otherwise
 // - uEntryStartZ/uEntryEndZ: world-Z window over which open tiles fade in
 // - uPlayerWorldPos: player world-space position for simple tile highlighting
 
-attribute float instanceOpen;
-attribute float instanceBaseY;
+attribute float instanceVisibility;
 attribute float instanceSeed;
 
 uniform float uEntryStartZ;
@@ -40,8 +38,8 @@ void main() {
   // <1.0 => faster start (ease-out), >1.0 => slower start (ease-in).
   float speedExp = mix(0.75, 1.35, clamp(instanceSeed, 0.0, 1.0));
   float t = pow(tBase, speedExp);
-  // If instanceOpen == 0.0, keep alpha at 1.0 (no fade)
-  vAlpha = mix(1.0, t, clamp(instanceOpen, 0.0, 1.0));
+  // Gate fade by instanceVisibility: 0 => invisible, 1 => fade by t
+  vAlpha = t * clamp(instanceVisibility, 0.0, 1.0);
 
   // Pass seed to fragment for noise offset
   vSeed = instanceSeed;
