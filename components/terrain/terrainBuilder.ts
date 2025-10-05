@@ -229,11 +229,11 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
-  const questionTextCenterRow = 3.5
+  const questionTextCenterRow = 5.5
   const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
   // Two-tile layout
-  const tilesCenterRow = 9.5
+  const tilesCenterRow = 11.5
   const tilesTriggerRow = Math.ceil(tilesCenterRow)
   const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
   // Carve non-tile areas in rows that contain the answer tile rectangles
