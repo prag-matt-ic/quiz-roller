@@ -1,20 +1,33 @@
 'use client'
 
-import { Text } from '@react-three/drei'
+import { shaderMaterial, Text } from '@react-three/drei'
+import { extend, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useMemo, useRef } from 'react'
 import { Group, type Vector3Tuple } from 'three'
 
 import { type AnswerUserData } from '@/model/schema'
 
 import { useGameStore } from './GameProvider'
 import { PLAYER_RADIUS } from './player/PlayerHUD'
-import {
-  ANSWER_TILE_HEIGHT,
-  ANSWER_TILE_WIDTH,
-  QUESTION_TEXT_MAX_WIDTH,
-  QUESTION_TEXT_ROWS,
-} from './terrain/terrainBuilder'
+import answerTileFragment from './question/shaders/answerTile.frag'
+import answerTileVertex from './question/shaders/answerTile.vert'
+import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from './terrain/terrainBuilder'
+
+type AnswerTileShaderUniforms = {
+  uTime: number
+}
+
+const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
+  uTime: 0,
+}
+
+const AnswerTileShader = shaderMaterial(
+  INITIAL_ANSWER_TILE_UNIFORMS,
+  answerTileVertex,
+  answerTileFragment,
+)
+const AnswerTileShaderMaterial = extend(AnswerTileShader)
 
 type AnswerTileProps = {
   position: Vector3Tuple
@@ -29,6 +42,10 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
     )
 
     console.warn('Rendering AnswerTile:', { position, index, isBeingConfirmed })
+
+    const answerTileShaderRef = useRef<
+      typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms
+    >(null)
 
     const { text, userData } = useMemo(() => {
       const answer = currentQuestion.answers[index]
@@ -45,6 +62,14 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
 
       return { text, userData }
     }, [currentQuestion, index])
+
+    useFrame(({ clock }) => {
+      if (!answerTileShaderRef.current) return
+      if (isBeingConfirmed) {
+        // Drive pulsation via elapsed time only while confirming
+        answerTileShaderRef.current.uTime = clock.elapsedTime
+      }
+    })
 
     return (
       <RigidBody
@@ -66,8 +91,13 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         />
         <mesh>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
-          {/* TODO: replace with a custom shader material.. */}
-          <meshStandardMaterial color="#fff" transparent={true} opacity={0.3} />
+          <AnswerTileShaderMaterial
+            key={AnswerTileShader.key}
+            ref={answerTileShaderRef}
+            uTime={INITIAL_ANSWER_TILE_UNIFORMS.uTime}
+            transparent={true}
+            depthWrite={true}
+          />
         </mesh>
         <Text
           color="#000"

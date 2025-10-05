@@ -16,8 +16,7 @@ vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
 }
 
 void main() {
-  float alpha = clamp(vAlpha, 0.0, 1.0);
-  if (alpha <= 0.001) discard;
+  if (vAlpha <= 0.001) discard;
 
   // Distance-based highlight using instance center
   float dist = distance(vInstanceCenter, uPlayerWorldPos);
@@ -39,5 +38,5 @@ void main() {
 
  vec3 color = mix(background, pal, highlight * 0.8);
 
-  gl_FragColor = vec4(color, alpha);
+  gl_FragColor = vec4(color, vAlpha);
 }
