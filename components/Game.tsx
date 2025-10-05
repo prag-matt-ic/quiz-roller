@@ -34,8 +34,8 @@ const Game: FC = () => {
       }}>
       <ambientLight intensity={1} />
       <pointLight position={[0, 5, -0.5]} intensity={16} />
-      <OrbitControls />
-      {/* <Camera isMobile={false} /> */}
+      {/* <OrbitControls /> */}
+      <Camera isMobile={false} />
       <Suspense>
         <Physics debug={false}>
           {process.env.NODE_ENV === 'development' && <Stats />}
