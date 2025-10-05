@@ -5,6 +5,9 @@ export const COLUMNS = 16
 export const ROWS_VISIBLE = 40
 export const TILE_SIZE = 1
 export const TILE_THICKNESS = 0.16
+// Heights
+export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
+export const UNSAFE_HEIGHT = -40 // sunken obstacles
 
 export const QUESTION_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
@@ -28,8 +31,6 @@ type ObstacleParams = {
   movePerRow: number // max lateral shift (cells) per row (reachability)
   freq: number // noise frequency (0.05..0.2)
   notchChance: number // 0..1 small chance to nibble corridor edge
-  openHeight?: number // y for open cells (default -1000)
-  blockedHeight?: number // y for obstacles (default 0)
 }
 
 function clamp(x: number, a: number, b: number) {
@@ -60,8 +61,6 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     movePerRow,
     freq,
     notchChance,
-    openHeight = 0,
-    blockedHeight = -1000,
   } = params
 
   const SAFE_PADDING_ROWS = 1
@@ -76,7 +75,7 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
 
   // First rows always fully open
   for (let i = 0; i < SAFE_PADDING_ROWS; i++) {
-    heights[i] = new Array<number>(COLUMNS).fill(openHeight)
+    heights[i] = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
   }
 
   const centerStart = Math.floor(COLUMNS / 2)
@@ -93,7 +92,7 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
 
   // Generate obstacle rows between the leading and trailing padding zones.
   for (let i = SAFE_PADDING_ROWS; i < rows - SAFE_PADDING_ROWS; i++) {
-    const rowHeights = new Array<number>(COLUMNS).fill(blockedHeight)
+    const rowHeights = new Array<number>(COLUMNS).fill(UNSAFE_HEIGHT)
 
     // Soft target center from noise, then cap drift for reachability
     const n = noise1D(i) // [-1,1]
@@ -108,25 +107,25 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     const R = clamp(c + halfR, 0, COLUMNS - 1)
 
     // Open the corridor
-    for (let col = L; col <= R; col++) rowHeights[col] = openHeight
+    for (let col = L; col <= R; col++) rowHeights[col] = SAFE_HEIGHT
 
     // Optional notch: nibble corridor edge but never seal it
     if (Math.random() < notchChance && w >= 2) {
       const sideLeft = Math.random() < 0.5
       const notchWidth = Math.min(2, w - 1) // preserve ≥1 open cell
       if (sideLeft) {
-        for (let k = 0; k < notchWidth; k++) rowHeights[L + k] = blockedHeight
+        for (let k = 0; k < notchWidth; k++) rowHeights[L + k] = UNSAFE_HEIGHT
       } else {
-        for (let k = 0; k < notchWidth; k++) rowHeights[R - k] = blockedHeight
+        for (let k = 0; k < notchWidth; k++) rowHeights[R - k] = UNSAFE_HEIGHT
       }
       // Ensure at least one cell open
       let anyOpen = false
       for (let col = L; col <= R; col++)
-        if (rowHeights[col] === openHeight) {
+        if (rowHeights[col] === SAFE_HEIGHT) {
           anyOpen = true
           break
         }
-      if (!anyOpen) rowHeights[c] = openHeight // reopen center if we accidentally sealed it
+      if (!anyOpen) rowHeights[c] = SAFE_HEIGHT // reopen center if we accidentally sealed it
     }
 
     heights[i] = rowHeights
@@ -135,7 +134,7 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
 
   // Last rows always fully open
   for (let i = rows - SAFE_PADDING_ROWS; i < rows; i++) {
-    heights[i] = new Array<number>(COLUMNS).fill(openHeight)
+    heights[i] = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
   }
 
   console.log('Generated obstacle heights:', { heights })
@@ -162,16 +161,16 @@ export function positionQuestionAndAnswerTiles(
   return positionFourAnswerTiles(startZ)
 }
 
+const ANSWER_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
+
 function positionFourAnswerTiles(startZ: number): {
   textPos: [number, number, number]
   tilePositions: [number, number, number][]
 } {
-  const yValue = -TILE_THICKNESS * 2 + 0.01
-
   const textCenterRowIndex = 3.5
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
-    yValue,
+    ANSWER_TILE_Y,
     startZ - textCenterRowIndex * TILE_SIZE,
   ]
 
@@ -182,10 +181,10 @@ function positionFourAnswerTiles(startZ: number): {
   const topCenterRow = 7.5
   const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + 1 // spacing row
   tilePositions.push(
-    [colToX(leftCenterCol), yValue, startZ - topCenterRow * TILE_SIZE],
-    [colToX(rightCenterCol), yValue, startZ - topCenterRow * TILE_SIZE],
-    [colToX(leftCenterCol), yValue, startZ - bottomCenterRow * TILE_SIZE],
-    [colToX(rightCenterCol), yValue, startZ - bottomCenterRow * TILE_SIZE],
+    [colToX(leftCenterCol), ANSWER_TILE_Y, startZ - topCenterRow * TILE_SIZE],
+    [colToX(rightCenterCol), ANSWER_TILE_Y, startZ - topCenterRow * TILE_SIZE],
+    [colToX(leftCenterCol), ANSWER_TILE_Y, startZ - bottomCenterRow * TILE_SIZE],
+    [colToX(rightCenterCol), ANSWER_TILE_Y, startZ - bottomCenterRow * TILE_SIZE],
   )
 
   return { textPos, tilePositions }
@@ -195,11 +194,10 @@ function positionTwoAnswerTiles(startZ: number): {
   textPos: [number, number, number]
   tilePositions: [number, number, number][]
 } {
-  const yValue = -TILE_THICKNESS * 2 + 0.01
   const textCenterRowIndex = 5.5
   const textPos: [number, number, number] = [
     colToX(COLUMNS / 2 - 0.5),
-    yValue,
+    ANSWER_TILE_Y,
     startZ - textCenterRowIndex * TILE_SIZE,
   ]
 
@@ -209,8 +207,8 @@ function positionTwoAnswerTiles(startZ: number): {
 
   const tilesCenterRow = 10.5
   tilePositions.push(
-    [colToX(leftCenterCol), yValue, startZ - tilesCenterRow * TILE_SIZE],
-    [colToX(rightCenterCol), yValue, startZ - tilesCenterRow * TILE_SIZE],
+    [colToX(leftCenterCol), ANSWER_TILE_Y, startZ - tilesCenterRow * TILE_SIZE],
+    [colToX(rightCenterCol), ANSWER_TILE_Y, startZ - tilesCenterRow * TILE_SIZE],
   )
 
   return { textPos, tilePositions }
@@ -220,16 +218,12 @@ function positionTwoAnswerTiles(startZ: number): {
 // leave all cells open. For subsequent questions (two-tile layout), close
 // cells outside the answer tile footprints across the tile row band so the
 // player must pass over a tile to proceed.
-export function generateQuestionHeights(params: {
-  isFirstQuestion: boolean
-  openHeight?: number
-  blockedHeight?: number
-}): number[][] {
-  const { isFirstQuestion, openHeight = 0, blockedHeight = -1000 } = params
+export function generateQuestionHeights(params: { isFirstQuestion: boolean }): number[][] {
+  const { isFirstQuestion } = params
 
   // Start fully open
   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
-    new Array<number>(COLUMNS).fill(openHeight),
+    new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
 
   if (isFirstQuestion) return heights
@@ -250,7 +244,7 @@ export function generateQuestionHeights(params: {
     for (let c = 0; c < COLUMNS; c++) {
       const inLeft = c >= leftStartCol && c <= leftEndCol
       const inRight = c >= rightStartCol && c <= rightEndCol
-      if (!inLeft && !inRight) row[c] = blockedHeight
+      if (!inLeft && !inRight) row[c] = UNSAFE_HEIGHT
     }
   }
 

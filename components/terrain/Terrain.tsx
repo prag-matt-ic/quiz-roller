@@ -37,6 +37,7 @@ import {
   QUESTION_TEXT_FONT_SIZE,
   QUESTION_TEXT_MAX_WIDTH,
   ROWS_VISIBLE,
+  SAFE_HEIGHT,
   TILE_SIZE,
   TILE_THICKNESS,
   colToX,
@@ -44,10 +45,6 @@ import {
   generateQuestionHeights,
   positionQuestionAndAnswerTiles,
 } from './terrainBuilder'
-
-// Heights
-const OPEN_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
-const BLOCKED_HEIGHT = -40 // sunken obstacles
 
 // Shader material for fade-in (mirrors TunnelParticles pattern)
 type TileShaderUniforms = {
@@ -164,8 +161,6 @@ const Terrain: FC = () => {
   function insertQuestionRows(isFirstQuestion = false) {
     const heights = generateQuestionHeights({
       isFirstQuestion,
-      openHeight: OPEN_HEIGHT,
-      blockedHeight: BLOCKED_HEIGHT,
     })
     const blocks: RowData[] = heights.map((row, i) => ({
       heights: row,
@@ -191,8 +186,6 @@ const Terrain: FC = () => {
       movePerRow: 1,
       freq: 0.12,
       notchChance: 0.1,
-      openHeight: OPEN_HEIGHT,
-      blockedHeight: BLOCKED_HEIGHT,
     })
     return heights.map((h, i) => ({
       heights: h,
@@ -273,7 +266,7 @@ const Terrain: FC = () => {
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
           if (instanceOpenMask.current && instanceBaseY.current && instanceSeed.current) {
-            instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
+            instanceOpenMask.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
             instanceBaseY.current[bodyIndex] = y
             instanceSeed.current[bodyIndex] = Math.random()
           }
@@ -370,7 +363,7 @@ const Terrain: FC = () => {
         yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
         if (instanceOpenMask.current && instanceBaseY.current) {
           const y = newRowData.heights[col]
-          instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
+          instanceOpenMask.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
           instanceBaseY.current[bodyIndex] = y
         }
       }
@@ -440,7 +433,7 @@ const Terrain: FC = () => {
         const t = tmpTranslation.current
         t.x = xByBodyIndex.current[bodyIndex]
         const baseY = yByBodyIndex.current[bodyIndex]
-        t.y = baseY === OPEN_HEIGHT ? baseY + yOffset : baseY
+        t.y = baseY === SAFE_HEIGHT ? baseY + yOffset : baseY
         t.z = z
         body.setTranslation(t, true)
       }

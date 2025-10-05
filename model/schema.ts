@@ -50,7 +50,7 @@ export const topicQuestion: Question = {
   id: 'topic',
   subtopic: '-',
   difficulty: 0,
-  text: 'Select a topic to begin rolling',
+  text: 'Select a topic',
   answers: TOPICS.map((topic) => ({
     text: topic,
     isCorrect: true,

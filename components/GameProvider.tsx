@@ -31,6 +31,7 @@ type GameState = {
   // Questions
   currentDifficulty: number
   currentQuestionIndex: number
+  isAwaitingQuestion: boolean
   questions: Question[]
   getAndSetNextQuestion: () => Promise<void>
 
@@ -56,6 +57,7 @@ const INITIAL_STATE: Pick<
   | 'currentQuestionIndex'
   | 'confirmingAnswer'
   | 'confirmedAnswers'
+  | 'isAwaitingQuestion'
 > = {
   stage: Stage.QUESTION,
   terrainSpeed: 0,
@@ -66,6 +68,7 @@ const INITIAL_STATE: Pick<
   currentQuestionIndex: 0,
   confirmingAnswer: null,
   confirmedAnswers: [],
+  isAwaitingQuestion: false,
 }
 
 type CreateStoreParams = {
@@ -90,16 +93,17 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
-
+      set({ isAwaitingQuestion: true })
       const nextQuestion = await fetchQuestion({
         topic: topic!,
-        previousQuestions: questions,
+        previousQuestions: questions.splice(1), // Exclude topic question
         difficulty: currentDifficulty,
       })
-      console.warn('Question received:', nextQuestion)
+      console.warn('New question received:', nextQuestion)
       set((s) => ({
         questions: [...s.questions, nextQuestion],
         currentQuestionIndex: currentQuestionIndex + 1,
+        isAwaitingQuestion: false,
       }))
     },
     setConfirmingAnswer: (data: AnswerUserData | null) => {

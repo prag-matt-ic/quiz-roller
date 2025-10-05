@@ -5,7 +5,7 @@ varying vec2 vUv;
 
 void main() {
   // Base: 25% white
-  float baseAlpha = 0.25;
+  float baseAlpha = 0.8;
 
   // Barebones pulsation: varies 0..1 with time; at uTime=0 -> 0
   float modAmt = abs(sin(uTime * 4.0));
