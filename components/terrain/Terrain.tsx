@@ -18,8 +18,8 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { type Question } from '@/model/schema'
 
-import tileFadeFragment from './shaders/tileFade.frag'
-import tileFadeVertex from './shaders/tileFade.vert'
+import tileFadeFragment from './shaders/tile.frag'
+import tileFadeVertex from './shaders/tile.vert'
 import {
   COLUMNS,
   MAX_Z,
@@ -56,7 +56,7 @@ const CustomTileShaderMaterial = shaderMaterial(
   tileFadeVertex,
   tileFadeFragment,
 )
-const TileFadeShaderMaterial = extend(CustomTileShaderMaterial)
+const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
 type SectionType = 'question' | 'obstacles'
 
@@ -109,11 +109,12 @@ const Terrain: FC = () => {
   // Per-instance GPU attributes: open mask + base Y (at assignment time)
   const instanceOpenMask = useRef<Float32Array | null>(null)
   const instanceBaseY = useRef<Float32Array | null>(null)
+  const instanceSeed = useRef<Float32Array | null>(null)
   const instanceOpenAttrRef = useRef<InstancedBufferAttribute>(null)
   const instanceBaseYAttrRef = useRef<InstancedBufferAttribute>(null)
   const instancedMeshRef = useRef<InstancedMesh>(null)
 
-  const tileShaderRef = useRef<typeof TileFadeShaderMaterial & TileShaderUniforms>(null)
+  const tileShaderRef = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   // Entry lift animation config (rows -> world units via TILE_SIZE)
@@ -251,6 +252,12 @@ const Terrain: FC = () => {
       const totalInstances = ROWS_VISIBLE * COLUMNS
       instanceOpenMask.current = new Float32Array(totalInstances)
       instanceBaseY.current = new Float32Array(totalInstances)
+      instanceSeed.current = new Float32Array(totalInstances)
+
+      // Deterministic per-instance seed in [0,1]
+      const seedForIndex = (i: number) => {
+        return Math.random()
+      }
 
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
@@ -267,9 +274,10 @@ const Terrain: FC = () => {
           const bodyIndex = rowIndex * COLUMNS + col
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
-          if (instanceOpenMask.current && instanceBaseY.current) {
+          if (instanceOpenMask.current && instanceBaseY.current && instanceSeed.current) {
             instanceOpenMask.current[bodyIndex] = y === OPEN_HEIGHT ? 1 : 0
             instanceBaseY.current[bodyIndex] = y
+            instanceSeed.current[bodyIndex] = seedForIndex(bodyIndex)
           }
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
@@ -513,8 +521,12 @@ const Terrain: FC = () => {
               attach="attributes-instanceBaseY"
               args={[instanceBaseY.current!, 1]}
             />
+            <instancedBufferAttribute
+              attach="attributes-instanceSeed"
+              args={[instanceSeed.current!, 1]}
+            />
           </boxGeometry>
-          <TileFadeShaderMaterial
+          <TileShaderMaterial
             ref={tileShaderRef}
             key={(CustomTileShaderMaterial as unknown as { key: string }).key}
             transparent
