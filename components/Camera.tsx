@@ -16,10 +16,6 @@ const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
-// Intro animation start position (wide arc sweep from side)
-export const INTRO_START_POSITION = { x: -10, y: 0, z: 12 }
-const INTRO_START_TARGET = { x: 0, y: 0, z: 0 }
-
 // Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
   Stage,
@@ -71,14 +67,16 @@ const Camera: FC<Props> = () => {
     const animateIntro = async () => {
       if (!cameraControls.current) return
 
+      const { position, target, zoom } = CAMERA_CONFIG[Stage.SPLASH]
+
       // Set initial position without transition (instantly place camera)
       await cameraControls.current.setLookAt(
-        INTRO_START_POSITION.x,
-        INTRO_START_POSITION.y,
-        INTRO_START_POSITION.z,
-        INTRO_START_TARGET.x,
-        INTRO_START_TARGET.y,
-        INTRO_START_TARGET.z,
+        position.x,
+        position.y,
+        position.z,
+        target.x,
+        target.y,
+        target.z,
         false,
       )
 
@@ -108,7 +106,7 @@ const Camera: FC<Props> = () => {
   // Update camera position when stage changes
   useEffect(() => {
     if (!cameraControls.current) return
-    if (stage === Stage.SPLASH) return // Skip for intro animation
+    if (stage === Stage.SPLASH || stage === Stage.ENTRY) return // Skip for intro animation
 
     const { x, y, z } = CAMERA_CONFIG[stage].position
     const target = CAMERA_CONFIG[stage].target

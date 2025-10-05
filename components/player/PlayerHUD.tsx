@@ -75,7 +75,7 @@ const PlayerHUD: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-teal-100">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"

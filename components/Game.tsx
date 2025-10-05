@@ -10,7 +10,7 @@ import { type FC, Suspense } from 'react'
 import Player from '@/components/player/Player'
 import Terrain from '@/components/terrain/Terrain'
 
-import Camera, { INTRO_START_POSITION } from './Camera'
+import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
 import Particles from './particles/Particles'
@@ -18,7 +18,7 @@ import Particles from './particles/Particles'
 gsap.registerPlugin(useGSAP)
 
 // Start at the intro sweep position to avoid a jump before animation
-const INITIAL_CAMERA_POSITION = INTRO_START_POSITION
+const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 
 const Game: FC = () => {
   return (
