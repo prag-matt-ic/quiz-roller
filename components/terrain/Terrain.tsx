@@ -33,8 +33,8 @@ import {
   TILE_THICKNESS,
   colToX,
   generateObstacleHeights,
-  generateQuestionHeights,
-  positionQuestionAndAnswerTiles,
+  RowData,
+  generateQuestionSectionRowData,
 } from './terrainBuilder'
 
 // Shader material for fade-in (mirrors TunnelParticles pattern)
@@ -54,15 +54,6 @@ const CustomTileShaderMaterial = shaderMaterial(
   tileFadeFragment,
 )
 const TileShaderMaterial = extend(CustomTileShaderMaterial)
-
-type SectionType = 'question' | 'obstacles'
-
-type RowData = {
-  heights: number[]
-  type: SectionType
-  isSectionStart: boolean
-  isSectionEnd: boolean
-}
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -140,24 +131,18 @@ const Terrain: FC = () => {
 
   // Build a contiguous block of question rows
   function insertQuestionRows(isFirstQuestion = false) {
-    const heights = generateQuestionHeights({
+    const rows = generateQuestionSectionRowData({
       isFirstQuestion,
     })
-    const blocks: RowData[] = heights.map((row, i) => ({
-      heights: row,
-      type: 'question',
-      isSectionStart: i === 0,
-      isSectionEnd: i === QUESTION_SECTION_ROWS - 1,
-    }))
-    rowsData.current = [...rowsData.current, ...blocks]
+    rowsData.current = [...rowsData.current, ...rows]
     console.warn(`Inserted question section`, {
-      blocks,
+      rows,
       rowsData: rowsData.current,
     })
   }
 
   // Build a contiguous block of obstacle rows with a guaranteed corridor (pure)
-  function buildObstacleSection(): RowData[] {
+  function getObstacleSectionRows(): RowData[] {
     const heights = generateObstacleHeights({
       rows: OBSTACLE_SECTION_ROWS,
       // Provide explicit seed so consecutive sections differ deterministically
@@ -177,28 +162,24 @@ const Terrain: FC = () => {
   }
 
   function topUpObstacleBuffer(count: number) {
-    for (let i = 0; i < count; i++) obstacleSectionBuffer.current.push(buildObstacleSection())
+    for (let i = 0; i < count; i++) obstacleSectionBuffer.current.push(getObstacleSectionRows())
   }
 
   function scheduleObstacleTopUpIfNeeded() {
-    // TODO: return out..
-    if (
-      obstacleSectionBuffer.current.length <= OBSTACLE_TOPUP_THRESHOLD &&
-      !obstacleTopUpScheduled.current
-    ) {
-      obstacleTopUpScheduled.current = true
-      // Defer heavy generation outside the frame loop
-      startTransition(() => {
-        const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
-        if (needed > 0) topUpObstacleBuffer(needed)
-        obstacleTopUpScheduled.current = false
-      })
-    }
+    if (obstacleTopUpScheduled.current) return
+    if (obstacleSectionBuffer.current.length > OBSTACLE_BUFFER_SECTIONS) return
+    obstacleTopUpScheduled.current = true
+    // Defer heavy generation outside the frame loop
+    startTransition(() => {
+      const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
+      if (needed > 0) topUpObstacleBuffer(needed)
+      obstacleTopUpScheduled.current = false
+    })
   }
 
   // Append a precomputed obstacle section to the rows stream
   function insertObstacleRows() {
-    const blocks = obstacleSectionBuffer.current.shift() ?? buildObstacleSection()
+    const blocks = obstacleSectionBuffer.current.shift() ?? getObstacleSectionRows()
     rowsData.current = [...rowsData.current, ...blocks]
     scheduleObstacleTopUpIfNeeded()
   }
@@ -214,7 +195,7 @@ const Terrain: FC = () => {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
       // Seed with initial sections of row data
-      insertQuestionRows(true)
+      insertQuestionRows()
       insertObstacleRows()
       insertQuestionRows()
       insertObstacleRows()
@@ -267,56 +248,18 @@ const Terrain: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // This is called when the first row in the question section becomes visible.
-  // Positioning the Q&A elements over the proceeding rows.
-  function repositionQuestionElements(startRowZ: number, answerCount = 2) {
-    if (!questionGroupRef.current || !tileRigidBodies.current) return
-    const { textPos, tilePositions } = positionQuestionAndAnswerTiles(startRowZ, answerCount)
-
-    console.warn(
-      `Repositioning question elements at z=${startRowZ} with ${answerCount} answer tiles`,
-      {
-        textPos,
-        tilePositions,
-      },
-    )
-
-    // Place text
-    questionGroupRef.current.position.set(textPos[0], textPos[1], textPos[2])
-    // Place tiles
-    answerRefs.forEach((ref, i) => {
-      if (tilePositions[i] === undefined) return // When there are only 2 answers not all refs are used
-      if (!ref.current) return
-      ref.current.setTranslation(
-        { x: tilePositions[i][0], y: tilePositions[i][1], z: tilePositions[i][2] },
-        true,
-      )
-    })
-  }
+  // Split placement helpers: text and answer tiles
+  // Track raised state per visible row slot for current content
+  const rowRaisedRef = useRef<boolean[]>([])
 
   // Subscribe to player position and update the uniform vector in-place (no allocations per frame)
   usePlayerPosition((pos) => {
+    // TODO: store a vector3 in the store and update that so it can be read directly?
     playerWorldPosRef.current.set(pos.x, pos.y, pos.z)
   })
 
-  useEffect(() => {
-    if (!questionGroupRef.current) return
-    if (!tileInstances.length) return
-    if (!tileRigidBodies.current) return
-
-    function placeInitialQuestion() {
-      const firstTileRigidBody = tileRigidBodies.current![0]
-      // First tile is the initial question section, so position over it
-      const startRowZ = firstTileRigidBody.translation().z
-      repositionQuestionElements(startRowZ, 4)
-    }
-
-    placeInitialQuestion()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answerRefs, tileInstances.length, tileRigidBodies.current])
-
   // Deterministic row-content advance: apply N wraps worth of content updates for a row
-  function applyRowWraps(rowIndex: number, wrapsToApply: number, wrappedZ: number) {
+  function applyRowWraps(rowIndex: number, wrapsToApply: number) {
     for (let n = 0; n < wrapsToApply; n++) {
       const currentRowData = activeRowsData.current[rowIndex]
 
@@ -346,11 +289,9 @@ const Terrain: FC = () => {
       instanceVisibilityAttrRef.current!.needsUpdate = true
     }
 
-    // If, after applying wraps, the assigned row starts a question section, position Q/A elements
-    const assigned = activeRowsData.current[rowIndex]
-    if (wrapsToApply > 0 && assigned.type === 'question' && assigned.isSectionStart) {
-      console.warn('Scheduling question elements respawn (deterministic)')
-      repositionQuestionElements(wrappedZ, 2)
+    // Reset raised state for this visible row slot when it wraps to new content
+    if (wrapsToApply > 0) {
+      rowRaisedRef.current[rowIndex] = false
     }
   }
 
@@ -384,7 +325,7 @@ const Terrain: FC = () => {
       // If this row crossed the boundary, advance its assigned content rows accordingly
       const prevWraps = wrapCountByRow.current[rowIndex]
       if (wraps > prevWraps) {
-        applyRowWraps(rowIndex, wraps - prevWraps, z)
+        applyRowWraps(rowIndex, wraps - prevWraps)
         wrapCountByRow.current[rowIndex] = wraps
       }
 
@@ -412,6 +353,35 @@ const Terrain: FC = () => {
         t.z = z
         body.setTranslation(t, true)
       }
+
+      // If this row has just become fully raised for its current content, place any bound elements
+      const wasRaised = rowRaisedRef.current[rowIndex] === true
+      const isRaised = z >= entryEndZ
+      if (!wasRaised && isRaised) {
+        positionQuestionElementsIfNeeded(rowIndex, z)
+        rowRaisedRef.current[rowIndex] = true
+      }
+    }
+  }
+
+  // Place elements when a row containing their target positions becomes fully raised
+  function positionQuestionElementsIfNeeded(rowIndex: number, rowZ: number) {
+    const row = activeRowsData.current[rowIndex]
+    if (!row) return
+    const text = row.questionTextPosition
+    if (!!text && questionGroupRef.current) {
+      questionGroupRef.current.position.set(text[0], text[1], rowZ + text[2])
+      console.warn('Placed question text (row trigger)')
+    }
+    const answerPositions = row.answerTilePositions
+    if (!!answerPositions) {
+      for (let i = 0; i < answerPositions.length; i++) {
+        const t = answerPositions[i]
+        const ref = answerRefs[i]
+        if (!ref.current) continue
+        ref.current.setTranslation({ x: t[0], y: t[1], z: rowZ + t[2] }, true)
+      }
+      console.warn('Placed answer tiles (row trigger)')
     }
   }
 
@@ -421,11 +391,13 @@ const Terrain: FC = () => {
   function moveQuestionElements(zStep: number) {
     if (!questionGroupRef.current) return
 
+    const hidePosition = { x: 0, y: -40, z: 40 }
+
     const isQuestionBehindCamera = questionGroupRef.current.position.z > MAX_Z
     if (isQuestionBehindCamera) {
       // Move out of view until next repositioning
-      questionGroupRef.current.position.z = 40
-      questionGroupRef.current.position.y = -40
+      questionGroupRef.current.position.z = hidePosition.z
+      questionGroupRef.current.position.y = hidePosition.y
     } else {
       questionGroupRef.current.position.z += zStep
     }
@@ -436,7 +408,10 @@ const Terrain: FC = () => {
       const translation = ref.current.translation()
       if (translation.z > MAX_Z) {
         // Move out of view until next repositioning
-        ref.current.setTranslation({ x: translation.x, y: -40, z: 40 }, false)
+        ref.current.setTranslation(
+          { x: translation.x, y: hidePosition.y, z: hidePosition.z },
+          false,
+        )
         continue
       }
       ref.current.setTranslation(

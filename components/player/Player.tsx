@@ -14,7 +14,7 @@ import {
 import { type FC, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
@@ -208,7 +208,7 @@ const Player: FC = () => {
       userData={userData}
       restitution={0}
       colliders={false}
-      position={[0, 2.5, 0]}
+      position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />

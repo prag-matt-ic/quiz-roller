@@ -1,6 +1,6 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame, useThree } from '@react-three/fiber'
-import React, { type FC, useLayoutEffect, useMemo, useRef } from 'react'
+import React, { type FC, useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, DataTexture, Points, Texture } from 'three'
 import {
   GPUComputationRenderer,
@@ -75,12 +75,12 @@ const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
   uDpr: 1,
 }
 
-const CustomTunnelShaderMaterial = shaderMaterial(
+const CustomPointsShaderMaterial = shaderMaterial(
   INITIAL_POINTS_UNIFORMS,
   particleVertex,
   particleFragment,
 )
-const TunnelPointsShaderMaterial = extend(CustomTunnelShaderMaterial)
+const PointsShaderMaterial = extend(CustomPointsShaderMaterial)
 
 type Props = {
   isMobile: boolean
@@ -96,9 +96,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
     [isMobile, performance],
   )
   const points = useRef<Points>(null)
-  const pointsShaderMaterial = useRef<typeof TunnelPointsShaderMaterial & PointsShaderUniforms>(
-    null,
-  )
+  const pointsShaderMaterial = useRef<typeof PointsShaderMaterial & PointsShaderUniforms>(null)
   const textureSize = useMemo(() => Math.sqrt(particlesCount), [particlesCount])
 
   // GPUComputationRenderer setup
@@ -145,7 +143,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
   // ------------------
   // SIMULATION SETUP
   // ------------------
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!renderer) return
 
     try {
@@ -207,7 +205,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
     }
   }, [renderer, textureSize, seeds])
 
-  useFrame((_, dt) => {
+  useFrame((_, delta) => {
     if (
       !pointsShaderMaterial.current ||
       !gpuCompute.current ||
@@ -218,20 +216,19 @@ const Particles: FC<Props> = ({ isMobile }) => {
     )
       return
 
-    const clampedDt = Math.min(dt, 0.033) // Cap at ~30fps to stabilize sim
-    accumTime.current += clampedDt
+    accumTime.current += delta
     const time = accumTime.current
 
     // Update position uniforms
     positionUniforms.current.uIsIdle.value = !isPlaying
     positionUniforms.current.uTime.value = time
-    positionUniforms.current.uDeltaTime.value = clampedDt
+    positionUniforms.current.uDeltaTime.value = delta
     positionUniforms.current.uTerrainSpeed.value = terrainSpeed.current
 
     // Update velocity uniforms
     velocityUniforms.current.uIsIdle.value = !isPlaying
     velocityUniforms.current.uTime.value = time
-    velocityUniforms.current.uDeltaTime.value = clampedDt
+    velocityUniforms.current.uDeltaTime.value = delta
     velocityUniforms.current.uTerrainSpeed.value = terrainSpeed.current
 
     // Compute the simulation
@@ -264,13 +261,13 @@ const Particles: FC<Props> = ({ isMobile }) => {
         <bufferAttribute attach="attributes-seed" args={[seeds, 1]} count={seeds.length} />
       </bufferGeometry>
 
-      <TunnelPointsShaderMaterial
-        key={CustomTunnelShaderMaterial.key}
+      <PointsShaderMaterial
+        key={CustomPointsShaderMaterial.key}
         ref={pointsShaderMaterial}
         {...INITIAL_POINTS_UNIFORMS}
         transparent={true}
         depthTest={false}
-        blending={AdditiveBlending}
+        // blending={AdditiveBlending}
         uDpr={dpr}
       />
     </points>
@@ -287,8 +284,8 @@ const fillPositionTexture = (texturePosition: DataTexture) => {
     // Spawn inside a wide, short box above terrain (terrain at y=0)
     // X in [-6, 6] (width ~12), Y in [0.5, 4.5] (height ~4), Z in [-60, -40]
     const x = -6 + Math.random() * 12
-    const y = 0.5 + Math.random() * 4.0
-    const z = -60 + Math.random() * 20
+    const y = Math.random() * 8.0
+    const z = Math.random() * 40
 
     // Position (xyz) and life (w)
     posArray[k + 0] = x

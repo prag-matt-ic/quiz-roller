@@ -7,7 +7,7 @@ uniform float uTime;
 
 varying vec2 vUv;
 
-const float BORDER_FRACTION = 0.08; // fraction of full height
+const float BORDER_FRACTION = 0.06; // fraction of full height
 const vec4 BASE_COLOUR = vec4(1.0, 1.0, 1.0, 0.6);
 
 float sdBox(in vec2 p, in vec2 b) {

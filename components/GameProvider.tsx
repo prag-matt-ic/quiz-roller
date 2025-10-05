@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
 } from 'react'
+import { type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
 import { type AnswerUserData, type Question, topicQuestion } from '@/model/schema'
@@ -47,6 +48,8 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 3, 2]
+
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
@@ -63,7 +66,11 @@ const INITIAL_STATE: Pick<
 > = {
   stage: Stage.QUESTION,
   terrainSpeed: 0,
-  playerPosition: { x: 0, y: 0, z: 0 },
+  playerPosition: {
+    x: PLAYER_INITIAL_POSITION[0],
+    y: PLAYER_INITIAL_POSITION[1],
+    z: PLAYER_INITIAL_POSITION[2],
+  },
   topic: null,
   currentDifficulty: 0,
   questions: [topicQuestion],

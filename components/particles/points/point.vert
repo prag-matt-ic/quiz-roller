@@ -8,7 +8,7 @@ varying float vLife;
 varying float vSeed;
 
 // Increased sizes for better visibility
-const float MIN_PT_SIZE = 12.0;
+const float MIN_PT_SIZE = 40.0;
 const float LG_PT_SIZE = 56.0;
 const float XL_PT_SIZE = 112.0;
 
@@ -37,8 +37,8 @@ void main() {
     float stepSeed = step(0.9, modulatedSeed); // Some of the points will be XL size
     float size = mix(mix(minPtSize, lgPtSize, modulatedSeed), xlPtSize, stepSeed); // Random size based on seed
 
-    float attenuationFactor = 1.0 / max(-viewPosition.z, 1.0); // Size attenuation (get smaller as distance increases)
-    float pointSize = size * attenuationFactor;
+    // float attenuationFactor = 1.0 / max(-viewPosition.z, 1.0); // Size attenuation (get smaller as distance increases)
+    // float pointSize = size * attenuationFactor;
 
-    gl_PointSize = pointSize;
+    gl_PointSize = size;
 }
