@@ -11,13 +11,13 @@ import Player from '@/components/player/Player'
 import Terrain from '@/components/terrain/Terrain'
 
 import Camera, { CAMERA_POSITIONS } from './Camera'
+import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
 import Particles from './particles/Particles'
-// import FloatingTiles from './floatingTiles/FloatingTiles'
 
 gsap.registerPlugin(useGSAP)
 
-const INITIAL_CAMERA_POSITION = CAMERA_POSITIONS[Stage.INTRO]
+const INITIAL_CAMERA_POSITION = CAMERA_POSITIONS[Stage.SPLASH]
 
 const Game: FC = () => {
   return (
@@ -52,7 +52,7 @@ export default Game
 const Level: FC = () => {
   return (
     <>
-      {/* <FloatingTiles isMobile={false} /> */}
+      <FloatingTiles isMobile={false} />
       <Terrain />
       {/* <Particles isMobile={false} /> */}
       <Player />

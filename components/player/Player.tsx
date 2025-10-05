@@ -86,7 +86,7 @@ const Player: FC = () => {
     shaderTime.current += delta
     playerShaderRef.current.uTime = shaderTime.current
 
-    if (stage === Stage.INTRO || stage === Stage.GAME_OVER) return
+    if (stage === Stage.SPLASH || stage === Stage.GAME_OVER) return
 
     // Determine intended direction on X/Z plane
     let dx = 0
@@ -214,7 +214,7 @@ const Player: FC = () => {
       ref={bodyRef}
       type="kinematicPosition"
       userData={userData}
-      restitution={0}
+      restitution={1}
       colliders={false}
       position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}

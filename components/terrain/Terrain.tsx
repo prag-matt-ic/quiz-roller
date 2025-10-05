@@ -35,6 +35,7 @@ import {
   generateObstacleHeights,
   RowData,
   generateQuestionSectionRowData,
+  generateEntrySectionRowData,
 } from './terrainBuilder'
 
 // Shader material for fade-in (mirrors TunnelParticles pattern)
@@ -141,6 +142,13 @@ const Terrain: FC = () => {
     })
   }
 
+  // Build the initial entry corridor rows (pure)
+  function insertEntryRows() {
+    const rows = generateEntrySectionRowData()
+    rowsData.current = [...rowsData.current, ...rows]
+    console.warn('Inserted entry section', { rows })
+  }
+
   // Build a contiguous block of obstacle rows with a guaranteed corridor (pure)
   function getObstacleSectionRows(): RowData[] {
     const heights = generateObstacleHeights({
@@ -194,7 +202,8 @@ const Terrain: FC = () => {
       // Precompute obstacle sections up front
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
-      // Seed with initial sections of row data
+      // Seed with initial sections of row data: entry -> first question -> obstacles -> ...
+      insertEntryRows()
       insertQuestionRows(true)
       insertObstacleRows()
       insertQuestionRows()
@@ -265,9 +274,8 @@ const Terrain: FC = () => {
 
       // Section boundary hooks for the row that's leaving the front
       if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-        console.warn('terrain ended, switching to QUESTION stage')
+        console.warn('Obstacle section ended')
         insertObstacleRows()
-        goToStage(Stage.QUESTION)
       }
       if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
         console.warn('Inserting new question section')
@@ -360,6 +368,15 @@ const Terrain: FC = () => {
       if (!wasRaised && isRaised) {
         positionQuestionElementsIfNeeded(rowIndex, z)
         rowRaisedRef.current[rowIndex] = true
+
+        // When the designated question trigger row becomes fully raised,
+        // transition to QUESTION stage. Terrain continues moving; GameProvider
+        // will tween speed down over time.
+        const rowMeta = activeRowsData.current[rowIndex]
+        if (rowMeta?.type === 'question' && rowMeta.isQuestionTrigger && !isQuestionStage) {
+          console.warn('Question section reached position; switching to QUESTION stage')
+          goToStage(Stage.QUESTION)
+        }
       }
     }
   }

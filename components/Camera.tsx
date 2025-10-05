@@ -1,12 +1,12 @@
 'use client'
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import React, { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import { useFrame } from '@react-three/fiber'
 
 const { ACTION } = CameraControlsImpl
 
@@ -17,14 +17,16 @@ const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
 export const CAMERA_POSITIONS: Record<Stage, { x: number; y: number; z: number }> = {
-  [Stage.INTRO]: { x: 12, y: 10, z: 8 },
+  [Stage.SPLASH]: { x: 0, y: 10, z: 8 },
+  [Stage.ENTRY]: { x: 0, y: 10, z: 4 },
   [Stage.QUESTION]: { x: 0, y: 12, z: 5 },
   [Stage.TERRAIN]: { x: 0, y: 6, z: 6 },
   [Stage.GAME_OVER]: { x: 0, y: 16, z: 4 },
 }
 
 const CAMERA_ZOOMS: Record<Stage, number> = {
-  [Stage.INTRO]: 1,
+  [Stage.SPLASH]: 1,
+  [Stage.ENTRY]: 1.5,
   [Stage.TERRAIN]: 0.75,
   [Stage.QUESTION]: 1,
   [Stage.GAME_OVER]: 1,

@@ -106,7 +106,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
   const positionUniforms = useRef<PositionShaderUniforms | null>(null)
   const velocityUniforms = useRef<VelocityShaderUniforms | null>(null)
 
-  const isPlaying = useGameStore((s) => s.stage !== Stage.INTRO)
+  const isPlaying = useGameStore((s) => s.stage !== Stage.SPLASH)
   const { terrainSpeed } = useTerrainSpeed()
   const accumTime = useRef(0)
 
