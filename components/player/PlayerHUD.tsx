@@ -6,9 +6,14 @@ import { type FC, useRef } from 'react'
 import { Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
+import { getPaletteHex } from '@/components/palette'
 
 export const PLAYER_RADIUS = 0.5
 export const CONFIRMATION_DURATION_S = 3
+
+// Get colors from palette at different positions
+const COLOR_START = getPaletteHex(0.3)
+const COLOR_END = getPaletteHex(0.7)
 
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
@@ -73,7 +78,10 @@ const PlayerHUD: FC = () => {
           className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-teal-100">
           <div
             id="progress-bar"
-            className="absolute h-full w-full -translate-x-full rounded-full bg-linear-90 from-blue-600 to-teal-400"
+            className="absolute h-full w-full -translate-x-full rounded-full"
+            style={{
+              background: `linear-gradient(90deg, ${COLOR_START}, ${COLOR_END})`,
+            }}
           />
         </div>
       </Transition>
