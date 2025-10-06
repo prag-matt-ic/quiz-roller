@@ -8,7 +8,7 @@ import gsap from 'gsap'
 import { type FC, Suspense, useEffect } from 'react'
 import * as THREE from 'three'
 
-import backgroundImage from '@/assets/background.jpg'
+import backgroundImage from '@/assets/textures/background-2.jpg'
 import Player from '@/components/player/Player'
 import Terrain from '@/components/terrain/Terrain'
 

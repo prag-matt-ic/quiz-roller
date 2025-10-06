@@ -12,7 +12,6 @@ const { ACTION } = CameraControlsImpl
 
 const MIN_POLAR_ANGLE = MathUtils.degToRad(20)
 const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
-
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
