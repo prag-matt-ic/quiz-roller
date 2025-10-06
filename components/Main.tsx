@@ -35,9 +35,11 @@ const Main: FC = () => {
   }
 
   return (
-    <GameProvider fetchQuestion={fetchQuestion}>
-      <Game />
-    </GameProvider>
+    <main>
+      <GameProvider fetchQuestion={fetchQuestion}>
+        <Game />
+      </GameProvider>
+    </main>
   )
 }
 

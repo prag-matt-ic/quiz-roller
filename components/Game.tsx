@@ -1,12 +1,14 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { Stats } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Stats, useTexture } from '@react-three/drei'
+import { Canvas, useThree } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense } from 'react'
+import { type FC, Suspense, useEffect } from 'react'
+import * as THREE from 'three'
 
+import backgroundImage from '@/assets/background.jpg'
 import Player from '@/components/player/Player'
 import Terrain from '@/components/terrain/Terrain'
 
@@ -32,11 +34,17 @@ const Game: FC = () => {
           INITIAL_CAMERA_POSITION.y,
           INITIAL_CAMERA_POSITION.z,
         ],
-        far: 60,
+        far: 45,
         fov: 60,
+      }}
+      gl={{
+        alpha: false,
+        antialias: true,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 0.25,
       }}>
-      <ambientLight intensity={1} />
-      <pointLight position={[0, 5, -0.5]} intensity={16} />
+      <ambientLight intensity={1.0} />
+      {/* <pointLight position={[0, 5, -0.5]} intensity={16} /> */}
       {/* <OrbitControls /> */}
       <Camera isMobile={false} />
       <Suspense>
@@ -54,6 +62,7 @@ export default Game
 const Level: FC = () => {
   return (
     <>
+      <Background />
       <FloatingTiles isMobile={false} />
       <Terrain />
       <Ground />
@@ -61,4 +70,22 @@ const Level: FC = () => {
       <Player />
     </>
   )
+}
+
+const Background: FC = () => {
+  const scene = useThree((state) => state.scene)
+  const texture = useTexture(backgroundImage.src)
+
+  useEffect(() => {
+    if (!texture) return
+    // Use LinearSRGBColorSpace to prevent double gamma correction
+    texture.colorSpace = THREE.LinearSRGBColorSpace
+    scene.background = texture
+
+    return () => {
+      scene.background = null
+    }
+  }, [scene, texture])
+
+  return null
 }
