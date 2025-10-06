@@ -36,7 +36,7 @@ void main() {
   float tBase = clamp((worldPos.z - uEntryStartZ) / denom, 0.0, 1.0);
   // Map seed into an exponent to speed up or slow down the ramp without shifting start/end.
   // <1.0 => faster start (ease-out), >1.0 => slower start (ease-in).
-  float speedExp = mix(0.75, 1.35, clamp(instanceSeed, 0.0, 1.0));
+  float speedExp = mix(0.6, 1.4, clamp(instanceSeed, 0.0, 1.0));
   float t = pow(tBase, speedExp);
   // Gate fade by instanceVisibility: 0 => invisible, 1 => fade by t
   vAlpha = t * clamp(instanceVisibility, 0.0, 1.0);

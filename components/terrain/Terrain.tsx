@@ -60,14 +60,13 @@ const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isGameOver = stage === Stage.GAME_OVER
   const isQuestionStage = stage === Stage.QUESTION
-  const isAwaitingQuestion = useGameStore((s) => s.isAwaitingQuestion)
   const currentQuestion = useGameStore((s) => s.currentQuestion)
 
   function onTerrainSpeedChange(normalized: number) {
     if (!tileShader.current) return
     // Interpolate entry window based on normalized speed.
     // 0 => question section fully raised; 1 => terrain entry offset used.
-    const frontOffsetRows = QUESTION_SECTION_ROWS + (12 - QUESTION_SECTION_ROWS) * normalized
+    const frontOffsetRows = QUESTION_SECTION_ROWS + -4 * normalized
 
     const endZ = MAX_Z - frontOffsetRows * TILE_SIZE
     const startZ = endZ - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
@@ -94,7 +93,7 @@ const Terrain: FC = () => {
   const instanceSeed = useRef<Float32Array | null>(null)
   // Single visibility channel in [0,1] replacing open mask + baseY attribute
   const instanceVisibility = useRef<Float32Array | null>(null)
-  const instanceVisibilityAttrRef = useRef<InstancedBufferAttribute>(null)
+  const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
@@ -107,8 +106,6 @@ const Terrain: FC = () => {
   const obstacleSectionBuffer = useRef<RowData[][]>([])
   const obstacleTopUpScheduled = useRef(false)
   const OBSTACLE_BUFFER_SECTIONS = 10
-  const OBSTACLE_TOPUP_THRESHOLD = 4
-
   // During question phase, extend front offset so all 16 rows are up.
 
   // Precomputed row sequence
@@ -274,11 +271,10 @@ const Terrain: FC = () => {
 
       // Section boundary hooks for the row that's leaving the front
       if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-        console.warn('Obstacle section ended')
         insertObstacleRows()
       }
+
       if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
-        console.warn('Inserting new question section')
         insertQuestionRows()
       }
 
@@ -294,7 +290,7 @@ const Terrain: FC = () => {
         instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
       }
 
-      instanceVisibilityAttrRef.current!.needsUpdate = true
+      instanceVisibilityBufferAttribute.current!.needsUpdate = true
     }
 
     // Reset raised state for this visible row slot when it wraps to new content
@@ -471,7 +467,7 @@ const Terrain: FC = () => {
           count={tileInstances.length}>
           <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
             <instancedBufferAttribute
-              ref={instanceVisibilityAttrRef}
+              ref={instanceVisibilityBufferAttribute}
               attach="attributes-instanceVisibility"
               args={[instanceVisibility.current!, 1]}
             />

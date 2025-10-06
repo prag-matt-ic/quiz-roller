@@ -71,6 +71,10 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
       [confirmedAnswers, text],
     )
 
+    // TODO: Add a "waiting for next question" if reached and not ready
+    // TODO: Add a correct/incorrect feedback. Correct should be like confetti.
+    // TODO: sound effects should be triggered from the GameProvider when answer is confirmed
+
     console.log('Answer Tile', { text, isConfirming, wasConfirmed })
 
     const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
