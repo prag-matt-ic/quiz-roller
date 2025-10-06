@@ -17,7 +17,7 @@ import { type Mesh, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
-import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import type { OutOfBoundsUserData, PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
 import fragment from './shaders/player.frag'
@@ -45,12 +45,13 @@ const Player: FC = () => {
   const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
+  const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
 
   const { controllerRef, input } = usePlayerController()
 
-  const MOVEMENT_SPEED = 6.5 // units per second
+  const MOVEMENT_SPEED = 8.5 // units per second
   const PLAYER_GRAVITY = -9.81 // m/s²
   const UP = new Vector3(0, 1, 0)
   const EPS = 1e-6
@@ -185,17 +186,16 @@ const Player: FC = () => {
     const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
 
     if (!otherUserData) return
-
     if (otherUserData.type === 'answer') {
       if (stage !== Stage.QUESTION) return // only allow during question stage
       setConfirmingAnswer(otherUserData)
       return
     }
 
-    // if (otherUserData.type === 'ground') {
-    //   onGameOver(OutOfBoundsUserData.ground)
-    //   return
-    // }
+    if (otherUserData.type === 'out-of-bounds') {
+      goToStage(Stage.GAME_OVER)
+      return
+    }
   }
 
   const onIntersectionExit: IntersectionExitHandler = (e) => {

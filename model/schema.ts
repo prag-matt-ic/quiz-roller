@@ -37,7 +37,7 @@ export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
 
-export type RigidBodyUserData = PlayerUserData | AnswerUserData
+export type RigidBodyUserData = PlayerUserData | AnswerUserData | OutOfBoundsUserData 
 
 export const TOPICS: string[] = [
   'UX/UI Design',
