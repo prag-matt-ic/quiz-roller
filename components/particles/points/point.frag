@@ -18,15 +18,15 @@ void main() {
     falloff = pow(falloff, 2.0); // Apply power of 2 for sharper falloff
     
     // Combine with life for final alpha
-    float alpha = falloff * vLife;
+    float alpha = falloff;
     
     // Color variation based on seed
-    vec3 baseColor = vec3(0.0, 1.0, 0.8); // Teal
-    vec3 color = mix(baseColor, vec3(0.0, 0.8, 1.0), vSeed);
+    vec3 baseColor = vec3(1.0, 1.0, 1.8); // Teal
+    vec3 color = mix(baseColor, vec3(1.0, 0.8, 1.0), vSeed);
     
     // Add bright core using pow2 for star-like intensity
     float core = pow(falloff, 4.0); // Even sharper for the bright center
-    color += core * 0.5;
+    // color += core * 0.5;
     
     gl_FragColor = vec4(color, alpha);
 }

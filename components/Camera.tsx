@@ -15,6 +15,12 @@ const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
+const SPLASH_AND_GAMEOVER_CONFIG = {
+  position: { x: 20, y: 12, z: 8 },
+  target: { x: 0, y: 0, z: 0 },
+  zoom: 1,
+}
+
 // Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
   Stage,
@@ -24,11 +30,7 @@ export const CAMERA_CONFIG: Record<
     zoom: number
   }
 > = {
-  [Stage.SPLASH]: {
-    position: { x: 20, y: 12, z: 8 },
-    target: { x: 0, y: 0, z: 0 },
-    zoom: 1,
-  },
+  [Stage.SPLASH]: SPLASH_AND_GAMEOVER_CONFIG,
   [Stage.ENTRY]: {
     position: { x: 0, y: 8, z: 5 },
     target: { x: 0, y: 0, z: 0 },
@@ -44,11 +46,7 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.75,
   },
-  [Stage.GAME_OVER]: {
-    position: { x: 0, y: 16, z: 4 },
-    target: { x: 0, y: 0, z: 0 },
-    zoom: 1,
-  },
+  [Stage.GAME_OVER]: SPLASH_AND_GAMEOVER_CONFIG,
 }
 
 type Props = {

@@ -56,13 +56,13 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> 
             className="game-over-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
             onClick={() => goToStage(Stage.ENTRY)}>
             <PlayIcon className="size-6" strokeWidth={1.5} />
-            TRY AGAIN
+            REROLL
           </button>
           <button
             className="game-over-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
             onClick={() => goToStage(Stage.SPLASH)}>
             <SkullIcon className="size-6" strokeWidth={1.5} />
-            GIVE UP
+            MENU
           </button>
         </section>
       )}
@@ -71,4 +71,3 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> 
 }
 
 export default GameOverUI
-

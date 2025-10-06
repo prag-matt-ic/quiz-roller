@@ -20,14 +20,24 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
+// TODO:
+// - Correctly reset game state when restarting from game over - (player position, terrain speed, confirmed answers, current question, difficulty, etc)
+// - Persist the user's history personalBest: { distance, topic, correctAnswers: number}
+// - Improve question fetching logic so that if the new question has not arrived, there's a "waiting for next question" state.
+// - ensure consistent experience at different framerates - terrain speed and player movement need to be framerate-independent
+// - basic performance optimisations - less floating tiles, full opacity on floor tiles.
+// - Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+// - Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
+// - Add a "share my score" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
+// - Improve the story/theme - so it's more about building the future of the web
+
 type GameState = {
   stage: Stage
-  // Normalized terrain speed in range [0, 1].
   // Consumers can scale by a constant to get world units per second.
-  terrainSpeed: number
+  terrainSpeed: number // Normalized speed in range [0, 1].
   setTerrainSpeed: (speed: number) => void
-  // Normalized confirmation progress in range [0, 1].
-  confirmationProgress: number
+
+  confirmationProgress: number // [0, 1]
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
@@ -35,9 +45,8 @@ type GameState = {
   distanceRows: number
   incrementDistanceRows: (delta?: number) => void
 
-  topic: string | null
-
   // Questions
+  topic: string | null
   currentDifficulty: number
   currentQuestionIndex: number
   isAwaitingQuestion: boolean
@@ -207,6 +216,9 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     },
 
     goToStage: (stage: Stage) => {
+      if (stage === Stage.SPLASH) {
+        set({ ...INITIAL_STATE })
+      }
       // Basic function for now, can be expanded later
       if (stage === Stage.ENTRY) {
         set({ stage: Stage.ENTRY })
@@ -218,7 +230,6 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {},
         })
         return
       }
@@ -239,21 +250,20 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {},
         })
       }
 
       if (stage === Stage.GAME_OVER) {
+        // TODO: store personal best if applicable
         set({ stage: Stage.GAME_OVER })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 4,
+          duration: 0.4,
           ease: 'power2.out',
           value: 0, // normalized
           onUpdate: () => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
-          onComplete: () => {},
         })
         return
       }

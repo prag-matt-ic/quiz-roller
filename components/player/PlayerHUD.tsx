@@ -18,18 +18,20 @@ const COLOR_END = getPaletteHex(0.8)
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
 
+  for (let i = 0; i <= 10; i++) {
+    const color = getPaletteHex(i / 10)
+    console.log(`${i / 10}:`, color)
+  }
+
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
     [],
   )
 
-  const onConfirmationProgressChange = useCallback(
-    (progress: number) => {
-      const xValue = -100 + progress * 100
-      setter(xValue)
-    },
-    [setter],
-  )
+  const onConfirmationProgressChange = (progress: number) => {
+    const xValue = -100 + progress * 100
+    setter(xValue)
+  }
 
   useConfirmationProgress(onConfirmationProgressChange)
 

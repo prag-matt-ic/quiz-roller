@@ -20,7 +20,8 @@ export function useConfirmationProgress(
       onConfirmationProgressChange?.(confirmationProgress.current)
     })
     return unsubscribe
-  }, [gameStoreAPI, onConfirmationProgressChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStoreAPI])
 
   // Fire once on mount with the current value so consumers can initialize.
   useEffect(() => {

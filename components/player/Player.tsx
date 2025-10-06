@@ -11,13 +11,13 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, useRef } from 'react'
+import { type FC, forwardRef, RefObject, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
-import type { OutOfBoundsUserData, PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
 import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
 import fragment from './shaders/player.frag'
@@ -220,19 +220,32 @@ const Player: FC = () => {
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
-      <mesh ref={sphereMeshRef}>
-        <sphereGeometry args={[PLAYER_RADIUS, 24, 24]} />
-        <PlayerShaderMaterial
-          key={PlayerShader.key}
-          ref={playerShaderRef}
-          uTime={INITIAL_UNIFORMS.uTime}
-          transparent={false}
-          depthWrite={true}
-        />
-      </mesh>
+      <Marble ref={sphereMeshRef} playerShaderRef={playerShaderRef} />
       <PlayerHUD />
     </RigidBody>
   )
 }
 
 export default Player
+
+export const Marble = forwardRef(
+  (
+    props: { playerShaderRef: RefObject<typeof PlayerShaderMaterial & ShaderUniforms> },
+    ref,
+  ) => {
+    return (
+      <mesh ref={ref}>
+        <sphereGeometry args={[PLAYER_RADIUS, 24, 24]} />
+        <PlayerShaderMaterial
+          key={PlayerShader.key}
+          ref={props.playerShaderRef}
+          uTime={INITIAL_UNIFORMS.uTime}
+          transparent={false}
+          depthWrite={true}
+        />
+      </mesh>
+    )
+  },
+)
+
+Marble.displayName = 'Marble'
