@@ -5,6 +5,7 @@ import { type FC } from 'react'
 import { type Question, QuestionSchema } from '@/model/schema'
 
 import Game from './Game'
+import UI from './ui/UI'
 import { GameProvider } from './GameProvider'
 
 const Main: FC = () => {
@@ -38,6 +39,7 @@ const Main: FC = () => {
     <main>
       <GameProvider fetchQuestion={fetchQuestion}>
         <Game />
+        <UI isMobile={false} />
       </GameProvider>
     </main>
   )

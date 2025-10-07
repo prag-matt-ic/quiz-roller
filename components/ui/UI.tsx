@@ -7,6 +7,7 @@ import { type FC, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import { getDifficultyLabel } from '@/model/difficulty'
 // import useAudio from '@/hooks/useAudio' // TODO: add sound effects
 
 // Register plugins
@@ -24,6 +25,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const goToStage = useGameStore((s) => s.goToStage)
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
   const currentDifficulty = useGameStore((s) => s.currentDifficulty)
+  const distanceRows = useGameStore((s) => s.distanceRows)
 
   const isSplash = stage === Stage.SPLASH
   const isEntry = stage === Stage.ENTRY
@@ -54,18 +56,48 @@ const UI: FC<Props> = ({ isMobile }) => {
     <SwitchTransition>
       <Transition key={key} timeout={{ enter: 0, exit: 500 }} nodeRef={wrapper} appear={true}>
         {(transitionStatus) => {
-          if (!isGameOver)
+          if (!isGameOver) {
+            const isPlaying = isQuestion || isObstacleCourse
+            const correctCount = confirmedAnswers.reduce(
+              (acc, a) => acc + (a.answer.isCorrect ? 1 : 0),
+              0,
+            )
+            const diff = Math.max(0, Math.min(10, currentDifficulty))
+            const difficultyLabel = getDifficultyLabel(diff)
             return (
-              <div ref={wrapper} className="">
-                UI
-                <button
-                  className="ui-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
-                  onClick={() => goToStage(Stage.ENTRY)}>
-                  <PlayIcon className="size-6" strokeWidth={1.5} />
-                  BEGIN
-                </button>
+              <div ref={wrapper}>
+                {/* Start button visible on splash/idle */}
+                {(isSplash || isEntry) && (
+                  <div className="pointer-events-auto fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <button
+                      className="ui-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
+                      onClick={() => goToStage(Stage.ENTRY)}>
+                      <PlayIcon className="size-6" strokeWidth={1.5} />
+                      BEGIN
+                    </button>
+                  </div>
+                )}
+
+                {/* Playing HUD */}
+                {isPlaying && (
+                  <div className="pointer-events-none fixed right-4 top-4 z-50 select-none text-white">
+                    <div className="mb-2 rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm backdrop-blur">
+                      <span className="opacity-80">Distance</span>{' '}
+                      <span className="font-mono text-white">{distanceRows}</span>
+                    </div>
+                    <div className="rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm backdrop-blur">
+                      <span className="opacity-80">Correct</span>{' '}
+                      <span className="font-mono text-white">{correctCount}</span>
+                      <span className="mx-2 opacity-30">•</span>
+                      <span className="opacity-80">Difficulty</span>{' '}
+                      <span className="font-mono text-white">{diff}/10</span>
+                      <span className="ml-2 text-white/80">({difficultyLabel})</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )
+          }
 
           return (
             <div ref={wrapper} className="">

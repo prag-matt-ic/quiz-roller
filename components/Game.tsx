@@ -25,7 +25,7 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 
 const Game: FC = () => {
   return (
-    <Canvas
+      <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
       onContextMenu={(e) => e.preventDefault()}
       camera={{
@@ -34,7 +34,7 @@ const Game: FC = () => {
           INITIAL_CAMERA_POSITION.y,
           INITIAL_CAMERA_POSITION.z,
         ],
-        far: 45,
+        far: 40,
         fov: 60,
       }}
       gl={{
@@ -53,7 +53,7 @@ const Game: FC = () => {
           <Level />
         </Physics>
       </Suspense>
-    </Canvas>
+      </Canvas>
   )
 }
 

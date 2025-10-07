@@ -4,6 +4,7 @@
 uniform float uMix; // blend strength for palette over black
 
 varying vec3 vWorldPos;
+varying float vAlpha;
 
 void main() {
   // Simple world-space noise drives palette index
@@ -15,6 +16,6 @@ void main() {
   // Darker look: blend palette over black (not white)
   vec3 base = mix(vec3(0.0), col, uMix);
 
-  gl_FragColor = vec4(base, 1.0);
+  gl_FragColor = vec4(base, vAlpha);
 }
 

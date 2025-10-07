@@ -25,8 +25,15 @@ type GameState = {
   // Normalized terrain speed in range [0, 1].
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number
+  setTerrainSpeed: (speed: number) => void
+  // Normalized confirmation progress in range [0, 1].
+  confirmationProgress: number
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
+
+  // Distance travelled in rows (increments when terrain rows recycle)
+  distanceRows: number
+  incrementDistanceRows: (delta?: number) => void
 
   topic: string | null
 
@@ -55,6 +62,7 @@ const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
   | 'terrainSpeed'
+  | 'confirmationProgress'
   | 'playerPosition'
   | 'topic'
   | 'questions'
@@ -67,6 +75,7 @@ const INITIAL_STATE: Pick<
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
+  confirmationProgress: 0,
   playerPosition: {
     x: PLAYER_INITIAL_POSITION[0],
     y: PLAYER_INITIAL_POSITION[1],
@@ -80,6 +89,7 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   isAwaitingQuestion: false,
+  distanceRows: 0,
 }
 
 type CreateStoreParams = {
@@ -94,14 +104,21 @@ type CreateStoreParams = {
   }) => Promise<Question>
 }
 
+const CONFIRMATION_DURATION_S = 3
+
 const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
   let speedTween: GSAPTween | null = null
   const speedTweenTarget = { value: 0 }
+  let confirmationTween: GSAPTween | null = null
+  const confirmationTweenTarget = { value: 0 }
 
   return createStore<GameState>()((set, get) => ({
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
+    setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
+    incrementDistanceRows: (delta = 1) =>
+      set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
       set({ isAwaitingQuestion: true })
@@ -121,14 +138,37 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     setConfirmingAnswer: (data: AnswerUserData | null) => {
       if (!data) {
         set({ confirmingAnswer: null })
+        // Animate confirmation progress back to 0
+        confirmationTween?.kill()
+        confirmationTween = gsap.to(confirmationTweenTarget, {
+          duration: 0.4,
+          ease: 'power2.out',
+          value: 0,
+          onUpdate: () => {
+            set({ confirmationProgress: confirmationTweenTarget.value })
+          },
+        })
         return
       }
-      const { confirmedAnswers: answers } = get()
+      const { confirmedAnswers: answers, onAnswerConfirmed } = get()
       if (answers.find((a) => a.questionId === data.questionId)) {
         console.warn('Answer already confirmed for this question:', data)
         return
       }
       set({ confirmingAnswer: data })
+      // Animate confirmation progress from 0 to 1
+      confirmationTween?.kill()
+      confirmationTween = gsap.to(confirmationTweenTarget, {
+        duration: CONFIRMATION_DURATION_S,
+        ease: 'none',
+        value: 1,
+        onUpdate: () => {
+          set({ confirmationProgress: confirmationTweenTarget.value })
+        },
+        onComplete: () => {
+          if (!!get().confirmingAnswer) onAnswerConfirmed()
+        },
+      })
     },
     onAnswerConfirmed: async () => {
       const { confirmingAnswer, goToStage, getAndSetNextQuestion } = get()
@@ -136,6 +176,11 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         console.error('No answer selected to confirm')
         return
       }
+
+      // Kill confirmation animation
+      confirmationTween?.kill()
+      set({ confirmationProgress: 0 })
+
       if (!confirmingAnswer.answer.isCorrect) {
         console.warn('Wrong answer chosen! Game over.')
         set((s) => ({
@@ -178,17 +223,8 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
 
       if (stage === Stage.QUESTION) {
+        // Speed deceleration is now handled in Terrain.tsx, synchronized with row raising
         set({ stage: Stage.QUESTION })
-        speedTween?.kill()
-        speedTween = gsap.to(speedTweenTarget, {
-          duration: 0.5,
-          ease: 'power1.out',
-          value: 0, // normalized
-          onUpdate: () => {
-            set({ terrainSpeed: speedTweenTarget.value })
-          },
-          onComplete: () => {},
-        })
         return
       }
 
@@ -196,7 +232,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         set({ stage: Stage.TERRAIN })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 2.5,
+          duration: 2.4,
           ease: 'power2.out',
           value: 1, // normalized
           onUpdate: () => {

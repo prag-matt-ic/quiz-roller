@@ -58,27 +58,17 @@ const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const isGameOver = stage === Stage.GAME_OVER
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
+  const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
 
-  function onTerrainSpeedChange(normalized: number) {
-    if (!tileShader.current) return
-    // Interpolate entry window based on normalized speed.
-    // 0 => question section fully raised; 1 => terrain entry offset used.
-    const frontOffsetRows = QUESTION_SECTION_ROWS + -4 * normalized
-
-    const endZ = MAX_Z - frontOffsetRows * TILE_SIZE
-    const startZ = endZ - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
-
-    entryStartZRef.current = startZ
-    entryEndZRef.current = endZ
-    tileShader.current.uEntryStartZ = startZ
-    tileShader.current.uEntryEndZ = endZ
-  }
+  // Fixed entry window values for row raising animation
+  // When speed=0 (question stage), all question section rows should be fully raised
+  const ENTRY_END_Z = MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE
+  const ENTRY_START_Z = ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
 
   // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
-  const { terrainSpeed } = useTerrainSpeed(onTerrainSpeedChange)
+  const { terrainSpeed } = useTerrainSpeed()
   const goToStage = useGameStore((s) => s.goToStage)
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
@@ -94,14 +84,35 @@ const Terrain: FC = () => {
   // Single visibility channel in [0,1] replacing open mask + baseY attribute
   const instanceVisibility = useRef<Float32Array | null>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
+  // Answer number per instance (0=not under answer, 1=answer 1, 2=answer 2, etc.)
+  const instanceAnswerNumber = useRef<Float32Array | null>(null)
+  const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  const speedLogRef = useRef<{ lastT: number; lastSpeed: number; lastProgress: number } | null>(
+    null,
+  )
 
-  // Interpolated entry window refs (kept in sync with terrain speed changes)
-  const entryStartZRef = useRef<number>(MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE)
-  const entryEndZRef = useRef<number>(MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE)
+  // Deceleration easing configuration
+  // We apply a steep ease-out to the terrain speed as the question section raises:
+  //   speed = 1 - pow(progress, DECEL_EASE_POWER)
+  // where progress is normalized [0..1] from the first question row reaching fully-raised
+  // to the last row reaching fully-raised. Higher power -> slower early change and
+  // a sharper drop near the end. 5 gives a noticeable but smooth slow-down that still
+  // preserves momentum across most of the section.
+  // Tune guide:
+  //   3 = gentle ease-out
+  //   4 = steep (previous default)
+  //   5 = steeper (current)
+  //   6+ = very steep (almost full speed until the final rows)
+  const DECEL_EASE_POWER = 5
+  // Start deceleration after an initial buffer so that the section has visually
+  // "entered" before slowing begins. This offsets the start by N rows worth of scroll.
+  // Keep this < QUESTION_SECTION_ROWS - 1. Typical values: 4..8
+  const DECEL_START_OFFSET_ROWS = 6
+
   // Obstacle section precomputation buffer
   const obstacleSectionBuffer = useRef<RowData[][]>([])
   const obstacleTopUpScheduled = useRef(false)
@@ -114,6 +125,9 @@ const Terrain: FC = () => {
   const nextRowIndex = useRef(0)
   // Tracks which RowData is currently assigned to each visible row slot (0..ROWS-1)
   const activeRowsData = useRef<RowData[]>([])
+  // Distance tracking: start counting only after entry section has fully recycled
+  const hasFinishedEntryRef = useRef(false)
+  const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
 
   // Question/answers instance refs and spawn scheduling
   // A single question group + four answer tiles are reused and moved along the
@@ -126,6 +140,12 @@ const Terrain: FC = () => {
     createRef<RapierRigidBody>(),
     createRef<RapierRigidBody>(),
   ]).current
+
+  // Question section speed deceleration state (scrollZ thresholds)
+  // Start/end are expressed in scrollZ units so comparisons are consistent.
+  const questionSectionStartZ = useRef<number | null>(null)
+  const questionSectionEndZ = useRef<number | null>(null)
+  const initialSpeedAtSectionStart = useRef<number>(1)
 
   // Build a contiguous block of question rows
   function insertQuestionRows(isFirstQuestion = false) {
@@ -215,6 +235,7 @@ const Terrain: FC = () => {
       const totalInstances = ROWS_VISIBLE * COLUMNS
       instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
+      instanceAnswerNumber.current = new Float32Array(totalInstances)
 
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
@@ -223,6 +244,9 @@ const Terrain: FC = () => {
         // Initialize deterministic scroll baselines
         baseZByRow.current[rowIndex] = -rowIndex * TILE_SIZE + zOffset
         wrapCountByRow.current[rowIndex] = 0
+
+        // Do not set deceleration thresholds here; we set them when the
+        // first question row becomes fully raised so speed starts at 1.
 
         for (let col = 0; col < COLUMNS; col++) {
           const x = colToX(col)
@@ -234,6 +258,7 @@ const Terrain: FC = () => {
 
           instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
           instanceSeed.current[bodyIndex] = Math.random()
+          instanceAnswerNumber.current[bodyIndex] = rowData.answerNumber?.[col] ?? 0
 
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
@@ -264,6 +289,13 @@ const Terrain: FC = () => {
     playerWorldPosRef.current.set(pos.x, pos.y, pos.z)
   })
 
+  // Reset question section deceleration when transitioning to TERRAIN stage
+  useEffect(() => {
+    if (stage === Stage.TERRAIN) {
+      resetQuestionSectionDeceleration()
+    }
+  }, [stage])
+
   // Deterministic row-content advance: apply N wraps worth of content updates for a row
   function applyRowWraps(rowIndex: number, wrapsToApply: number) {
     for (let n = 0; n < wrapsToApply; n++) {
@@ -278,9 +310,18 @@ const Terrain: FC = () => {
         insertQuestionRows()
       }
 
+      // Detect the final intro row recycling to begin distance counting thereafter
+      if (currentRowData.type === 'entry' && currentRowData.isSectionEnd) {
+        hasFinishedEntryRef.current = true
+        console.warn('Entry section fully recycled; starting distance counting')
+      }
+
       const newRowData = rowsData.current[nextRowIndex.current]
       activeRowsData.current[rowIndex] = newRowData
       nextRowIndex.current++
+
+      // Do not set deceleration thresholds when content becomes active.
+      // We start deceleration only when the first question row is fully raised.
 
       // Update Y for all bodies in this row slot to match new content
       for (let col = 0; col < COLUMNS; col++) {
@@ -288,9 +329,14 @@ const Terrain: FC = () => {
         yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
         const y = newRowData.heights[col]
         instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+        instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[col] ?? 0
       }
 
       instanceVisibilityBufferAttribute.current!.needsUpdate = true
+      instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
+
+      // Increment distance after completing the wrap if counting is active.
+      if (hasFinishedEntryRef.current) incrementDistanceRows(1)
     }
 
     // Reset raised state for this visible row slot when it wraps to new content
@@ -300,13 +346,56 @@ const Terrain: FC = () => {
   }
 
   /**
+   * Compute the terrain speed based on the current scroll position relative to
+   * the active question section. Speed decelerates from initial speed to 0 as
+   * the last row of the section becomes fully raised.
+   */
+  function computeTerrainSpeedForQuestionSection(): number {
+    const startZ = questionSectionStartZ.current
+    const targetScrollZ = questionSectionEndZ.current
+    const currentZ = scrollZ.current
+
+    // No active question section deceleration
+    if (startZ === null || targetScrollZ === null) {
+      return terrainSpeed.current
+    }
+
+    // Before section start: use current speed
+    if (currentZ < startZ) {
+      return terrainSpeed.current
+    }
+
+    // After target scroll: speed is 0
+    if (currentZ >= targetScrollZ) {
+      return 0
+    }
+
+    // During deceleration: steep ease-out from 1 -> 0 across the section.
+    // Curve: speed = 1 - pow(progress, DECEL_EASE_POWER)
+    const progress = (currentZ - startZ) / (targetScrollZ - startZ)
+    const p = Math.max(0, Math.min(1, progress))
+    // Keep most of the speed early; drop sharply near the end
+    const eased = 1 - Math.pow(p, DECEL_EASE_POWER)
+    return eased
+  }
+
+  /**
+   * Reset question section deceleration state when leaving the question stage.
+   */
+  function resetQuestionSectionDeceleration() {
+    questionSectionStartZ.current = null
+    questionSectionEndZ.current = null
+    initialSpeedAtSectionStart.current = 1
+  }
+
+  /**
    * Per-frame terrain advancement. Moves visible rows along +Z and recycles
    * them once they pass the camera threshold.
    */
   function updateTiles(zStep: number) {
-    // Snapshot entry window for this frame
-    const entryStartZ = entryStartZRef.current
-    const entryEndZ = entryEndZRef.current
+    // Use fixed entry window for row raising animation
+    const entryStartZ = ENTRY_START_Z
+    const entryEndZ = ENTRY_END_Z
     if (!tileRigidBodies.current) return
     const cycle = ROWS_VISIBLE * TILE_SIZE
 
@@ -365,12 +454,29 @@ const Terrain: FC = () => {
         positionQuestionElementsIfNeeded(rowIndex, z)
         rowRaisedRef.current[rowIndex] = true
 
-        // When the designated question trigger row becomes fully raised,
-        // transition to QUESTION stage. Terrain continues moving; GameProvider
-        // will tween speed down over time.
+        // When the first row of a question section becomes fully raised,
+        // set deceleration thresholds in scrollZ units and switch to QUESTION stage.
         const rowMeta = activeRowsData.current[rowIndex]
-        if (rowMeta?.type === 'question' && rowMeta.isQuestionTrigger && !isQuestionStage) {
-          console.warn('Question section reached position; switching to QUESTION stage')
+        if (rowMeta?.type === 'question' && rowMeta.isSectionStart && !isQuestionStage) {
+          // Use absolute scrollZ values so thresholds align across cycles.
+          const nowScrollZ = scrollZ.current
+          // End when the last row becomes fully raised relative to this moment
+          const endScrollZ = nowScrollZ + (QUESTION_SECTION_ROWS - 1) * TILE_SIZE
+          // Delay the deceleration start by a small number of rows so the
+          // section is visually present before slowing begins.
+          const delayedStart = nowScrollZ + DECEL_START_OFFSET_ROWS * TILE_SIZE
+          // Ensure start < end
+          questionSectionStartZ.current = Math.min(delayedStart, endScrollZ - 1e-4)
+          questionSectionEndZ.current = endScrollZ
+          initialSpeedAtSectionStart.current = terrainSpeed.current
+          console.warn('Question section start raised; beginning deceleration', {
+            startScrollZ: nowScrollZ,
+            delayedStart: questionSectionStartZ.current,
+            endScrollZ,
+            entryEndZ,
+            baseZStart: baseZByRow.current[rowIndex],
+            initialSpeed: initialSpeedAtSectionStart.current,
+          })
           goToStage(Stage.QUESTION)
         }
       }
@@ -388,8 +494,10 @@ const Terrain: FC = () => {
     }
     const answerPositions = row.answerTilePositions
     if (!!answerPositions) {
-      for (let i = 0; i < answerPositions.length; i++) {
+      // Place only the indices provided by this trigger row (ignore nulls)
+      for (let i = 0; i < answerPositions.length && i < answerRefs.length; i++) {
         const t = answerPositions[i]
+        if (!t) continue
         const ref = answerRefs[i]
         if (!ref.current) continue
         ref.current.setTranslation({ x: t[0], y: t[1], z: rowZ + t[2] }, true)
@@ -443,11 +551,61 @@ const Terrain: FC = () => {
   useFrame((_, delta) => {
     if (!isSetup.current) return
     if (!tileShader.current) return
+
+    // Update shader uniforms with fixed entry window values
+    tileShader.current.uEntryStartZ = ENTRY_START_Z
+    tileShader.current.uEntryEndZ = ENTRY_END_Z
+
+    // Compute terrain speed with question section deceleration if active
+    const computedSpeed = isQuestionStage
+      ? computeTerrainSpeedForQuestionSection()
+      : terrainSpeed.current
+
+    // Update store if speed has changed
+    if (computedSpeed !== terrainSpeed.current) {
+      setTerrainSpeed(computedSpeed)
+    }
+
     // Convert normalized speed to world units per second
-    const zStep = terrainSpeed.current * TERRAIN_SPEED_UNITS * delta
+    const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
     tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
+
+    // Debug logging for terrain speed and deceleration state (throttled)
+    if (!speedLogRef.current)
+      speedLogRef.current = { lastT: 0, lastSpeed: -1, lastProgress: -1 }
+    const tNow = performance.now()
+    const throttleMs = 200
+    const decelActive =
+      questionSectionStartZ.current !== null && questionSectionEndZ.current !== null
+    const startZ = questionSectionStartZ.current ?? 0
+    const endZ = questionSectionEndZ.current ?? 0
+    let progress = -1
+    if (decelActive) {
+      const span = Math.max(1e-6, endZ - startZ)
+      progress = Math.max(0, Math.min(1, (scrollZ.current - startZ) / span))
+    }
+    const shouldLog =
+      tNow - speedLogRef.current.lastT > throttleMs ||
+      Math.abs(computedSpeed - speedLogRef.current.lastSpeed) > 0.05
+    if (shouldLog) {
+      console.log(
+        '[Terrain] speed',
+        computedSpeed.toFixed(3),
+        'scrollZ',
+        scrollZ.current.toFixed(2),
+        {
+          decelActive,
+          startZ: startZ.toFixed(2),
+          endZ: endZ.toFixed(2),
+          progress: progress >= 0 ? progress.toFixed(2) : 'n/a',
+        },
+      )
+      speedLogRef.current.lastT = tNow
+      speedLogRef.current.lastSpeed = computedSpeed
+      speedLogRef.current.lastProgress = progress
+    }
   })
 
   if (!tileInstances.length) return null
@@ -468,12 +626,17 @@ const Terrain: FC = () => {
           <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
             <instancedBufferAttribute
               ref={instanceVisibilityBufferAttribute}
-              attach="attributes-instanceVisibility"
+              attach="attributes-visibility"
               args={[instanceVisibility.current!, 1]}
             />
             <instancedBufferAttribute
-              attach="attributes-instanceSeed"
+              attach="attributes-seed"
               args={[instanceSeed.current!, 1]}
+            />
+            <instancedBufferAttribute
+              ref={instanceAnswerNumberBufferAttribute}
+              attach="attributes-answerNumber"
+              args={[instanceAnswerNumber.current!, 1]}
             />
           </boxGeometry>
           <TileShaderMaterial

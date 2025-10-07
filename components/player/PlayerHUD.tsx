@@ -2,52 +2,51 @@
 
 import { Html } from '@react-three/drei'
 import gsap from 'gsap'
-import { type FC, useRef } from 'react'
+import { type FC, useCallback, useRef } from 'react'
 import { Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
 import { getPaletteHex } from '@/components/palette'
+import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
-export const CONFIRMATION_DURATION_S = 3
 
 // Get colors from palette at different positions
 const COLOR_START = getPaletteHex(0.3)
-const COLOR_END = getPaletteHex(0.7)
+const COLOR_END = getPaletteHex(0.8)
 
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
-  const onAnswerConfirmed = useGameStore((s) => s.onAnswerConfirmed)
 
-  const timelineRef = useRef<GSAPTimeline>(null)
+  const setter = useCallback(
+    (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
+    [],
+  )
+
+  const onConfirmationProgressChange = useCallback(
+    (progress: number) => {
+      const xValue = -100 + progress * 100
+      setter(xValue)
+    },
+    [setter],
+  )
+
+  useConfirmationProgress(onConfirmationProgressChange)
+
+  const containerTween = useRef<GSAPTween>(null)
 
   const onEnter = () => {
-    timelineRef.current?.kill()
-    gsap.set('#progress-bar', { x: '-100%' })
-    timelineRef.current = gsap
-      .timeline()
-      .fromTo(
-        confirmingContainer.current,
-        { opacity: 0, scale: 1.3 },
-        { opacity: 1, scale: 1, duration: 0.24, ease: 'power1.out' },
-      )
-      .to(
-        '#progress-bar',
-        {
-          x: 0,
-          duration: CONFIRMATION_DURATION_S,
-          ease: 'linear',
-          onComplete: () => {
-            if (!!confirmingAnswer) onAnswerConfirmed()
-          },
-        },
-        0,
-      )
+    containerTween.current?.kill()
+    containerTween.current = gsap.fromTo(
+      confirmingContainer.current,
+      { opacity: 0, scale: 1.25 },
+      { opacity: 1, scale: 1, duration: 0.24, ease: 'power1.out' },
+    )
   }
 
   const onExit = () => {
-    timelineRef.current?.kill()
-    timelineRef.current = gsap.timeline().to(confirmingContainer.current, {
+    containerTween.current?.kill()
+    containerTween.current = gsap.to(confirmingContainer.current, {
       scale: 1.1,
       opacity: 0,
       duration: 0.2,
@@ -75,7 +74,7 @@ const PlayerHUD: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-300">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"

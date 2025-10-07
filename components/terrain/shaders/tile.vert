@@ -1,10 +1,11 @@
 // Instanced tile fade vertex shader
-// - instanceVisibility: 1.0 for open (safe) tiles, 0.0 otherwise
+// - visibility: 1.0 for open (safe) tiles, 0.0 otherwise
 // - uEntryStartZ/uEntryEndZ: world-Z window over which open tiles fade in
 // - uPlayerWorldPos: player world-space position for simple tile highlighting
 
-attribute float instanceVisibility;
-attribute float instanceSeed;
+attribute float visibility;
+attribute float seed;
+attribute float answerNumber;
 
 uniform float uEntryStartZ;
 uniform float uEntryEndZ;
@@ -13,7 +14,9 @@ uniform vec3 uPlayerWorldPos;
 varying float vAlpha;
 varying float vPlayerHighlight;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 varying float vSeed;
+varying float vAnswerNumber;
 
 void main() {
   // Compute combined model-instance matrix once and reuse
@@ -21,6 +24,10 @@ void main() {
   // Compute world position for current vertex of the instance
   vec4 worldPos = modelInstanceMatrix * vec4(position, 1.0);
   vWorldPos = worldPos.xyz;
+
+  // Compute world-space normal (approximate by applying linear part of modelInstanceMatrix)
+  // This is sufficient for axis-aligned boxes used for tiles
+  vWorldNormal = normalize(mat3(modelInstanceMatrix) * normal);
 
   // Compute instance center in world space once per vertex (constant per instance)
   vec3 instanceCenter = (modelInstanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
@@ -36,13 +43,16 @@ void main() {
   float tBase = clamp((worldPos.z - uEntryStartZ) / denom, 0.0, 1.0);
   // Map seed into an exponent to speed up or slow down the ramp without shifting start/end.
   // <1.0 => faster start (ease-out), >1.0 => slower start (ease-in).
-  float speedExp = mix(0.6, 1.4, clamp(instanceSeed, 0.0, 1.0));
+  float speedExp = mix(0.6, 1.4, clamp(seed, 0.0, 1.0));
   float t = pow(tBase, speedExp);
-  // Gate fade by instanceVisibility: 0 => invisible, 1 => fade by t
-  vAlpha = t * clamp(instanceVisibility, 0.0, 1.0);
+  // Gate fade by visibility: 0 => invisible, 1 => fade by t
+  vAlpha = t * clamp(visibility, 0.0, 1.0);
 
   // Pass seed to fragment for noise offset
-  vSeed = instanceSeed;
+  vSeed = seed;
+
+  // Pass answer number to fragment shader
+  vAnswerNumber = answerNumber;
 
   gl_Position = projectionMatrix * viewMatrix * worldPos;
 }
