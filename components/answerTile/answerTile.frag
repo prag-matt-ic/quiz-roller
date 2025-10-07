@@ -7,8 +7,8 @@ uniform float uTime;
 
 varying vec2 vUv;
 
-const float BORDER_FRACTION = 0.04; // fraction of full height
-const vec4 BASE_COLOUR = vec4(1.0, 1.0, 1.0, 0.5);
+const float BORDER_FRACTION = 0.08; // fraction of full height
+const vec4 BASE_COLOUR = vec4(0.0);
 
 float sdBox(in vec2 p, in vec2 b) {
     vec2 d = abs(p)-b;
@@ -17,10 +17,13 @@ float sdBox(in vec2 p, in vec2 b) {
 
 
 void main() {
+  // Each tile tracks its own progress via the component's localProgress ref
+  // But shrinks smoothly following the global progress when not confirming
   if (uConfirmingProgress <= 0.0) {
     gl_FragColor = BASE_COLOUR;
     return;
   }
+  
   // Center UVs in [-0.5, 0.5]
   vec2 p = vUv - 0.5;
 
@@ -41,8 +44,7 @@ void main() {
 
   float borderColourP = sin(vUv.x + uTime * 0.4) * 0.5 + 0.5;
   vec3 borderColour = getColourFromPalette(borderColourP);
-  vec4 baseColour = mix(BASE_COLOUR, vec4(1.0, 1.0, 1.0, 0.0), uConfirmingProgress);
-  vec4 color = mix(baseColour, vec4(borderColour, 1.0), borderMask);
+  vec4 color = mix(BASE_COLOUR, vec4(borderColour, 1.0), borderMask);
 
   gl_FragColor = color;
 }

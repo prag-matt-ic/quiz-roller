@@ -180,6 +180,8 @@ export type RowData = {
   isQuestionTrigger?: boolean
   questionTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
   answerTilePositions?: [number, number, number][] // If true, when this row is visible, position answer tiles here
+  // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
+  answerNumber?: number[]
 }
 
 // --- Entry section ---
@@ -211,13 +213,15 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
-  const questionTextCenterRow = 6.5
-  const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
+
+  // Position question text in the vertical center
+  const questionTextCenterRow = (QUESTION_SECTION_ROWS - 1) / 2 // 7.5 for 16 rows
+  const textTriggerRow = Math.round(questionTextCenterRow) // 8
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
 
-  // Four-tile layout triggers
-  const topCenterRow = 10.5
-  const bottomCenterRow = topCenterRow + ANSWER_TILE_ROWS + 4
+  // Four-tile layout: corners with 1-row buffer top and bottom
+  const topCenterRow = 2.5 // Rows 1-4 (with 1-row top buffer)
+  const bottomCenterRow = 12.5 // Rows 11-14 (with 1-row bottom buffer)
   const tilesTriggerRow = Math.ceil(topCenterRow)
   const tilesZRelative = (tilesTriggerRow - topCenterRow) * TILE_SIZE
 
@@ -226,16 +230,47 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
   const zRelTop = tilesZRelative
   const zRelBottom = zRelTop + (bottomCenterRow - topCenterRow) * TILE_SIZE
 
+  // Calculate answer tile ownership for four-tile layout
+  const leftStartCol = 1
+  const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
+  const rightStartCol = 9
+  const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
+  const topStartRow = Math.ceil(topCenterRow - ANSWER_TILE_ROWS / 2)
+  const topEndRow = topStartRow + ANSWER_TILE_ROWS - 1
+  const bottomStartRow = Math.ceil(bottomCenterRow - ANSWER_TILE_ROWS / 2)
+  const bottomEndRow = bottomStartRow + ANSWER_TILE_ROWS - 1
+
   const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
   for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
     const isStart = i === 0
     const isEnd = i === QUESTION_SECTION_ROWS - 1
+
+    // Compute ownership array for this row
+    const ownership = new Array<number>(COLUMNS).fill(0)
+    // Top-left tile (answer 1)
+    if (i >= topStartRow && i <= topEndRow) {
+      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
+    }
+    // Top-right tile (answer 2)
+    if (i >= topStartRow && i <= topEndRow) {
+      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
+    }
+    // Bottom-left tile (answer 3)
+    if (i >= bottomStartRow && i <= bottomEndRow) {
+      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 3
+    }
+    // Bottom-right tile (answer 4)
+    if (i >= bottomStartRow && i <= bottomEndRow) {
+      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 4
+    }
+
     rows[i] = {
       heights: heights[i],
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
       isQuestionTrigger: i === textTriggerRow,
+      answerNumber: ownership,
     }
     if (i === textTriggerRow) {
       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
@@ -285,15 +320,29 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
 
   const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
+
   for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
     const isStart = i === 0
     const isEnd = i === QUESTION_SECTION_ROWS - 1
+
+    // Compute ownership array for this row (two-tile layout)
+    const ownership = new Array<number>(COLUMNS).fill(0)
+    // Left tile (answer 1)
+    if (i >= startRow && i <= endRow) {
+      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
+    }
+    // Right tile (answer 2)
+    if (i >= startRow && i <= endRow) {
+      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
+    }
+
     rows[i] = {
       heights: heights[i],
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
       isQuestionTrigger: i - 3 === textTriggerRow,
+      answerNumber: ownership,
     }
     if (i === textTriggerRow) {
       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]

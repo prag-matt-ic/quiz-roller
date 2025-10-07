@@ -94,6 +94,9 @@ const Terrain: FC = () => {
   // Single visibility channel in [0,1] replacing open mask + baseY attribute
   const instanceVisibility = useRef<Float32Array | null>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
+  // Answer number per instance (0=not under answer, 1=answer 1, 2=answer 2, etc.)
+  const instanceAnswerNumber = useRef<Float32Array | null>(null)
+  const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
@@ -215,6 +218,7 @@ const Terrain: FC = () => {
       const totalInstances = ROWS_VISIBLE * COLUMNS
       instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
+      instanceAnswerNumber.current = new Float32Array(totalInstances)
 
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
@@ -234,6 +238,7 @@ const Terrain: FC = () => {
 
           instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
           instanceSeed.current[bodyIndex] = Math.random()
+          instanceAnswerNumber.current[bodyIndex] = rowData.answerNumber?.[col] ?? 0
 
           instances.push({
             key: `terrain-${rowIndex}-${col}`,
@@ -288,9 +293,11 @@ const Terrain: FC = () => {
         yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
         const y = newRowData.heights[col]
         instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+        instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[col] ?? 0
       }
 
       instanceVisibilityBufferAttribute.current!.needsUpdate = true
+      instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
     }
 
     // Reset raised state for this visible row slot when it wraps to new content
@@ -468,12 +475,17 @@ const Terrain: FC = () => {
           <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
             <instancedBufferAttribute
               ref={instanceVisibilityBufferAttribute}
-              attach="attributes-instanceVisibility"
+              attach="attributes-visibility"
               args={[instanceVisibility.current!, 1]}
             />
             <instancedBufferAttribute
-              attach="attributes-instanceSeed"
+              attach="attributes-seed"
               args={[instanceSeed.current!, 1]}
+            />
+            <instancedBufferAttribute
+              ref={instanceAnswerNumberBufferAttribute}
+              attach="attributes-answerNumber"
+              args={[instanceAnswerNumber.current!, 1]}
             />
           </boxGeometry>
           <TileShaderMaterial

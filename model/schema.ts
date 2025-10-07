@@ -31,13 +31,14 @@ export type AnswerUserData = {
   type: 'answer'
   questionId: string
   answer: Answer
+  answerNumber: number
 }
 
 export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
 
-export type RigidBodyUserData = PlayerUserData | AnswerUserData | OutOfBoundsUserData 
+export type RigidBodyUserData = PlayerUserData | AnswerUserData | OutOfBoundsUserData
 
 export const TOPICS: string[] = [
   'UX/UI Design',
