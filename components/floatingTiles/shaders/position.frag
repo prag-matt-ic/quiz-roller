@@ -23,6 +23,7 @@ uniform float uZMinRow;
 uniform float uZMaxRow;
 uniform float uZFadeStart; // world units where Z fade starts
 uniform float uZFadeEnd;   // world units where Z fade ends
+uniform float uCameraZ;    // camera world-space Z (for camera-relative fade)
 
 // Store per-instance speed using a separate storage strategy
 // We'll encode speed in the initial position data and maintain it across frames
@@ -92,21 +93,14 @@ void main() {
   float normalizedY = (position.y - uYMin) / (uYMax - uYMin);
   normalizedY = clamp(normalizedY, 0.0, 1.0);
   
-  float alpha = 1.0;
-  if (normalizedY < 0.2) {
-    // Fade in during first 20%
-    alpha = normalizedY / 0.2;
-  } else if (normalizedY > 0.8) {
-    // Fade out during final 20%
-    alpha = (1.0 - normalizedY) / 0.2;
-  }
-  
-  // Smoothstep for smoother transitions
-  alpha = smoothstep(0.0, 1.0, alpha);
+  // Smooth, continuous fade using two smoothsteps: fade-in (0.0->0.2), fade-out (0.8->1.0)
+  float fadeIn = smoothstep(0.0, 0.2, normalizedY);
+  float fadeOut = 1.0 - smoothstep(0.8, 1.0, normalizedY);
+  float alpha = fadeIn * fadeOut;
 
-  // Apply Z distance-based fade (away from camera/origin). Uses absolute Z distance.
-  // If |z| <= uZFadeStart => no fade. If |z| >= uZFadeEnd => fully transparent.
-  float zDist = abs(position.z);
+  // Apply Z distance-based fade relative to camera Z.
+  // If distance along Z from camera is <= start => no fade, >= end => fully faded.
+  float zDist = abs(position.z - uCameraZ);
   float zFade = 1.0 - smoothstep(uZFadeStart, uZFadeEnd, zDist);
   alpha *= zFade;
   

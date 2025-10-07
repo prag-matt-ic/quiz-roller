@@ -118,17 +118,22 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           mass={0}
           friction={0}
         />
-        <mesh>
+        {/* Slightly elevate the visual mesh above the terrain to avoid z-fighting */}
+        <mesh position={[0, 0, 0.02]} renderOrder={10}>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
           <AnswerTileShaderMaterial
             key={AnswerTileShader.key}
             ref={shader}
             transparent={true}
             depthWrite={true}
+            polygonOffset={true}
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
             uConfirmingProgress={0}
             uIsConfirming={0}
           />
         </mesh>
+        {/* Lift text slightly above the tile surface to prevent z-fighting with the plane */}
         <Text
           color="#000"
           fontSize={0.35}
@@ -136,7 +141,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           anchorY="middle"
           textAlign="center"
           maxWidth={ANSWER_TILE_WIDTH - 0.5}
-          position={[0, 0.0, 0.01]}
+          position={[0, 0.0, 0.03]}
           rotation={[0, 0, 0]}>
           {text}
         </Text>

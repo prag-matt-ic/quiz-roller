@@ -11,15 +11,19 @@ varying float vPlayerHighlight;
 varying float vAnswerNumber;
 
 void main() {
-  if (vAlpha <= 0.001) discard;
+  // Determine if this instance sits under an answer tile
+  float hasAnswer = step(0.5, vAnswerNumber);
+  // Only discard fully transparent tiles that are not answer tiles
+  if (vAlpha <= 0.001 && hasAnswer < 0.5) discard;
 
-  // Apply reduced max opacity to ~40% of tiles based on seed
-  float alpha = vAlpha;
-  if (vSeed > 0.5) {
+  // For answer tiles, alpha should always be 1.0 (no fade).
+  // For non-answer tiles, apply fade and optional seed-based max opacity.
+  float alpha = (hasAnswer > 0.5) ? 1.0 : vAlpha;
+  if (vSeed > 0.5 && hasAnswer < 0.5) {
     // Map seed from [0.3, 1.0] to maxAlpha [0.3, 1.0]
     float t = (vSeed - 0.3) / 0.7; // normalize to [0, 1]
     float maxAlpha = mix(0.6, 1.0, t);
-    alpha = min(vAlpha, maxAlpha);
+    alpha = min(alpha, maxAlpha);
   }
 
   // Distance-based highlight precomputed in vertex shader
@@ -32,10 +36,8 @@ void main() {
   float bgInput = clamp(bgNoise * 0.5 + 0.5, 0.0, 1.0);
   vec3 bgColour = getColourFromPalette(bgInput);
 
-  // Use step to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
-  // step(0.5, vAnswerNumber) returns 1.0 if vAnswerNumber >= 0.5, else 0.0
-  float hasAnswer = step(0.5, vAnswerNumber);
-  float mixAmount = mix(0.5, 0.08, hasAnswer);
+  // Use hasAnswer to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
+  float mixAmount = mix(0.4, 0.05, hasAnswer);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
   // Respect fade-in alpha; do not force full opacity here.
   // If needed later, we can raise a minimum once fully raised (vAlpha ~ 1.0).

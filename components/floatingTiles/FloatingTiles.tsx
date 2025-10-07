@@ -45,6 +45,7 @@ type Props = {
 // - GPU-computed alpha fading: 0% -> 100% in first 20%, 100% -> 0% in final 20%
 const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   const renderer = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
 
   // Instance count
   const instanceCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
@@ -80,7 +81,6 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
 
   // Per-instance state buffers (heap-allocated once)
   const positions = useRef<Float32Array>(new Float32Array(instanceCount * 3))
-  const speeds = useRef<Float32Array>(new Float32Array(instanceCount))
 
   // Refs for Three objects and frame-scope scratch
   const meshRef = useRef<InstancedMesh>(null)
@@ -93,19 +93,19 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
 
   // Texture UVs for sampling GPU compute texture
   const textureUvs = useMemo(() => {
+    // Sample at texel centers to avoid filtering between neighbors
     const uvs = new Float32Array(instanceCount * 2)
     for (let i = 0; i < instanceCount; i++) {
-      const x = (i % textureSize) / (textureSize - 1 || 1)
-      const y = Math.floor(i / textureSize) / (textureSize - 1 || 1)
+      const tx = i % textureSize
+      const ty = Math.floor(i / textureSize)
+      const x = (tx + 0.5) / textureSize
+      const y = (ty + 0.5) / textureSize
       uvs[i * 2] = x
       uvs[i * 2 + 1] = y
     }
     return uvs
   }, [instanceCount, textureSize])
 
-  function rand(min: number, max: number) {
-    return min + Math.random() * (max - min)
-  }
   function randInt(min: number, max: number) {
     return (min + Math.floor(Math.random() * (max - min + 1))) | 0
   }
@@ -125,8 +125,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     positions.current[base + 0] = x
     positions.current[base + 1] = Y_MIN + (ySpread > 0 ? Math.random() * ySpread : 0)
     positions.current[base + 2] = z
-    // Slight speed variance; keep it modest for calm motion
-    speeds.current[i] = rand(0.6, 1.2)
+    // Speed variance handled in GPU; no CPU-side speed state needed
   }
 
   // Initialize positions: sprinkle a subset up the column so it doesn't appear all at once
@@ -152,7 +151,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     try {
       gpuCompute.current = new GPUComputationRenderer(textureSize, textureSize, renderer)
 
-      // Create initial position texture (includes speed in W channel)
+  // Create initial position texture (W channel reserved for alpha; computed on GPU)
       const dtPosition = gpuCompute.current.createTexture()
       fillPositionTexture(dtPosition, positions.current)
 
@@ -179,6 +178,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
         uZMaxRow: { value: number }
         uZFadeStart: { value: number }
         uZFadeEnd: { value: number }
+        uCameraZ: { value: number }
       }
       positionUniforms.uDeltaTime = { value: 0.016 }
       positionUniforms.uYMin = { value: Y_MIN }
@@ -186,10 +186,11 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
       positionUniforms.uGridCols = { value: GRID_COLS }
       positionUniforms.uTileSize = { value: TILE_SIZE }
       positionUniforms.uZMinRow = { value: Z_MIN_ROW }
-  positionUniforms.uZMaxRow = { value: Z_MAX_ROW }
-  // Z fade defaults: start fading at ~20 units, fully faded by ~30 units
-  positionUniforms.uZFadeStart = { value: 20 }
-  positionUniforms.uZFadeEnd = { value: 30 }
+      positionUniforms.uZMaxRow = { value: Z_MAX_ROW }
+      // Z fade: start fading at ~25 units, fully faded by ~35 units
+      positionUniforms.uZFadeStart = { value: 25 }
+      positionUniforms.uZFadeEnd = { value: 35 }
+      positionUniforms.uCameraZ = { value: camera.position.z }
 
       // Initialize GPU compute
       const error = gpuCompute.current.init()
@@ -197,7 +198,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     } catch (error) {
       console.error('Error initializing FloatingTiles GPUComputationRenderer:', error)
     }
-  }, [renderer, textureSize, Y_MIN, Y_MAX, GRID_COLS, Z_MIN_ROW, Z_MAX_ROW])
+  }, [renderer, textureSize, Y_MIN, Y_MAX, GRID_COLS, Z_MIN_ROW, Z_MAX_ROW, camera.position.z])
 
   // GPU computation - position and alpha computed on GPU
   useFrame((_, dt) => {
@@ -212,8 +213,10 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     // Update position uniforms
     const positionUniforms = positionVariable.current.material.uniforms as {
       uDeltaTime: { value: number }
+      uCameraZ: { value: number }
     }
     positionUniforms.uDeltaTime.value = delta
+    positionUniforms.uCameraZ.value = camera.position.z
 
     // Compute the simulation
     gpuCompute.current.compute()
@@ -236,7 +239,8 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     <instancedMesh
       ref={meshRef}
       args={[undefined, undefined, instanceCount]}
-      castShadow={false}>
+      castShadow={false}
+      frustumCulled={false}>
       <boxGeometry args={[BOX_W, BOX_H, BOX_D]}>
         {/**
          * IMPORTANT: This must be an InstancedBufferAttribute so each instance
