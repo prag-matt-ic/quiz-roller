@@ -14,6 +14,7 @@ uniform vec3 uPlayerWorldPos;
 varying float vAlpha;
 varying float vPlayerHighlight;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vAnswerNumber;
 
@@ -23,6 +24,10 @@ void main() {
   // Compute world position for current vertex of the instance
   vec4 worldPos = modelInstanceMatrix * vec4(position, 1.0);
   vWorldPos = worldPos.xyz;
+
+  // Compute world-space normal (approximate by applying linear part of modelInstanceMatrix)
+  // This is sufficient for axis-aligned boxes used for tiles
+  vWorldNormal = normalize(mat3(modelInstanceMatrix) * normal);
 
   // Compute instance center in world space once per vertex (constant per instance)
   vec3 instanceCenter = (modelInstanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;

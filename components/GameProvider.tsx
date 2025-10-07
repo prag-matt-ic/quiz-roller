@@ -25,6 +25,7 @@ type GameState = {
   // Normalized terrain speed in range [0, 1].
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number
+  setTerrainSpeed: (speed: number) => void
   // Normalized confirmation progress in range [0, 1].
   confirmationProgress: number
   playerPosition: { x: number; y: number; z: number }
@@ -110,6 +111,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     // Configurable parameters set on load with default values
     ...INITIAL_STATE,
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
+    setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
       set({ isAwaitingQuestion: true })
@@ -214,17 +216,8 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
 
       if (stage === Stage.QUESTION) {
+        // Speed deceleration is now handled in Terrain.tsx, synchronized with row raising
         set({ stage: Stage.QUESTION })
-        speedTween?.kill()
-        speedTween = gsap.to(speedTweenTarget, {
-          duration: 0.5,
-          ease: 'power1.out',
-          value: 0, // normalized
-          onUpdate: () => {
-            set({ terrainSpeed: speedTweenTarget.value })
-          },
-          onComplete: () => {},
-        })
         return
       }
 
@@ -232,7 +225,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         set({ stage: Stage.TERRAIN })
         speedTween?.kill()
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 2.5,
+          duration: 2.4,
           ease: 'power2.out',
           value: 1, // normalized
           onUpdate: () => {

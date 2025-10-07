@@ -5,12 +5,22 @@ precision highp float;
 
 varying float vAlpha;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vPlayerHighlight;
 varying float vAnswerNumber;
 
 void main() {
   if (vAlpha <= 0.001) discard;
+
+  // Apply reduced max opacity to ~40% of tiles based on seed
+  float alpha = vAlpha;
+  if (vSeed > 0.5) {
+    // Map seed from [0.3, 1.0] to maxAlpha [0.3, 1.0]
+    float t = (vSeed - 0.3) / 0.7; // normalize to [0, 1]
+    float maxAlpha = mix(0.6, 1.0, t);
+    alpha = min(vAlpha, maxAlpha);
+  }
 
   // Distance-based highlight precomputed in vertex shader
   float highlight = vPlayerHighlight;
@@ -25,15 +35,28 @@ void main() {
   // Use step to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
   // step(0.5, vAnswerNumber) returns 1.0 if vAnswerNumber >= 0.5, else 0.0
   float hasAnswer = step(0.5, vAnswerNumber);
-  float mixAmount = mix(0.22, 0.1, hasAnswer);
+  float mixAmount = mix(0.5, 0.08, hasAnswer);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
+  // Respect fade-in alpha; do not force full opacity here.
+  // If needed later, we can raise a minimum once fully raised (vAlpha ~ 1.0).
 
   if (highlight > 0.01) {
     float highlightNoise = noise(worldPosScaled);
     float highlightInput = clamp(highlightNoise * 0.5 + 0.5, 0.0, 1.0);
     vec3 highlightColour = getColourFromPalette(highlightInput);
     background = mix(background, highlightColour, highlight);
+    // Keep highlight from overriding early fade-in completely; boost slightly.
+    alpha = max(alpha, min(1.0, alpha + highlight * 0.35));
   }
 
-  gl_FragColor = vec4(background, vAlpha);
+  // Darken faces that are not facing world up (y-axis)
+  // Sides/bottom get 50% intensity, top stays at 100%
+  const float DARKEN_FACTOR = 0.66; // 50% darker
+  const float UP_THRESHOLD = 0.5;  // treat faces with dot(up, normal) >= 0.5 as "up"
+  float upDot = clamp(dot(normalize(vWorldNormal), vec3(0.0, 1.0, 0.0)), -1.0, 1.0);
+  float isFacingUp = step(UP_THRESHOLD, upDot); // 1.0 for mostly-upward faces, 0.0 otherwise
+  float shade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
+  vec3 shaded = background * shade;
+
+  gl_FragColor = vec4(shaded, alpha);
 }

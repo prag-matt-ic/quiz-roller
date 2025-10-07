@@ -1,21 +1,28 @@
 'use client'
 
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend, useFrame, useThree } from '@react-three/fiber'
 import { type FC, useEffect, useMemo, useRef } from 'react'
-import { InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three'
+import { DataTexture, InstancedMesh, Matrix4, Texture } from 'three'
+import {
+  GPUComputationRenderer,
+  type Variable,
+} from 'three/addons/misc/GPUComputationRenderer.js'
 
 import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/components/terrain/terrainBuilder'
 
 import floatingTilesFragment from './shaders/floatingTiles.frag'
 import floatingTilesVertex from './shaders/floatingTiles.vert'
+import positionFragmentShader from './shaders/position.frag'
 
 type FloatingTilesUniforms = {
   uMix: number
+  uPositionTexture: Texture | null
 }
 
 const INITIAL_FLOATING_TILE_UNIFORMS: FloatingTilesUniforms = {
   uMix: 0.4,
+  uPositionTexture: null,
 }
 
 const CustomFloatingTilesMaterial = shaderMaterial(
@@ -35,10 +42,12 @@ type Props = {
 // Notes:
 // - Avoid per-frame allocations; reuse scratch objects and typed arrays
 // - Geometry matches Terrain tiles (flat boxes using TILE_SIZE/TILE_THICKNESS)
-// - Simple CPU simulation for initial setup; can evolve to GPU later
+// - GPU-computed alpha fading: 0% -> 100% in first 20%, 100% -> 0% in final 20%
 const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
+  const renderer = useThree((s) => s.gl)
+
   // Instance count
-  const instanceCount = useMemo(() => count ?? (isMobile ? 80 : 160), [count, isMobile])
+  const instanceCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
 
   // Grid config: wider than terrain. Example: terrain has 16 cols; use 32 here
   const GRID_COLS = COLUMNS * 2 // 32
@@ -61,7 +70,8 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   )
 
   // Z is kept near the playfield and quantized to the terrain grid for coherence
-  const Z_ROWS_HALF = 12 // rows in each direction (band depth)
+  // Spread further back along Z: increase rows for deeper band
+  const Z_ROWS_HALF = 20 // rows in each direction (band depth)
   const Z_MIN_ROW = -Z_ROWS_HALF
   const Z_MAX_ROW = Z_ROWS_HALF
   // Vertical motion band
@@ -74,10 +84,24 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
 
   // Refs for Three objects and frame-scope scratch
   const meshRef = useRef<InstancedMesh>(null)
-  const tmpMatrix = useRef<Matrix4>(new Matrix4())
-  const tmpPos = useRef<Vector3>(new Vector3())
-  const tmpQuat = useRef<Quaternion>(new Quaternion())
-  const tmpScale = useRef<Vector3>(new Vector3(1, 1, 1))
+  const materialRef = useRef<typeof FloatingTilesMaterial & FloatingTilesUniforms>(null)
+
+  // GPU Computation for position and alpha (alpha computed from Y position)
+  const gpuCompute = useRef<GPUComputationRenderer | null>(null)
+  const positionVariable = useRef<Variable | null>(null)
+  const textureSize = useMemo(() => Math.ceil(Math.sqrt(instanceCount)), [instanceCount])
+
+  // Texture UVs for sampling GPU compute texture
+  const textureUvs = useMemo(() => {
+    const uvs = new Float32Array(instanceCount * 2)
+    for (let i = 0; i < instanceCount; i++) {
+      const x = (i % textureSize) / (textureSize - 1 || 1)
+      const y = Math.floor(i / textureSize) / (textureSize - 1 || 1)
+      uvs[i * 2] = x
+      uvs[i * 2 + 1] = y
+    }
+    return uvs
+  }, [instanceCount, textureSize])
 
   function rand(min: number, max: number) {
     return min + Math.random() * (max - min)
@@ -111,73 +135,147 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
       respawn(i, Y_MAX - Y_MIN)
     }
 
-    // Write initial matrices once on mount
+    // Set instance matrices to identity - positions come from GPU texture
     if (!meshRef.current) return
+    const identityMatrix = new Matrix4()
     for (let i = 0; i < instanceCount; i++) {
-      const base = i * 3
-      tmpPos.current.set(
-        positions.current[base + 0],
-        positions.current[base + 1],
-        positions.current[base + 2],
-      )
-      tmpMatrix.current.compose(tmpPos.current, tmpQuat.current.identity(), tmpScale.current)
-      meshRef.current.setMatrixAt(i, tmpMatrix.current)
+      meshRef.current.setMatrixAt(i, identityMatrix)
     }
     meshRef.current.instanceMatrix.needsUpdate = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceCount])
 
-  // Float upward; recycle above the top bound to the bottom band
+  // Initialize GPU compute for position (alpha computed within position shader)
+  useEffect(() => {
+    if (!renderer) return
+
+    try {
+      gpuCompute.current = new GPUComputationRenderer(textureSize, textureSize, renderer)
+
+      // Create initial position texture (includes speed in W channel)
+      const dtPosition = gpuCompute.current.createTexture()
+      fillPositionTexture(dtPosition, positions.current)
+
+      // Add position variable to GPU compute
+      positionVariable.current = gpuCompute.current.addVariable(
+        'texturePosition',
+        positionFragmentShader,
+        dtPosition,
+      )
+
+      // Set dependencies: position only depends on itself
+      gpuCompute.current.setVariableDependencies(positionVariable.current, [
+        positionVariable.current,
+      ])
+
+      // Set uniforms for position shader
+      const positionUniforms = positionVariable.current.material.uniforms as {
+        uDeltaTime: { value: number }
+        uYMin: { value: number }
+        uYMax: { value: number }
+        uGridCols: { value: number }
+        uTileSize: { value: number }
+        uZMinRow: { value: number }
+        uZMaxRow: { value: number }
+        uZFadeStart: { value: number }
+        uZFadeEnd: { value: number }
+      }
+      positionUniforms.uDeltaTime = { value: 0.016 }
+      positionUniforms.uYMin = { value: Y_MIN }
+      positionUniforms.uYMax = { value: Y_MAX }
+      positionUniforms.uGridCols = { value: GRID_COLS }
+      positionUniforms.uTileSize = { value: TILE_SIZE }
+      positionUniforms.uZMinRow = { value: Z_MIN_ROW }
+  positionUniforms.uZMaxRow = { value: Z_MAX_ROW }
+  // Z fade defaults: start fading at ~20 units, fully faded by ~30 units
+  positionUniforms.uZFadeStart = { value: 20 }
+  positionUniforms.uZFadeEnd = { value: 30 }
+
+      // Initialize GPU compute
+      const error = gpuCompute.current.init()
+      if (error !== null) throw new Error(error)
+    } catch (error) {
+      console.error('Error initializing FloatingTiles GPUComputationRenderer:', error)
+    }
+  }, [renderer, textureSize, Y_MIN, Y_MAX, GRID_COLS, Z_MIN_ROW, Z_MAX_ROW])
+
+  // GPU computation - position and alpha computed on GPU
   useFrame((_, dt) => {
     if (!meshRef.current) return
+    if (!gpuCompute.current) return
+    if (!positionVariable.current) return
+    if (!materialRef.current) return
 
     // Clamp dt to avoid huge jumps on tab switch
     const delta = Math.min(dt, 0.05)
 
-    for (let i = 0; i < instanceCount; i++) {
-      const base = i * 3
-      const speed = speeds.current[i]
-      const y = positions.current[base + 1] + speed * delta
-      positions.current[base + 1] = y <= Y_MAX ? y : Y_MIN
-      if (y > Y_MAX) {
-        // When recycling, choose new side column and row-aligned Z
-        const col = allowedCols[randInt(0, allowedCols.length - 1)]
-        positions.current[base + 0] = colToXForGrid(col, GRID_COLS)
-        const rowZ = randInt(Z_MIN_ROW, Z_MAX_ROW)
-        positions.current[base + 2] = rowZ * TILE_SIZE
-        speeds.current[i] = rand(0.6, 1.2)
-      }
-
-      tmpPos.current.set(
-        positions.current[base + 0],
-        positions.current[base + 1],
-        positions.current[base + 2],
-      )
-      tmpMatrix.current.compose(tmpPos.current, tmpQuat.current.identity(), tmpScale.current)
-      meshRef.current.setMatrixAt(i, tmpMatrix.current)
+    // Update position uniforms
+    const positionUniforms = positionVariable.current.material.uniforms as {
+      uDeltaTime: { value: number }
     }
+    positionUniforms.uDeltaTime.value = delta
 
-    meshRef.current.instanceMatrix.needsUpdate = true
+    // Compute the simulation
+    gpuCompute.current.compute()
+
+    // Set the result texture to the material (contains position xyz + alpha w)
+    materialRef.current.uPositionTexture = gpuCompute.current.getCurrentRenderTarget(
+      positionVariable.current,
+    ).texture
+
+    // Note: Instance matrices are now mostly unused since positions come from GPU texture
+    // We keep the mesh to maintain the instancing system, but transforms are in the shader
   })
 
   // Slightly smaller than terrain tiles
-  const BOX_W = TILE_SIZE * 0.8
-  const BOX_H = TILE_THICKNESS * 0.8
-  const BOX_D = TILE_SIZE * 0.8
+  const BOX_W = TILE_SIZE * 0.75
+  const BOX_H = TILE_THICKNESS * 0.75
+  const BOX_D = TILE_SIZE * 0.75
 
   return (
     <instancedMesh
       ref={meshRef}
       args={[undefined, undefined, instanceCount]}
       castShadow={false}>
-      <boxGeometry args={[BOX_W, BOX_H, BOX_D]} />
+      <boxGeometry args={[BOX_W, BOX_H, BOX_D]}>
+        {/**
+         * IMPORTANT: This must be an InstancedBufferAttribute so each instance
+         * gets a single UV to sample its texel from the position texture.
+         * Using BufferAttribute (per-vertex) mangles geometry because each vertex
+         * would sample a different texel, stretching triangles across space.
+         */}
+        <instancedBufferAttribute attach="attributes-textureUv" args={[textureUvs, 2]} />
+      </boxGeometry>
       <FloatingTilesMaterial
         key={(CustomFloatingTilesMaterial as unknown as { key: string }).key}
+        ref={materialRef}
         uMix={INITIAL_FLOATING_TILE_UNIFORMS.uMix}
-        transparent={false}
-        depthWrite
+        uPositionTexture={INITIAL_FLOATING_TILE_UNIFORMS.uPositionTexture}
+        transparent={true}
+        depthWrite={true}
       />
     </instancedMesh>
   )
+}
+
+// Helper function to fill position texture with initial data
+// Note: W channel is initialized to 0, will be computed as alpha on first compute pass
+const fillPositionTexture = (texturePosition: DataTexture, positions: Float32Array) => {
+  const posArray = texturePosition.image.data as Float32Array
+
+  for (let i = 0, k = 0; i < positions.length / 3; i++, k += 4) {
+    const x = positions[i * 3 + 0]
+    const y = positions[i * 3 + 1]
+    const z = positions[i * 3 + 2]
+
+    // RGBA: xyz position + placeholder (will become alpha after first compute)
+    posArray[k + 0] = x
+    posArray[k + 1] = y
+    posArray[k + 2] = z
+    posArray[k + 3] = 0.0 // Will be computed as alpha in first frame
+  }
+
+  texturePosition.needsUpdate = true
 }
 
 export default FloatingTiles

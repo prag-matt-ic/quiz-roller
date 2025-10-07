@@ -13,7 +13,8 @@ export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world 
 export const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of travel
 
 export const QUESTION_SECTION_ROWS = 16
-export const ENTRY_SECTION_ROWS = 16
+// Extend intro/entry section to push the first question further back
+export const ENTRY_SECTION_ROWS = 24
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
@@ -157,8 +158,6 @@ export function generateObstacleHeights(params: ObstacleParams): number[][] {
     cPrev = c
   }
 
-  console.log('Generated obstacle heights:', { heights })
-
   return heights
 }
 
@@ -176,10 +175,12 @@ export type RowData = {
   type: SectionType
   isSectionStart: boolean
   isSectionEnd: boolean
-  // When true, this row becoming fully raised should trigger transition to QUESTION stage
-  isQuestionTrigger?: boolean
   questionTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
-  answerTilePositions?: [number, number, number][] // If true, when this row is visible, position answer tiles here
+  // Optional per-index answer tile placements for this trigger row.
+  // Use null for indices that should not be placed on this trigger.
+  // Example: for a 4-tile layout, top trigger provides [pos, pos, null, null],
+  // bottom trigger provides [null, null, pos, pos].
+  answerTilePositions?: ([number, number, number] | null)[]
   // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
   answerNumber?: number[]
 }
@@ -222,13 +223,17 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
   // Four-tile layout: corners with 1-row buffer top and bottom
   const topCenterRow = 2.5 // Rows 1-4 (with 1-row top buffer)
   const bottomCenterRow = 12.5 // Rows 11-14 (with 1-row bottom buffer)
-  const tilesTriggerRow = Math.ceil(topCenterRow)
-  const tilesZRelative = (tilesTriggerRow - topCenterRow) * TILE_SIZE
+  // Trigger rows per group (top, then bottom) so that each pair is placed
+  // only when its own rows have become fully raised.
+  const topTriggerRow = Math.ceil(topCenterRow)
+  const topZRelative = (topTriggerRow - topCenterRow) * TILE_SIZE
+  const bottomTriggerRow = Math.ceil(bottomCenterRow)
+  const bottomZRelative = (bottomTriggerRow - bottomCenterRow) * TILE_SIZE
 
   const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
-  const zRelTop = tilesZRelative
-  const zRelBottom = zRelTop + (bottomCenterRow - topCenterRow) * TILE_SIZE
+  const zRelTop = topZRelative
+  const zRelBottom = bottomZRelative
 
   // Calculate answer tile ownership for four-tile layout
   const leftStartCol = 1
@@ -269,16 +274,25 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
-      isQuestionTrigger: i === textTriggerRow,
       answerNumber: ownership,
     }
     if (i === textTriggerRow) {
       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
     }
-    if (i === tilesTriggerRow) {
+    if (i === topTriggerRow) {
+      // Place top-left (index 0) and top-right (index 1) only
       rows[i].answerTilePositions = [
         [colToX(leftCenterCol), ANSWER_TILE_Y, zRelTop],
         [colToX(rightCenterCol), ANSWER_TILE_Y, zRelTop],
+        null,
+        null,
+      ]
+    }
+    if (i === bottomTriggerRow) {
+      // Place bottom-left (index 2) and bottom-right (index 3) only
+      rows[i].answerTilePositions = [
+        null,
+        null,
         [colToX(leftCenterCol), ANSWER_TILE_Y, zRelBottom],
         [colToX(rightCenterCol), ANSWER_TILE_Y, zRelBottom],
       ]
@@ -292,13 +306,17 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
+
+  // Text appears first, then answers further down the section
   const questionTextCenterRow = 5.5
   const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
-  // Two-tile layout
-  const tilesCenterRow = 11.5
+
+  // Two-tile layout positioned after the text
+  const tilesCenterRow = 10.5
   const tilesTriggerRow = Math.ceil(tilesCenterRow)
   const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
+
   // Carve non-tile areas in rows that contain the answer tile rectangles
   const leftStartCol = 1
   const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
@@ -341,7 +359,6 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
       type: 'question',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
-      isQuestionTrigger: i - 3 === textTriggerRow,
       answerNumber: ownership,
     }
     if (i === textTriggerRow) {
