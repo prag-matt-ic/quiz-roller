@@ -3,7 +3,7 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame, useThree } from '@react-three/fiber'
 import { type FC, useEffect, useMemo, useRef } from 'react'
-import { DataTexture, InstancedMesh, Matrix4, Texture } from 'three'
+import { DataTexture, InstancedMesh, Matrix4, NearestFilter, Texture } from 'three'
 import {
   GPUComputationRenderer,
   type Variable,
@@ -47,11 +47,14 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   const renderer = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
 
-  // Instance count
-  const instanceCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
+  // Target instance count, rounded up to a perfect square to avoid wasted compute texels
+  const baseCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
+  const textureSize = useMemo(() => Math.ceil(Math.sqrt(baseCount)), [baseCount])
+  const instanceCount = useMemo(() => textureSize * textureSize, [textureSize])
 
-  // Grid config: wider than terrain. Example: terrain has 16 cols; use 32 here
-  const GRID_COLS = COLUMNS * 2 // 32
+  // Grid config: widen beyond terrain by EXTRA_SIDE_COLS per side.
+  const EXTRA_SIDE_COLS = 8
+  const GRID_COLS = 2 * COLUMNS + 2 * EXTRA_SIDE_COLS // terrain band + extra per side
   const MIDDLE_START = (GRID_COLS - COLUMNS) / 2 // 8
   const MIDDLE_END = MIDDLE_START + COLUMNS - 1 // 23
   // Allowed columns live strictly left of terrain band and right of it
@@ -77,7 +80,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   const Z_MAX_ROW = Z_ROWS_HALF
   // Vertical motion band
   const Y_MIN = -16 // spawn band start (bottom)
-  const Y_MAX = 8 // recycle threshold (top)
+  const Y_MAX = 10 // recycle threshold (top)
 
   // Per-instance state buffers (heap-allocated once)
   const positions = useRef<Float32Array>(new Float32Array(instanceCount * 3))
@@ -89,7 +92,6 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   // GPU Computation for position and alpha (alpha computed from Y position)
   const gpuCompute = useRef<GPUComputationRenderer | null>(null)
   const positionVariable = useRef<Variable | null>(null)
-  const textureSize = useMemo(() => Math.ceil(Math.sqrt(instanceCount)), [instanceCount])
 
   // Texture UVs for sampling GPU compute texture
   const textureUvs = useMemo(() => {
@@ -130,6 +132,10 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
 
   // Initialize positions: sprinkle a subset up the column so it doesn't appear all at once
   useEffect(() => {
+    // Ensure buffer matches instance count
+    if (positions.current.length !== instanceCount * 3) {
+      positions.current = new Float32Array(instanceCount * 3)
+    }
     for (let i = 0; i < instanceCount; i++) {
       respawn(i, Y_MAX - Y_MIN)
     }
@@ -151,8 +157,13 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     try {
       gpuCompute.current = new GPUComputationRenderer(textureSize, textureSize, renderer)
 
-  // Create initial position texture (W channel reserved for alpha; computed on GPU)
+      // Create initial position texture (W channel reserved for alpha; computed on GPU)
       const dtPosition = gpuCompute.current.createTexture()
+      // Ensure no filtering on data textures to avoid bleeding
+      dtPosition.minFilter = NearestFilter
+      dtPosition.magFilter = NearestFilter
+      // Mipmaps off for data textures
+      dtPosition.generateMipmaps = false
       fillPositionTexture(dtPosition, positions.current)
 
       // Add position variable to GPU compute
@@ -173,6 +184,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
         uYMin: { value: number }
         uYMax: { value: number }
         uGridCols: { value: number }
+        uTerrainCols: { value: number }
         uTileSize: { value: number }
         uZMinRow: { value: number }
         uZMaxRow: { value: number }
@@ -184,6 +196,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
       positionUniforms.uYMin = { value: Y_MIN }
       positionUniforms.uYMax = { value: Y_MAX }
       positionUniforms.uGridCols = { value: GRID_COLS }
+      positionUniforms.uTerrainCols = { value: COLUMNS }
       positionUniforms.uTileSize = { value: TILE_SIZE }
       positionUniforms.uZMinRow = { value: Z_MIN_ROW }
       positionUniforms.uZMaxRow = { value: Z_MAX_ROW }
@@ -195,6 +208,18 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
       // Initialize GPU compute
       const error = gpuCompute.current.init()
       if (error !== null) throw new Error(error)
+
+      // Force Nearest filtering on the compute render targets to prevent sampling overhead/bleeding
+      if (positionVariable.current) {
+        const rtA = positionVariable.current.renderTargets[0].texture
+        const rtB = positionVariable.current.renderTargets[1].texture
+        rtA.minFilter = NearestFilter
+        rtA.magFilter = NearestFilter
+        rtA.generateMipmaps = false
+        rtB.minFilter = NearestFilter
+        rtB.magFilter = NearestFilter
+        rtB.generateMipmaps = false
+      }
     } catch (error) {
       console.error('Error initializing FloatingTiles GPUComputationRenderer:', error)
     }

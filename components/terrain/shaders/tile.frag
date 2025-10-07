@@ -11,20 +11,21 @@ varying float vPlayerHighlight;
 varying float vAnswerNumber;
 
 void main() {
+  // Fade applies to all tiles; discard until fade begins
+  if (vAlpha <= 0.001) discard;
+
   // Determine if this instance sits under an answer tile
   float hasAnswer = step(0.5, vAnswerNumber);
-  // Only discard fully transparent tiles that are not answer tiles
-  if (vAlpha <= 0.001 && hasAnswer < 0.5) discard;
 
-  // For answer tiles, alpha should always be 1.0 (no fade).
-  // For non-answer tiles, apply fade and optional seed-based max opacity.
-  float alpha = (hasAnswer > 0.5) ? 1.0 : vAlpha;
-  if (vSeed > 0.5 && hasAnswer < 0.5) {
-    // Map seed from [0.3, 1.0] to maxAlpha [0.3, 1.0]
-    float t = (vSeed - 0.3) / 0.7; // normalize to [0, 1]
-    float maxAlpha = mix(0.6, 1.0, t);
-    alpha = min(alpha, maxAlpha);
-  }
+  // Answer tiles: fade-in to 1.0 (no seed-based cap)
+  // Non-answer tiles: fade-in but may cap alpha based on seed.
+  // Use a branch-reduced approach to avoid nested conditionals.
+  float alpha = vAlpha;
+  float applyCap = (1.0 - hasAnswer) * step(0.5, vSeed);
+  // Map seed from [0.3, 1.0] to maxAlpha [0.6, 1.0]
+  float tSeed = clamp((vSeed - 0.3) / 0.7, 0.0, 1.0);
+  float maxAlpha = mix(0.6, 1.0, tSeed);
+  alpha = mix(alpha, min(alpha, maxAlpha), applyCap);
 
   // Distance-based highlight precomputed in vertex shader
   float highlight = vPlayerHighlight;

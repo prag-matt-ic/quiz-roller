@@ -18,6 +18,7 @@ uniform float uDeltaTime;
 uniform float uYMin;
 uniform float uYMax;
 uniform float uGridCols;
+uniform float uTerrainCols; // number of terrain columns in the middle band
 uniform float uTileSize;
 uniform float uZMinRow;
 uniform float uZMaxRow;
@@ -62,8 +63,8 @@ void main() {
     // Choose random column from allowed range
     // Note: This is simplified - ideally we'd pass allowed columns as uniform
     // For now, we'll use the outer bands (0 to middleStart) and (middleEnd to gridCols)
-    float middleStart = (uGridCols - 16.0) / 2.0; // Assuming COLUMNS = 16
-    float middleEnd = middleStart + 15.0;
+  float middleStart = (uGridCols - uTerrainCols) / 2.0;
+  float middleEnd = middleStart + (uTerrainCols - 1.0);
     
     // Randomly choose left or right band
     float isRightBand = step(0.5, seed1);

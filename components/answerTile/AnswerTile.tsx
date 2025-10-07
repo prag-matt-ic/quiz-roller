@@ -118,14 +118,18 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           mass={0}
           friction={0}
         />
-        {/* Slightly elevate the visual mesh above the terrain to avoid z-fighting */}
-        <mesh position={[0, 0, 0.02]} renderOrder={10}>
+        {/* Elevate the visual mesh above terrain to avoid z-fighting (no custom render order) */}
+        <mesh position={[0, 0, 0.04]}>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
           <AnswerTileShaderMaterial
             key={AnswerTileShader.key}
             ref={shader}
             transparent={true}
-            depthWrite={true}
+            // Respect scene depth so the player can occlude the tile as expected
+            depthTest={true}
+            // Do not write depth so the semi-transparent edges don't occlude later draws
+            depthWrite={false}
+            // Mild offset to avoid coplanar artifacts with terrain
             polygonOffset={true}
             polygonOffsetFactor={-1}
             polygonOffsetUnits={-1}
@@ -141,7 +145,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           anchorY="middle"
           textAlign="center"
           maxWidth={ANSWER_TILE_WIDTH - 0.5}
-          position={[0, 0.0, 0.03]}
+          position={[0, 0.0, 0.06]}
           rotation={[0, 0, 0]}>
           {text}
         </Text>
