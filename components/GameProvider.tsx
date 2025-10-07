@@ -31,6 +31,10 @@ type GameState = {
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
+  // Distance travelled in rows (increments when terrain rows recycle)
+  distanceRows: number
+  incrementDistanceRows: (delta?: number) => void
+
   topic: string | null
 
   // Questions
@@ -85,6 +89,7 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   isAwaitingQuestion: false,
+  distanceRows: 0,
 }
 
 type CreateStoreParams = {
@@ -112,6 +117,8 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     ...INITIAL_STATE,
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
     setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
+    incrementDistanceRows: (delta = 1) =>
+      set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
     getAndSetNextQuestion: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
       set({ isAwaitingQuestion: true })

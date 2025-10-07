@@ -125,6 +125,9 @@ const Terrain: FC = () => {
   const nextRowIndex = useRef(0)
   // Tracks which RowData is currently assigned to each visible row slot (0..ROWS-1)
   const activeRowsData = useRef<RowData[]>([])
+  // Distance tracking: start counting only after entry section has fully recycled
+  const hasFinishedEntryRef = useRef(false)
+  const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
 
   // Question/answers instance refs and spawn scheduling
   // A single question group + four answer tiles are reused and moved along the
@@ -307,6 +310,12 @@ const Terrain: FC = () => {
         insertQuestionRows()
       }
 
+      // Detect the final intro row recycling to begin distance counting thereafter
+      if (currentRowData.type === 'entry' && currentRowData.isSectionEnd) {
+        hasFinishedEntryRef.current = true
+        console.warn('Entry section fully recycled; starting distance counting')
+      }
+
       const newRowData = rowsData.current[nextRowIndex.current]
       activeRowsData.current[rowIndex] = newRowData
       nextRowIndex.current++
@@ -325,6 +334,9 @@ const Terrain: FC = () => {
 
       instanceVisibilityBufferAttribute.current!.needsUpdate = true
       instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
+
+      // Increment distance after completing the wrap if counting is active.
+      if (hasFinishedEntryRef.current) incrementDistanceRows(1)
     }
 
     // Reset raised state for this visible row slot when it wraps to new content
@@ -561,7 +573,8 @@ const Terrain: FC = () => {
     tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
 
     // Debug logging for terrain speed and deceleration state (throttled)
-    if (!speedLogRef.current) speedLogRef.current = { lastT: 0, lastSpeed: -1, lastProgress: -1 }
+    if (!speedLogRef.current)
+      speedLogRef.current = { lastT: 0, lastSpeed: -1, lastProgress: -1 }
     const tNow = performance.now()
     const throttleMs = 200
     const decelActive =
@@ -577,12 +590,18 @@ const Terrain: FC = () => {
       tNow - speedLogRef.current.lastT > throttleMs ||
       Math.abs(computedSpeed - speedLogRef.current.lastSpeed) > 0.05
     if (shouldLog) {
-      console.log('[Terrain] speed', computedSpeed.toFixed(3), 'scrollZ', scrollZ.current.toFixed(2), {
-        decelActive,
-        startZ: startZ.toFixed(2),
-        endZ: endZ.toFixed(2),
-        progress: progress >= 0 ? progress.toFixed(2) : 'n/a',
-      })
+      console.log(
+        '[Terrain] speed',
+        computedSpeed.toFixed(3),
+        'scrollZ',
+        scrollZ.current.toFixed(2),
+        {
+          decelActive,
+          startZ: startZ.toFixed(2),
+          endZ: endZ.toFixed(2),
+          progress: progress >= 0 ? progress.toFixed(2) : 'n/a',
+        },
+      )
       speedLogRef.current.lastT = tNow
       speedLogRef.current.lastSpeed = computedSpeed
       speedLogRef.current.lastProgress = progress
