@@ -15,8 +15,7 @@ import Terrain from '@/components/terrain/Terrain'
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
-import Particles from './particles/Particles'
-import Ground from './terrain/Ground'
+import OutOfBounds from './terrain/OutOfBounds'
 
 gsap.registerPlugin(useGSAP)
 
@@ -25,7 +24,7 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 
 const Game: FC = () => {
   return (
-      <Canvas
+    <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
       onContextMenu={(e) => e.preventDefault()}
       camera={{
@@ -53,7 +52,7 @@ const Game: FC = () => {
           <Level />
         </Physics>
       </Suspense>
-      </Canvas>
+    </Canvas>
   )
 }
 
@@ -64,9 +63,8 @@ const Level: FC = () => {
     <>
       <Background />
       <FloatingTiles isMobile={false} />
+      <OutOfBounds />
       <Terrain />
-      <Ground />
-      {/* <Particles isMobile={false} /> */}
       <Player />
     </>
   )
