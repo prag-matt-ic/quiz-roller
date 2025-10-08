@@ -107,7 +107,7 @@ const Terrain: FC = () => {
   //   4 = steep (previous default)
   //   5 = steeper (current)
   //   6+ = very steep (almost full speed until the final rows)
-  const DECEL_EASE_POWER = 5
+  const DECEL_EASE_POWER = 6
   // Start deceleration after an initial buffer so that the section has visually
   // "entered" before slowing begins. This offsets the start by N rows worth of scroll.
   // Keep this < QUESTION_SECTION_ROWS - 1. Typical values: 4..8

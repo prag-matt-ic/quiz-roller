@@ -18,6 +18,8 @@ varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vAnswerNumber;
 
+const float PLAYER_IMPACT_RADIUS = 2.0; // world units
+
 void main() {
   // Compute combined model-instance matrix once and reuse
   mat4 modelInstanceMatrix = modelMatrix * instanceMatrix;
@@ -32,7 +34,7 @@ void main() {
   // Compute instance center in world space once per vertex (constant per instance)
   vec3 instanceCenter = (modelInstanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
   // Precompute highlight based on distance to player in the vertex shader.
-  const float PLAYER_IMPACT_RADIUS = 1.75; // world units
+  
   float dist = distance(instanceCenter, uPlayerWorldPos);
   vPlayerHighlight = smoothstep(PLAYER_IMPACT_RADIUS, 0.0, dist);
 

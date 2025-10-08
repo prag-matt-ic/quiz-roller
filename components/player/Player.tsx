@@ -87,7 +87,7 @@ const Player: FC = () => {
     shaderTime.current += delta
     playerShaderRef.current.uTime = shaderTime.current
 
-    if (stage === Stage.SPLASH || stage === Stage.GAME_OVER) return
+    if (stage === Stage.SPLASH) return
 
     // Determine intended direction on X/Z plane
     let dx = 0

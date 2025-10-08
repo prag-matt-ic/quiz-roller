@@ -13,7 +13,7 @@ const OutOfBounds: FC = () => {
     <RigidBody type="fixed" colliders={false} position={[0, 0, 0]} userData={userData}>
       {/* Large, thin sensor plane below the playable tiles. Half-extents used here. */}
       <CuboidCollider
-        position={[0, -8, 0]}
+        position={[0, -6, 0]}
         args={[50, 1, 50]}
         activeCollisionTypes={
           ActiveCollisionTypes.DEFAULT | ActiveCollisionTypes.KINEMATIC_FIXED

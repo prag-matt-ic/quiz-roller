@@ -4,6 +4,9 @@ precision highp float;
 #pragma glslify: getColourFromPalette = require(../../palette.glsl)
 
 uniform float uTime;
+// uniform float uColourOffset;
+// TODO: add marble config to the game provider so user can specify which 
+// range of the palette this should sample from (e.g, 0-40%, 30-70%, 60-100%).
 
 varying vec3 vLocalPos;
 varying vec3 vNormal;

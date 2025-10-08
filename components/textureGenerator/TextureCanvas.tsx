@@ -58,7 +58,7 @@ const TextureScene: FC = () => {
   const exportSettings = useControls('Export Settings', {
     resolution: {
       value: 2048,
-      options: [1024, 2048, 4096],
+      options: [1024, 2048, 4096, 4096 * 2],
       label: 'Resolution',
     },
     seed: {

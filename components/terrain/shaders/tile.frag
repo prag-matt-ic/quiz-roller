@@ -24,7 +24,7 @@ void main() {
   float applyCap = (1.0 - hasAnswer) * step(0.5, vSeed);
   // Map seed from [0.3, 1.0] to maxAlpha [0.6, 1.0]
   float tSeed = clamp((vSeed - 0.3) / 0.7, 0.0, 1.0);
-  float maxAlpha = mix(0.6, 1.0, tSeed);
+  float maxAlpha = mix(0.8, 1.0, tSeed);
   alpha = mix(alpha, min(alpha, maxAlpha), applyCap);
 
   // Distance-based highlight precomputed in vertex shader
@@ -32,7 +32,7 @@ void main() {
   vec3 worldPosScaled = vWorldPos * 0.12;
 
   // Compute noise with slight per-instance offset using seed
-  vec3 bgNoisePos = (worldPosScaled + vec3(vSeed * 0.3, 0.0, vSeed * 0.3));
+  vec3 bgNoisePos = (worldPosScaled + vec3(vSeed * 0.12, 0.0, vSeed * 0.12));
   float bgNoise = noise(bgNoisePos);
   float bgInput = clamp(bgNoise * 0.5 + 0.5, 0.0, 1.0);
   vec3 bgColour = getColourFromPalette(bgInput);
