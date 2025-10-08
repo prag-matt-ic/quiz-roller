@@ -16,10 +16,10 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   }
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-linear-to-b from-black/70 from-0% to-transparent to-60%">
+    <div className="pointer-events-auto fixed inset-0 z-50 flex justify-center bg-linear-180 from-black/80 from-40% to-transparent to-60% py-24">
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
-        <header>
+        <header className="flex flex-col items-center justify-center">
           <h1 className="heading-xl tracking-wide">Enchanted Marble</h1>
           <p className="paragraph-lg text-white">Lift the Kingdom&apos;s Curse</p>
           {/* CTA Buttons */}

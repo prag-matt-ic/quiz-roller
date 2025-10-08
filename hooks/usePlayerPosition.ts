@@ -24,6 +24,11 @@ export function usePlayerPosition(
     return unsubscribe
   }, [gameStoreAPI, onPlayerPositionChange])
 
+  // Fire once on mount so consumers can initialize uniforms/refs immediately.
+  useEffect(() => {
+    onPlayerPositionChange?.(playerPosition.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return { playerPosition }
 }
-

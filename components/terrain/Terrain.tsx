@@ -11,7 +11,7 @@ import {
 } from '@react-three/rapier'
 import { Group, InstancedBufferAttribute, Vector3 } from 'three'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { QuestionText } from '@/components/QuestionText'
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
@@ -49,7 +49,11 @@ type TileShaderUniforms = {
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uEntryStartZ: -9999,
   uEntryEndZ: -9999,
-  uPlayerWorldPos: new Vector3(0, 0, 0),
+  uPlayerWorldPos: new Vector3(
+    PLAYER_INITIAL_POSITION[0],
+    PLAYER_INITIAL_POSITION[1],
+    PLAYER_INITIAL_POSITION[2],
+  ),
 }
 const CustomTileShaderMaterial = shaderMaterial(
   INITIAL_TILE_UNIFORMS,
