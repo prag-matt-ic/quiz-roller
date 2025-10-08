@@ -28,7 +28,7 @@ export type SimFps = 0 | 30 | 60 | 120
 // - TW: Persist the user's history personal best for each topic: { topic, correctAnswers: number, distance: number } (create topic enum value. persist store with partialize state).
 // - Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
 // - TW: Update GameOver UI to include this run vs. previous best run - indicating which one was best (e.g is new run, the new best?)
-// - MF: Update Splash UI - simpler, just heading, subheading, start button, volume control
+// - MF: Update Splash UI - simpler, just heading, subheading, start button, sound on/off switch
 // - MF: Improve the story and splash UI - so it's more about building the future of the web
 
 // - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).

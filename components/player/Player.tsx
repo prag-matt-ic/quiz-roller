@@ -11,19 +11,18 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, forwardRef, RefObject, useRef } from 'react'
+import { type FC, forwardRef, type RefObject, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import fragment from '@/components/player/shaders/player.frag'
+import vertex from '@/components/player/shaders/player.vert'
+import usePlayerController from '@/components/player/usePlayerController'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
-
-import PlayerHUD, { PLAYER_RADIUS } from './PlayerHUD'
-import fragment from './shaders/player.frag'
-import vertex from './shaders/player.vert'
-import usePlayerController from './usePlayerController'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -35,7 +34,7 @@ type ShaderUniforms = {
 const INITIAL_UNIFORMS: ShaderUniforms = {
   uTime: 0,
 }
-// TODO: import .vert and .frag files
+
 const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
 const PlayerShaderMaterial = extend(PlayerShader)
 
@@ -118,7 +117,7 @@ const Player: FC = () => {
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
       desiredTranslationDelta,
-      QueryFilterFlags.EXCLUDE_SENSORS,
+      QueryFilterFlags.ONLY_FIXED,
     )
     const correctedMovement = controllerRef.current.computedMovement()
 
