@@ -3,12 +3,17 @@ precision highp float;
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require(../../palette.glsl)
 
+uniform float uScrollZ;
+
 varying float vAlpha;
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vPlayerHighlight;
 varying float vAnswerNumber;
+
+const float DARKEN_FACTOR = 0.66; // 50% darker
+const float UP_THRESHOLD = 0.5;  // treat faces with dot(up, normal) >= 0.5 as "up"
 
 void main() {
   // Fade applies to all tiles; discard until fade begins
@@ -29,37 +34,34 @@ void main() {
 
   // Distance-based highlight precomputed in vertex shader
   float highlight = vPlayerHighlight;
-  vec3 worldPosScaled = vWorldPos * 0.12;
+  vec3 worldPosScaled = vWorldPos * 0.1;
 
-  // Compute noise with slight per-instance offset using seed
-  vec3 bgNoisePos = (worldPosScaled + vec3(vSeed * 0.12, 0.0, vSeed * 0.12));
+  // Compute noise with slight per-instance offset using seed and scroll offset
+  vec3 bgNoisePos = (worldPosScaled + vec3(vSeed * 0.1, -vSeed * 0.1, -uScrollZ * 0.12 ));
   float bgNoise = noise(bgNoisePos);
   float bgInput = clamp(bgNoise * 0.5 + 0.5, 0.0, 1.0);
   vec3 bgColour = getColourFromPalette(bgInput);
 
-  // Use hasAnswer to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
-  float mixAmount = mix(0.4, 0.05, hasAnswer);
+    // Use hasAnswer to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
+  float mixAmount = mix(0.5, 0.1, hasAnswer);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
-  // Respect fade-in alpha; do not force full opacity here.
-  // If needed later, we can raise a minimum once fully raised (vAlpha ~ 1.0).
 
   if (highlight > 0.01) {
     float highlightNoise = noise(worldPosScaled);
     float highlightInput = clamp(highlightNoise * 0.5 + 0.5, 0.0, 1.0);
-    vec3 highlightColour = getColourFromPalette(highlightInput);
+    vec3 highlightColour = mix(vec3(1.0), getColourFromPalette(highlightInput), 0.8);
     background = mix(background, highlightColour, highlight);
     // Keep highlight from overriding early fade-in completely; boost slightly.
-    alpha = max(alpha, min(1.0, alpha + highlight * 0.35));
+    alpha = max(alpha, min(1.0, alpha + highlight * 0.5));
   }
 
   // Darken faces that are not facing world up (y-axis)
   // Sides/bottom get 50% intensity, top stays at 100%
-  const float DARKEN_FACTOR = 0.66; // 50% darker
-  const float UP_THRESHOLD = 0.5;  // treat faces with dot(up, normal) >= 0.5 as "up"
+
   float upDot = clamp(dot(normalize(vWorldNormal), vec3(0.0, 1.0, 0.0)), -1.0, 1.0);
   float isFacingUp = step(UP_THRESHOLD, upDot); // 1.0 for mostly-upward faces, 0.0 otherwise
   float shade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
-  vec3 shaded = background * shade;
+  background *= shade;
 
-  gl_FragColor = vec4(shaded, alpha);
+  gl_FragColor = vec4(background, alpha);
 }

@@ -45,6 +45,7 @@ type TileShaderUniforms = {
   uEntryStartZ: number
   uEntryEndZ: number
   uPlayerWorldPos: Vector3
+  uScrollZ: number
 }
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uEntryStartZ: -9999,
@@ -54,6 +55,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
     PLAYER_INITIAL_POSITION[1],
     PLAYER_INITIAL_POSITION[2],
   ),
+  uScrollZ: 0,
 }
 const CustomTileShaderMaterial = shaderMaterial(
   INITIAL_TILE_UNIFORMS,
@@ -108,9 +110,6 @@ const Terrain: FC = () => {
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
   const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  const speedLogRef = useRef<{ lastT: number; lastSpeed: number; lastProgress: number } | null>(
-    null,
-  )
 
   // Deceleration easing configuration
   // We apply a steep ease-out to the terrain speed as the question section raises:
@@ -571,6 +570,7 @@ const Terrain: FC = () => {
     // Update shader uniforms with fixed entry window values
     tileShader.current.uEntryStartZ = ENTRY_START_Z
     tileShader.current.uEntryEndZ = ENTRY_END_Z
+    tileShader.current.uScrollZ = scrollZ.current
 
     // Compute terrain speed
     let computedSpeed = terrainSpeed.current
@@ -640,6 +640,7 @@ const Terrain: FC = () => {
             uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
             uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
             uPlayerWorldPos={playerWorldPosRef.current}
+            uScrollZ={INITIAL_TILE_UNIFORMS.uScrollZ}
           />
         </instancedMesh>
       </InstancedRigidBodies>
