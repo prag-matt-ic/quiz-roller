@@ -90,12 +90,11 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   const goToStage = useGameStore((s) => s.goToStage)
   return (
     <div className="pointer-events-auto fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <p className="mt-2 text-sm text-white/80">
-        Roll onto a topic tile to begin, then answer questions by rolling into the correct
-        answer. Avoid wrong answers!
+      <p className="mt-2 text-xl text-white/80">
+        YOUR MISSION: Roll as far as you can without falling off or answering wrong!
       </p>
       <button
-        className="ui-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
+        className="flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
         onClick={() => goToStage(Stage.ENTRY)}>
         <PlayIcon className="size-6" strokeWidth={1.5} />
         BEGIN
