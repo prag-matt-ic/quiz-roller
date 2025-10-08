@@ -27,14 +27,14 @@ export const CAMERA_CONFIG: Record<
   [Stage.SPLASH]: {
     // Close to the player with a low Y to keep the path low in view.
     // These are starting values and can be tweaked.
-    position: { x: 0, y: 2, z: 8 },
+    position: { x: 0, y: 2.5, z: 9 },
     target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
     zoom: 1.2,
   },
   [Stage.ENTRY]: {
-    position: { x: 0, y: 3, z: 8 },
+    position: { x: 0, y: 5, z: 8 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.2,
+    zoom: 1,
   },
   [Stage.QUESTION]: {
     position: { x: 0, y: 12, z: 5 },
