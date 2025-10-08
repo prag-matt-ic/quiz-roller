@@ -13,7 +13,6 @@ import {
 } from '@/components/terrain/terrainBuilder'
 import {
   INTRO_BANNERS_CONTENT,
-  INTRO_BANNERS_END_PADDING_ROWS,
   INTRO_BANNERS_SPACING_ROWS,
   INTRO_BANNERS_START_PADDING_ROWS,
 } from '@/constants/intro'
@@ -26,34 +25,13 @@ export type IntroBannersHandle = {
 type Props = {
   // Initial row window offset used by Terrain to place visible rows
   zOffset: number
-  // How many rows to space between successive banners
-  rowSpacing?: number
-  // Leading padding in rows before the first banner
-  startPaddingRows?: number
-  // Trailing padding in rows after the last banner
-  endPaddingRows?: number
-  // Text content for banners (determines count)
-  content?: string[]
-  // Vertical placement in world units
-  y?: number
   // Optional visibility toggle (we still keep in scene graph for perf)
   visible?: boolean
 }
 
 // Lightweight banner planes staggered along the entry corridor. No per-frame allocations.
 export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
-  (
-    {
-      zOffset,
-      rowSpacing = INTRO_BANNERS_SPACING_ROWS,
-      startPaddingRows = INTRO_BANNERS_START_PADDING_ROWS,
-      endPaddingRows = INTRO_BANNERS_END_PADDING_ROWS,
-      content = INTRO_BANNERS_CONTENT,
-      y = SAFE_HEIGHT + 0.9,
-      visible = true,
-    },
-    ref,
-  ) => {
+  ({ zOffset, visible = true }, ref) => {
     const groupRef = useRef<Group>(null)
 
     // Precompute static banner local positions (relative to the group)
@@ -63,18 +41,19 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
       const rightCol = Math.min(COLUMNS - 1, endCol + 2)
       const leftX = colToX(leftCol)
       const rightX = colToX(rightCol)
+      const y = SAFE_HEIGHT + 1.5
 
       const positions: { x: number; y: number; z: number; side: 'left' | 'right' }[] = []
       // Place banners from content array with start/end padding and spacing
-      for (let i = 0; i < content.length; i++) {
+      for (let i = 0; i < INTRO_BANNERS_CONTENT.length; i++) {
         const side: 'left' | 'right' = i % 2 === 0 ? 'left' : 'right'
         const x = side === 'left' ? leftX : rightX
-        const row = startPaddingRows + i * rowSpacing
+        const row = INTRO_BANNERS_START_PADDING_ROWS + i * INTRO_BANNERS_SPACING_ROWS
         const z = -row * TILE_SIZE + zOffset
         positions.push({ x, y, z, side })
       }
       return positions
-    }, [zOffset, rowSpacing, startPaddingRows, endPaddingRows, content, y])
+    }, [zOffset])
 
     useImperativeHandle(
       ref,
@@ -102,7 +81,7 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
               anchorY="middle"
               maxWidth={2.6}
               position={[0, 0, 0.01]}>
-              {content[i]}
+              {INTRO_BANNERS_CONTENT[i]}
             </Text>
           </group>
         ))}

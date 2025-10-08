@@ -42,7 +42,7 @@ void main() {
   // 1 outside inner box (border), 0 inside (white)
   float borderMask = smoothstep(0.0, aa, d);
 
-  float borderColourP = sin(vUv.x + uTime * 0.4) * 0.5 + 0.5;
+  float borderColourP = sin(vUv.x * 3.0) * 0.5 + 0.5;
   vec3 borderColour = getColourFromPalette(borderColourP);
   vec4 color = mix(BASE_COLOUR, vec4(borderColour, 1.0), borderMask);
 
