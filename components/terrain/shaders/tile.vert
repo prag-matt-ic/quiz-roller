@@ -18,7 +18,7 @@ varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vAnswerNumber;
 
-const float PLAYER_IMPACT_RADIUS = 2.0; // world units
+const float PLAYER_IMPACT_RADIUS = 1.75; // world units
 
 void main() {
   // Compute combined model-instance matrix once and reuse
