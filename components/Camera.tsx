@@ -25,14 +25,14 @@ export const CAMERA_CONFIG: Record<
   }
 > = {
   [Stage.SPLASH]: {
-    position: { x: 10, y: 10, z: 8 },
+    position: { x: 20, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.5,
+    zoom: 1,
   },
   [Stage.ENTRY]: {
-    position: { x: 0, y: 10, z: 4 },
+    position: { x: 0, y: 8, z: 5 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.25,
+    zoom: 1.2,
   },
   [Stage.QUESTION]: {
     position: { x: 0, y: 12, z: 5 },
@@ -58,93 +58,51 @@ type Props = {
 const Camera: FC<Props> = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
-  const goToStage = useGameStore((s) => s.goToStage)
   const { playerPosition } = usePlayerPosition()
-
-  // Intro animation: wide arc sweep from side
-  useEffect(() => {
-    const animateIntro = async () => {
-      if (!cameraControls.current) return
-
-      const { position, target, zoom } = CAMERA_CONFIG[Stage.SPLASH]
-
-      // Set initial position without transition (instantly place camera)
-      cameraControls.current.setLookAt(
-        position.x,
-        position.y,
-        position.z,
-        target.x,
-        target.y,
-        target.z,
-        false,
-      )
-
-      cameraControls.current.zoomTo(zoom, false)
-
-      // Sweep to entry position with smooth transition
-      const {
-        position: entryPos,
-        target: entryTarget,
-        zoom: entryZoom,
-      } = CAMERA_CONFIG[Stage.ENTRY]
-
-      cameraControls.current.setLookAt(
-        entryPos.x,
-        entryPos.y,
-        entryPos.z,
-        entryTarget.x,
-        entryTarget.y,
-        entryTarget.z,
-        true,
-      )
-
-      await cameraControls.current.zoomTo(entryZoom, true)
-
-      // Transition to entry stage after animation completes
-      setTimeout(() => {
-        goToStage(Stage.ENTRY)
-      }, 200)
-    }
-
-    if (stage === Stage.SPLASH) animateIntro()
-  }, [stage, goToStage])
 
   // Update camera position when stage changes
   useEffect(() => {
     if (!cameraControls.current) return
-    if (stage === Stage.SPLASH || stage === Stage.ENTRY) return // Skip for intro animation
 
-    const { x, y, z } = CAMERA_CONFIG[stage].position
-    const target = CAMERA_CONFIG[stage].target
-    const targetX = stage === Stage.TERRAIN ? playerPosition.current.x : target.x
-
-    cameraControls.current.setLookAt(x, y, z, targetX, target.y, target.z, true)
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
+
+    if (stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Handled in useFrame below
+
+    const { position, target } = CAMERA_CONFIG[stage]
+    cameraControls.current.setLookAt(
+      position.x,
+      position.y,
+      position.z,
+      target.x,
+      target.y,
+      target.z,
+      true,
+    )
   }, [stage, playerPosition])
 
   useFrame(() => {
     if (!cameraControls.current) return
+
     if (stage === Stage.QUESTION) {
-      // Follow player position
       cameraControls.current.setLookAt(
-        playerPosition.current.x,
+        playerPosition.current.x, // Follow player X
         CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + 5,
-        playerPosition.current.x,
+        playerPosition.current.z + 5, // Follow the player from slightly behind
+        playerPosition.current.x, // Look at the player X
         0,
-        playerPosition.current.z,
+        playerPosition.current.z, // Look at the player Z
         true,
       )
     }
     if (stage === Stage.TERRAIN) {
       // Follow player X, but with some lag/smoothing
       cameraControls.current.setLookAt(
-        playerPosition.current.x,
-        CAMERA_CONFIG[stage].position.y,
-        CAMERA_CONFIG[stage].position.z,
-        playerPosition.current.x,
+        playerPosition.current.x, // Follow player X
+        CAMERA_CONFIG[stage].position.y, // Fixed Y
+        CAMERA_CONFIG[stage].position.z, // Fixed Z
+        playerPosition.current.x, // Look at the player X
         0,
-        playerPosition.current.z,
+        playerPosition.current.z, // Look at the player Z
         true,
       )
     }
@@ -163,13 +121,13 @@ const Camera: FC<Props> = () => {
       maxZoom={3}
       makeDefault={true}
       mouseButtons={{
-        left: ACTION.ROTATE,
+        left: ACTION.NONE,
         middle: ACTION.NONE,
         right: ACTION.NONE,
-        wheel: ACTION.ZOOM,
+        wheel: ACTION.NONE,
       }}
       touches={{
-        one: ACTION.TOUCH_ROTATE,
+        one: ACTION.NONE,
         two: ACTION.NONE,
         three: ACTION.NONE,
       }}
