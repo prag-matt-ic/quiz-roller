@@ -72,6 +72,7 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'isAwaitingQuestion'
+  | 'distanceRows'
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
@@ -223,7 +224,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       }
 
       if (stage === Stage.QUESTION) {
-        // Speed deceleration is now handled in Terrain.tsx, synchronized with row raising
+        // Speed deceleration is handled in Terrain.tsx, synchronized with row raising
         set({ stage: Stage.QUESTION })
         return
       }
