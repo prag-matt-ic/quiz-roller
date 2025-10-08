@@ -170,7 +170,7 @@ export const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
             className="flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
             onClick={() => goToStage(Stage.ENTRY)}>
             <PlayIcon className="size-6" strokeWidth={1.5} />
-            BEGIN
+            START ROLLING
           </button>
         </div>
 
