@@ -10,6 +10,7 @@ attribute float answerNumber;
 uniform float uEntryStartZ;
 uniform float uEntryEndZ;
 uniform vec3 uPlayerWorldPos;
+uniform float uScrollZ;
 
 varying float vAlpha;
 varying float vPlayerHighlight;
