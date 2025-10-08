@@ -153,17 +153,12 @@ const Terrain: FC = () => {
       isFirstQuestion,
     })
     rowsData.current = [...rowsData.current, ...rows]
-    console.warn(`Inserted question section`, {
-      rows,
-      rowsData: rowsData.current,
-    })
   }
 
   // Build the initial entry corridor rows (pure)
   function insertEntryRows() {
     const rows = generateEntrySectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
-    console.warn('Inserted entry section', { rows })
   }
 
   // Build a contiguous block of obstacle rows with a guaranteed corridor (pure)
@@ -313,7 +308,6 @@ const Terrain: FC = () => {
       // Detect the final intro row recycling to begin distance counting thereafter
       if (currentRowData.type === 'entry' && currentRowData.isSectionEnd) {
         hasFinishedEntryRef.current = true
-        console.warn('Entry section fully recycled; starting distance counting')
       }
 
       const newRowData = rowsData.current[nextRowIndex.current]
@@ -469,14 +463,6 @@ const Terrain: FC = () => {
           questionSectionStartZ.current = Math.min(delayedStart, endScrollZ - 1e-4)
           questionSectionEndZ.current = endScrollZ
           initialSpeedAtSectionStart.current = terrainSpeed.current
-          console.warn('Question section start raised; beginning deceleration', {
-            startScrollZ: nowScrollZ,
-            delayedStart: questionSectionStartZ.current,
-            endScrollZ,
-            entryEndZ,
-            baseZStart: baseZByRow.current[rowIndex],
-            initialSpeed: initialSpeedAtSectionStart.current,
-          })
           goToStage(Stage.QUESTION)
         }
       }
@@ -490,7 +476,6 @@ const Terrain: FC = () => {
     const text = row.questionTextPosition
     if (!!text && questionGroupRef.current) {
       questionGroupRef.current.position.set(text[0], text[1], rowZ + text[2])
-      console.warn('Placed question text (row trigger)')
     }
     const answerPositions = row.answerTilePositions
     if (!!answerPositions) {
@@ -502,7 +487,6 @@ const Terrain: FC = () => {
         if (!ref.current) continue
         ref.current.setTranslation({ x: t[0], y: t[1], z: rowZ + t[2] }, true)
       }
-      console.warn('Placed answer tiles (row trigger)')
     }
   }
 
@@ -571,41 +555,6 @@ const Terrain: FC = () => {
     updateTiles(zStep)
     moveQuestionElements(zStep)
     tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
-
-    // Debug logging for terrain speed and deceleration state (throttled)
-    if (!speedLogRef.current)
-      speedLogRef.current = { lastT: 0, lastSpeed: -1, lastProgress: -1 }
-    const tNow = performance.now()
-    const throttleMs = 200
-    const decelActive =
-      questionSectionStartZ.current !== null && questionSectionEndZ.current !== null
-    const startZ = questionSectionStartZ.current ?? 0
-    const endZ = questionSectionEndZ.current ?? 0
-    let progress = -1
-    if (decelActive) {
-      const span = Math.max(1e-6, endZ - startZ)
-      progress = Math.max(0, Math.min(1, (scrollZ.current - startZ) / span))
-    }
-    const shouldLog =
-      tNow - speedLogRef.current.lastT > throttleMs ||
-      Math.abs(computedSpeed - speedLogRef.current.lastSpeed) > 0.05
-    if (shouldLog) {
-      console.log(
-        '[Terrain] speed',
-        computedSpeed.toFixed(3),
-        'scrollZ',
-        scrollZ.current.toFixed(2),
-        {
-          decelActive,
-          startZ: startZ.toFixed(2),
-          endZ: endZ.toFixed(2),
-          progress: progress >= 0 ? progress.toFixed(2) : 'n/a',
-        },
-      )
-      speedLogRef.current.lastT = tNow
-      speedLogRef.current.lastSpeed = computedSpeed
-      speedLogRef.current.lastProgress = progress
-    }
   })
 
   if (!tileInstances.length) return null
