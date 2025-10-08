@@ -16,8 +16,11 @@ const nunitoSans = Nunito_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Quiz Roller',
+  title: 'Quizroller',
   description: 'How far will you roll?',
+  appleWebApp: {
+    title: 'Quizroller',
+  },
 }
 
 export default function RootLayout({

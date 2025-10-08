@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
 import { Text } from '@react-three/drei'
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
 import { Group } from 'three'
 
 import {

@@ -229,20 +229,32 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
 
-  // Position question text in the vertical center
-  const questionTextCenterRow = (QUESTION_SECTION_ROWS - 1) / 2 // 7.5 for 16 rows
-  const textTriggerRow = Math.round(questionTextCenterRow) // 8
-  const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
+  // Layout goals for first question:
+  // - Question text appears before any answers
+  // - Two answer tile rows with a 2-row gap between them
 
-  // Four-tile layout: corners with 1-row buffer top and bottom
-  const topCenterRow = 2.5 // Rows 1-4 (with 1-row top buffer)
-  const bottomCenterRow = 12.5 // Rows 11-14 (with 1-row bottom buffer)
-  // Trigger rows per group (top, then bottom) so that each pair is placed
-  // only when its own rows have become fully raised.
+  // Gap between the two answer rows (in whole grid rows)
+  const ANSWER_ROW_GAP = 2
+
+  // Place the top answer row starting a bit into the section to keep
+  // a small buffer from the leading edge. This keeps everything within
+  // the 16-row window while providing the requested 2-row gap.
+  const topStartRow = 4
+  const topCenterRow = topStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 4.5
   const topTriggerRow = Math.ceil(topCenterRow)
   const topZRelative = (topTriggerRow - topCenterRow) * TILE_SIZE
+
+  // Bottom answer row starts after the top row plus the explicit gap
+  const bottomStartRow = topStartRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP // 3 + 4 + 2 = 9
+  const bottomCenterRow = bottomStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 10.5
   const bottomTriggerRow = Math.ceil(bottomCenterRow)
   const bottomZRelative = (bottomTriggerRow - bottomCenterRow) * TILE_SIZE
+
+  // Bring the question text forward so it can be read before answers.
+  // Center it ahead of the top answer row.
+  const questionTextCenterRow = 2.5
+  const textTriggerRow = Math.ceil(questionTextCenterRow)
+  const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
 
   const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
@@ -254,10 +266,10 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
   const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
   const rightStartCol = 9
   const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
-  const topStartRow = Math.ceil(topCenterRow - ANSWER_TILE_ROWS / 2)
-  const topEndRow = topStartRow + ANSWER_TILE_ROWS - 1
-  const bottomStartRow = Math.ceil(bottomCenterRow - ANSWER_TILE_ROWS / 2)
-  const bottomEndRow = bottomStartRow + ANSWER_TILE_ROWS - 1
+  const topStartRowComputed = Math.ceil(topCenterRow - ANSWER_TILE_ROWS / 2)
+  const topEndRow = topStartRowComputed + ANSWER_TILE_ROWS - 1
+  const bottomStartRowComputed = Math.ceil(bottomCenterRow - ANSWER_TILE_ROWS / 2)
+  const bottomEndRow = bottomStartRowComputed + ANSWER_TILE_ROWS - 1
 
   const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
   for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
@@ -267,19 +279,19 @@ export function generateFirstQuestionSectionRowData(): RowData[] {
     // Compute ownership array for this row
     const ownership = new Array<number>(COLUMNS).fill(0)
     // Top-left tile (answer 1)
-    if (i >= topStartRow && i <= topEndRow) {
+    if (i >= topStartRowComputed && i <= topEndRow) {
       for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
     }
     // Top-right tile (answer 2)
-    if (i >= topStartRow && i <= topEndRow) {
+    if (i >= topStartRowComputed && i <= topEndRow) {
       for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
     }
     // Bottom-left tile (answer 3)
-    if (i >= bottomStartRow && i <= bottomEndRow) {
+    if (i >= bottomStartRowComputed && i <= bottomEndRow) {
       for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 3
     }
     // Bottom-right tile (answer 4)
-    if (i >= bottomStartRow && i <= bottomEndRow) {
+    if (i >= bottomStartRowComputed && i <= bottomEndRow) {
       for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 4
     }
 

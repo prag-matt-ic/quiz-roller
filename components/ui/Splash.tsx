@@ -16,7 +16,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   }
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-50 flex justify-center bg-linear-180 from-black/80 from-40% to-transparent to-60% py-24">
+    <div className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/80 from-40% to-transparent to-60% py-24">
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
         <header className="flex flex-col items-center justify-center">
