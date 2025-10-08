@@ -3,7 +3,7 @@
 
 import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   InstancedRigidBodyProps,
@@ -17,6 +17,7 @@ import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import { useGameFrame } from '@/hooks/useGameFrame'
 
 import tileFadeFragment from './shaders/tile.frag'
 import tileFadeVertex from './shaders/tile.vert'
@@ -55,6 +56,9 @@ const CustomTileShaderMaterial = shaderMaterial(
   tileFadeFragment,
 )
 const TileShaderMaterial = extend(CustomTileShaderMaterial)
+
+// Reused constants/objects to avoid per-frame allocations
+const HIDE_POSITION = { x: 0, y: -40, z: 40 }
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -485,7 +489,11 @@ const Terrain: FC = () => {
         if (!t) continue
         const ref = answerRefs[i]
         if (!ref.current) continue
-        ref.current.setTranslation({ x: t[0], y: t[1], z: rowZ + t[2] }, true)
+        const tmp = tmpTranslation.current
+        tmp.x = t[0]
+        tmp.y = t[1]
+        tmp.z = rowZ + t[2]
+        ref.current.setTranslation(tmp, true)
       }
     }
   }
@@ -496,13 +504,11 @@ const Terrain: FC = () => {
   function moveQuestionElements(zStep: number) {
     if (!questionGroupRef.current) return
 
-    const hidePosition = { x: 0, y: -40, z: 40 }
-
     const isQuestionBehindCamera = questionGroupRef.current.position.z > MAX_Z
     if (isQuestionBehindCamera) {
       // Move out of view until next repositioning
-      questionGroupRef.current.position.z = hidePosition.z
-      questionGroupRef.current.position.y = hidePosition.y
+      questionGroupRef.current.position.z = HIDE_POSITION.z
+      questionGroupRef.current.position.y = HIDE_POSITION.y
     } else {
       questionGroupRef.current.position.z += zStep
     }
@@ -513,26 +519,24 @@ const Terrain: FC = () => {
       const translation = ref.current.translation()
       if (translation.z > MAX_Z) {
         // Move out of view until next repositioning
-        ref.current.setTranslation(
-          { x: translation.x, y: hidePosition.y, z: hidePosition.z },
-          false,
-        )
+        const tmp = tmpTranslation.current
+        tmp.x = translation.x
+        tmp.y = HIDE_POSITION.y
+        tmp.z = HIDE_POSITION.z
+        ref.current.setTranslation(tmp, false)
         continue
       }
-      ref.current.setTranslation(
-        {
-          x: translation.x,
-          y: translation.y,
-          z: translation.z + zStep,
-        },
-        true,
-      )
+      const tmp = tmpTranslation.current
+      tmp.x = translation.x
+      tmp.y = translation.y
+      tmp.z = translation.z + zStep
+      ref.current.setTranslation(tmp, true)
     }
   }
 
   // Per-frame update: compute Z step from speed and frame delta, then move both
   // terrain and question elements in lockstep.
-  useFrame((_, delta) => {
+  useGameFrame((_, delta) => {
     if (!isSetup.current) return
     if (!tileShader.current) return
 

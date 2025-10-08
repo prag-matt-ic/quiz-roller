@@ -2,7 +2,7 @@
 
 import { QueryFilterFlags } from '@dimforge/rapier3d-compat'
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import {
   BallCollider,
   type IntersectionEnterHandler,
@@ -16,6 +16,7 @@ import { type Mesh, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { TERRAIN_SPEED_UNITS } from '@/constants/game'
+import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 
@@ -51,7 +52,7 @@ const Player: FC = () => {
 
   const { controllerRef, input } = usePlayerController()
 
-  const MOVEMENT_SPEED = 8.5 // units per second
+  const MOVEMENT_SPEED = 7 // units per second
   const PLAYER_GRAVITY = -9.81 // m/s²
   const UP = new Vector3(0, 1, 0)
   const EPS = 1e-6
@@ -70,10 +71,12 @@ const Player: FC = () => {
   const worldScale = useRef(new Vector3())
   // Next kinematic translation to apply to the rigid body
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  // Desired translation delta passed into the character controller (reused each frame)
+  const desiredMove = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   // Accumulated shader time uniform
   const shaderTime = useRef(0)
 
-  useFrame((_, delta) => {
+  useGameFrame((_, delta) => {
     // Always advance shader time, even during intro/game-over
     if (
       !playerShaderRef.current ||
@@ -105,11 +108,10 @@ const Player: FC = () => {
     }
 
     // Include gravity in the desired movement
-    const desiredTranslationDelta = {
-      x: dx * MOVEMENT_SPEED * delta,
-      y: PLAYER_GRAVITY * delta,
-      z: dz * MOVEMENT_SPEED * delta,
-    }
+    const desiredTranslationDelta = desiredMove.current
+    desiredTranslationDelta.x = dx * MOVEMENT_SPEED * delta
+    desiredTranslationDelta.y = PLAYER_GRAVITY * delta
+    desiredTranslationDelta.z = dz * MOVEMENT_SPEED * delta
 
     // Use character controller to compute collision-aware movement
     // Note: Need to allow kinematic-kinematic collisions for terrain
@@ -156,10 +158,9 @@ const Player: FC = () => {
     relativeVelocity.current.copy(playerVelocity.current).add(terrainVelocity.current)
     relativeVelocity.current.y = 0 // constrain to surface plane (assumes flat ground)
 
-    if (input.current.backward && Math.abs(terrainSpeedUnits) > EPS) {
-      // treat ball as static relative to ground: no rolling
-      relativeVelocity.current.set(0, 0, 0)
-    }
+    // Do not zero-out relative velocity when moving backward.
+    // The sphere should roll whenever there is non-zero motion relative to the terrain,
+    // including when moving toward the camera faster than the terrain scroll.
 
     // compute effective world-space radius (handles parent/mesh scaling)
     sphereMeshRef.current.getWorldScale(worldScale.current)
@@ -172,11 +173,9 @@ const Player: FC = () => {
       // --- Rolling without slipping: ω = (n × v) / R ---
       // Axis given by right-hand rule (surface normal × velocity)
       rollAxis.current.copy(UP).cross(relativeVelocity.current).normalize()
-
       // Angle this frame: θ = |v| * Δt / R  (scaled if you want)
       // const angle = (speed * delta * ROLLING_SPEED_MULTIPLIER) / PLAYER_RADIUS
       const angle = (speed * delta) / effectiveRadius
-
       sphereMeshRef.current.rotateOnWorldAxis(rollAxis.current, angle)
       sphereMeshRef.current.quaternion.normalize()
     }
@@ -237,7 +236,7 @@ export const Marble = forwardRef(
   ) => {
     return (
       <mesh ref={ref}>
-        <sphereGeometry args={[PLAYER_RADIUS, 24, 24]} />
+        <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
         <PlayerShaderMaterial
           key={PlayerShader.key}
           ref={props.playerShaderRef}

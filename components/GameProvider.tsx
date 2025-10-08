@@ -20,30 +20,35 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
+// Simulation frame-rate limiter. 0 = uncapped (use real delta)
+export type SimFps = 0 | 30 | 60 | 120
+
 // TODO:
 // - TW: Correctly reset game state when restarting from game over - (player position, terrain speed, confirmed answers, current question, difficulty, etc)
 // - TW: Persist the user's history personal best for each topic: { topic, correctAnswers: number, distance: number } (create topic enum value. persist store with partialize state).
-// - MF: Improve question fetching logic so that it builds a buffer of future questions to avoid waiting times
-// - MF: Ensure consistent experience at different framerates - terrain speed and player movement need to be framerate-independent
 // - Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
-
 // - TW: Update GameOver UI to include this run vs. previous best run - indicating which one was best (e.g is new run, the new best?)
 // - MF: Update Splash UI - simpler, just heading, subheading, start button, volume control
-
-// Bug: Slight bug moving player backward (-z) when the terrain is slowing down - it doesn't rotate even though player is moving backward faster than the terrain speed.
-
 // - MF: Improve the story and splash UI - so it's more about building the future of the web
 
 // - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
 // - MF: Add a "share my score" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
-
 // - MF: Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
+
+// DONE:
+// - MF: Improve question fetching logic so that it builds a buffer of future questions to avoid waiting times
+// - MF: Ensure consistent experience at different framerates - terrain speed and player movement need to be framerate-independent (use delta time)
+// - MF: Bug: Slight bug moving player backward (-z) when the terrain is slowing down - it doesn't rotate even though player is moving backward faster than the terrain speed.
 
 type GameState = {
   stage: Stage
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number // Normalized speed in range [0, 1].
   setTerrainSpeed: (speed: number) => void
+
+  // Debug/testing: simulate fixed-step updates at a target FPS. 0 = uncapped
+  simFps: SimFps
+  setSimFps: (fps: SimFps) => void
 
   confirmationProgress: number // [0, 1]
   playerPosition: { x: number; y: number; z: number }
@@ -57,10 +62,9 @@ type GameState = {
   topic: string | null
   currentDifficulty: number
   currentQuestionIndex: number
-  isAwaitingQuestion: boolean
   currentQuestion: Question
   questions: Question[]
-  getAndSetNextQuestion: () => Promise<void>
+  fetchNextQuestionIfNeeded: () => Promise<void>
 
   confirmingAnswer: AnswerUserData | null
   setConfirmingAnswer: (data: AnswerUserData | null) => void
@@ -88,8 +92,8 @@ const INITIAL_STATE: Pick<
   | 'currentQuestion'
   | 'confirmingAnswer'
   | 'confirmedAnswers'
-  | 'isAwaitingQuestion'
   | 'distanceRows'
+  | 'simFps'
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
@@ -103,11 +107,11 @@ const INITIAL_STATE: Pick<
   currentDifficulty: 0,
   questions: [topicQuestion],
   currentQuestion: topicQuestion,
-  currentQuestionIndex: 0,
+  currentQuestionIndex: -1,
   confirmingAnswer: null,
   confirmedAnswers: [],
-  isAwaitingQuestion: false,
   distanceRows: 0,
+  simFps: 0,
 }
 
 type CreateStoreParams = {
@@ -135,22 +139,30 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     ...INITIAL_STATE,
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
     setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
+    setSimFps: (fps) => set({ simFps: fps }),
     incrementDistanceRows: (delta = 1) =>
       set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
-    getAndSetNextQuestion: async () => {
+    fetchNextQuestionIfNeeded: async () => {
       const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
-      set({ isAwaitingQuestion: true })
+      // Can't fetch questions until topic is set (after first answer)
+      if (!topic) return
+
+      console.warn('fetchNextQuestionIfNeeded called')
+
+      // Only fetch if we don't have enough buffer (less than 2 questions ahead of current index)
+      const questionsAhead = questions.length - 1 - currentQuestionIndex // -1 to exclude topic question
+      if (questionsAhead >= 2) return
+
+      console.warn('Fetching next question...')
+
       const nextQuestion = await fetchQuestion({
-        topic: topic!,
-        previousQuestions: questions.splice(1), // Exclude topic question
+        topic,
+        previousQuestions: questions.slice(1), // Exclude topic question
         difficulty: currentDifficulty,
       })
       console.warn('New question received:', nextQuestion)
       set((s) => ({
         questions: [...s.questions, nextQuestion],
-        currentQuestionIndex: currentQuestionIndex + 1,
-        isAwaitingQuestion: false,
-        currentQuestion: nextQuestion,
       }))
     },
     setConfirmingAnswer: (data: AnswerUserData | null) => {
@@ -189,7 +201,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       })
     },
     onAnswerConfirmed: async () => {
-      const { confirmingAnswer, goToStage, getAndSetNextQuestion } = get()
+      const { confirmingAnswer, goToStage, fetchNextQuestionIfNeeded } = get()
       if (!confirmingAnswer) {
         console.error('No answer selected to confirm')
         return
@@ -220,7 +232,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         topic: s.topic ?? confirmingAnswer.answer.text, // 1st correct answer becomes the topic
       }))
       goToStage(Stage.TERRAIN)
-      getAndSetNextQuestion()
+      fetchNextQuestionIfNeeded()
     },
 
     goToStage: (stage: Stage) => {
@@ -239,12 +251,25 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
             set({ terrainSpeed: speedTweenTarget.value })
           },
         })
+        // Start fetching questions early to build buffer
+        get().fetchNextQuestionIfNeeded()
         return
       }
 
       if (stage === Stage.QUESTION) {
         // Speed deceleration is handled in Terrain.tsx, synchronized with row raising
-        set({ stage: Stage.QUESTION })
+        // Increment question index and update current question
+        set((s) => {
+          const newIndex = s.currentQuestionIndex + 1
+          const newQuestion = s.questions[newIndex] || s.currentQuestion
+          return {
+            stage: Stage.QUESTION,
+            currentQuestionIndex: newIndex,
+            currentQuestion: newQuestion,
+          }
+        })
+        // Fetch next question to maintain buffer
+        get().fetchNextQuestionIfNeeded()
         return
       }
 

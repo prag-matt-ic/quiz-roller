@@ -4,9 +4,10 @@ import { type FC } from 'react'
 
 import { type Question, QuestionSchema } from '@/model/schema'
 
+import SimFpsHotkeys from './debug/SimFpsHotkeys'
 import Game from './Game'
-import UI from './ui/UI'
 import { GameProvider } from './GameProvider'
+import UI from './ui/UI'
 
 const Main: FC = () => {
   const fetchQuestion = async ({
@@ -40,6 +41,7 @@ const Main: FC = () => {
       <GameProvider fetchQuestion={fetchQuestion}>
         <Game />
         <UI isMobile={false} />
+        {process.env.NODE_ENV === 'development' && <SimFpsHotkeys />}
       </GameProvider>
     </main>
   )

@@ -14,6 +14,7 @@ import Terrain from '@/components/terrain/Terrain'
 
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
+import { useGameStore } from './GameProvider'
 import { Stage } from './GameProvider'
 import OutOfBounds from './terrain/OutOfBounds'
 
@@ -23,6 +24,8 @@ gsap.registerPlugin(useGSAP)
 const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 
 const Game: FC = () => {
+  const simFps = useGameStore((s) => s.simFps)
+  const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
   return (
     <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
@@ -40,14 +43,13 @@ const Game: FC = () => {
         alpha: false,
         antialias: true,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.25,
+        toneMappingExposure: 0.24,
       }}>
       <ambientLight intensity={1.0} />
-      {/* <pointLight position={[0, 5, -0.5]} intensity={16} /> */}
       {/* <OrbitControls /> */}
       <Camera isMobile={false} />
       <Suspense>
-        <Physics debug={false}>
+        <Physics debug={false} timeStep={physicsTimeStep}>
           {process.env.NODE_ENV === 'development' && <Stats />}
           <Level />
         </Physics>
