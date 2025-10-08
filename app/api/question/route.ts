@@ -70,9 +70,9 @@ export async function POST(req: Request) {
   const shuffledAnswers = shuffle(parsedQuestion.data.answers)
 
   const questionWithId: Question = {
+    ...parsedQuestion.data,
     id: crypto.randomUUID(),
     difficulty,
-    ...parsedQuestion.data,
     answers: shuffledAnswers,
   }
 
