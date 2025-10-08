@@ -50,6 +50,10 @@ type GameState = {
   simFps: SimFps
   setSimFps: (fps: SimFps) => void
 
+  // Sound
+  isMuted: boolean
+  setIsMuted: (muted: boolean) => void
+
   confirmationProgress: number // [0, 1]
   playerPosition: { x: number; y: number; z: number }
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -77,7 +81,9 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 3, 2]
+// Start the player on the floor tiles (no drop-in):
+// y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 0.1, 4]
 
 const INITIAL_STATE: Pick<
   GameState,
@@ -94,6 +100,7 @@ const INITIAL_STATE: Pick<
   | 'confirmedAnswers'
   | 'distanceRows'
   | 'simFps'
+  | 'isMuted'
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
@@ -112,6 +119,7 @@ const INITIAL_STATE: Pick<
   confirmedAnswers: [],
   distanceRows: 0,
   simFps: 0,
+  isMuted: true,
 }
 
 type CreateStoreParams = {
@@ -140,6 +148,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
     setPlayerPosition: (pos) => set({ playerPosition: pos }),
     setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
     setSimFps: (fps) => set({ simFps: fps }),
+    setIsMuted: (muted) => set({ isMuted: muted }),
     incrementDistanceRows: (delta = 1) =>
       set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
     fetchNextQuestionIfNeeded: async () => {
@@ -242,17 +251,16 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
       // Basic function for now, can be expanded later
       if (stage === Stage.ENTRY) {
         set({ stage: Stage.ENTRY })
+        // Ease terrain speed up to 0.25 using GSAP
         speedTween?.kill()
+        // Ensure tween starts from the current store value (likely 0 from SPLASH)
+        speedTweenTarget.value = get().terrainSpeed
         speedTween = gsap.to(speedTweenTarget, {
-          duration: 2,
+          duration: 1.2,
           ease: 'power2.out',
-          value: 1, // normalized
-          onUpdate: () => {
-            set({ terrainSpeed: speedTweenTarget.value })
-          },
+          value: 0.25,
+          onUpdate: () => set({ terrainSpeed: speedTweenTarget.value }),
         })
-        // Start fetching questions early to build buffer
-        get().fetchNextQuestionIfNeeded()
         return
       }
 

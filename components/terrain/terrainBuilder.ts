@@ -1,4 +1,10 @@
 import { createNoise2D } from 'simplex-noise'
+import {
+  INTRO_BANNERS_CONTENT,
+  INTRO_BANNERS_END_PADDING_ROWS,
+  INTRO_BANNERS_SPACING_ROWS,
+  INTRO_BANNERS_START_PADDING_ROWS,
+} from '@/constants/intro'
 
 // Grid configuration
 export const COLUMNS = 16
@@ -14,7 +20,11 @@ export const ENTRY_RAISE_DURATION_ROWS = 4 // raise over this many rows of trave
 
 export const QUESTION_SECTION_ROWS = 16
 // Extend intro/entry section to push the first question further back
-export const ENTRY_SECTION_ROWS = 24
+// Entry rows are sized to fit intro banners with padding
+export const ENTRY_SECTION_ROWS =
+  INTRO_BANNERS_START_PADDING_ROWS +
+  Math.max(0, INTRO_BANNERS_CONTENT.length - 1) * INTRO_BANNERS_SPACING_ROWS +
+  INTRO_BANNERS_END_PADDING_ROWS
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
@@ -186,13 +196,17 @@ export type RowData = {
 }
 
 // --- Entry section ---
-// 16 rows with a 6-column central safe corridor; everything else sunken.
-const ENTRY_OPEN_COLS = 6
-export function generateEntrySectionRowData(): RowData[] {
-  const rows: RowData[] = new Array(ENTRY_SECTION_ROWS)
+// Entry rows with a 6-column central safe corridor; everything else sunken.
+export const ENTRY_OPEN_COLS = 6
 
+export function getEntryCorridorBounds() {
   const startCol = Math.floor((COLUMNS - ENTRY_OPEN_COLS) / 2)
   const endCol = startCol + ENTRY_OPEN_COLS - 1
+  return { startCol, endCol }
+}
+export function generateEntrySectionRowData(): RowData[] {
+  const rows: RowData[] = new Array(ENTRY_SECTION_ROWS)
+  const { startCol, endCol } = getEntryCorridorBounds()
 
   for (let i = 0; i < ENTRY_SECTION_ROWS; i++) {
     const heights = new Array<number>(COLUMNS).fill(UNSAFE_HEIGHT)

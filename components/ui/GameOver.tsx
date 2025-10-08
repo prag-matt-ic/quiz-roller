@@ -8,6 +8,8 @@ import type { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 
+import Button from './Button'
+
 const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> = ({
   transitionStatus,
   isMobile,
@@ -50,20 +52,24 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> 
       {isMobile ? (
         <p className="preference-fade-in max-w-sm p-3 text-center text-white">USE A COMPUTER</p>
       ) : (
-        <section>
-          <h2 className="text-2xl font-bold">GAME OVER MAN, GAME OVER</h2>
-          <button
-            className="game-over-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
+        <section className="flex flex-col items-center gap-4">
+          <h2 className="game-over-fade-in text-2xl font-bold opacity-0">
+            GAME OVER MAN, GAME OVER
+          </h2>
+          <Button
+            variant="primary"
+            className="game-over-fade-in opacity-0"
             onClick={() => goToStage(Stage.ENTRY)}>
             <PlayIcon className="size-6" strokeWidth={1.5} />
             REROLL
-          </button>
-          <button
-            className="game-over-fade-in flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-linear-90 from-white/5 to-white/15 px-5 py-2.5 text-xl font-medium text-white opacity-0 shadow-xl shadow-white/5 backdrop-blur-sm hover:from-black/20 hover:to-black/5"
+          </Button>
+          <Button
+            variant="secondary"
+            className="game-over-fade-in opacity-0"
             onClick={() => goToStage(Stage.SPLASH)}>
             <SkullIcon className="size-6" strokeWidth={1.5} />
             MENU
-          </button>
+          </Button>
         </section>
       )}
     </div>

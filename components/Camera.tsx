@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import React, { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
@@ -14,12 +14,6 @@ const MIN_POLAR_ANGLE = MathUtils.degToRad(20)
 const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
-
-const SPLASH_AND_GAMEOVER_CONFIG = {
-  position: { x: 20, y: 12, z: 8 },
-  target: { x: 0, y: 0, z: 0 },
-  zoom: 1,
-}
 
 // Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
@@ -30,7 +24,13 @@ export const CAMERA_CONFIG: Record<
     zoom: number
   }
 > = {
-  [Stage.SPLASH]: SPLASH_AND_GAMEOVER_CONFIG,
+  [Stage.SPLASH]: {
+    // Close to the player with a low Y to keep the path low in view.
+    // These are starting values and can be tweaked.
+    position: { x: 0, y: 3, z: 8 },
+    target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
+    zoom: 1.2,
+  },
   [Stage.ENTRY]: {
     position: { x: 0, y: 8, z: 5 },
     target: { x: 0, y: 0, z: 0 },
@@ -46,7 +46,11 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.75,
   },
-  [Stage.GAME_OVER]: SPLASH_AND_GAMEOVER_CONFIG,
+  [Stage.GAME_OVER]: {
+    position: { x: 20, y: 12, z: 8 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1,
+  },
 }
 
 type Props = {
@@ -89,6 +93,18 @@ const Camera: FC<Props> = () => {
         playerPosition.current.x, // Look at the player X
         0,
         playerPosition.current.z, // Look at the player Z
+        true,
+      )
+    }
+    if (stage === Stage.ENTRY) {
+      // Track like question stage but keep ENTRY's zoomed-in config
+      cameraControls.current.setLookAt(
+        playerPosition.current.x, // Follow player X
+        CAMERA_CONFIG[stage].position.y,
+        playerPosition.current.z + 5, // Slightly behind
+        playerPosition.current.x,
+        0,
+        playerPosition.current.z,
         true,
       )
     }

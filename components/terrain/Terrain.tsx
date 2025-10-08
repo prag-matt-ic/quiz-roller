@@ -38,6 +38,7 @@ import {
   generateQuestionSectionRowData,
   generateEntrySectionRowData,
 } from './terrainBuilder'
+import IntroBanners, { type IntroBannersHandle } from '@/components/terrain/IntroBanners'
 
 // Shader material for fade-in (mirrors TunnelParticles pattern)
 type TileShaderUniforms = {
@@ -59,6 +60,13 @@ const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
 // Reused constants/objects to avoid per-frame allocations
 const HIDE_POSITION = { x: 0, y: -40, z: 40 }
+// Initial z-offset used when seeding rows (must match Terrain setup)
+const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 5
+// Intro speed baseline when near the camera (bottom half)
+const INTRO_MIN_SPEED = 0.25
+// How far along the entry window the speed should reach 1.0.
+// 1.0 = at ENTRY_START_Z (furthest), 0.5 = halfway toward the camera.
+const INTRO_SPEED_FAR_FACTOR = 0.5
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -77,6 +85,7 @@ const Terrain: FC = () => {
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const isSetup = useRef(false)
+  const bannersRef = useRef<IntroBannersHandle>(null)
   // Deterministic scrolling state
   const scrollZ = useRef(0)
   const baseZByRow = useRef<number[]>([])
@@ -228,7 +237,7 @@ const Terrain: FC = () => {
       insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
-      const zOffset = TILE_SIZE * 5
+      const zOffset = INITIAL_ROWS_Z_OFFSET
 
       // Pre-generate visible window of rows
       const totalInstances = ROWS_VISIBLE * COLUMNS
@@ -473,6 +482,8 @@ const Terrain: FC = () => {
     }
   }
 
+  // (ENTRY speed now driven by store; removed treadmill model)
+
   // Place elements when a row containing their target positions becomes fully raised
   function positionQuestionElementsIfNeeded(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
@@ -534,6 +545,19 @@ const Terrain: FC = () => {
     }
   }
 
+  // ENTRY speed as a function of player's relative Z position.
+  // Maps from 0.25 near/front (z ~ 0) up to 1.0 as the player moves
+  // further away along -Z toward ENTRY_START_Z.
+  function computeEntrySpeedFromPlayerZ(): number {
+    const playerZ = playerWorldPosRef.current.z
+    const nearZ = 0
+    // Bring the far boundary closer to the camera so speed ramps earlier
+    const farZ = ENTRY_START_Z * INTRO_SPEED_FAR_FACTOR // negative; closer in magnitude
+    const denom = Math.max(1e-6, nearZ - farZ)
+    const t = Math.max(0, Math.min(1, (nearZ - playerZ) / denom))
+    return INTRO_MIN_SPEED + (1 - INTRO_MIN_SPEED) * t
+  }
+
   // Per-frame update: compute Z step from speed and frame delta, then move both
   // terrain and question elements in lockstep.
   useGameFrame((_, delta) => {
@@ -544,10 +568,15 @@ const Terrain: FC = () => {
     tileShader.current.uEntryStartZ = ENTRY_START_Z
     tileShader.current.uEntryEndZ = ENTRY_END_Z
 
-    // Compute terrain speed with question section deceleration if active
-    const computedSpeed = isQuestionStage
-      ? computeTerrainSpeedForQuestionSection()
-      : terrainSpeed.current
+    // Compute terrain speed
+    let computedSpeed = terrainSpeed.current
+    if (stage === Stage.SPLASH) {
+      computedSpeed = 0
+    } else if (stage === Stage.ENTRY) {
+      computedSpeed = computeEntrySpeedFromPlayerZ()
+    } else if (isQuestionStage) {
+      computedSpeed = computeTerrainSpeedForQuestionSection()
+    }
 
     // Update store if speed has changed
     if (computedSpeed !== terrainSpeed.current) {
@@ -558,6 +587,8 @@ const Terrain: FC = () => {
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
+    // Move intro banners along with the tiles at the same speed
+    bannersRef.current?.advance(zStep)
     tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
   })
 
@@ -565,6 +596,11 @@ const Terrain: FC = () => {
 
   return (
     <group>
+      <IntroBanners
+        ref={bannersRef}
+        zOffset={INITIAL_ROWS_Z_OFFSET}
+        visible={stage === Stage.ENTRY}
+      />
       <InstancedRigidBodies
         ref={tileRigidBodies}
         instances={tileInstances}

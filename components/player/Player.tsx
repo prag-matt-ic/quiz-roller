@@ -19,7 +19,7 @@ import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import fragment from '@/components/player/shaders/player.frag'
 import vertex from '@/components/player/shaders/player.vert'
 import usePlayerController from '@/components/player/usePlayerController'
-import { TERRAIN_SPEED_UNITS } from '@/constants/game'
+import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
@@ -39,19 +39,19 @@ const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
 const PlayerShaderMaterial = extend(PlayerShader)
 
 const Player: FC = () => {
-  const bodyRef = useRef<RapierRigidBody>(null)
-  const ballColliderRef = useRef<RapierCollider | null>(null)
-  const sphereMeshRef = useRef<Mesh>(null)
-  const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
   const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
-
   const { controllerRef, input } = usePlayerController()
 
-  const MOVEMENT_SPEED = 7 // units per second
+  const bodyRef = useRef<RapierRigidBody>(null)
+  const ballColliderRef = useRef<RapierCollider | null>(null)
+  const sphereMeshRef = useRef<Mesh>(null)
+  const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
+
+  const MOVEMENT_SPEED = PLAYER_MOVE_UNITS // units per second (centralized)
   const PLAYER_GRAVITY = -9.81 // m/s²
   const UP = new Vector3(0, 1, 0)
   const EPS = 1e-6
