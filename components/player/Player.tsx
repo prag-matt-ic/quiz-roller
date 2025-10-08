@@ -230,7 +230,9 @@ export default Player
 
 export const Marble = forwardRef(
   (
-    props: { playerShaderRef: RefObject<typeof PlayerShaderMaterial & ShaderUniforms> },
+    props: {
+      playerShaderRef: RefObject<(typeof PlayerShaderMaterial & ShaderUniforms) | null>
+    },
     ref,
   ) => {
     return (
