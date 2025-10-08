@@ -2,9 +2,10 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { SplitText } from 'gsap/SplitText'
-import { PlayIcon, SkullIcon } from 'lucide-react'
-import { type FC, useRef } from 'react'
+import { Check as CheckIcon, CheckCircle2Icon, PlayIcon, SkullIcon } from 'lucide-react'
+import { type FC, ReactNode, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
+import { twMerge } from 'tailwind-merge'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { getDifficultyLabel } from '@/model/difficulty'
@@ -89,7 +90,7 @@ export default UI
 const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   const goToStage = useGameStore((s) => s.goToStage)
   return (
-    <div className="pointer-events-auto fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div className="pointer-events-auto fixed inset-0 flex flex-col items-center justify-center gap-6 bg-black/70 p-6 text-center">
       <p className="mt-2 text-xl text-white/80">
         YOUR MISSION: Roll as far as you can without falling off or answering wrong!
       </p>
@@ -105,31 +106,60 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = () => {
 
 const PlayingUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
-  const currentDifficulty = useGameStore((s) => s.currentDifficulty)
+  const difficulty = useGameStore((s) => s.currentDifficulty)
   const distanceRows = useGameStore((s) => s.distanceRows)
 
   const correctCount = confirmedAnswers.reduce(
     (acc, a) => acc + (a.answer.isCorrect ? 1 : 0),
-    0,
+    -1, // First question is the topic, not counted
   )
-  const diff = Math.max(0, Math.min(10, currentDifficulty))
-  const difficultyLabel = getDifficultyLabel(diff)
+
+  const difficultyLabel = getDifficultyLabel(difficulty)
+
+  const renderBlock = ({
+    className,
+    heading,
+    content,
+  }: {
+    className?: string
+    heading: string
+    content: ReactNode
+  }): ReactNode => {
+    return (
+      <div className={twMerge('flex flex-col bg-black/40', className)}>
+        <div className="block px-4 py-2 text-center text-sm leading-none font-medium text-white/80 uppercase">
+          {heading}
+        </div>
+        <div className="flex-1 bg-black/30 p-2 text-center">{content}</div>
+      </div>
+    )
+  }
 
   return (
-    <section className="pointer-events-none fixed top-4 right-4 z-50 text-white select-none">
-      <div className="mb-2 rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm backdrop-blur">
-        <span className="opacity-80">Distance</span>{' '}
-        <span className="font-mono text-white">{distanceRows}</span>
-      </div>
-      <div className="rounded-full border border-white/15 bg-black/40 px-4 py-2 text-sm backdrop-blur">
-        <span className="opacity-80">Correct</span>{' '}
-        <span className="font-mono text-white">{correctCount}</span>
-        <span className="mx-2 opacity-30">•</span>
-        <span className="opacity-80">Difficulty</span>{' '}
-        <span className="font-mono text-white">{diff}/10</span>
-        <span className="ml-2 text-white/80">({difficultyLabel})</span>
-      </div>
-    </section>
+    <>
+      <section className="pointer-events-none fixed inset-x-0 top-3 flex justify-center gap-0.5">
+        {renderBlock({
+          heading: 'Difficulty',
+          content: <span className="text-lg font-extrabold">{difficultyLabel}</span>,
+        })}
+
+        {renderBlock({
+          heading: 'Gems',
+          content: (
+            <div className="flex items-center gap-1">
+              {Array.from({ length: correctCount }).map((_, i) => (
+                <CheckCircle2Icon key={i} className="size-4 text-green-400" strokeWidth={2} />
+              ))}
+            </div>
+          ),
+        })}
+
+        {renderBlock({
+          heading: 'Distance',
+          content: <span className="text-xl font-extrabold">{distanceRows}</span>,
+        })}
+      </section>
+    </>
   )
 }
 

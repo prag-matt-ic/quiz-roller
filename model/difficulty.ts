@@ -10,9 +10,8 @@ export function getDifficultyDescription(difficulty: number): string {
 
 export function getDifficultyLabel(difficulty: number): string {
   const d = Math.max(0, Math.min(10, Math.floor(difficulty)))
-  if (d <= 1) return 'easy'
-  if (d <= 3) return 'moderate'
-  if (d <= 7) return 'challenging'
-  return 'very difficult'
+  if (d <= 1) return 'Easy'
+  if (d <= 3) return 'Intermediate'
+  if (d <= 7) return 'Challenging'
+  return 'Expert'
 }
-
