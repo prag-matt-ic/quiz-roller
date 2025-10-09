@@ -1,6 +1,5 @@
 ---
 mode: 'agent'
-tools: ['githubRepo', 'codebase']
 description: 'Review and refactor code for clean code principles'
 ---
 
@@ -10,7 +9,7 @@ Use the following Clean Code Checklist to review and refactor the current file's
 
 ## Checklist
 
-- [ ] Use meaningful names – variable and function names should clearly communicate what the code does. Avoid abbreviations or cryptic identifiers; clear naming makes the code self‑documenting. Boolean variables should be named to imply true/false (e.g. isVisible, hasItems).
+- [ ] Use meaningful names – variable and function names should clearly communicate what the code does. Avoid abbreviations or cryptic identifiers; clear naming makes the code self‑documenting. Boolean variables should be named to imply true/false (e.g. isVisible, hasItems). Don't add unecessary prefixes or suffixes - e.g do not add 'Ref' to a useRef variable.
 
 - [ ] Be consistent – use the same vocabulary for the same type of entity (e.g. always call the current player position playerPos instead of mixing currentPos, position, and pos).
 

@@ -26,16 +26,13 @@ void main() {
   
   // Center UVs in [-0.5, 0.5]
   vec2 p = vUv - 0.5;
-
   // Scale UV X by aspect so units match in "height-space"
   vec2 pH = vec2(p.x * uTileAspect, p.y);
-  
   // Plane bounds half-size in height-space
   vec2 bOuterH = vec2(0.5 * uTileAspect, 0.5);
-
   float thickness = BORDER_FRACTION * uConfirmingProgress;
   vec2 bInnerH = bOuterH - vec2(thickness);
-  
+
   float d = sdBox(pH, bInnerH);
   float aa = fwidth(d);
   
