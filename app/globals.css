@@ -29,7 +29,7 @@ h6 {
 
 @layer utilities {
   .heading-xl {
-    @apply text-4xl !leading-tight font-[500] tracking-tight sm:text-5xl md:text-6xl;
+    @apply text-4xl !leading-tight font-[500] tracking-tight sm:text-6xl md:text-8xl;
   }
   .heading-lg {
     @apply text-3xl !leading-tight font-[500] tracking-tight sm:text-4xl md:text-5xl;
