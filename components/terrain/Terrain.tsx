@@ -365,7 +365,7 @@ const Terrain: FC = () => {
     // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
     if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
       const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
-      return -ENTRY_Y_OFFSET * tOut
+      return ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
     return 0
