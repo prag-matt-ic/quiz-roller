@@ -32,7 +32,6 @@ const Main: FC = () => {
       throw new Error(`Error fetching question: ${response.statusText}`)
     }
     const data = await response.json()
-    console.warn('Fetch question payload:', data)
     return QuestionSchema.parse(data)
   }
 

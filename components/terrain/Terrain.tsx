@@ -6,10 +6,10 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
-  InstancedRigidBodyProps,
-  RapierRigidBody,
+  type InstancedRigidBodyProps,
+  type RapierRigidBody,
 } from '@react-three/rapier'
-import { Group, InstancedBufferAttribute, Vector3 } from 'three'
+import { type Group, type InstancedBufferAttribute, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { QuestionText } from '@/components/QuestionText'
@@ -22,10 +22,20 @@ import { useGameFrame } from '@/hooks/useGameFrame'
 import tileFadeFragment from './shaders/tile.frag'
 import tileFadeVertex from './shaders/tile.vert'
 import {
+  ANSWER_TILE_COUNT,
   COLUMNS,
+  DECEL_EASE_POWER,
+  DECEL_START_OFFSET_ROWS,
+  ENTRY_END_Z,
+  ENTRY_START_Z,
   ENTRY_Y_OFFSET,
-  ENTRY_RAISE_DURATION_ROWS,
+  EXIT_END_Z,
+  EXIT_START_Z,
+  INITIAL_ROWS_Z_OFFSET,
+  INTRO_MIN_SPEED,
+  INTRO_SPEED_FAR_FACTOR,
   MAX_Z,
+  OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
   QUESTION_SECTION_ROWS,
   ROWS_VISIBLE,
@@ -34,29 +44,52 @@ import {
   TILE_THICKNESS,
   colToX,
   generateObstacleHeights,
-  RowData,
+  type RowData,
   generateQuestionSectionRowData,
-  generateEntrySectionRowData,
+  generateIntroSectionRowData,
 } from './terrainBuilder'
 import IntroBanners, { type IntroBannersHandle } from '@/components/terrain/IntroBanners'
 
-// Shader material for fade-in (mirrors TunnelParticles pattern)
+const EPSILON = {
+  SMALL: 1e-6,
+  TINY: 1e-4,
+} as const
+
+const HIDE_POSITION = {
+  QUESTION_Y: -40,
+  QUESTION_Z: 40,
+  ANSWER_Y: -100,
+  ANSWER_Z: -100,
+} as const
+
+const INITIAL_QUESTION_POSITION = {
+  Y: 0.01,
+  Z: -999,
+} as const
+
+// Shader material for fade-in/out
 type TileShaderUniforms = {
   uEntryStartZ: number
   uEntryEndZ: number
   uPlayerWorldPos: Vector3
   uScrollZ: number
+  uExitStartZ: number
+  uExitEndZ: number
 }
+
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uEntryStartZ: -9999,
-  uEntryEndZ: -9999,
+  uEntryStartZ: ENTRY_START_Z,
+  uEntryEndZ: ENTRY_END_Z,
   uPlayerWorldPos: new Vector3(
     PLAYER_INITIAL_POSITION[0],
     PLAYER_INITIAL_POSITION[1],
     PLAYER_INITIAL_POSITION[2],
   ),
   uScrollZ: 0,
+  uExitStartZ: EXIT_START_Z,
+  uExitEndZ: EXIT_END_Z,
 }
+
 const CustomTileShaderMaterial = shaderMaterial(
   INITIAL_TILE_UNIFORMS,
   tileFadeVertex,
@@ -64,174 +97,136 @@ const CustomTileShaderMaterial = shaderMaterial(
 )
 const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
-// Reused constants/objects to avoid per-frame allocations
-const HIDE_POSITION = { x: 0, y: -40, z: 40 }
-// Initial z-offset used when seeding rows (must match Terrain setup)
-const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 5
-// Intro speed baseline when near the camera (bottom half)
-const INTRO_MIN_SPEED = 0.25
-// How far along the entry window the speed should reach 1.0.
-// 1.0 = at ENTRY_START_Z (furthest), 0.5 = halfway toward the camera.
-const INTRO_SPEED_FAR_FACTOR = 0.5
+// Type for obstacle generation configuration
+type ObstacleGenerationConfig = {
+  rows: number
+  seed: number
+  minWidth: number
+  maxWidth: number
+  movePerRow: number
+  freq: number
+  notchChance: number
+}
+
+const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> = {
+  minWidth: 4,
+  maxWidth: 8,
+  movePerRow: 1,
+  freq: 0.12,
+  notchChance: 0.1,
+}
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
-
-  // Fixed entry window values for row raising animation
-  // When speed=0 (question stage), all question section rows should be fully raised
-  const ENTRY_END_Z = MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE
-  const ENTRY_START_Z = ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
-
-  // Normalized terrain speed [0,1]. Scale by TERRAIN_SPEED_UNITS when converting to world units.
-  const { terrainSpeed } = useTerrainSpeed()
   const goToStage = useGameStore((s) => s.goToStage)
+  const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
+
+  const { terrainSpeed } = useTerrainSpeed()
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
-  const isSetup = useRef(false)
-  const bannersRef = useRef<IntroBannersHandle>(null)
+  const hasInitialized = useRef(false)
+  const banners = useRef<IntroBannersHandle>(null)
+
   // Deterministic scrolling state
-  const scrollZ = useRef(0)
+  const currentScrollPosition = useRef(0)
   const baseZByRow = useRef<number[]>([])
   const wrapCountByRow = useRef<number[]>([])
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
+
   // Per-instance GPU attributes
   const instanceSeed = useRef<Float32Array | null>(null)
-  // Single visibility channel in [0,1] replacing open mask + baseY attribute
   const instanceVisibility = useRef<Float32Array | null>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
-  // Answer number per instance (0=not under answer, 1=answer 1, 2=answer 2, etc.)
   const instanceAnswerNumber = useRef<Float32Array | null>(null)
   const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
-  const playerWorldPosRef = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
-  const tmpTranslation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-
-  // Deceleration easing configuration
-  // We apply a steep ease-out to the terrain speed as the question section raises:
-  //   speed = 1 - pow(progress, DECEL_EASE_POWER)
-  // where progress is normalized [0..1] from the first question row reaching fully-raised
-  // to the last row reaching fully-raised. Higher power -> slower early change and
-  // a sharper drop near the end. 5 gives a noticeable but smooth slow-down that still
-  // preserves momentum across most of the section.
-  // Tune guide:
-  //   3 = gentle ease-out
-  //   4 = steep (previous default)
-  //   5 = steeper (current)
-  //   6+ = very steep (almost full speed until the final rows)
-  const DECEL_EASE_POWER = 6
-  // Start deceleration after an initial buffer so that the section has visually
-  // "entered" before slowing begins. This offsets the start by N rows worth of scroll.
-  // Keep this < QUESTION_SECTION_ROWS - 1. Typical values: 4..8
-  const DECEL_START_OFFSET_ROWS = 6
+  const playerWorldPosition = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
+  const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Obstacle section precomputation buffer
   const obstacleSectionBuffer = useRef<RowData[][]>([])
-  const obstacleTopUpScheduled = useRef(false)
-  const OBSTACLE_BUFFER_SECTIONS = 10
-  // During question phase, extend front offset so all 16 rows are up.
+  const isObstacleTopUpScheduled = useRef(false)
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
-  // Next rowData index to consume when recycling a row
-  const nextRowIndex = useRef(0)
-  // Tracks which RowData is currently assigned to each visible row slot (0..ROWS-1)
+  const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
-  // Distance tracking: start counting only after entry section has fully recycled
-  const hasFinishedEntryRef = useRef(false)
-  const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
+  const hasCompletedIntro = useRef(false)
 
-  // Question/answers instance refs and spawn scheduling
-  // A single question group + four answer tiles are reused and moved along the
-  // Z axis with the terrain. At the start of a question section, they're
-  // repositioned to the new open rows.
-  const questionGroupRef = useRef<Group>(null)
-  const answerRefs = useRef([
-    createRef<RapierRigidBody>(),
-    createRef<RapierRigidBody>(),
-    createRef<RapierRigidBody>(),
-    createRef<RapierRigidBody>(),
-  ]).current
+  // Question/answers instance refs
+  const questionGroup = useRef<Group>(null)
+  const answerRefs = useRef(
+    Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
+  ).current
 
-  // Question section speed deceleration state (scrollZ thresholds)
-  // Start/end are expressed in scrollZ units so comparisons are consistent.
+  // Question section speed deceleration state
   const questionSectionStartZ = useRef<number | null>(null)
   const questionSectionEndZ = useRef<number | null>(null)
   const initialSpeedAtSectionStart = useRef<number>(1)
+  const isRowRaised = useRef<boolean[]>([])
 
-  // Build a contiguous block of question rows
   function insertQuestionRows(isFirstQuestion = false) {
-    const rows = generateQuestionSectionRowData({
-      isFirstQuestion,
-    })
+    const rows = generateQuestionSectionRowData({ isFirstQuestion })
     rowsData.current = [...rowsData.current, ...rows]
   }
 
-  // Build the initial entry corridor rows (pure)
-  function insertEntryRows() {
-    const rows = generateEntrySectionRowData()
+  function insertIntroRows() {
+    const rows = generateIntroSectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
   }
 
-  // Build a contiguous block of obstacle rows with a guaranteed corridor (pure)
   function getObstacleSectionRows(): RowData[] {
-    const heights = generateObstacleHeights({
+    const config: ObstacleGenerationConfig = {
       rows: OBSTACLE_SECTION_ROWS,
-      // Provide explicit seed so consecutive sections differ deterministically
       seed: Math.floor(Math.random() * 1_000_000),
-      minWidth: 4,
-      maxWidth: 8,
-      movePerRow: 1,
-      freq: 0.12,
-      notchChance: 0.1,
-    })
-    return heights.map((h, i) => ({
-      heights: h,
-      type: 'obstacles',
-      isSectionStart: i === 0,
-      isSectionEnd: i === OBSTACLE_SECTION_ROWS - 1,
+      ...DEFAULT_OBSTACLE_CONFIG,
+    }
+
+    const heights = generateObstacleHeights(config)
+    return heights.map((columnHeights, rowIndex) => ({
+      heights: columnHeights,
+      type: 'obstacles' as const,
+      isSectionStart: rowIndex === 0,
+      isSectionEnd: rowIndex === OBSTACLE_SECTION_ROWS - 1,
     }))
   }
 
   function topUpObstacleBuffer(count: number) {
-    for (let i = 0; i < count; i++) obstacleSectionBuffer.current.push(getObstacleSectionRows())
+    for (let i = 0; i < count; i++) {
+      obstacleSectionBuffer.current.push(getObstacleSectionRows())
+    }
   }
 
   function scheduleObstacleTopUpIfNeeded() {
-    if (obstacleTopUpScheduled.current) return
+    if (isObstacleTopUpScheduled.current) return
     if (obstacleSectionBuffer.current.length > OBSTACLE_BUFFER_SECTIONS) return
-    obstacleTopUpScheduled.current = true
-    // Defer heavy generation outside the frame loop
+
+    isObstacleTopUpScheduled.current = true
     startTransition(() => {
       const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
       if (needed > 0) topUpObstacleBuffer(needed)
-      obstacleTopUpScheduled.current = false
+      isObstacleTopUpScheduled.current = false
     })
   }
 
-  // Append a precomputed obstacle section to the rows stream
   function insertObstacleRows() {
     const blocks = obstacleSectionBuffer.current.shift() ?? getObstacleSectionRows()
     rowsData.current = [...rowsData.current, ...blocks]
     scheduleObstacleTopUpIfNeeded()
   }
 
-  // No incremental generator; rows are precomputed into rowsDataRef.
-
-  // Pre-generate the visible window of rows
   useEffect(() => {
-    if (isSetup.current) return
+    if (hasInitialized.current) return
 
     function setupInitialRowsAndInstances() {
-      // Precompute obstacle sections up front
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
-      // Seed with initial sections of row data: entry -> first question -> obstacles -> ...
-      insertEntryRows()
+      insertIntroRows()
       insertQuestionRows(true)
       insertObstacleRows()
       insertQuestionRows()
@@ -240,9 +235,6 @@ const Terrain: FC = () => {
       insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
-      const zOffset = INITIAL_ROWS_Z_OFFSET
-
-      // Pre-generate visible window of rows
       const totalInstances = ROWS_VISIBLE * COLUMNS
       instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
@@ -250,69 +242,53 @@ const Terrain: FC = () => {
 
       for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
-        // Track the row meta currently assigned to this visible slot
         activeRowsData.current[rowIndex] = rowData
-        // Initialize deterministic scroll baselines
-        baseZByRow.current[rowIndex] = -rowIndex * TILE_SIZE + zOffset
+        baseZByRow.current[rowIndex] = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
         wrapCountByRow.current[rowIndex] = 0
 
-        // Do not set deceleration thresholds here; we set them when the
-        // first question row becomes fully raised so speed starts at 1.
-
-        for (let col = 0; col < COLUMNS; col++) {
-          const x = colToX(col)
-          const z = -rowIndex * TILE_SIZE + zOffset
-          const y = rowData.heights[col]
-          const bodyIndex = rowIndex * COLUMNS + col
+        for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+          const x = colToX(columnIndex)
+          const z = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
+          const y = rowData.heights[columnIndex]
+          const bodyIndex = rowIndex * COLUMNS + columnIndex
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
 
           instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
           instanceSeed.current[bodyIndex] = Math.random()
-          instanceAnswerNumber.current[bodyIndex] = rowData.answerNumber?.[col] ?? 0
+          instanceAnswerNumber.current[bodyIndex] = rowData.answerNumber?.[columnIndex] ?? 0
 
           instances.push({
-            key: `terrain-${rowIndex}-${col}`,
+            key: `terrain-${rowIndex}-${columnIndex}`,
             position: [x, y, z],
-            userData: { type: 'terrain', rowIndex: rowIndex, colIndex: col },
+            userData: { type: 'terrain', rowIndex, colIndex: columnIndex },
           })
         }
       }
 
       setTileInstances(instances)
-      isSetup.current = true
-      nextRowIndex.current = ROWS_VISIBLE
+      hasInitialized.current = true
+      nextRowDataIndex.current = ROWS_VISIBLE
     }
 
     setupInitialRowsAndInstances()
-    // We intentionally run this once on mount to seed initial rows
-    // insertObstacleRows/topUpObstacleBuffer are stable callees and don't need to be deps here
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Split placement helpers: text and answer tiles
-  // Track raised state per visible row slot for current content
-  const rowRaisedRef = useRef<boolean[]>([])
-
-  // Subscribe to player position and update the uniform vector in-place (no allocations per frame)
-  usePlayerPosition((pos) => {
-    // TODO: store a vector3 in the store and update that so it can be read directly?
-    playerWorldPosRef.current.set(pos.x, pos.y, pos.z)
+  usePlayerPosition((position) => {
+    playerWorldPosition.current.set(position.x, position.y, position.z)
   })
 
-  // Reset question section deceleration when transitioning to TERRAIN stage
   useEffect(() => {
     if (stage === Stage.TERRAIN) {
       resetQuestionSectionDeceleration()
     }
   }, [stage])
 
-  // Deterministic row-content advance: apply N wraps worth of content updates for a row
   function applyRowWraps(rowIndex: number, wrapsToApply: number) {
-    for (let n = 0; n < wrapsToApply; n++) {
+    for (let wrapCount = 0; wrapCount < wrapsToApply; wrapCount++) {
       const currentRowData = activeRowsData.current[rowIndex]
 
-      // Section boundary hooks for the row that's leaving the front
       if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
         insertObstacleRows()
       }
@@ -321,259 +297,230 @@ const Terrain: FC = () => {
         insertQuestionRows()
       }
 
-      // Detect the final intro row recycling to begin distance counting thereafter
-      if (currentRowData.type === 'entry' && currentRowData.isSectionEnd) {
-        hasFinishedEntryRef.current = true
+      if (currentRowData.type === 'intro' && currentRowData.isSectionEnd) {
+        hasCompletedIntro.current = true
       }
 
-      const newRowData = rowsData.current[nextRowIndex.current]
+      const newRowData = rowsData.current[nextRowDataIndex.current]
       activeRowsData.current[rowIndex] = newRowData
-      nextRowIndex.current++
+      nextRowDataIndex.current++
 
-      // Do not set deceleration thresholds when content becomes active.
-      // We start deceleration only when the first question row is fully raised.
-
-      // Update Y for all bodies in this row slot to match new content
-      for (let col = 0; col < COLUMNS; col++) {
-        const bodyIndex = rowIndex * COLUMNS + col
-        yByBodyIndex.current[bodyIndex] = newRowData.heights[col]
-        const y = newRowData.heights[col]
+      for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+        const bodyIndex = rowIndex * COLUMNS + columnIndex
+        yByBodyIndex.current[bodyIndex] = newRowData.heights[columnIndex]
+        const y = newRowData.heights[columnIndex]
         instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
-        instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[col] ?? 0
+        instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[columnIndex] ?? 0
       }
 
       instanceVisibilityBufferAttribute.current!.needsUpdate = true
       instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
 
-      // Increment distance after completing the wrap if counting is active.
-      if (hasFinishedEntryRef.current) incrementDistanceRows(1)
+      if (hasCompletedIntro.current) {
+        incrementDistanceRows(1)
+      }
     }
 
-    // Reset raised state for this visible row slot when it wraps to new content
     if (wrapsToApply > 0) {
-      rowRaisedRef.current[rowIndex] = false
+      isRowRaised.current[rowIndex] = false
     }
   }
 
-  /**
-   * Compute the terrain speed based on the current scroll position relative to
-   * the active question section. Speed decelerates from initial speed to 0 as
-   * the last row of the section becomes fully raised.
-   */
   function computeTerrainSpeedForQuestionSection(): number {
     const startZ = questionSectionStartZ.current
     const targetScrollZ = questionSectionEndZ.current
-    const currentZ = scrollZ.current
+    const currentScrollZ = currentScrollPosition.current
 
-    // No active question section deceleration
     if (startZ === null || targetScrollZ === null) {
       return terrainSpeed.current
     }
 
-    // Before section start: use current speed
-    if (currentZ < startZ) {
+    if (currentScrollZ < startZ) {
       return terrainSpeed.current
     }
 
-    // After target scroll: speed is 0
-    if (currentZ >= targetScrollZ) {
+    if (currentScrollZ >= targetScrollZ) {
       return 0
     }
 
-    // During deceleration: steep ease-out from 1 -> 0 across the section.
-    // Curve: speed = 1 - pow(progress, DECEL_EASE_POWER)
-    const progress = (currentZ - startZ) / (targetScrollZ - startZ)
-    const p = Math.max(0, Math.min(1, progress))
-    // Keep most of the speed early; drop sharply near the end
-    const eased = 1 - Math.pow(p, DECEL_EASE_POWER)
-    return eased
+    const progress = (currentScrollZ - startZ) / (targetScrollZ - startZ)
+    const normalizedProgress = Math.max(0, Math.min(1, progress))
+    const easedSpeed = 1 - Math.pow(normalizedProgress, DECEL_EASE_POWER)
+    return easedSpeed
   }
 
-  /**
-   * Reset question section deceleration state when leaving the question stage.
-   */
   function resetQuestionSectionDeceleration() {
     questionSectionStartZ.current = null
     questionSectionEndZ.current = null
     initialSpeedAtSectionStart.current = 1
   }
 
-  /**
-   * Per-frame terrain advancement. Moves visible rows along +Z and recycles
-   * them once they pass the camera threshold.
-   */
+  function computeLiftLowerOffset(rowZ: number): number {
+    // Entry lift: raise from -ENTRY_Y_OFFSET up to 0 across the entry window
+    if (rowZ < ENTRY_START_Z) return -ENTRY_Y_OFFSET
+    if (rowZ < ENTRY_END_Z) {
+      const tIn = (rowZ - ENTRY_START_Z) / (ENTRY_END_Z - ENTRY_START_Z)
+      return -ENTRY_Y_OFFSET * (1 - tIn)
+    }
+    // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
+    if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
+      const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
+      return ENTRY_Y_OFFSET * tOut
+    }
+    // Otherwise, tiles are flat at y=0
+    return 0
+  }
+
+  function updateRowPositions(rowIndex: number, rowZ: number, yOffset: number) {
+    const firstBodyIndex = rowIndex * COLUMNS
+
+    for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+      const body = tileRigidBodies.current![firstBodyIndex + columnIndex]
+      if (!body) continue
+
+      const bodyIndex = firstBodyIndex + columnIndex
+      translation.current.x = xByBodyIndex.current[bodyIndex]
+      const baseY = yByBodyIndex.current[bodyIndex]
+      translation.current.y = baseY === SAFE_HEIGHT ? baseY + yOffset : baseY
+      translation.current.z = rowZ
+      body.setTranslation(translation.current, true)
+    }
+  }
+
+  function handleRowRaised(rowIndex: number, rowZ: number) {
+    positionQuestionElementsIfNeeded(rowIndex, rowZ)
+    isRowRaised.current[rowIndex] = true
+
+    const rowMetadata = activeRowsData.current[rowIndex]
+    const isQuestionSectionStart =
+      rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
+
+    if (isQuestionSectionStart) {
+      const currentScrollZ = currentScrollPosition.current
+      const endScrollZ = currentScrollZ + (QUESTION_SECTION_ROWS - 1) * TILE_SIZE
+      const delayedStartScrollZ = currentScrollZ + DECEL_START_OFFSET_ROWS * TILE_SIZE
+
+      questionSectionStartZ.current = Math.min(delayedStartScrollZ, endScrollZ - EPSILON.TINY)
+      questionSectionEndZ.current = endScrollZ
+      initialSpeedAtSectionStart.current = terrainSpeed.current
+      goToStage(Stage.QUESTION)
+    }
+  }
+
   function updateTiles(zStep: number) {
-    // Use fixed entry window for row raising animation
-    const entryStartZ = ENTRY_START_Z
-    const entryEndZ = ENTRY_END_Z
     if (!tileRigidBodies.current) return
-    const cycle = ROWS_VISIBLE * TILE_SIZE
 
-    // Advance global scroll
-    scrollZ.current += zStep
-
-    // For each visible row slot, compute wrapped Z and apply any content wraps deterministically
-    // Thresholds are driven by normalized terrain speed via refs
+    const cycleDistance = ROWS_VISIBLE * TILE_SIZE
+    currentScrollPosition.current += zStep
 
     for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
-      const firstBodyIndex = rowIndex * COLUMNS
-      // Wrapped Z for this row slot
-      let z = baseZByRow.current[rowIndex] + scrollZ.current
+      let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
       let wraps = 0
-      while (z >= MAX_Z) {
-        z -= cycle
+
+      while (rowZ >= MAX_Z) {
+        rowZ -= cycleDistance
         wraps++
       }
 
-      // If this row crossed the boundary, advance its assigned content rows accordingly
-      const prevWraps = wrapCountByRow.current[rowIndex]
-      if (wraps > prevWraps) {
-        applyRowWraps(rowIndex, wraps - prevWraps)
+      const previousWraps = wrapCountByRow.current[rowIndex]
+      if (wraps > previousWraps) {
+        applyRowWraps(rowIndex, wraps - previousWraps)
         wrapCountByRow.current[rowIndex] = wraps
       }
 
-      // Compute per-row Y offset for entry lift animation (ignored during game over)
-      let yOffset = -ENTRY_Y_OFFSET
+      const yOffset = computeLiftLowerOffset(rowZ)
+      updateRowPositions(rowIndex, rowZ, yOffset)
 
-      if (z >= entryStartZ) {
-        if (z >= entryEndZ) {
-          yOffset = 0
-        } else {
-          const tLift = (z - entryStartZ) / (entryEndZ - entryStartZ)
-          yOffset = -ENTRY_Y_OFFSET * (1 - tLift)
-        }
-      }
+      const wasRaised = isRowRaised.current[rowIndex] === true
+      const isRaised = rowZ >= ENTRY_END_Z
 
-      // Move all column tiles in this row to the computed absolute position
-      for (let col = 0; col < COLUMNS; col++) {
-        const body = tileRigidBodies.current[firstBodyIndex + col]
-        if (!body) continue
-        const bodyIndex = firstBodyIndex + col
-        const t = tmpTranslation.current
-        t.x = xByBodyIndex.current[bodyIndex]
-        const baseY = yByBodyIndex.current[bodyIndex]
-        t.y = baseY === SAFE_HEIGHT ? baseY + yOffset : baseY
-        t.z = z
-        body.setTranslation(t, true)
-      }
-
-      // If this row has just become fully raised for its current content, place any bound elements
-      const wasRaised = rowRaisedRef.current[rowIndex] === true
-      const isRaised = z >= entryEndZ
       if (!wasRaised && isRaised) {
-        positionQuestionElementsIfNeeded(rowIndex, z)
-        rowRaisedRef.current[rowIndex] = true
-
-        // When the first row of a question section becomes fully raised,
-        // set deceleration thresholds in scrollZ units and switch to QUESTION stage.
-        const rowMeta = activeRowsData.current[rowIndex]
-        if (rowMeta?.type === 'question' && rowMeta.isSectionStart && !isQuestionStage) {
-          // Use absolute scrollZ values so thresholds align across cycles.
-          const nowScrollZ = scrollZ.current
-          // End when the last row becomes fully raised relative to this moment
-          const endScrollZ = nowScrollZ + (QUESTION_SECTION_ROWS - 1) * TILE_SIZE
-          // Delay the deceleration start by a small number of rows so the
-          // section is visually present before slowing begins.
-          const delayedStart = nowScrollZ + DECEL_START_OFFSET_ROWS * TILE_SIZE
-          // Ensure start < end
-          questionSectionStartZ.current = Math.min(delayedStart, endScrollZ - 1e-4)
-          questionSectionEndZ.current = endScrollZ
-          initialSpeedAtSectionStart.current = terrainSpeed.current
-          goToStage(Stage.QUESTION)
-        }
+        handleRowRaised(rowIndex, rowZ)
       }
     }
   }
 
-  // (ENTRY speed now driven by store; removed treadmill model)
-
-  // Place elements when a row containing their target positions becomes fully raised
   function positionQuestionElementsIfNeeded(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    const text = row.questionTextPosition
-    if (!!text && questionGroupRef.current) {
-      questionGroupRef.current.position.set(text[0], text[1], rowZ + text[2])
+
+    const textPosition = row.questionTextPosition
+    if (textPosition && questionGroup.current) {
+      questionGroup.current.position.set(
+        textPosition[0],
+        textPosition[1],
+        rowZ + textPosition[2],
+      )
     }
+
     const answerPositions = row.answerTilePositions
-    if (!!answerPositions) {
-      // Place only the indices provided by this trigger row (ignore nulls)
-      for (let i = 0; i < answerPositions.length && i < answerRefs.length; i++) {
-        const t = answerPositions[i]
-        if (!t) continue
-        const ref = answerRefs[i]
-        if (!ref.current) continue
-        const tmp = tmpTranslation.current
-        tmp.x = t[0]
-        tmp.y = t[1]
-        tmp.z = rowZ + t[2]
-        ref.current.setTranslation(tmp, true)
-      }
+    if (!answerPositions) return
+
+    for (
+      let answerIndex = 0;
+      answerIndex < answerPositions.length && answerIndex < answerRefs.length;
+      answerIndex++
+    ) {
+      const position = answerPositions[answerIndex]
+      if (!position) continue
+
+      const answerRef = answerRefs[answerIndex]
+      if (!answerRef.current) continue
+
+      translation.current.x = position[0]
+      translation.current.y = position[1]
+      translation.current.z = rowZ + position[2]
+      answerRef.current.setTranslation(translation.current, true)
     }
   }
 
-  /**
-   * Keep question text and answers moving with the terrain.
-   */
   function moveQuestionElements(zStep: number) {
-    if (!questionGroupRef.current) return
+    if (!questionGroup.current) return
 
-    const isQuestionBehindCamera = questionGroupRef.current.position.z > MAX_Z
+    const isQuestionBehindCamera = questionGroup.current.position.z > MAX_Z
     if (isQuestionBehindCamera) {
-      // Move out of view until next repositioning
-      questionGroupRef.current.position.z = HIDE_POSITION.z
-      questionGroupRef.current.position.y = HIDE_POSITION.y
+      questionGroup.current.position.z = HIDE_POSITION.QUESTION_Z
+      questionGroup.current.position.y = HIDE_POSITION.QUESTION_Y
     } else {
-      questionGroupRef.current.position.z += zStep
+      questionGroup.current.position.z += zStep
     }
 
-    // Answer tiles (rapier bodies)
-    for (const ref of answerRefs) {
-      if (!ref.current) continue
-      const translation = ref.current.translation()
-      if (translation.z > MAX_Z) {
-        // Move out of view until next repositioning
-        const tmp = tmpTranslation.current
-        tmp.x = translation.x
-        tmp.y = HIDE_POSITION.y
-        tmp.z = HIDE_POSITION.z
-        ref.current.setTranslation(tmp, false)
+    for (const answerRef of answerRefs) {
+      if (!answerRef.current) continue
+
+      const currentTranslation = answerRef.current.translation()
+      if (currentTranslation.z > MAX_Z) {
+        translation.current.x = currentTranslation.x
+        translation.current.y = HIDE_POSITION.ANSWER_Y
+        translation.current.z = HIDE_POSITION.ANSWER_Z
+        answerRef.current.setTranslation(translation.current, false)
         continue
       }
-      const tmp = tmpTranslation.current
-      tmp.x = translation.x
-      tmp.y = translation.y
-      tmp.z = translation.z + zStep
-      ref.current.setTranslation(tmp, true)
+
+      translation.current.x = currentTranslation.x
+      translation.current.y = currentTranslation.y
+      translation.current.z = currentTranslation.z + zStep
+      answerRef.current.setTranslation(translation.current, true)
     }
   }
 
-  // ENTRY speed as a function of player's relative Z position.
-  // Maps from 0.25 near/front (z ~ 0) up to 1.0 as the player moves
-  // further away along -Z toward ENTRY_START_Z.
   function computeEntrySpeedFromPlayerZ(): number {
-    const playerZ = playerWorldPosRef.current.z
+    const playerZ = playerWorldPosition.current.z
     const nearZ = 0
-    // Bring the far boundary closer to the camera so speed ramps earlier
-    const farZ = ENTRY_START_Z * INTRO_SPEED_FAR_FACTOR // negative; closer in magnitude
-    const denom = Math.max(1e-6, nearZ - farZ)
-    const t = Math.max(0, Math.min(1, (nearZ - playerZ) / denom))
-    return INTRO_MIN_SPEED + (1 - INTRO_MIN_SPEED) * t
+    const farZ = ENTRY_START_Z * INTRO_SPEED_FAR_FACTOR
+    const denominator = Math.max(EPSILON.SMALL, nearZ - farZ)
+    const normalizedDistance = Math.max(0, Math.min(1, (nearZ - playerZ) / denominator))
+    return INTRO_MIN_SPEED + (1 - INTRO_MIN_SPEED) * normalizedDistance
   }
 
-  // Per-frame update: compute Z step from speed and frame delta, then move both
-  // terrain and question elements in lockstep.
   useGameFrame((_, delta) => {
-    if (!isSetup.current) return
+    if (!hasInitialized.current) return
     if (!tileShader.current) return
 
-    // Update shader uniforms with fixed entry window values
-    tileShader.current.uEntryStartZ = ENTRY_START_Z
-    tileShader.current.uEntryEndZ = ENTRY_END_Z
-    tileShader.current.uScrollZ = scrollZ.current
+    tileShader.current.uScrollZ = currentScrollPosition.current
 
-    // Compute terrain speed
     let computedSpeed = terrainSpeed.current
+
     if (stage === Stage.SPLASH) {
       computedSpeed = 0
     } else if (stage === Stage.ENTRY) {
@@ -582,29 +529,21 @@ const Terrain: FC = () => {
       computedSpeed = computeTerrainSpeedForQuestionSection()
     }
 
-    // Update store if speed has changed
     if (computedSpeed !== terrainSpeed.current) {
       setTerrainSpeed(computedSpeed)
     }
 
-    // Convert normalized speed to world units per second
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
-    // Move intro banners along with the tiles at the same speed
-    bannersRef.current?.advance(zStep)
-    tileShader.current.uPlayerWorldPos = playerWorldPosRef.current
+    banners.current?.advance(zStep)
+    tileShader.current.uPlayerWorldPos = playerWorldPosition.current
   })
 
   if (!tileInstances.length) return null
 
   return (
     <group>
-      <IntroBanners
-        ref={bannersRef}
-        zOffset={INITIAL_ROWS_Z_OFFSET}
-        visible={stage === Stage.ENTRY}
-      />
       <InstancedRigidBodies
         ref={tileRigidBodies}
         instances={tileInstances}
@@ -635,25 +574,35 @@ const Terrain: FC = () => {
           <TileShaderMaterial
             ref={tileShader}
             key={(CustomTileShaderMaterial as unknown as { key: string }).key}
-            transparent
-            depthWrite
+            transparent={true}
             uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
             uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
-            uPlayerWorldPos={playerWorldPosRef.current}
+            uPlayerWorldPos={playerWorldPosition.current}
             uScrollZ={INITIAL_TILE_UNIFORMS.uScrollZ}
+            uExitStartZ={INITIAL_TILE_UNIFORMS.uExitStartZ}
+            uExitEndZ={INITIAL_TILE_UNIFORMS.uExitEndZ}
           />
         </instancedMesh>
       </InstancedRigidBodies>
 
-      {/* Question overlay positioned over open section; single instance recycled */}
-      <QuestionText
-        ref={questionGroupRef}
-        text={currentQuestion.text}
-        position={[0, 0.01, -999]}
+      <IntroBanners
+        ref={banners}
+        zOffset={INITIAL_ROWS_Z_OFFSET}
+        visible={stage === Stage.ENTRY}
       />
-      {/* Do not conditionally mount these tiles */}
-      {answerRefs.map((ref, i) => (
-        <AnswerTile key={`answer-tile-${i}`} ref={ref} index={i} position={[0, -100, -100]} />
+
+      <QuestionText
+        ref={questionGroup}
+        text={currentQuestion.text}
+        position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
+      />
+      {answerRefs.map((answerRef, answerIndex) => (
+        <AnswerTile
+          key={`answer-tile-${answerIndex}`}
+          ref={answerRef}
+          index={answerIndex}
+          position={[0, HIDE_POSITION.ANSWER_Y, HIDE_POSITION.ANSWER_Z]}
+        />
       ))}
     </group>
   )

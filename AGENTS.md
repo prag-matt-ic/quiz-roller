@@ -26,14 +26,13 @@ useFrame((_, dt) => {
 
 ## Clean Code guidelines
 
-Use meaningful names – variable and function names should clearly communicate what the code does. Avoid abbreviations or cryptic identifiers; clear naming makes the code self‑documenting
-github.com
+Use meaningful names – variable and function names should clearly communicate what the code does. Avoid abbreviations or cryptic identifiers; clear naming makes the code self‑documenting.
 
 Be consistent – use the same vocabulary for the same type of entity (e.g. always call the current player position playerPos instead of mixing currentPos, position, and pos).
 
 Write small, pure functions – each function should have a single responsibility. Break complex logic into smaller helpers rather than nesting conditionals.
 
-Early returns over deep nesting – return early to avoid if/else pyramids.
+Prefer early returns over deep nesting – return early to avoid if/else pyramids.
 
 Prefer immutability – never mutate objects or arrays directly. When updating state, return new objects instead of modifying existing ones.
 
@@ -45,11 +44,13 @@ Comment judiciously – write code that is self‑explanatory; when comments are
 
 Zustand is used for global state in this project. To keep components fast and predictable:
 
-Split stores by concern – for example, GameProvider holds game state, while useInputStore handles user input.
+Split stores by concern.
 
-Use selectors – when consuming state in a component, call the hook with a selector (useStore((state) => state.someValue)) so that the component re‑renders only when that slice changes. Avoid retrieving the entire store in a component.
+Use selectors – when consuming state in a component, call the hook with a selector (useStore((state) => state.someValue)) so that the component re‑renders only when that slice changes.
 
-Subscribe to frequently changing values – for values that update every frame (e.g. game time or physics ticks), subscribe to the value and set it in a ref, like useTimeSubscription.
+Never retrieve the entire store in a component.
+
+Subscribe to frequently changing values – for values that update every frame (e.g. game time or physics ticks), subscribe to the value and set it in a ref, like `useTimeSubscription`.
 
 Keep state immutable – always use functional updates (set((prev) => {…})) and avoid mutating nested objects.
 
@@ -79,11 +80,11 @@ Player movement is discrete: arrow keys or WASD trigger movement.
 
 ## Additional notes
 
-The project deliberately avoids a traditional game engine. It is built on web standards (Three.js, React). Use functional components and hooks; avoid class components.
+The project deliberately avoids a traditional game engine. It is built on web standards (Three.js, React).
+
+Use functional components and hooks; avoid class components.
 
 There is no server state. All game logic runs client‑side.
-
-Immutable updates – all Zustand stores should use immutable patterns (e.g. spread operators) to update nested objects.
 
 When writing new TypeScript, favour type aliases to describe shapes and prefer generics where appropriate.
 

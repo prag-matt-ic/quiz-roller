@@ -18,10 +18,10 @@ const COLOR_END = getPaletteHex(0.8)
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
 
-  for (let i = 0; i <= 10; i++) {
-    const color = getPaletteHex(i / 10)
-    console.log(`${i / 10}:`, color)
-  }
+  // for (let i = 0; i <= 10; i++) {
+  //   const color = getPaletteHex(i / 10)
+  //   console.log(`${i / 10}:`, color)
+  // }
 
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
@@ -76,7 +76,7 @@ const PlayerHUD: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-300">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 shadow-md shadow-black/15">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"

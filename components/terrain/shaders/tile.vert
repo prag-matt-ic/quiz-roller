@@ -1,6 +1,7 @@
 // Instanced tile fade vertex shader
 // - visibility: 1.0 for open (safe) tiles, 0.0 otherwise
 // - uEntryStartZ/uEntryEndZ: world-Z window over which open tiles fade in
+// - uExitStartZ/uExitEndZ: world-Z window over which tiles fade out
 // - uPlayerWorldPos: player world-space position for simple tile highlighting
 
 attribute float visibility;
@@ -11,6 +12,8 @@ uniform float uEntryStartZ;
 uniform float uEntryEndZ;
 uniform vec3 uPlayerWorldPos;
 uniform float uScrollZ;
+uniform float uExitStartZ;
+uniform float uExitEndZ;
 
 varying float vAlpha;
 varying float vPlayerHighlight;
@@ -18,6 +21,7 @@ varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vAnswerNumber;
+varying float vFadeOut;
 
 const float PLAYER_IMPACT_RADIUS = 1.75; // world units
 
@@ -50,6 +54,11 @@ void main() {
   float t = pow(tBase, speedExp);
   // Gate fade by visibility: 0 => invisible, 1 => fade by t
   vAlpha = t * clamp(visibility, 0.0, 1.0);
+
+  // Compute fade-out factor based on exit window; 1.0 before window, 0.0 at/after end.
+  float denomExit = max(0.0001, (uExitEndZ - uExitStartZ));
+  float tOut = clamp((worldPos.z - uExitStartZ) / denomExit, 0.0, 1.0);
+  vFadeOut = 1.0 - tOut;
 
   // Pass seed to fragment for noise offset
   vSeed = seed;
