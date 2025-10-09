@@ -28,9 +28,16 @@ import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 // https://rapier.rs/docs/user_guides/javascript/colliders
 // https://rapier.rs/docs/user_guides/javascript/character_controller/
 
+// Physics constants
+const GRAVITY_ACCELERATION = -9.81 // m/s²
+const UP_DIRECTION = new Vector3(0, 1, 0)
+const EPSILON = 1e-6 // Small value to prevent division by zero
+
+// Shader configuration
 type ShaderUniforms = {
   uTime: number
 }
+
 const INITIAL_UNIFORMS: ShaderUniforms = {
   uTime: 0,
 }
@@ -46,37 +53,28 @@ const Player: FC = () => {
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const { controllerRef, input } = usePlayerController()
 
+  // Refs for physics bodies and meshes
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
   const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
 
-  const MOVEMENT_SPEED = PLAYER_MOVE_UNITS // units per second (centralized)
-  const PLAYER_GRAVITY = -9.81 // m/s²
-  const UP = new Vector3(0, 1, 0)
-  const EPS = 1e-6
-
-  // Player world displacement over the last frame (collision-corrected by the controller)
+  // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
-  // Player velocity this frame in world units per second
   const playerVelocity = useRef(new Vector3())
-  // Terrain scrolling velocity in world units per second
   const terrainVelocity = useRef(new Vector3())
-  // Player velocity relative to the terrain (used for rolling)
   const relativeVelocity = useRef(new Vector3())
-  // World-space axis to roll the sphere around this frame
   const rollAxis = useRef(new Vector3())
-  // World-scale of the sphere mesh (used to compute effective radius)
   const worldScale = useRef(new Vector3())
-  // Next kinematic translation to apply to the rigid body
+
+  // Reusable position objects (avoid per-frame allocations)
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  // Desired translation delta passed into the character controller (reused each frame)
-  const desiredMove = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  // Accumulated shader time uniform
+  const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+
+  // Shader time accumulator
   const shaderTime = useRef(0)
 
-  useGameFrame((_, delta) => {
-    // Always advance shader time, even during intro/game-over
+  useGameFrame((_, deltaTime) => {
     if (
       !playerShaderRef.current ||
       !bodyRef.current ||
@@ -86,106 +84,79 @@ const Player: FC = () => {
     )
       return
 
-    shaderTime.current += delta
+    // Update shader animation time
+    shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
 
+    // Don't update during splash screen
     if (stage === Stage.SPLASH) return
 
-    // Determine intended direction on X/Z plane
-    let dx = 0
-    let dz = 0
-    if (input.current.left) dx -= 1 // left = -X
-    if (input.current.right) dx += 1 // right = +X
-    if (input.current.forward) dz -= 1 // forward = -Z
-    if (input.current.backward) dz += 1 // backward = +Z
+    // Get player input and normalize direction
+    const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
+    const inputDirectionZ = (input.current.backward ? 1 : 0) - (input.current.forward ? 1 : 0)
+    const normalizedDirection = normalizeInputDirection(inputDirectionX, inputDirectionZ)
 
-    // Normalize to keep diagonal speed consistent
-    const len = Math.hypot(dx, dz)
-    if (len > 0) {
-      dx /= len
-      dz /= len
-    }
+    // Calculate desired movement including gravity
+    const movement = calculateDesiredMovement(
+      normalizedDirection.x,
+      normalizedDirection.z,
+      deltaTime,
+    )
 
-    // Include gravity in the desired movement
-    const desiredTranslationDelta = desiredMove.current
-    desiredTranslationDelta.x = dx * MOVEMENT_SPEED * delta
-    desiredTranslationDelta.y = PLAYER_GRAVITY * delta
-    desiredTranslationDelta.z = dz * MOVEMENT_SPEED * delta
+    desiredMovement.current.x = movement.x
+    desiredMovement.current.y = movement.y
+    desiredMovement.current.z = movement.z
 
     // Use character controller to compute collision-aware movement
-    // Note: Need to allow kinematic-kinematic collisions for terrain
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
-      desiredTranslationDelta,
+      desiredMovement.current,
       QueryFilterFlags.ONLY_FIXED,
     )
+
     const correctedMovement = controllerRef.current.computedMovement()
-
-    // Apply the corrected movement to the kinematic rigid body
     const currentPosition = bodyRef.current.translation()
-
-    // The character controller returns the actual movement we should apply
-    // NOT the final position, so we need to add it to current position
+    // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
     nextPosition.current.y = currentPosition.y + correctedMovement.y
     nextPosition.current.z = currentPosition.z + correctedMovement.z
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
-
-    // Update global playerPosition in store (immutable update)
-    // Note: use a fresh object to adhere to immutability rules
+    // Update global player position in store (immutable update)
     setPlayerPosition({
       x: nextPosition.current.x,
       y: nextPosition.current.y,
       z: nextPosition.current.z,
     })
 
-    // Player world displacement this frame (already collision-corrected)
+    // Calculate physics for rolling animation
     frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
 
-    // Convert displacement to velocity (units / second)
-    playerVelocity.current.copy(frameDisplacement.current).divideScalar(Math.max(delta, EPS))
+    calculatePlayerVelocity(frameDisplacement.current, deltaTime, playerVelocity.current)
+    calculateTerrainVelocity(terrainSpeed.current, terrainVelocity.current)
+    calculateRelativeVelocity(
+      playerVelocity.current,
+      terrainVelocity.current,
+      relativeVelocity.current,
+    )
 
-    // Terrain scroll velocity (scale normalized speed by base units).
-    // Convention: "forward" is -Z in your input mapping,
-    // so terrain moving forward at `terrainSpeed` means the ground flows toward +Z
-    // and the ball's relative forward velocity is -terrainSpeed on Z.
-    const terrainSpeedUnits = terrainSpeed.current * TERRAIN_SPEED_UNITS
-    terrainVelocity.current.set(0, 0, -terrainSpeedUnits)
-
-    // Relative velocity of ball w.r.t. ground on the contact plane
-    relativeVelocity.current.copy(playerVelocity.current).add(terrainVelocity.current)
-    relativeVelocity.current.y = 0 // constrain to surface plane (assumes flat ground)
-
-    // Do not zero-out relative velocity when moving backward.
-    // The sphere should roll whenever there is non-zero motion relative to the terrain,
-    // including when moving toward the camera faster than the terrain scroll.
-
-    // compute effective world-space radius (handles parent/mesh scaling)
-    sphereMeshRef.current.getWorldScale(worldScale.current)
-    // assume uniform scale for a sphere; if not uniform, pick the contact-plane scale
-    const effectiveRadius = PLAYER_RADIUS * worldScale.current.x
-
-    const speed = relativeVelocity.current.length()
-    if (speed > EPS && effectiveRadius > EPS) {
-      // 0.000001 to avoid NaN
-      // --- Rolling without slipping: ω = (n × v) / R ---
-      // Axis given by right-hand rule (surface normal × velocity)
-      rollAxis.current.copy(UP).cross(relativeVelocity.current).normalize()
-      // Angle this frame: θ = |v| * Δt / R  (scaled if you want)
-      // const angle = (speed * delta * ROLLING_SPEED_MULTIPLIER) / PLAYER_RADIUS
-      const angle = (speed * delta) / effectiveRadius
-      sphereMeshRef.current.rotateOnWorldAxis(rollAxis.current, angle)
-      sphereMeshRef.current.quaternion.normalize()
-    }
+    // Apply rolling physics to sphere mesh
+    applyRollingPhysics({
+      sphereMesh: sphereMeshRef.current,
+      relativeVelocity: relativeVelocity.current,
+      deltaTime,
+      worldScale: worldScale.current,
+      rollAxis: rollAxis.current,
+    })
   })
 
-  const onIntersectionEnter: IntersectionEnterHandler = (e) => {
-    const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
+  const onIntersectionEnter: IntersectionEnterHandler = (event) => {
+    const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
 
     if (!otherUserData) return
+
     if (otherUserData.type === 'answer') {
-      if (stage !== Stage.QUESTION) return // only allow during question stage
+      if (stage !== Stage.QUESTION) return
       setConfirmingAnswer(otherUserData)
       return
     }
@@ -196,10 +167,11 @@ const Player: FC = () => {
     }
   }
 
-  const onIntersectionExit: IntersectionExitHandler = (e) => {
-    const otherUserData = e.other.rigidBodyObject?.userData as RigidBodyUserData
-    // console.debug("Player INTERSECTION EXIT with", otherUserData, e);
+  const onIntersectionExit: IntersectionExitHandler = (event) => {
+    const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
+
     if (!otherUserData) return
+
     if (otherUserData.type === 'answer') {
       setConfirmingAnswer(null)
     }
@@ -225,6 +197,83 @@ const Player: FC = () => {
 }
 
 export default Player
+
+// Helper functions for player movement calculation
+function normalizeInputDirection(inputX: number, inputZ: number): { x: number; z: number } {
+  const magnitude = Math.hypot(inputX, inputZ)
+  if (magnitude === 0) return { x: 0, z: 0 }
+  return {
+    x: inputX / magnitude,
+    z: inputZ / magnitude,
+  }
+}
+
+function calculateDesiredMovement(
+  normalizedDirectionX: number,
+  normalizedDirectionZ: number,
+  deltaTime: number,
+): { x: number; y: number; z: number } {
+  return {
+    x: normalizedDirectionX * PLAYER_MOVE_UNITS * deltaTime,
+    y: GRAVITY_ACCELERATION * deltaTime,
+    z: normalizedDirectionZ * PLAYER_MOVE_UNITS * deltaTime,
+  }
+}
+
+function calculatePlayerVelocity(
+  displacement: Vector3,
+  deltaTime: number,
+  targetVelocity: Vector3,
+): void {
+  targetVelocity.copy(displacement).divideScalar(Math.max(deltaTime, EPSILON))
+}
+
+function calculateTerrainVelocity(
+  terrainSpeedNormalized: number,
+  targetVelocity: Vector3,
+): void {
+  const terrainSpeedUnits = terrainSpeedNormalized * TERRAIN_SPEED_UNITS
+  // Terrain moving forward means ground flows toward +Z
+  targetVelocity.set(0, 0, -terrainSpeedUnits)
+}
+
+function calculateRelativeVelocity(
+  playerVelocity: Vector3,
+  terrainVelocity: Vector3,
+  targetVelocity: Vector3,
+): void {
+  targetVelocity.copy(playerVelocity).add(terrainVelocity)
+  targetVelocity.y = 0 // Constrain to surface plane (assumes flat ground)
+}
+
+function applyRollingPhysics({
+  sphereMesh,
+  relativeVelocity,
+  deltaTime,
+  worldScale,
+  rollAxis,
+}: {
+  sphereMesh: Mesh
+  relativeVelocity: Vector3
+  deltaTime: number
+  worldScale: Vector3
+  rollAxis: Vector3
+}): void {
+  sphereMesh.getWorldScale(worldScale)
+  // Assume uniform scale for a sphere
+  const effectiveRadius = PLAYER_RADIUS * worldScale.x
+  const speed = relativeVelocity.length()
+
+  if (speed <= EPSILON || effectiveRadius <= EPSILON) return
+  // Rolling without slipping: ω = (n × v) / R
+  // Axis given by right-hand rule (surface normal × velocity)
+  rollAxis.copy(UP_DIRECTION).cross(relativeVelocity).normalize()
+
+  // Calculate rotation angle: θ = |v| * Δt / R
+  const rotationAngle = (speed * deltaTime) / effectiveRadius
+  sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
+  sphereMesh.quaternion.normalize()
+}
 
 export const Marble = forwardRef(
   (

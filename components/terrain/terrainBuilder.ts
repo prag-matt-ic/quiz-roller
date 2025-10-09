@@ -1,4 +1,5 @@
 import { createNoise2D } from 'simplex-noise'
+
 import {
   INTRO_BANNERS_CONTENT,
   INTRO_BANNERS_END_PADDING_ROWS,
