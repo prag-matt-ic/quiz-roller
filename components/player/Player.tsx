@@ -111,7 +111,7 @@ const Player: FC = () => {
     controllerRef.current.computeColliderMovement(
       ballColliderRef.current,
       desiredMovement.current,
-      QueryFilterFlags.ONLY_FIXED,
+      QueryFilterFlags.EXCLUDE_SENSORS,
     )
 
     const correctedMovement = controllerRef.current.computedMovement()
@@ -152,7 +152,6 @@ const Player: FC = () => {
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
-
     if (!otherUserData) return
 
     if (otherUserData.type === 'answer') {
@@ -169,7 +168,6 @@ const Player: FC = () => {
 
   const onIntersectionExit: IntersectionExitHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
-
     if (!otherUserData) return
 
     if (otherUserData.type === 'answer') {
@@ -275,26 +273,23 @@ function applyRollingPhysics({
   sphereMesh.quaternion.normalize()
 }
 
-export const Marble = forwardRef(
-  (
-    props: {
-      playerShaderRef: RefObject<(typeof PlayerShaderMaterial & ShaderUniforms) | null>
-    },
-    ref,
-  ) => {
-    return (
-      <mesh ref={ref}>
-        <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
-        <PlayerShaderMaterial
-          key={PlayerShader.key}
-          ref={props.playerShaderRef}
-          uTime={INITIAL_UNIFORMS.uTime}
-          transparent={false}
-          depthWrite={true}
-        />
-      </mesh>
-    )
-  },
-)
+type MarbleProps = {
+  playerShaderRef: RefObject<(typeof PlayerShaderMaterial & ShaderUniforms) | null>
+}
+
+export const Marble = forwardRef((props: MarbleProps, ref) => {
+  return (
+    <mesh ref={ref}>
+      <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
+      <PlayerShaderMaterial
+        key={PlayerShader.key}
+        ref={props.playerShaderRef}
+        uTime={INITIAL_UNIFORMS.uTime}
+        transparent={false}
+        depthWrite={true}
+      />
+    </mesh>
+  )
+})
 
 Marble.displayName = 'Marble'

@@ -13,9 +13,8 @@ import { persist } from 'zustand/middleware'
 
 import {
   type AnswerUserData,
-  CurrentRunStats,
-  PersonalBest,
   type Question,
+  type RunStats,
   Topic,
   topicQuestion,
 } from '@/model/schema'
@@ -42,12 +41,6 @@ export type SimFps = 0 | 30 | 60 | 120
 // - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
 // - MF: Add a "share my score" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 // Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
-
-// DONE:
-// - MF: Improve question fetching logic so that it builds a buffer of future questions to avoid waiting times
-// - MF: Ensure consistent experience at different framerates - terrain speed and player movement need to be framerate-independent (use delta time)
-// - MF: Bug: Slight bug moving player backward (-z) when the terrain is slowing down - it doesn't rotate even though player is moving backward faster than the terrain speed.
-// - MF: Update Splash UI - simpler, just heading, subheading, start button, sound on/off switch
 
 type GameState = {
   stage: Stage
@@ -84,10 +77,10 @@ type GameState = {
   onAnswerConfirmed: () => void
   confirmedAnswers: AnswerUserData[] // Answers that have been confirmed
 
-  currentRunStats: CurrentRunStats | null
-  personalBests: PersonalBest[]
-  getPersonalBest: (topic: Topic) => PersonalBest | null
-  updatePersonalBest: (stats: CurrentRunStats) => void
+  currentRunStats: RunStats | null
+  personalBests: RunStats[]
+  getPersonalBest: (topic: Topic) => RunStats | null
+  updatePersonalBest: (stats: RunStats) => void
 
   goToStage: (stage: Stage) => void
 }
@@ -187,7 +180,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           const nextQuestion = await fetchQuestion({
             topic,
             previousQuestions: questions.slice(1), // Exclude topic question
-            difficulty: currentDifficulty,
+            difficulty: Math.min(questions.length, 10), // Increase difficulty with each question
           })
           console.warn('New question received:', nextQuestion)
           set((s) => ({
@@ -267,7 +260,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         getPersonalBest: (topic: Topic) =>
           get().personalBests.find((pb) => pb.topic === topic) ?? null,
 
-        updatePersonalBest: (stats: CurrentRunStats) => {
+        updatePersonalBest: (stats: RunStats) => {
           const currentPB = get().personalBests.find((pb) => pb.topic === stats.topic)
           const newPB =
             !currentPB ||
@@ -276,7 +269,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
               stats.distance > currentPB.distance)
           if (!newPB) return
 
-          const newRecord: PersonalBest = { ...stats }
+          const newRecord: RunStats = { ...stats }
 
           set((s) => {
             const index = s.personalBests.findIndex((pb) => pb.topic === stats.topic)
@@ -359,7 +352,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
               const totalCorrectAnswers = confirmedAnswers.filter(
                 (answer) => answer.answer.isCorrect,
               ).length
-              const currentRunStats: CurrentRunStats = {
+              const currentRunStats: RunStats = {
                 topic,
                 correctAnswers: totalCorrectAnswers,
                 distance: distanceRows,

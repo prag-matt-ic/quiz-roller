@@ -65,14 +65,7 @@ export enum Topic {
   ARTIFICIAL_INTELLIGENCE = 'Artificial Intelligence',
 }
 
-export type PersonalBest = {
-  topic: Topic
-  correctAnswers: number
-  distance: number
-  date: Date
-}
-
-export type CurrentRunStats = {
+export type RunStats = {
   topic: Topic
   correctAnswers: number
   distance: number
