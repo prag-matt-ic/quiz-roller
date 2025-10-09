@@ -31,7 +31,7 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
     zoom: 1.2,
   },
-  [Stage.ENTRY]: {
+  [Stage.INTRO]: {
     position: { x: 0, y: 5, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
@@ -96,7 +96,7 @@ const Camera: FC<Props> = () => {
         true,
       )
     }
-    if (stage === Stage.ENTRY) {
+    if (stage === Stage.INTRO) {
       // Track like question stage but keep ENTRY's zoomed-in config
       cameraControls.current.setLookAt(
         playerPosition.current.x, // Follow player X

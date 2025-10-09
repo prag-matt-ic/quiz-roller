@@ -110,7 +110,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> 
           <Button
             variant="primary"
             className="game-over-fade-in opacity-0"
-            onClick={() => goToStage(Stage.ENTRY)}>
+            onClick={() => goToStage(Stage.INTRO)}>
             <PlayIcon className="size-6" strokeWidth={1.5} />
             REROLL
           </Button>

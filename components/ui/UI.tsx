@@ -24,11 +24,11 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const stage = useGameStore((s) => s.stage)
   const isSplash = stage === Stage.SPLASH
-  const isEntry = stage === Stage.ENTRY
+  const isIntro = stage === Stage.INTRO
   const isPlaying = stage === Stage.QUESTION || stage === Stage.TERRAIN
   const isGameOver = stage === Stage.GAME_OVER
 
-  const switchKey = `${isSplash}-${isEntry}-${isPlaying}-${isGameOver}`
+  const switchKey = `${isSplash}-${isIntro}-${isPlaying}-${isGameOver}`
 
   // const { playAudio: playBackgroundAudio } = useAudio({
   //   src: '/sounds/background.aac',

@@ -523,7 +523,7 @@ const Terrain: FC = () => {
 
     if (stage === Stage.SPLASH) {
       computedSpeed = 0
-    } else if (stage === Stage.ENTRY) {
+    } else if (stage === Stage.INTRO) {
       computedSpeed = computeEntrySpeedFromPlayerZ()
     } else if (isQuestionStage) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
@@ -588,7 +588,7 @@ const Terrain: FC = () => {
       <IntroBanners
         ref={banners}
         zOffset={INITIAL_ROWS_Z_OFFSET}
-        visible={stage === Stage.ENTRY}
+        visible={stage === Stage.INTRO}
       />
 
       <QuestionText

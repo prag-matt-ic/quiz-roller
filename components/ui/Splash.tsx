@@ -5,9 +5,8 @@ import type { FC } from 'react'
 import { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-
-import Button from './Button'
-import { GradientText } from './GradientText'
+import Button from '@/components/ui/Button'
+import { GradientText } from '@/components/ui/GradientText'
 
 const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
   const goToStage = useGameStore((s) => s.goToStage)
@@ -15,7 +14,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
 
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
-    goToStage(Stage.ENTRY)
+    goToStage(Stage.INTRO)
   }
 
   useGSAP(

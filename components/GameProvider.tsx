@@ -21,7 +21,7 @@ import {
 
 export enum Stage {
   SPLASH = 'splash', // UI - introduction
-  ENTRY = 'entry', // Pathway leading to 1st question
+  INTRO = 'intro', // Pathway leading to 1st question
   QUESTION = 'question',
   TERRAIN = 'terrain',
   GAME_OVER = 'game_over',
@@ -165,7 +165,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
         fetchNextQuestionIfNeeded: async () => {
-          const { topic, questions, currentDifficulty, currentQuestionIndex } = get()
+          const { topic, questions, currentQuestionIndex } = get()
           // Can't fetch questions until topic is set (after first answer)
           if (!topic) return
 
@@ -296,8 +296,8 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
             return
           }
           // Basic function for now, can be expanded later
-          if (stage === Stage.ENTRY) {
-            set({ stage: Stage.ENTRY })
+          if (stage === Stage.INTRO) {
+            set({ stage: Stage.INTRO })
             // Ease terrain speed up to 0.25 using GSAP
             speedTween?.kill()
             // Ensure tween starts from the current store value (likely 0 from SPLASH)
