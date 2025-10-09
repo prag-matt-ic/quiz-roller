@@ -57,3 +57,24 @@ export const topicQuestion: Question = {
     isCorrect: true,
   })),
 }
+
+export enum Topic {
+  UX_UI_DESIGN = 'UX/UI Design',
+  PSYCHOLOGY = 'Psychology',
+  ENGLISH = 'English',
+  ARTIFICIAL_INTELLIGENCE = 'Artificial Intelligence',
+}
+
+export type PersonalBest = {
+  topic: Topic
+  correctAnswers: number
+  distance: number
+  date: Date
+}
+
+export type CurrentRunStats = {
+  topic: Topic
+  correctAnswers: number
+  distance: number
+  date: Date
+}
