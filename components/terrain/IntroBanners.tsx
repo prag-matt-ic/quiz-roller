@@ -7,7 +7,7 @@ import { Group } from 'three'
 import {
   colToX,
   COLUMNS,
-  getEntryCorridorBounds,
+  getIntroCorridorBounds,
   SAFE_HEIGHT,
   TILE_SIZE,
 } from '@/components/terrain/terrainBuilder'
@@ -36,7 +36,7 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
 
     // Precompute static banner local positions (relative to the group)
     const bannerPositions = useMemo(() => {
-      const { startCol, endCol } = getEntryCorridorBounds()
+      const { startCol, endCol } = getIntroCorridorBounds()
       const leftCol = Math.max(0, startCol - 2)
       const rightCol = Math.min(COLUMNS - 1, endCol + 2)
       const leftX = colToX(leftCol)

@@ -11,6 +11,7 @@ varying vec3 vWorldNormal;
 varying float vSeed;
 varying float vPlayerHighlight;
 varying float vAnswerNumber;
+varying float vFadeOut;
 
 const float ANSWER_MIX = 0.1;
 const float NON_ANSWER_MIX = 0.25; // Lower value is more white
@@ -18,8 +19,8 @@ const float DARKEN_FACTOR = 0.66; // 50% darker
 const float UP_THRESHOLD = 0.5;  // treat faces with dot(up, normal) >= 0.5 as "up"
 
 void main() {
-  // Fade applies to all tiles; discard until fade begins
-  if (vAlpha <= 0.001) discard;
+  // Fade applies to all tiles; discard until fade begins or after fade-out
+  if (vAlpha <= 0.001 || vFadeOut <= 0.001) discard;
 
   // Determine if this instance sits under an answer tile
   float hasAnswer = step(0.5, vAnswerNumber);
@@ -62,5 +63,6 @@ void main() {
   float shade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
   background *= shade;
 
-  gl_FragColor = vec4(background, alpha);
+  // Enforce exit fade-out after all alpha adjustments
+  gl_FragColor = vec4(background, alpha * vFadeOut);
 }
