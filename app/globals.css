@@ -59,3 +59,17 @@ h6 {
     @apply text-xs lg:text-sm;
   }
 }
+
+
+@layer components {
+  .custom-range-slider {
+    &::-webkit-slider-thumb {
+      appearance: none;
+      @apply w-5 h-5 rounded-full bg-transparent cursor-pointer;
+    }
+    
+    &::-moz-range-thumb {
+      @apply w-5 h-5 rounded-full bg-transparent cursor-pointer border-0;
+    }
+  }
+}

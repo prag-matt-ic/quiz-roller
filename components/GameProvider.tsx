@@ -31,16 +31,19 @@ export enum Stage {
 export type SimFps = 0 | 30 | 60 | 120
 
 // TODO:
-// - TW: Correctly reset game state when restarting from game over - (player position, terrain speed, confirmed answers, current question, difficulty, etc)
-// - TW: Persist the user's history personal best for each topic: { topic, correctAnswers: number, distance: number } (create topic enum value. persist store with partialize state).
-// - TW: Update GameOver UI to include this run vs. previous best run - indicating which one was best (e.g is new run, the new best?)
-
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
 
-// - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
 // - MF: Add a "share my score" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 // Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
+
+// DONE:
+// - TW: Correctly reset game state when restarting from game over - (player position, terrain speed, confirmed answers, current question, difficulty, etc)
+// - TW: Persist the user's history personal best for each topic: { topic, correctAnswers: number, distance: number } (create topic enum value. persist store with partialize state).
+// - TW: Update GameOver UI to include this run vs. previous best run - indicating which one was best (e.g is new run, the new best?)
+// - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
+
+
 
 type GameState = {
   stage: Stage
@@ -55,6 +58,9 @@ type GameState = {
   // Sound
   isMuted: boolean
   setIsMuted: (muted: boolean) => void
+
+  playerColour: number // palette parameters
+  setPlayerColour: (palette: number) => void
 
   confirmationProgress: number // [0, 1]
   playerPosition: { x: number; y: number; z: number }
@@ -79,9 +85,11 @@ type GameState = {
 
   currentRunStats: RunStats | null
   personalBests: RunStats[]
-  getPersonalBest: (topic: Topic) => RunStats | null
-  updatePersonalBest: (stats: RunStats) => void
+  previousPersonalBest: RunStats | null
+  isNewPersonalBest: boolean
 
+  resetGame: () => void
+  resetTick: number
   goToStage: (stage: Stage) => void
 }
 
@@ -108,8 +116,11 @@ const INITIAL_STATE: Pick<
   | 'distanceRows'
   | 'simFps'
   | 'isMuted'
+  | 'playerColour'
   | 'personalBests'
   | 'currentRunStats'
+  | 'isNewPersonalBest'
+  | 'previousPersonalBest'
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
@@ -129,8 +140,11 @@ const INITIAL_STATE: Pick<
   distanceRows: 0,
   simFps: 0,
   isMuted: true,
+  playerColour: 0.33, // middle
   currentRunStats: null,
   personalBests: [],
+  isNewPersonalBest: false,
+  previousPersonalBest: null,
 }
 
 type CreateStoreParams = {
@@ -162,6 +176,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
         setSimFps: (fps) => set({ simFps: fps }),
         setIsMuted: (muted) => set({ isMuted: muted }),
+        setPlayerColour: (paletteParam) => set({ playerColour: paletteParam }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
         fetchNextQuestionIfNeeded: async () => {
@@ -260,7 +275,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         getPersonalBest: (topic: Topic) =>
           get().personalBests.find((pb) => pb.topic === topic) ?? null,
 
-        updatePersonalBest: (stats: RunStats) => {
+        setIsNewPersonalBest: (stats: RunStats) => {
           const currentPB = get().personalBests.find((pb) => pb.topic === stats.topic)
           const newPB =
             !currentPB ||
@@ -280,24 +295,30 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
             return { personalBests: updatedPB }
           })
         },
+        resetTick: 0,
+        resetGame: () => {
+          // kill animations and reset tween state
+          speedTween?.kill()
+          speedTween = null
+          confirmationTween?.kill()
+          confirmationTween = null
+          speedTweenTarget.value = 0
+          confirmationTweenTarget.value = 0
+
+          // keep persisted PBs, reset everything else
+          const keepPB = get().personalBests
+          set({ ...INITIAL_STATE, personalBests: keepPB })
+          set((s) => ({ resetTick: s.resetTick + 1 }))
+        },
 
         goToStage: (stage: Stage) => {
           if (stage === Stage.SPLASH) {
-            // Kill any active animations to prevent interference
-            speedTween?.kill()
-            confirmationTween?.kill()
-
-            // Reset tween targets to initial values
-            speedTweenTarget.value = 0
-            confirmationTweenTarget.value = 0
-
-            const personalBests = get().personalBests
-            set({ ...INITIAL_STATE, personalBests })
+            get().resetGame()
             return
           }
           // Basic function for now, can be expanded later
           if (stage === Stage.INTRO) {
-            set({ stage: Stage.INTRO })
+            set({ stage: Stage.INTRO, isNewPersonalBest: false })
             // Ease terrain speed up to 0.25 using GSAP
             speedTween?.kill()
             // Ensure tween starts from the current store value (likely 0 from SPLASH)
@@ -344,22 +365,62 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           }
 
           if (stage === Stage.GAME_OVER) {
-            const { topic, confirmedAnswers, distanceRows, updatePersonalBest } = get()
-
+            const { topic, confirmedAnswers, distanceRows, personalBests } = get()
+            if (get().currentRunStats) {
+              set({ stage: Stage.GAME_OVER }) // ensure stage is set, but skip recompute
+              return
+            }
             if (!topic) {
-              set({ stage: Stage.GAME_OVER })
-            } else {
-              const totalCorrectAnswers = confirmedAnswers.filter(
-                (answer) => answer.answer.isCorrect,
-              ).length
-              const currentRunStats: RunStats = {
+              console.warn('[GAME_OVER] No topic set. Skipping PB compute.')
+              set({
+                stage: Stage.GAME_OVER,
+                isNewPersonalBest: false,
+                previousPersonalBest: null,
+                currentRunStats: null,
+              })
+              return
+            }
+            const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
+            const run: RunStats = {
+              topic,
+              correctAnswers: totalCorrect,
+              distance: distanceRows,
+              date: new Date(),
+            }
+
+            // previous PB BEFORE overwriting
+            const prevPB = personalBests.find((p) => p.topic === topic) ?? null
+            if (!prevPB) {
+              const topicsInPB = personalBests.map((p) => p.topic)
+              console.warn(
+                '[GAME_OVER] No previous PB for topic. Possible topic mismatch? topic=',
                 topic,
-                correctAnswers: totalCorrectAnswers,
-                distance: distanceRows,
-                date: new Date(),
-              }
-              set({ currentRunStats, stage: Stage.GAME_OVER })
-              updatePersonalBest(currentRunStats)
+                ' topicsInPB=',
+                topicsInPB,
+              )
+            }
+
+            const isNew =
+              !prevPB ||
+              run.correctAnswers > prevPB.correctAnswers ||
+              (run.correctAnswers === prevPB.correctAnswers && run.distance > prevPB.distance)
+
+            // update state for UI
+            set({
+              stage: Stage.GAME_OVER,
+              currentRunStats: run,
+              previousPersonalBest: prevPB,
+              isNewPersonalBest: isNew,
+            })
+
+            // write new PB if needed
+            if (isNew) {
+              set((s) => {
+                const idx = s.personalBests.findIndex((p) => p.topic === topic)
+                const updated =
+                  idx === -1 ? s.personalBests.concat(run) : s.personalBests.with(idx, run)
+                return { personalBests: updated }
+              })
             }
 
             speedTween?.kill()
@@ -379,7 +440,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         name: 'game-store',
         partialize: (s) => ({
           personalBests: s.personalBests,
-          currentRunStats: s.currentRunStats,
+          playerColour: s.playerColour,
         }),
       },
     ),

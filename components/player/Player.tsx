@@ -11,7 +11,7 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, forwardRef, type RefObject, useRef } from 'react'
+import { type FC, forwardRef, type RefObject, useEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
@@ -36,10 +36,12 @@ const EPSILON = 1e-6 // Small value to prevent division by zero
 // Shader configuration
 type ShaderUniforms = {
   uTime: number
+  uColourRange: number
 }
 
 const INITIAL_UNIFORMS: ShaderUniforms = {
   uTime: 0,
+  uColourRange: 0.33, // Default to middle of palette
 }
 
 const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -48,9 +50,11 @@ const PlayerShaderMaterial = extend(PlayerShader)
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
+  const playerColour = useGameStore((s) => s.playerColour)
   const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
+  const resetTick = useGameStore((s) => s.resetTick)
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
@@ -74,6 +78,25 @@ const Player: FC = () => {
   // Shader time accumulator
   const shaderTime = useRef(0)
 
+  useEffect(() => {
+    const b = bodyRef.current
+    if (!b) return
+    // hard reset transform & motion
+    b.setTranslation(
+      {
+        x: PLAYER_INITIAL_POSITION[0],
+        y: PLAYER_INITIAL_POSITION[1],
+        z: PLAYER_INITIAL_POSITION[2],
+      },
+      true, // wake up
+    )
+    b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    b.setAngvel({ x: 0, y: 0, z: 0 }, true)
+    b.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true) // identity quat
+    b.wakeUp()
+    // (optional) also update any local refs used by your usePlayerPosition hook
+  }, [resetTick])
+
   useGameFrame((_, deltaTime) => {
     if (
       !playerShaderRef.current ||
@@ -87,6 +110,7 @@ const Player: FC = () => {
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
+    playerShaderRef.current.uColourRange = playerColour 
 
     // Don't update during splash screen
     if (stage === Stage.SPLASH) return
@@ -285,6 +309,7 @@ export const Marble = forwardRef((props: MarbleProps, ref) => {
         key={PlayerShader.key}
         ref={props.playerShaderRef}
         uTime={INITIAL_UNIFORMS.uTime}
+        uColourRange={INITIAL_UNIFORMS.uColourRange}
         transparent={false}
         depthWrite={true}
       />

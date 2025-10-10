@@ -2,9 +2,9 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { DoorOpen, PlayIcon } from 'lucide-react'
-import { type FC, useMemo, useRef } from 'react'
+import { type FC, useRef } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
-import { twJoin } from 'tailwind-merge'
+import { useShallow } from 'zustand/react/shallow'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 
@@ -13,25 +13,17 @@ import { GradientText } from './GradientText'
 
 const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
-  const goToStage = useGameStore((s) => s.goToStage)
 
-  const topic = useGameStore((s) => s.topic)
-  const currentRunStats = useGameStore((s) => s.currentRunStats)
-  const getPersonalBest = useGameStore((s) => s.getPersonalBest)
-
-  const personalBest = useMemo(
-    () => (topic ? getPersonalBest(topic) : null),
-    [topic, getPersonalBest],
+  const gameOver = useGameStore(
+    useShallow((s) => ({
+      topic: s.topic,
+      currentRun: s.currentRunStats,
+      prevPB: s.previousPersonalBest,
+      isNewPB: s.isNewPersonalBest,
+      goToStage: s.goToStage,
+      resetGame: s.resetGame,
+    })),
   )
-
-  // New record if current run matches the persisted PB metrics.
-  const isNewRecord = useMemo(() => {
-    if (!currentRunStats || !personalBest) return false
-    return (
-      currentRunStats.correctAnswers === personalBest.correctAnswers &&
-      currentRunStats.distance === personalBest.distance
-    )
-  }, [currentRunStats, personalBest])
 
   useGSAP(
     () => {
@@ -51,6 +43,24 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
             delay: 0.5,
           },
         )
+        if (gameOver.isNewPB) {
+          gsap.fromTo(
+            '#record-badge',
+            {
+              opacity: 0,
+              scale: 0.8,
+              y: -20,
+            },
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.6,
+              ease: 'back.out(1.7)',
+              delay: 0.8,
+            },
+          )
+        }
       }
       if (transitionStatus === 'exiting') {
         gsap.to(container.current, {
@@ -60,8 +70,21 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         })
       }
     },
-    { dependencies: [transitionStatus], scope: container },
+    {
+      dependencies: [transitionStatus, gameOver.isNewPB],
+      scope: container,
+      revertOnUpdate: true,
+    },
   )
+
+  const handleRollAgain = () => {
+    // Reset game state first
+    gameOver.resetGame()
+    // Small delay to ensure reset completes before starting intro
+    setTimeout(() => {
+      gameOver.goToStage(Stage.INTRO)
+    }, 50)
+  }
 
   return (
     <section
@@ -71,14 +94,12 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         <GradientText>Game Over</GradientText>
       </h2>
       {/* New record banner */}
-      {isNewRecord ? (
+      {gameOver.isNewPB && (
         <h3
           id="record-badge"
-          className="heading-md mt-4 flex items-center justify-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize ring-1 ring-amber-400/40">
+          className="heading-md my-4 flex items-center justify-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize ring-1 ring-amber-400/40">
           🏆 You’ve set a new record! 🏆
         </h3>
-      ) : (
-        <div className="hidden" />
       )}
       {/* Results grid */}
       <div className="game-over-fade-in w-full max-w-4xl opacity-0">
@@ -86,20 +107,20 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           <LevelStats
             title="Current Run"
             values={{
-              topic,
-              correctAnswers: currentRunStats?.correctAnswers ?? 0,
-              distance: currentRunStats?.distance ?? 0,
+              topic: gameOver.topic,
+              correctAnswers: gameOver.currentRun?.correctAnswers ?? 0,
+              distance: gameOver.currentRun?.distance ?? 0,
             }}
-            highlight={isNewRecord}
+            highlight={gameOver.isNewPB}
           />
           <LevelStats
             title="Personal Best"
             values={{
-              topic: personalBest?.topic ?? topic,
-              correctAnswers: personalBest?.correctAnswers ?? 0,
-              distance: personalBest?.distance ?? 0,
+              topic: gameOver.prevPB?.topic ?? gameOver.topic,
+              correctAnswers: gameOver.prevPB?.correctAnswers ?? 0,
+              distance: gameOver.prevPB?.distance ?? 0,
             }}
-            highlight={!!personalBest && isNewRecord}
+            highlight={gameOver.isNewPB}
           />
         </div>
       </div>
@@ -107,14 +128,14 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         <Button
           variant="primary"
           className="game-over-fade-in capitalize opacity-0"
-          onClick={() => goToStage(Stage.INTRO)}>
+          onClick={handleRollAgain}>
           roll again
           <PlayIcon className="size-6" strokeWidth={1.5} />
         </Button>
         <Button
           variant="secondary"
           className="game-over-fade-in capitalize opacity-0"
-          onClick={() => goToStage(Stage.SPLASH)}>
+          onClick={() => gameOver.goToStage(Stage.SPLASH)}>
           exit to menu
           <DoorOpen className="size-6" strokeWidth={1.5} />
         </Button>
@@ -139,7 +160,7 @@ const LevelStats: FC<LevelStatsProps> = ({ title, values, highlight }) => {
   const { topic, correctAnswers, distance } = values
 
   return (
-    <section className="relative rounded-2xl border border-white/40 bg-linear-90 from-black/5 to-black/25 p-5 text-white shadow-xl shadow-black/5 backdrop-blur-md md:p-6">
+    <section className="relative rounded-2xl border border-white/40 bg-linear-90 from-black/10 to-black/25 p-5 text-white shadow-xl shadow-black/5 backdrop-blur-md md:p-6">
       <h3 className="heading-md mb-8 text-center tracking-wide text-white/90">{title}</h3>
       {/* Star overlay for PB highlight */}
       {highlight && (

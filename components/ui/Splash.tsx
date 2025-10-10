@@ -6,6 +6,7 @@ import { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
+import ColourSlider from '@/components/ui/ColourSlider'
 import { GradientText } from '@/components/ui/GradientText'
 
 const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
@@ -50,11 +51,12 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
         <header className="flex flex-col items-center justify-center gap-4">
-          <h1 className="heading-xl tracking-wide">
+          <h1 className="heading-xl tracking-wide mb-10">
             <GradientText>Quizroller</GradientText>
           </h1>
+          <ColourSlider />
           {/* CTA Buttons */}
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4">
             <Button
               variant="secondary"
               color="dark"
