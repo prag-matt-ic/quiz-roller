@@ -19,7 +19,7 @@ type Props = {
   isMobile: boolean
 }
 
-const UI: FC<Props> = ({ isMobile }) => {
+const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
 
   const stage = useGameStore((s) => s.stage)
@@ -72,7 +72,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           if (stage === Stage.GAME_OVER)
             return (
               <div ref={wrapper} className="">
-                <GameOverUI transitionStatus={transitionStatus} isMobile={isMobile} />
+                <GameOverUI transitionStatus={transitionStatus} />
               </div>
             )
 

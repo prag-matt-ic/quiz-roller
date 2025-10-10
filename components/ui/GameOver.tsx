@@ -1,7 +1,7 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { PlayIcon, SkullIcon } from 'lucide-react'
+import { DoorOpen, PlayIcon } from 'lucide-react'
 import { type FC, useMemo, useRef } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -9,11 +9,9 @@ import { twJoin } from 'tailwind-merge'
 import { Stage, useGameStore } from '@/components/GameProvider'
 
 import Button from './Button'
+import { GradientText } from './GradientText'
 
-const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> = ({
-  transitionStatus,
-  isMobile,
-}) => {
+const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
   const goToStage = useGameStore((s) => s.goToStage)
 
@@ -66,64 +64,62 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus; isMobile: boolean }> 
   )
 
   return (
-    <div ref={container} className="">
-      {isMobile ? (
-        <p className="preference-fade-in max-w-sm p-3 text-center text-white">USE A COMPUTER</p>
+    <section
+      ref={container}
+      className="flex h-screen flex-col items-center justify-between gap-4 border border-red-600 px-8 py-30">
+      <h2 className="game-over-fade-in heading-xl tracking-wide opacity-0">
+        <GradientText>Game Over</GradientText>
+      </h2>
+      {/* New record banner */}
+      {isNewRecord ? (
+        <h3
+          id="record-badge"
+          className="heading-md mt-4 flex items-center justify-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize ring-1 ring-amber-400/40">
+          🏆 You’ve set a new record! 🏆
+        </h3>
       ) : (
-        <section className="flex flex-col items-center gap-4">
-          <h2 className="game-over-fade-in text-3xl font-bold opacity-0">
-            GAME OVER MAN, GAME OVER
-          </h2>
-          {/* Results grid */}
-          <div className="game-over-fade-in w-full max-w-4xl opacity-0">
-            <div className="mx-auto grid grid-cols-1 gap-4 md:grid-cols-2">
-              <LevelStats
-                title="Current Run"
-                values={{
-                  topic,
-                  correctAnswers: currentRunStats?.correctAnswers ?? 0,
-                  distance: currentRunStats?.distance ?? 0,
-                }}
-                highlight={isNewRecord}
-              />
-              <LevelStats
-                title="Personal Best"
-                values={{
-                  topic: personalBest?.topic ?? topic,
-                  correctAnswers: personalBest?.correctAnswers ?? 0,
-                  distance: personalBest?.distance ?? 0,
-                }}
-                highlight={!!personalBest && isNewRecord}
-              />
-            </div>
-            {/* New record banner */}
-            {isNewRecord && (
-              <div
-                id="record-badge"
-                className="ring-amber-400/40text-center mt-4 flex items-center justify-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-white ring-1">
-                <span className="text-xl">🏆</span>
-                <span className="font-semibold">You’ve set a new record!</span>
-              </div>
-            )}
-          </div>
-
-          <Button
-            variant="primary"
-            className="game-over-fade-in opacity-0"
-            onClick={() => goToStage(Stage.INTRO)}>
-            <PlayIcon className="size-6" strokeWidth={1.5} />
-            REROLL
-          </Button>
-          <Button
-            variant="secondary"
-            className="game-over-fade-in opacity-0"
-            onClick={() => goToStage(Stage.SPLASH)}>
-            <SkullIcon className="size-6" strokeWidth={1.5} />
-            MENU
-          </Button>
-        </section>
+        <div className="hidden" />
       )}
-    </div>
+      {/* Results grid */}
+      <div className="game-over-fade-in w-full max-w-4xl opacity-0">
+        <div className="mx-auto grid grid-cols-1 gap-4 md:grid-cols-2">
+          <LevelStats
+            title="Current Run"
+            values={{
+              topic,
+              correctAnswers: currentRunStats?.correctAnswers ?? 0,
+              distance: currentRunStats?.distance ?? 0,
+            }}
+            highlight={isNewRecord}
+          />
+          <LevelStats
+            title="Personal Best"
+            values={{
+              topic: personalBest?.topic ?? topic,
+              correctAnswers: personalBest?.correctAnswers ?? 0,
+              distance: personalBest?.distance ?? 0,
+            }}
+            highlight={!!personalBest && isNewRecord}
+          />
+        </div>
+      </div>
+      <div className="mt-4 flex gap-4">
+        <Button
+          variant="primary"
+          className="game-over-fade-in capitalize opacity-0"
+          onClick={() => goToStage(Stage.INTRO)}>
+          roll again
+          <PlayIcon className="size-6" strokeWidth={1.5} />
+        </Button>
+        <Button
+          variant="secondary"
+          className="game-over-fade-in capitalize opacity-0"
+          onClick={() => goToStage(Stage.SPLASH)}>
+          exit to menu
+          <DoorOpen className="size-6" strokeWidth={1.5} />
+        </Button>
+      </div>
+    </section>
   )
 }
 
@@ -143,14 +139,8 @@ const LevelStats: FC<LevelStatsProps> = ({ title, values, highlight }) => {
   const { topic, correctAnswers, distance } = values
 
   return (
-    <section
-      className={twJoin(
-        'relative rounded-2xl p-5 shadow-lg ring-1 md:p-6',
-        highlight ? 'bg-white/10 ring-white/20' : 'bg-white/5 ring-white/10',
-      )}>
-      <h3 className="mb-3 text-center text-lg font-semibold tracking-wide text-white/90">
-        {title}
-      </h3>
+    <section className="relative rounded-2xl border border-white/40 bg-linear-90 from-black/5 to-black/25 p-5 text-white shadow-xl shadow-black/5 backdrop-blur-md md:p-6">
+      <h3 className="heading-md mb-8 text-center tracking-wide text-white/90">{title}</h3>
       {/* Star overlay for PB highlight */}
       {highlight && (
         <span className="star-pop pointer-events-none absolute top-3 right-3 text-2xl md:top-4 md:right-4 md:text-3xl">
@@ -158,23 +148,27 @@ const LevelStats: FC<LevelStatsProps> = ({ title, values, highlight }) => {
         </span>
       )}
 
-      <div className="grid grid-cols-2 gap-3 text-center text-white">
-        <div className="col-span-2">
-          <span className="block text-xs tracking-widest text-white/60 uppercase">Topic</span>
-          <span className="block text-base font-medium md:text-lg">{topic ?? '-'}</span>
-        </div>
+      <div className="grid grid-cols-2 gap-1 text-center text-white">
+        <span className="col-span-2 row-start-1 text-sm font-semibold tracking-widest text-white/60 uppercase">
+          Topic
+        </span>
+        <span className="col-span-2 row-start-2 mb-8 text-xl font-medium md:text-2xl">
+          {topic ?? '-'}
+        </span>
 
-        <div className="">
-          <span className="block text-xs tracking-widest text-white/60 uppercase">Correct</span>
-          <span className="block text-2xl font-bold md:text-3xl">{correctAnswers}</span>
-        </div>
+        <span className="col-start-1 row-start-3 text-sm font-semibold tracking-widest text-white/60 uppercase">
+          Correct
+        </span>
+        <span className="col-start-1 row-start-4 text-3xl font-bold md:text-4xl">
+          {correctAnswers}
+        </span>
 
-        <div className="">
-          <span className="block text-xs tracking-widest text-white/60 uppercase">
-            Distance
-          </span>
-          <span className="block text-2xl font-bold md:text-3xl">{distance}</span>
-        </div>
+        <span className="col-start-2 row-start-3 text-sm font-semibold tracking-widest text-white/60 uppercase">
+          Distance
+        </span>
+        <span className="col-start-2 row-start-4 text-3xl font-bold md:text-4xl">
+          {distance}
+        </span>
       </div>
     </section>
   )
