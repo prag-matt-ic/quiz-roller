@@ -29,15 +29,15 @@ const MarbleColourSelect: FC = () => {
     (range) => playerColour >= range.min && playerColour <= range.max,
   )
 
-  const sliderValue = currentRangeIndex !== -1 ? currentRangeIndex : 0
+  const value = currentRangeIndex !== -1 ? currentRangeIndex : 0
 
   return (
-    <section className="my-4 flex flex-col items-center">
-      <div className="mb-1 text-white/70">Choose your Marble Colour</div>
+    <section className="my-4 flex w-fit flex-col items-center rounded-full bg-black/10 px-8 py-4 backdrop-blur-sm">
+      <span className="mb-1 block font-semibold text-white">Choose your Marble Colour</span>
 
-      <div className="mt-2 flex gap-4">
+      <div className="mt-2 flex gap-5">
         {COLOUR_RANGES.map((range, idx) => {
-          const isActive = idx === sliderValue
+          const isActive = idx === value
           return (
             <button
               key={idx}
@@ -45,7 +45,7 @@ const MarbleColourSelect: FC = () => {
               aria-label={`Select colour range ${idx + 1}`}
               onClick={() => setPlayerColour(range.center)}
               className={twJoin(
-                'size-14 rounded-full border border-white transition-all duration-200 focus:outline-none',
+                'size-14 rounded-full focus:outline-none',
                 isActive && 'ring-2 ring-white',
               )}
               style={{

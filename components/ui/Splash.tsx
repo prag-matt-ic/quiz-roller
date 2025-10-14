@@ -50,32 +50,35 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
       className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/80 from-35% to-transparent to-60% py-24">
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
-        <header className="flex flex-col items-center justify-center gap-4">
+        <header className="flex h-full flex-col items-center justify-center gap-4">
           <h1 className="heading-xl mb-10 tracking-wide">
             <GradientText>Quizroller</GradientText>
           </h1>
-          <MarbleColourSelect />
-          {/* CTA Buttons */}
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="secondary"
-              color="dark"
-              aria-label="Start in silence"
-              onClick={() => onStartClick(true)}>
-              <VolumeXIcon className="size-5" strokeWidth={2} />
-              ROLL IN SILENCE
-            </Button>
-
-            <Button
-              variant="primary"
-              color="dark"
-              aria-label="Start with sounds"
-              onClick={() => onStartClick(false)}>
-              <PlayIcon className="size-5" strokeWidth={2} />
-              ROLL WITH SOUNDS
-            </Button>
-          </div>
         </header>
+
+        <div className="mx-auto self-end py-6">
+          <MarbleColourSelect />
+        </div>
+        {/* CTA Buttons */}
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="secondary"
+            color="dark"
+            aria-label="Start in silence"
+            onClick={() => onStartClick(true)}>
+            <VolumeXIcon className="size-5" strokeWidth={2} />
+            ROLL IN SILENCE
+          </Button>
+
+          <Button
+            variant="primary"
+            color="dark"
+            aria-label="Start with sounds"
+            onClick={() => onStartClick(false)}>
+            <PlayIcon className="size-5" strokeWidth={2} />
+            ROLL WITH SOUNDS
+          </Button>
+        </div>
       </div>
     </div>
   )

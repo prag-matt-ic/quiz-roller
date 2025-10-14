@@ -17,6 +17,10 @@ body {
   font-family: var(--font-nunito-sans), sans-serif;
 }
 
+button {
+  cursor: pointer;
+}
+
 h1,
 h2,
 h3,
@@ -60,16 +64,15 @@ h6 {
   }
 }
 
-
 @layer components {
   .custom-range-slider {
     &::-webkit-slider-thumb {
       appearance: none;
-      @apply w-5 h-5 rounded-full bg-transparent cursor-pointer;
+      @apply h-5 w-5 cursor-pointer rounded-full bg-transparent;
     }
-    
+
     &::-moz-range-thumb {
-      @apply w-5 h-5 rounded-full bg-transparent cursor-pointer border-0;
+      @apply h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent;
     }
   }
 }
