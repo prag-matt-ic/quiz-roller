@@ -6,8 +6,8 @@ import { Group, type Vector3Tuple } from 'three'
 
 import {
   QUESTION_TEXT_FONT_SIZE,
-  QUESTION_TEXT_MAX_WIDTH,
   QUESTION_TEXT_ROWS,
+  QUESTION_TEXT_WIDTH,
 } from './terrain/terrainBuilder'
 
 type Props = {
@@ -31,7 +31,7 @@ export const QuestionText = forwardRef<Group, Props>(({ text, position }, ref) =
         anchorX="center"
         anchorY="middle"
         textAlign="center"
-        maxWidth={QUESTION_TEXT_MAX_WIDTH}
+        maxWidth={QUESTION_TEXT_WIDTH}
         rotation={[-Math.PI / 2, 0, 0]}>
         {text}
       </Text>

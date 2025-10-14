@@ -40,6 +40,23 @@ Avoid magic numbers and strings – declare constants (e.g. LANE_COUNT = 3) so t
 
 Comment judiciously – write code that is self‑explanatory; when comments are needed, make them precise and consider using // TODO to mark work that should be improved later.
 
+## Tailwind Styling
+
+Use `size-[x]` for square/circle shapes instead of separate `h-[x]` and `w-[x]`.
+
+When concatenating classes, use `twJoin` or `twMerge` from 'tailwind-merge'. Prefer `twJoin` when all classes are defined within a component (no conflicts). Use `twMerge` when merging external props with internal classes that might conflict.
+
+Examples:
+
+```tsx
+// Square/circle shapes
+<div className="size-12 rounded-full" />
+
+// Class concatenation
+<div className={twJoin('size-12', isActive && 'ring-2')} />
+<div className={twMerge('size-12 bg-blue-500', externalClassName)} />
+```
+
 ## Zustand best practices
 
 Zustand is used for global state in this project. To keep components fast and predictable:

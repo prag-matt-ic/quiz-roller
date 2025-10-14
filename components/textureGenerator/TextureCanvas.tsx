@@ -14,6 +14,14 @@ import {
 
 const PREVIEW_SIZE = 512
 
+// TODO: Add palette controls. Provide cosine palette defaults + option to use "custom"
+// when "custom palette" is selected, allow for one or more hex values to be entered - then generate shades from those.
+
+// Node ordering -> the ability to drag and drop to re-order the effects.
+
+// TODO: use natural language to describe the desired artwork - AI uses available shaders to construct the relevant nodes.
+// If this is node based, maybe using WebGPU & TSL makes sense? How can the LLM "write" the code?
+
 /**
  * TextureCanvas - Main canvas component for background texture generation
  *
@@ -27,9 +35,8 @@ const TextureCanvas: FC = () => {
   return (
     <Canvas
       id="texture-canvas"
-      className="!absolute !aspect-square !h-full !w-full"
-      style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE }}
-      orthographic
+      className="!absolute !aspect-square shrink-0"
+      orthographic={true}
       camera={{ position: [0, 0, 1], zoom: 1, near: 0.1, far: 10 }}>
       <TextureScene />
     </Canvas>
@@ -56,17 +63,17 @@ const TextureScene: FC = () => {
 
   // Export settings controls with download button
   const exportSettings = useControls('Export Settings', {
-    resolution: {
-      value: 2048,
-      options: [1024, 2048, 4096, 4096 * 2],
-      label: 'Resolution',
-    },
     seed: {
       value: 0,
       min: 0,
       max: 300,
       step: 1,
       label: 'Seed',
+    },
+    resolution: {
+      value: 2048,
+      options: [1024, 2048, 4096, 4096 * 2],
+      label: 'Resolution',
     },
     Download: button(() => captureHighResTexture()),
   })
@@ -108,14 +115,14 @@ const TextureScene: FC = () => {
     fbmScale: {
       value: INITIAL_BACKGROUND_UNIFORMS.uFbmScale,
       min: 0.5,
-      max: 16.0,
+      max: 32.0,
       step: 0.5,
       label: 'Scale',
     },
     fbmOctaves: {
       value: INITIAL_BACKGROUND_UNIFORMS.uFbmOctaves,
       min: 1,
-      max: 8,
+      max: 12,
       step: 1,
       label: 'Octaves',
     },

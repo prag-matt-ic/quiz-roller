@@ -12,8 +12,8 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 export const PLAYER_RADIUS = 0.5
 
 // Get colors from palette at different positions
-const COLOR_START = getPaletteHex(0.3)
-const COLOR_END = getPaletteHex(0.8)
+const COLOR_START = getPaletteHex(0.5)
+const COLOR_END = getPaletteHex(0.9)
 
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
@@ -69,14 +69,12 @@ const PlayerHUD: FC = () => {
       <Transition
         in={!!confirmingAnswer}
         timeout={{ enter: 0, exit: 300 }}
-        mountOnEnter={true}
-        unmountOnExit={true}
         onEnter={onEnter}
         onExit={onExit}
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 shadow-md shadow-black/15">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 opacity-0 shadow-md shadow-black/15">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"

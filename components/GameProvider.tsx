@@ -437,7 +437,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         },
       }),
       {
-        name: 'game-store',
+        name: 'quiz-roller',
         partialize: (s) => ({
           personalBests: s.personalBests,
           playerColour: s.playerColour,

@@ -27,7 +27,7 @@ export const CAMERA_CONFIG: Record<
   [Stage.SPLASH]: {
     // Close to the player with a low Y to keep the path low in view.
     // These are starting values and can be tweaked.
-    position: { x: 0, y: 2.5, z: 9 },
+    position: { x: 0, y: 2, z: 10 },
     target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
     zoom: 1.2,
   },
@@ -44,10 +44,10 @@ export const CAMERA_CONFIG: Record<
   [Stage.TERRAIN]: {
     position: { x: 0, y: 6, z: 7 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 0.75,
+    zoom: 0.8,
   },
   [Stage.GAME_OVER]: {
-    position: { x: 20, y: 12, z: 8 },
+    position: { x: 16, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
   },
@@ -69,7 +69,7 @@ const Camera: FC<Props> = () => {
 
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
 
-    if (stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Handled in useFrame below
+    if (stage === Stage.INTRO || stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Position handled in useFrame below
 
     const { position, target } = CAMERA_CONFIG[stage]
     cameraControls.current.setLookAt(
@@ -86,17 +86,6 @@ const Camera: FC<Props> = () => {
   useFrame(() => {
     if (!cameraControls.current) return
 
-    if (stage === Stage.QUESTION) {
-      cameraControls.current.setLookAt(
-        playerPosition.current.x, // Follow player X
-        CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + 5, // Follow the player from slightly behind
-        playerPosition.current.x, // Look at the player X
-        0,
-        playerPosition.current.z, // Look at the player Z
-        true,
-      )
-    }
     if (stage === Stage.INTRO) {
       // Track like question stage but keep ENTRY's zoomed-in config
       cameraControls.current.setLookAt(
@@ -106,6 +95,18 @@ const Camera: FC<Props> = () => {
         playerPosition.current.x,
         0,
         playerPosition.current.z,
+        true,
+      )
+    }
+
+    if (stage === Stage.QUESTION) {
+      cameraControls.current.setLookAt(
+        playerPosition.current.x, // Follow player X
+        CAMERA_CONFIG[stage].position.y,
+        playerPosition.current.z + 5, // Follow the player from slightly behind
+        playerPosition.current.x, // Look at the player X
+        0,
+        playerPosition.current.z, // Look at the player Z
         true,
       )
     }

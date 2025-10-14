@@ -118,6 +118,7 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
+  const isIntroStage = stage === Stage.INTRO
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
@@ -525,7 +526,7 @@ const Terrain: FC = () => {
       computedSpeed = 0
     } else if (stage === Stage.INTRO) {
       computedSpeed = computeEntrySpeedFromPlayerZ()
-    } else if (isQuestionStage) {
+    } else if (stage === Stage.QUESTION) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
     }
 

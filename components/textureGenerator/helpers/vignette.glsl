@@ -1,3 +1,6 @@
+// TODO: remove dark/light vignette and just implement this one shader with 'is dark' boolean control
+
+
 /**
  * Vignette - Radial darkening or lightening from edges
  * 

@@ -45,7 +45,7 @@ void main() {
   float bgInput = clamp(bgNoise * 0.5 + 0.5, 0.0, 1.0);
   vec3 bgColour = getColourFromPalette(bgInput);
 
-    // Use hasAnswer to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
+  // Use hasAnswer to determine mix amount: 0.16 (no answer) or 0.05 (has answer)
   float mixAmount = mix(NON_ANSWER_MIX, ANSWER_MIX, hasAnswer);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
 
