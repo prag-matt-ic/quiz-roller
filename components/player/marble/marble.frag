@@ -1,3 +1,4 @@
+// Marble fragment shader
 precision highp float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
@@ -15,21 +16,20 @@ void main() {
   float n = noise(vec3(dir.x, dir.y, dir.z) * 0.3 + uTime * 0.08);
   float noiseValue = clamp(n * 0.5 + 0.5, 0.0, 1.0);
 
-  // Map the user's colour choice to range bounds
-  float rangeSize = 0.33; // Each range is 1/3 of palette
+  // Map the user's colour choice to range bounds (40% each with 10% overlap)
   float rangeMin, rangeMax;
   
-  if (uColourRange < 0.33) {
-    // Warm range: 0 - 0.32
+  if (uColourRange < 0.35) {
+    // Low range
     rangeMin = 0.0;
-    rangeMax = 0.32;
-  } else if (uColourRange < 0.67) {
-    // Cool range: 0.33 - 0.66  
-    rangeMin = 0.33;
-    rangeMax = 0.66;
+    rangeMax = 0.5;
+  } else if (uColourRange < 0.65) {
+    // Mid range
+    rangeMin = 0.25;
+    rangeMax = 0.75;
   } else {
-    // Deep range: 0.67 - 1.0
-    rangeMin = 0.67;
+    // High range
+    rangeMin = 0.5;
     rangeMax = 1.0;
   }
   

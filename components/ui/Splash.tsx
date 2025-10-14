@@ -2,11 +2,11 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { PlayIcon, VolumeXIcon } from 'lucide-react'
 import type { FC } from 'react'
-import { TransitionStatus } from 'react-transition-group'
+import type { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import MarbleColourSelect from '@/components/player/marble/MarbleColourSelect'
 import Button from '@/components/ui/Button'
-import ColourSlider from '@/components/ui/ColourSlider'
 import { GradientText } from '@/components/ui/GradientText'
 
 const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
@@ -51,10 +51,10 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
         <header className="flex flex-col items-center justify-center gap-4">
-          <h1 className="heading-xl tracking-wide mb-10">
+          <h1 className="heading-xl mb-10 tracking-wide">
             <GradientText>Quizroller</GradientText>
           </h1>
-          <ColourSlider />
+          <MarbleColourSelect />
           {/* CTA Buttons */}
           <div className="flex items-center justify-center gap-4">
             <Button

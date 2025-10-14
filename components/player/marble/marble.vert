@@ -1,4 +1,4 @@
-// Player sphere vertex shader
+// Marble vertex shader
 // Pass object-space position and normal to fragment for seamless spherical mapping
 
 varying vec3 vLocalPos;

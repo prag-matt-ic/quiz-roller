@@ -1,8 +1,6 @@
 'use client'
 
 import { QueryFilterFlags } from '@dimforge/rapier3d-compat'
-import { shaderMaterial } from '@react-three/drei'
-import { extend } from '@react-three/fiber'
 import {
   BallCollider,
   type IntersectionEnterHandler,
@@ -11,18 +9,18 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, forwardRef, type RefObject, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 import { type Mesh, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import fragment from '@/components/player/shaders/player.frag'
-import vertex from '@/components/player/shaders/player.vert'
 import usePlayerController from '@/components/player/usePlayerController'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+
+import { Marble, MarbleShaderMaterial, MarbleShaderUniforms } from './marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -32,20 +30,6 @@ import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 const GRAVITY_ACCELERATION = -9.81 // m/s²
 const UP_DIRECTION = new Vector3(0, 1, 0)
 const EPSILON = 1e-6 // Small value to prevent division by zero
-
-// Shader configuration
-type ShaderUniforms = {
-  uTime: number
-  uColourRange: number
-}
-
-const INITIAL_UNIFORMS: ShaderUniforms = {
-  uTime: 0,
-  uColourRange: 0.33, // Default to middle of palette
-}
-
-const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
-const PlayerShaderMaterial = extend(PlayerShader)
 
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
@@ -61,7 +45,7 @@ const Player: FC = () => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
-  const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
+  const playerShaderRef = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
 
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
@@ -110,7 +94,7 @@ const Player: FC = () => {
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
-    playerShaderRef.current.uColourRange = playerColour 
+    playerShaderRef.current.uColourRange = playerColour
 
     // Don't update during splash screen
     if (stage === Stage.SPLASH) return
@@ -296,25 +280,3 @@ function applyRollingPhysics({
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
 }
-
-type MarbleProps = {
-  playerShaderRef: RefObject<(typeof PlayerShaderMaterial & ShaderUniforms) | null>
-}
-
-export const Marble = forwardRef((props: MarbleProps, ref) => {
-  return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
-      <PlayerShaderMaterial
-        key={PlayerShader.key}
-        ref={props.playerShaderRef}
-        uTime={INITIAL_UNIFORMS.uTime}
-        uColourRange={INITIAL_UNIFORMS.uColourRange}
-        transparent={false}
-        depthWrite={true}
-      />
-    </mesh>
-  )
-})
-
-Marble.displayName = 'Marble'
