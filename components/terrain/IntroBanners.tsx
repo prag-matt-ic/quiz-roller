@@ -16,7 +16,7 @@ import {
   INTRO_BANNERS_CONTENT,
   INTRO_BANNERS_SPACING_ROWS,
   INTRO_BANNERS_START_PADDING_ROWS,
-} from '@/constants/intro'
+} from '@/resources/intro'
 
 export type IntroBannersHandle = {
   // Move banners forward in +Z by the given world-unit step

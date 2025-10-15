@@ -1,27 +1,25 @@
 import { z } from 'zod'
 
-// Answer schema
 export const AnswerSchema = z.object({
-  text: z.string().min(1),
+  text: z.string(),
   isCorrect: z.boolean(),
 })
 
-// LLM response schema (strict two-option MCQ with subtopic)
-export const LLMQuestionSchema = z.object({
-  text: z.string().min(1),
-  subtopic: z.string().min(1),
-  answers: z.array(AnswerSchema).length(2),
-})
-
-// App-level question schema (allows >2 options for initial topic selection)
-export const QuestionSchema = LLMQuestionSchema.extend({
+export const QuestionSchema = z.object({
   id: z.string(),
   difficulty: z.number().min(0).max(10),
+  text: z.string().min(1),
+  subtopic: z.string().min(1).optional(),
+  answers: z.array(AnswerSchema).length(2),
+  sourceUrl: z.url().optional(),
+  citation: z.string().optional(),
 })
 
-// TypeScript types inferred from the schemas
 export type Answer = z.infer<typeof AnswerSchema>
 export type Question = z.infer<typeof QuestionSchema>
+
+export type TopicQuestionBank = Record<number, Question[]>
+export type ContentLibrary = Record<Topic, TopicQuestionBank>
 
 export type PlayerUserData = {
   type: 'player'
@@ -40,29 +38,22 @@ export type OutOfBoundsUserData = {
 
 export type RigidBodyUserData = PlayerUserData | AnswerUserData | OutOfBoundsUserData
 
-export const TOPICS: string[] = [
-  'UX/UI Design',
-  'Psychology',
-  'English',
-  'Artificial Intelligence',
-]
+export enum Topic {
+  UX_UI_DESIGN = 'UX/UI Design',
+  ARTIFICIAL_INTELLIGENCE = 'Artificial Intelligence',
+  // PSYCHOLOGY = 'Psychology',
+  // ENGLISH = 'English',
+}
 
 export const topicQuestion: Question = {
   id: 'topic',
   subtopic: '-',
   difficulty: 0,
   text: 'Select a topic',
-  answers: TOPICS.map((topic) => ({
+  answers: Object.values(Topic).map((topic) => ({
     text: topic,
     isCorrect: true,
   })),
-}
-
-export enum Topic {
-  UX_UI_DESIGN = 'UX/UI Design',
-  PSYCHOLOGY = 'Psychology',
-  ENGLISH = 'English',
-  ARTIFICIAL_INTELLIGENCE = 'Artificial Intelligence',
 }
 
 export type RunStats = {

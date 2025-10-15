@@ -1,27 +1,34 @@
 'use client'
 
-import { shaderMaterial, Text } from '@react-three/drei'
+import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { forwardRef, useMemo, useRef } from 'react'
-import { type Vector3Tuple } from 'three'
+import { CanvasTexture, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
+import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/components/terrain/terrainBuilder'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
+import { useTextCanvas } from '@/hooks/useTextCanvas'
 import { type AnswerUserData } from '@/model/schema'
 
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
 
+// TODO: Add a correct/incorrect feedback. Correct should be like confetti.
+
 const ANSWER_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
+const CANVAS_WIDTH = ANSWER_TILE_WIDTH * 128
+const CANVAS_HEIGHT = ANSWER_TILE_HEIGHT * 128
 
 type AnswerTileShaderUniforms = {
   uConfirmingProgress: number
   uIsConfirming: number
   uTileAspect: number
   uTime: number
+  uTextTexture: CanvasTexture | null
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
@@ -29,10 +36,13 @@ const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
   uIsConfirming: 0,
   uTileAspect: ANSWER_TILE_ASPECT,
   uTime: 0,
+  uTextTexture: null,
 }
 
 const AnswerTileShader = shaderMaterial(
-  INITIAL_ANSWER_TILE_UNIFORMS,
+  {
+    ...INITIAL_ANSWER_TILE_UNIFORMS,
+  },
   answerTileVertex,
   answerTileFragment,
 )
@@ -48,6 +58,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
     const currentQuestion = useGameStore((s) => s.currentQuestion)
     const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
     const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
+    // Compute text + userData first; used by the text canvas hook
 
     const isConfirmingThisAnswer: boolean = useMemo(() => {
       if (!confirmingAnswer) return false
@@ -69,8 +80,6 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         return { text, userData }
       }, [currentQuestion, index])
 
-    // TODO: Use wasConfirmed for visual feedback (correct/incorrect animation)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const wasConfirmed: boolean = useMemo(
       () => confirmedAnswers.some((a) => a.answer.text === text),
       [confirmedAnswers, text],
@@ -87,8 +96,8 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
 
       const globalProgress = confirmationProgress.current
 
-      // If confirming this answer, track the global progress upward
       if (isConfirmingThisAnswer) {
+        // If confirming this answer, track the global progress upward
         localProgress.current = Math.max(localProgress.current, globalProgress)
       } else {
         // Not confirming: only allow progress to decrease, following global progress
@@ -98,6 +107,16 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
       shader.current.uConfirmingProgress = localProgress.current
       shader.current.uIsConfirming = isConfirmingThisAnswer ? 1 : 0
       shader.current.uTime = clock.elapsedTime
+    })
+
+    // Render a canvas texture for the label text (reusable hook)
+    const labelColour = wasConfirmed ? getPaletteHex(0.8) : getPaletteHex(0.5)
+    const canvasState = useTextCanvas(text, {
+      width: CANVAS_WIDTH,
+      height: CANVAS_HEIGHT,
+      color: labelColour,
+      fontWeight: 400,
+      baseFontScale: 0.1,
     })
 
     return (
@@ -118,16 +137,16 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           mass={0}
           friction={0}
         />
-        {/* Elevate the visual mesh above terrain to avoid z-fighting (no custom render order) */}
-        <mesh position={[0, 0, 0.04]}>
+        {/* Single mesh: shader renders border + samples text texture */}
+        <mesh position={[0, 0, 0.03]}>
           <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
           <AnswerTileShaderMaterial
             key={AnswerTileShader.key}
             ref={shader}
             transparent={true}
-            // // Respect scene depth so the player can occlude the tile as expected
+            // Respect scene depth so the player can occlude the tile as expected
             depthTest={true}
-            // // Do not write depth so the semi-transparent edges don't occlude later draws
+            // Do not write depth so the semi-transparent edges don't occlude later draws
             depthWrite={false}
             // Mild offset to avoid coplanar artifacts with terrain
             polygonOffset={true}
@@ -135,27 +154,12 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
             polygonOffsetUnits={-1}
             uConfirmingProgress={0}
             uIsConfirming={0}
+            uTextTexture={canvasState?.texture ?? null}
           />
         </mesh>
-        {/* Lift text slightly above the tile surface to prevent z-fighting with the plane */}
-        <Text
-          color="#000"
-          fontSize={0.35}
-          anchorX="center"
-          anchorY="middle"
-          textAlign="center"
-          maxWidth={ANSWER_TILE_WIDTH - 0.4}
-          position={[0, 0.0, 0.06]}
-          rotation={[0, 0, 0]}>
-          {text}
-        </Text>
       </RigidBody>
     )
   },
 )
 
 AnswerTile.displayName = 'AnswerTile'
-
-// TODO: Add a "waiting for next question" if reached and not ready
-// TODO: Add a correct/incorrect feedback. Correct should be like confetti.
-// TODO: sound effects should be triggered from the GameProvider when answer is confirmed

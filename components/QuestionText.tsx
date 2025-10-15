@@ -1,40 +1,40 @@
 'use client'
 
-import { Text } from '@react-three/drei'
 import { forwardRef } from 'react'
 import { Group, type Vector3Tuple } from 'three'
 
-import {
-  QUESTION_TEXT_FONT_SIZE,
-  QUESTION_TEXT_ROWS,
-  QUESTION_TEXT_WIDTH,
-} from './terrain/terrainBuilder'
+import { useTextCanvas } from '@/hooks/useTextCanvas'
+
+import { QUESTION_TEXT_HEIGHT, QUESTION_TEXT_WIDTH } from './terrain/terrainBuilder'
 
 type Props = {
   text: string
   position: Vector3Tuple
 }
 
+// Compute canvas resolution for crisp text (texel density ~128px per world unit)
+const CANVAS_WIDTH = QUESTION_TEXT_WIDTH * 128
+const CANVAS_HEIGHT = QUESTION_TEXT_HEIGHT * 128
+
 export const QuestionText = forwardRef<Group, Props>(({ text, position }, ref) => {
+  const canvasState = useTextCanvas(text, {
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
+    color: '#000000',
+    baseFontScale: 0.1,
+  })
+
   return (
     <group ref={ref} position={position}>
-      {/* Here for debugging purposes */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[QUESTION_TEXT_MAX_WIDTH, QUESTION_TEXT_ROWS]} />
-          <meshBasicMaterial color="#000" transparent={true} opacity={0.1} />
-        </mesh>
-      )} */}
-      <Text
-        color="#000"
-        fontSize={QUESTION_TEXT_FONT_SIZE}
-        anchorX="center"
-        anchorY="middle"
-        textAlign="center"
-        maxWidth={QUESTION_TEXT_WIDTH}
-        rotation={[-Math.PI / 2, 0, 0]}>
-        {text}
-      </Text>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[QUESTION_TEXT_WIDTH, QUESTION_TEXT_HEIGHT]} />
+        <meshBasicMaterial
+          map={canvasState?.texture ?? null}
+          transparent={true}
+          depthTest={true}
+          depthWrite={false}
+        />
+      </mesh>
     </group>
   )
 })

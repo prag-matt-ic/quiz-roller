@@ -11,12 +11,12 @@ import * as THREE from 'three'
 import backgroundImage from '@/assets/textures/background-2.jpg'
 import Player from '@/components/player/Player'
 import Terrain from '@/components/terrain/Terrain'
+import { useDebugStore } from '@/stores/useDebugStore'
 
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { useGameStore } from './GameProvider'
 import { Stage } from './GameProvider'
-import { useDebugStore } from '@/stores/useDebugStore'
 import OutOfBounds from './terrain/OutOfBounds'
 
 gsap.registerPlugin(useGSAP)

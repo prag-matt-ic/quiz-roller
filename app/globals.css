@@ -66,14 +66,4 @@ h6 {
 }
 
 @layer components {
-  .custom-range-slider {
-    &::-webkit-slider-thumb {
-      appearance: none;
-      @apply h-5 w-5 cursor-pointer rounded-full bg-transparent;
-    }
-
-    &::-moz-range-thumb {
-      @apply h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent;
-    }
-  }
 }
