@@ -44,7 +44,7 @@ Comment judiciously – write code that is self‑explanatory; when comments are
 
 Use `size-[x]` for square/circle shapes instead of separate `h-[x]` and `w-[x]`.
 
-When concatenating classes, use `twJoin` or `twMerge` from 'tailwind-merge'. Prefer `twJoin` when all classes are defined within a component (no conflicts). Use `twMerge` when merging external props with internal classes that might conflict.
+**When concatenating class strings**, use `twJoin` or `twMerge` from 'tailwind-merge'. Prefer `twJoin` when all classes are defined within a component (no conflicts). Use `twMerge` when merging external props with internal classes that might conflict.
 
 Examples:
 

@@ -4,9 +4,10 @@ precision highp float;
 #pragma glslify: rotate = require(glsl-rotate/rotate)
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require(../../palette.glsl)
+#pragma glslify: paletteRange = require(../../paletteRange.glsl)
 
 uniform float uTime;
-uniform float uColourRange; // [0,1] palette parameter
+uniform int uPlayerColourIndex; // 0,1,2: selected palette band
 uniform sampler2D uNormalMap;
 uniform float uNormalScale;
 uniform vec3 uAxis;  // world rotation axis (normalized)
@@ -30,7 +31,7 @@ const float SPECULAR_STRENGTH = 0.4;
 const int   RM_STEPS = 80;       // Marching steps
 const float RM_OPACITY = 0.6;    // Final opacity scale for emission
 const float RM_ABSORB = 20.0;   // Beer-Lambert absorption
-const float RM_BRIGHT = 1.0;     // Emission brightness
+const float RM_BRIGHT = 0.2;     // Emission brightness
 const float NOISE_SCALE = 0.6;   // Base noise frequency (normalized space)
 const float NOISE_STRENGTH = 0.8;// Modulation of density
 const float BLOB_RADIUS = 1.0;   // Radius in normalized space (1.0 = sphere radius)
@@ -52,15 +53,6 @@ vec3 perturbNormal() {
   mat3 TBN = mat3(T, B, N);
 
   return normalize(TBN * mapN);
-}
-
-// Compute palette range bounds without branching
-void paletteRange(float range, out float minV, out float maxV) {
-  float isLow = step(range, 0.35);
-  float isMid = step(0.35, range) * step(range, 0.65);
-  float isHigh = step(0.65, range);
-  minV = isLow * 0.0 + isMid * 0.25 + isHigh * 0.5;
-  maxV = isLow * 0.5 + isMid * 0.75 + isHigh * 1.0;
 }
 
 // Ray-sphere intersection; returns near/far along ray if hit
@@ -96,7 +88,7 @@ vec4 raymarchMarbleVolume(
   in vec3 axis,
   in float angle,
   in float time,
-  in float colourRange
+  in int colourIndex
 ) {
   float t0, t1;
   if (!sphereRayBounds(ro, rd, center, radius, t0, t1)) return vec4(0.0);
@@ -109,7 +101,7 @@ vec4 raymarchMarbleVolume(
 
   // Palette bounds
   float rangeMin, rangeMax;
-  paletteRange(colourRange, rangeMin, rangeMax);
+  paletteRange(colourIndex, rangeMin, rangeMax);
 
   for (int i = 0; i < RM_STEPS; i++) {
     vec3 p = ro + rd * t;          // world-space sample
@@ -165,7 +157,7 @@ void main() {
   float n = noise(normalize(vLocalPos) * 0.3 + uTime * 0.08);
   float noiseValue = n * 0.5 + 0.5;
 
-  float minV, maxV; paletteRange(uColourRange, minV, maxV);
+  float minV, maxV; paletteRange(uPlayerColourIndex, minV, maxV);
   float t = mix(minV, maxV, noiseValue);
   vec3 baseColor = getColourFromPalette(t);
 
@@ -182,7 +174,7 @@ void main() {
   float worldRadius = length(vWorldPos - worldCenter);
   vec3 ro = cameraPosition;
   vec3 rd = normalize(vWorldPos - cameraPosition);
-  vec4 emission = raymarchMarbleVolume(ro, rd, worldCenter, worldRadius, uAxis, uAngle, uTime, uColourRange);
+  vec4 emission = raymarchMarbleVolume(ro, rd, worldCenter, worldRadius, uAxis, uAngle, uTime, uPlayerColourIndex);
 
   // Combine surface and emission (additive glow)
   vec3 finalColor = litSurface + emission.rgb;

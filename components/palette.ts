@@ -94,3 +94,28 @@ export function getPaletteHex(t: number): string {
 export function getPaletteCss(t: number): string {
   return rgbToCss(getColourFromPalette(t))
 }
+
+// ---------------- Colour Range UI helpers ----------------
+// IMPORTANT: If you edit these ranges, also update the GLSL counterpart
+// in `components/paletteRange.glsl` (paletteRange function) so UI and shaders
+// stay in sync.
+
+export type ColourRange = { min: number; max: number; center: number }
+
+export const GRADIENT_STEPS = 8
+
+// Keep these in sync with paletteRange.glsl
+export const COLOUR_RANGES: readonly ColourRange[] = [
+  { min: 0.0, max: 0.4, center: 0.2 },
+  { min: 0.3, max: 0.7, center: 0.5 },
+  { min: 0.6, max: 1.0, center: 0.8 },
+] as const
+
+// Pre-compute gradient stops for each range
+export const GRADIENT_STOPS: readonly string[] = COLOUR_RANGES.map((range) => {
+  return Array.from({ length: GRADIENT_STEPS }, (_, i) => {
+    const t = range.min + (i / (GRADIENT_STEPS - 1)) * (range.max - range.min)
+    const pos = (i / (GRADIENT_STEPS - 1)) * 100
+    return `${getPaletteHex(t)} ${pos.toFixed(1)}%`
+  }).join(', ')
+})

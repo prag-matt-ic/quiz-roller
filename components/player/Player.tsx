@@ -34,7 +34,7 @@ const EPSILON = 1e-6 // Small value to prevent division by zero
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
-  const playerColour = useGameStore((s) => s.playerColour)
+  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
   const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
@@ -100,7 +100,9 @@ const Player: FC = () => {
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
-    playerShaderRef.current.uColourRange = playerColour
+    // Sync selected colour band index to shader
+    const idx = Math.max(0, Math.min(2, Math.round(playerColourIndex)))
+    playerShaderRef.current.uPlayerColourIndex = idx
 
     // Don't update during splash screen
     if (stage === Stage.SPLASH) return

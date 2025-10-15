@@ -6,14 +6,14 @@ import { type FC, useCallback, useRef } from 'react'
 import { Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
-import { getPaletteHex } from '@/components/palette'
+import { COLOUR_RANGES, getPaletteHex } from '@/components/palette'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
 
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
-  const playerColour = useGameStore((s) => s.playerColour)
+  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
 
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
@@ -50,9 +50,11 @@ const PlayerHUD: FC = () => {
 
   const confirmingContainer = useRef<HTMLDivElement>(null)
 
-  // Generate gradient colors based on player color
-  const colorStart = getPaletteHex(playerColour)
-  const colorEnd = getPaletteHex(Math.min(playerColour + 0.25, 1))
+  // Generate gradient colors based on selected colour band
+  const idx = Math.max(0, Math.min(2, Math.round(playerColourIndex)))
+  const range = COLOUR_RANGES[idx]
+  const colorStart = getPaletteHex(range.min)
+  const colorEnd = getPaletteHex(range.max)
 
   return (
     <Html

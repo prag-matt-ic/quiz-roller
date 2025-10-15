@@ -33,17 +33,9 @@ export type SimFps = 0 | 30 | 60 | 120
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+// - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
-// - MF: Add a "share my score" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 // Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
-
-// DONE:
-// - TW: Correctly reset game state when restarting from game over - (player position, terrain speed, confirmed answers, current question, difficulty, etc)
-// - TW: Persist the user's history personal best for each topic: { topic, correctAnswers: number, distance: number } (create topic enum value. persist store with partialize state).
-// - TW: Update GameOver UI to include this run vs. previous best run - indicating which one was best (e.g is new run, the new best?)
-// - TW: Add trivial player customisation to the splash screen (a slider which changes marble color by adjusting palette input value.).
-
-
 
 type GameState = {
   stage: Stage
@@ -59,8 +51,8 @@ type GameState = {
   isMuted: boolean
   setIsMuted: (muted: boolean) => void
 
-  playerColour: number // palette parameters
-  setPlayerColour: (palette: number) => void
+  playerColourIndex: number // selected colour band index (0,1,2)
+  setPlayerColourIndex: (index: number) => void
 
   confirmationProgress: number // [0, 1]
   playerPosition: { x: number; y: number; z: number }
@@ -116,7 +108,7 @@ const INITIAL_STATE: Pick<
   | 'distanceRows'
   | 'simFps'
   | 'isMuted'
-  | 'playerColour'
+  | 'playerColourIndex'
   | 'personalBests'
   | 'currentRunStats'
   | 'isNewPersonalBest'
@@ -140,7 +132,7 @@ const INITIAL_STATE: Pick<
   distanceRows: 0,
   simFps: 0,
   isMuted: true,
-  playerColour: 0.33, // middle
+  playerColourIndex: 1, // middle band index
   currentRunStats: null,
   personalBests: [],
   isNewPersonalBest: false,
@@ -176,7 +168,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
         setSimFps: (fps) => set({ simFps: fps }),
         setIsMuted: (muted) => set({ isMuted: muted }),
-        setPlayerColour: (paletteParam) => set({ playerColour: paletteParam }),
+        setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
         fetchNextQuestionIfNeeded: async () => {
@@ -440,7 +432,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         name: 'quiz-roller',
         partialize: (s) => ({
           personalBests: s.personalBests,
-          playerColour: s.playerColour,
+          playerColour: s.playerColourIndex,
         }),
       },
     ),
