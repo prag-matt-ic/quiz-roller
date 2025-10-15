@@ -18,6 +18,7 @@ import {
   Topic,
   topicQuestion,
 } from '@/model/schema'
+import { selectNextQuestion } from '@/resources/content'
 
 export enum Stage {
   SPLASH = 'splash', // UI - introduction
@@ -28,11 +29,12 @@ export enum Stage {
 }
 
 // Simulation frame-rate limiter. 0 = uncapped (use real delta)
-export type SimFps = 0 | 30 | 60 | 120
-
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+
+// TODO:
+// - TW: history of runs needs to omit the topic question (maybe we can re-structure store for this?)
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 // Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
@@ -42,10 +44,6 @@ type GameState = {
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number // Normalized speed in range [0, 1].
   setTerrainSpeed: (speed: number) => void
-
-  // Debug/testing: simulate fixed-step updates at a target FPS. 0 = uncapped
-  simFps: SimFps
-  setSimFps: (fps: SimFps) => void
 
   // Sound
   isMuted: boolean
@@ -68,7 +66,6 @@ type GameState = {
   currentQuestionIndex: number
   currentQuestion: Question
   questions: Question[]
-  fetchNextQuestionIfNeeded: () => Promise<void>
 
   confirmingAnswer: AnswerUserData | null
   setConfirmingAnswer: (data: AnswerUserData | null) => void
@@ -106,7 +103,6 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'distanceRows'
-  | 'simFps'
   | 'isMuted'
   | 'playerColourIndex'
   | 'personalBests'
@@ -130,7 +126,6 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
-  simFps: 0,
   isMuted: true,
   playerColourIndex: 1, // middle band index
   currentRunStats: null,
@@ -139,21 +134,9 @@ const INITIAL_STATE: Pick<
   previousPersonalBest: null,
 }
 
-type CreateStoreParams = {
-  fetchQuestion: ({
-    topic,
-    previousQuestions,
-    difficulty,
-  }: {
-    topic: Topic
-    previousQuestions: Question[]
-    difficulty: number
-  }) => Promise<Question>
-}
-
 const CONFIRMATION_DURATION_S = 3
 
-const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
+const createGameStore = () => {
   let speedTween: GSAPTween | null = null
   const speedTweenTarget = { value: 0 }
   let confirmationTween: GSAPTween | null = null
@@ -166,38 +149,13 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
         ...INITIAL_STATE,
         setPlayerPosition: (pos) => set({ playerPosition: pos }),
         setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
-        setSimFps: (fps) => set({ simFps: fps }),
         setIsMuted: (muted) => set({ isMuted: muted }),
         setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
-        fetchNextQuestionIfNeeded: async () => {
-          const { topic, questions, currentQuestionIndex } = get()
-          // Can't fetch questions until topic is set (after first answer)
-          if (!topic) return
-
-          console.warn('fetchNextQuestionIfNeeded called')
-
-          // Only fetch if we don't have enough buffer (less than 2 questions ahead of current index)
-          const questionsAhead = questions.length - 1 - currentQuestionIndex // -1 to exclude topic question
-          if (questionsAhead >= 2) return
-
-          console.warn('Fetching next question...')
-
-          const nextQuestion = await fetchQuestion({
-            topic,
-            previousQuestions: questions.slice(1), // Exclude topic question
-            difficulty: Math.min(questions.length, 10), // Increase difficulty with each question
-          })
-          console.warn('New question received:', nextQuestion)
-          set((s) => ({
-            questions: [...s.questions, nextQuestion],
-          }))
-        },
         setConfirmingAnswer: (data: AnswerUserData | null) => {
-          if (!data) {
+          const cancelConfirmation = () => {
             set({ confirmingAnswer: null })
-            // Animate confirmation progress back to 0
             confirmationTween?.kill()
             confirmationTween = gsap.to(confirmationTweenTarget, {
               duration: 0.4,
@@ -207,30 +165,37 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
                 set({ confirmationProgress: confirmationTweenTarget.value })
               },
             })
-            return
           }
-          const { confirmedAnswers: answers, onAnswerConfirmed } = get()
-          if (answers.find((a) => a.questionId === data.questionId)) {
-            console.warn('Answer already confirmed for this question:', data)
-            return
+
+          const startConfirmation = (data: AnswerUserData) => {
+            const { confirmedAnswers: answers, onAnswerConfirmed } = get()
+            const hasAlreadyAnswered = answers.find((a) => a.questionId === data.questionId)
+            if (hasAlreadyAnswered) return
+
+            set({ confirmingAnswer: data })
+            // Animate confirmation progress from 0 to 1
+            confirmationTween?.kill()
+            confirmationTween = gsap.to(confirmationTweenTarget, {
+              duration: CONFIRMATION_DURATION_S,
+              ease: 'none',
+              value: 1,
+              onUpdate: () => {
+                set({ confirmationProgress: confirmationTweenTarget.value })
+              },
+              onComplete: () => {
+                if (!!get().confirmingAnswer) onAnswerConfirmed()
+              },
+            })
           }
-          set({ confirmingAnswer: data })
-          // Animate confirmation progress from 0 to 1
-          confirmationTween?.kill()
-          confirmationTween = gsap.to(confirmationTweenTarget, {
-            duration: CONFIRMATION_DURATION_S,
-            ease: 'none',
-            value: 1,
-            onUpdate: () => {
-              set({ confirmationProgress: confirmationTweenTarget.value })
-            },
-            onComplete: () => {
-              if (!!get().confirmingAnswer) onAnswerConfirmed()
-            },
-          })
+
+          if (data === null) {
+            cancelConfirmation()
+          } else {
+            startConfirmation(data)
+          }
         },
         onAnswerConfirmed: async () => {
-          const { confirmingAnswer, goToStage, fetchNextQuestionIfNeeded } = get()
+          const { confirmingAnswer, goToStage } = get()
           if (!confirmingAnswer) {
             console.error('No answer selected to confirm')
             return
@@ -261,7 +226,6 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
             topic: s.topic! ?? confirmingAnswer.answer.text, // 1st correct answer becomes the topic
           }))
           goToStage(Stage.TERRAIN)
-          fetchNextQuestionIfNeeded()
         },
 
         getPersonalBest: (topic: Topic) =>
@@ -299,8 +263,7 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
 
           // keep persisted PBs, reset everything else
           const keepPB = get().personalBests
-          set({ ...INITIAL_STATE, personalBests: keepPB })
-          set((s) => ({ resetTick: s.resetTick + 1 }))
+          set((s) => ({ ...INITIAL_STATE, personalBests: keepPB, resetTick: s.resetTick + 1 }))
         },
 
         goToStage: (stage: Stage) => {
@@ -327,19 +290,36 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
           }
 
           if (stage === Stage.QUESTION) {
+            const currentQuestionIndex = get().currentQuestionIndex
+            const newQuestionIndex = currentQuestionIndex + 1
             // Speed deceleration is handled in Terrain.tsx, synchronized with row raising
             // Increment question index and update current question
-            set((s) => {
-              const newIndex = s.currentQuestionIndex + 1
-              const newQuestion = s.questions[newIndex] || s.currentQuestion
-              return {
+            if (newQuestionIndex === 0) {
+              set({
                 stage: Stage.QUESTION,
-                currentQuestionIndex: newIndex,
-                currentQuestion: newQuestion,
+                currentQuestionIndex: newQuestionIndex,
+                currentQuestion: topicQuestion,
+                questions: [topicQuestion],
+              })
+            } else {
+              const questions = get().questions
+              const askedIds = new Set<string>(questions.slice(1).map((q) => q.id))
+              const newQuestion = selectNextQuestion({
+                topic: get().topic!,
+                currentDifficulty: get().currentDifficulty,
+                askedIds: askedIds,
+              })
+              if (!newQuestion) {
+                console.error('No more questions available for topic:', get().topic)
+                return
               }
-            })
-            // Fetch next question to maintain buffer
-            get().fetchNextQuestionIfNeeded()
+              set({
+                stage: Stage.QUESTION,
+                currentQuestionIndex: newQuestionIndex,
+                currentQuestion: newQuestion,
+                questions: [...questions, newQuestion],
+              })
+            }
             return
           }
 
@@ -439,10 +419,10 @@ const createGameStore = ({ fetchQuestion }: CreateStoreParams) => {
   )
 }
 
-type Props = PropsWithChildren<CreateStoreParams>
+type Props = PropsWithChildren
 
-export const GameProvider: FC<Props> = ({ children, ...storeParams }) => {
-  const store = useRef<GameStore>(createGameStore(storeParams))
+export const GameProvider: FC<Props> = ({ children }) => {
+  const store = useRef<GameStore>(createGameStore())
 
   useEffect(() => {
     return () => {

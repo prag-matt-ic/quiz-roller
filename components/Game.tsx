@@ -16,6 +16,7 @@ import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { useGameStore } from './GameProvider'
 import { Stage } from './GameProvider'
+import { useDebugStore } from '@/stores/useDebugStore'
 import OutOfBounds from './terrain/OutOfBounds'
 
 gsap.registerPlugin(useGSAP)
@@ -24,7 +25,7 @@ gsap.registerPlugin(useGSAP)
 const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 
 const Game: FC = () => {
-  const simFps = useGameStore((s) => s.simFps)
+  const simFps = useDebugStore((s) => s.simFps)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
   const resetTick = useGameStore((s) => s.resetTick)
   return (

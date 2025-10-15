@@ -28,3 +28,5 @@ Use the following Clean Code Checklist to review and refactor the current file's
 - [ ] Avoid creating expensive objects/classes in loops or animation frames - reuse objects where sensible to reduce garbage collection. For example: never create a new Vector3() inside useFrame().
 
 - [ ] Review imports and ensure that types/interfaces are imported as types (e.g import { type MyType } from '...' ). Remove any unused imports.
+
+- [ ] For event handlers, use the on[Subject][Action] naming convention (e.g. onGameOverClick).

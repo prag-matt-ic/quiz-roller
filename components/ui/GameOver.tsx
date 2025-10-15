@@ -17,6 +17,8 @@ const BADGE_ID = 'record-badge'
 
 const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
+  const goToStage = useGameStore((s) => s.goToStage)
+  const resetGame = useGameStore((s) => s.resetGame)
 
   const gameOver = useGameStore(
     useShallow((s) => ({
@@ -24,8 +26,6 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
       currentRun: s.currentRunStats,
       prevPB: s.previousPersonalBest,
       isNewPB: s.isNewPersonalBest,
-      goToStage: s.goToStage,
-      resetGame: s.resetGame,
     })),
   )
 
@@ -83,13 +83,16 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
     },
   )
 
-  const handleRollAgain = () => {
-    // Reset game state first
-    gameOver.resetGame()
+  const onRollAgainClick = () => {
+    resetGame()
     // Small delay to ensure reset completes before starting intro
     setTimeout(() => {
-      gameOver.goToStage(Stage.INTRO)
+      goToStage(Stage.INTRO)
     }, 100)
+  }
+
+  const onExitToMenuClick = () => {
+    goToStage(Stage.SPLASH)
   }
 
   return (
@@ -105,7 +108,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           id={BADGE_ID}
           className={twJoin(
             'heading-md flex items-center justify-center gap-2 rounded-full',
-            'bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize',
+            'bg-amber-500/20 px-4 py-2 text-center font-semibold capitalize text-white',
             'ring-1 ring-amber-400/40',
           )}>
           <AwardIcon /> You&apos;ve set a new record!
@@ -116,7 +119,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         <div className={`${FADE_IN_CLASS} space-y-8 opacity-0`}>
           {/* Topic - spans all three columns */}
           <div className="col-span-3 mx-auto mb-4 w-fit rounded-2xl bg-black/40 p-6 text-center">
-            <span className="text-sm font-semibold tracking-widest text-white/60 uppercase">
+            <span className="text-sm font-semibold uppercase tracking-widest text-white/60">
               Topic
             </span>
             <p className="mt-1 text-xl font-medium md:text-2xl">{gameOver.topic}</p>
@@ -139,7 +142,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           variant="primary"
           color="dark"
           className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={handleRollAgain}>
+          onClick={onRollAgainClick}>
           Roll Again
           <PlayIcon className="size-6" strokeWidth={1.5} />
         </Button>
@@ -147,7 +150,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           variant="secondary"
           color="dark"
           className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={() => gameOver.goToStage(Stage.SPLASH)}>
+          onClick={onExitToMenuClick}>
           Exit to Menu
           <DoorOpen className="size-6" strokeWidth={1.5} />
         </Button>
@@ -182,7 +185,7 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       <h3 className="heading-sm text-white">This Run</h3>
       <h3 className="heading-sm text-white/50">Personal Best</h3>
       {/* Correct answers row */}
-      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
+      <div className="flex items-center text-sm font-semibold uppercase tracking-widest text-white/60">
         Correct Answers
       </div>
       <p
@@ -200,7 +203,7 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
         {personalBest.correctAnswers}
       </p>
       {/* Distance row */}
-      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
+      <div className="flex items-center text-sm font-semibold uppercase tracking-widest text-white/60">
         Distance Travelled
       </div>
       <p
