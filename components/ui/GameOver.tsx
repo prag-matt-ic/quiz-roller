@@ -17,6 +17,8 @@ const BADGE_ID = 'record-badge'
 
 const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
+  const goToStage = useGameStore((s) => s.goToStage)
+  const resetGame = useGameStore((s) => s.resetGame)
 
   const gameOver = useGameStore(
     useShallow((s) => ({
@@ -24,8 +26,6 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
       currentRun: s.currentRunStats,
       prevPB: s.previousPersonalBest,
       isNewPB: s.isNewPersonalBest,
-      goToStage: s.goToStage,
-      resetGame: s.resetGame,
     })),
   )
 
@@ -83,13 +83,16 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
     },
   )
 
-  const handleRollAgain = () => {
-    // Reset game state first
-    gameOver.resetGame()
+  const onRollAgainClick = () => {
+    resetGame()
     // Small delay to ensure reset completes before starting intro
     setTimeout(() => {
-      gameOver.goToStage(Stage.INTRO)
+      goToStage(Stage.INTRO)
     }, 100)
+  }
+
+  const onExitToMenuClick = () => {
+    goToStage(Stage.SPLASH)
   }
 
   return (
@@ -134,12 +137,12 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           />
         </div>
       )}
-      <div className="mt-4 flex gap-4">
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row">
         <Button
           variant="primary"
           color="dark"
           className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={handleRollAgain}>
+          onClick={onRollAgainClick}>
           Roll Again
           <PlayIcon className="size-6" strokeWidth={1.5} />
         </Button>
@@ -147,7 +150,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           variant="secondary"
           color="dark"
           className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={() => gameOver.goToStage(Stage.SPLASH)}>
+          onClick={onExitToMenuClick}>
           Exit to Menu
           <DoorOpen className="size-6" strokeWidth={1.5} />
         </Button>

@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const baseStyles =
-  'flex w-fit cursor-pointer items-center justify-center gap-3 rounded-full px-6 py-3 text-lg font-[600] backdrop-blur-sm'
+  'flex w-fit cursor-pointer uppercase items-center justify-center gap-3 rounded-full px-8 py-3 text-lg font-[600] backdrop-blur-sm'
 
 const colorStyles = {
   light: {
@@ -20,9 +20,9 @@ const colorStyles = {
   },
   dark: {
     primary:
-      'border border-black/20 bg-linear-90 from-black/60 to-black/30 text-white shadow-xl shadow-black/20 backdrop-blur-sm hover:from-black/70 hover:to-black/40',
+      'border border-black/20 bg-linear-90 from-black/70 to-black/30 text-white shadow-xl shadow-black/20 backdrop-blur-sm hover:from-black/70 hover:to-black/40',
     secondary:
-      'border border-black/5 bg-black/20 text-white/70 backdrop-blur-sm hover:bg-black/30 hover:text-white',
+      'border border-black/20 bg-black/30 text-white/80 backdrop-blur-sm hover:bg-black/40 hover:text-white',
   },
 }
 

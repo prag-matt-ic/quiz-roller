@@ -2,13 +2,13 @@
 
 import { type FC, useEffect } from 'react'
 
-import { SimFps, useGameStore } from '@/components/GameProvider'
+import { type SimFps, useDebugStore } from '@/stores/useDebugStore'
 
 // Minimal debug helper: press "F" to cycle simulation FPS (0 -> 30 -> 60 -> 120 -> 0)
 // No UI; logs to console. Keeps code changes small and contained.
 const SimFpsHotkeys: FC = () => {
-  const simFps = useGameStore((s) => s.simFps)
-  const setSimFps = useGameStore((s) => s.setSimFps)
+  const simFps = useDebugStore((s) => s.simFps)
+  const setSimFps = useDebugStore((s) => s.setSimFps)
 
   useEffect(() => {
     const sequence: SimFps[] = [0, 30, 60, 120]
