@@ -1,24 +1,22 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame, useThree } from '@react-three/fiber'
 import React, { type FC, useEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, DataTexture, Points, Texture } from 'three'
+import { DataTexture, Matrix3, Matrix4, Points, Texture, Vector3 } from 'three'
 import {
   GPUComputationRenderer,
   type Variable,
 } from 'three/addons/misc/GPUComputationRenderer.js'
 
-import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
-import { Stage, useGameStore } from '../GameProvider'
+import { Stage, useGameStore } from '../../GameProvider'
 import particleFragment from './points/point.frag'
 import particleVertex from './points/point.vert'
 import positionFragmentShader from './simulation/position.frag'
 import velocityFragmentShader from './simulation/velocity.frag'
 
-// NOTE IMPORTANT: this is not fully implemented in this project, will be updated in the future.
-
 /**
- * TunnelParticles - GPU-computed particle system for tunnel atmosphere
+ * Confetti Particles - GPU-computed particle burst for AnswerTile
  *
  * This component creates flowing particles that move through the tunnel using a dual-texture
  * GPU computation approach for high performance and organic movement.
@@ -32,14 +30,13 @@ import velocityFragmentShader from './simulation/velocity.frag'
  * ## Simulation Flow:
  * 1. **Velocity Shader**: Updates particle velocities with noise-based forces, damping, and momentum
  * 2. **Position Shader**: Updates particle positions using velocity data for smooth movement
- * 3. **Lifecycle**: Particles spawn at tunnel rear (-40 to -60z), flow toward camera, respawn when behind player
+ * 3. **Lifecycle**: Particles remain idle and invisible until triggered, then burst upward and fade out
  *
  * ## Key Features:
- * - Particles spawn within tunnel radius (6.0m) using polar coordinates
- * - Velocity-based movement allows for organic flowing patterns
- * - Noise functions create natural swirling and turbulence effects
- * - Performance scales with device capability (fewer particles on mobile)
- * - Proper depth sorting and additive blending for atmospheric effect
+ * - Burst emits from the local AnswerTile plane surface (y=spawnY)
+ * - Upward velocity with lateral randomness and gravity
+ * - Fade-in/out via life parameter; no respawn after burst
+ * - Small fixed particle count (64) for a crisp, celebratory effect
  *
  * ## Performance:
  * - Mobile: 24² = 576 particles
@@ -56,16 +53,21 @@ type PointsShaderUniforms = {
 
 type PositionShaderUniforms = {
   uIsIdle: { value: boolean }
+  uSpawnBurst: { value: boolean }
   uTime: { value: number }
   uDeltaTime: { value: number }
-  uTerrainSpeed: { value: number }
+  uTileWidth: { value: number }
+  uTileHeight: { value: number }
+  uSpawnY: { value: number }
+  uParentDeltaLocal: { value: Vector3 }
 }
 
 type VelocityShaderUniforms = {
   uIsIdle: { value: boolean }
+  uSpawnBurst: { value: boolean }
   uTime: { value: number }
   uDeltaTime: { value: number }
-  uTerrainSpeed: { value: number }
+  uPlayerPos: { value: Vector3 }
 }
 
 const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
@@ -83,18 +85,22 @@ const CustomPointsShaderMaterial = shaderMaterial(
 const PointsShaderMaterial = extend(CustomPointsShaderMaterial)
 
 type Props = {
-  isMobile: boolean
+  // Confetti plane size (AnswerTile width/height)
+  width: number
+  height: number
+  // Trigger the burst once when this flips from false -> true
+  active: boolean
+  // Optional local spawn height (y). Defaults to 0 (tile surface)
+  spawnY?: number
 }
 
-const Particles: FC<Props> = ({ isMobile }) => {
+const Particles: FC<Props> = ({ width, height, active, spawnY = 0 }) => {
   const dpr = useThree((s) => s.viewport.dpr)
   const performance = useThree((s) => s.performance).current
   const renderer = useThree((s) => s.gl)
 
-  const particlesCount = useMemo(
-    () => Math.pow(isMobile ? 12 : 40 * performance, 2),
-    [isMobile, performance],
-  )
+  // Fixed 64-particle burst (8x8 texture)
+  const particlesCount = 64
   const points = useRef<Points>(null)
   const pointsShaderMaterial = useRef<typeof PointsShaderMaterial & PointsShaderUniforms>(null)
   const textureSize = useMemo(() => Math.sqrt(particlesCount), [particlesCount])
@@ -107,8 +113,21 @@ const Particles: FC<Props> = ({ isMobile }) => {
   const velocityUniforms = useRef<VelocityShaderUniforms | null>(null)
 
   const isPlaying = useGameStore((s) => s.stage !== Stage.SPLASH)
-  const { terrainSpeed } = useTerrainSpeed()
   const accumTime = useRef(0)
+  const hasBurst = useRef(false)
+  const lastActive = useRef(false)
+  // Player position transforms
+  const worldPlayer = useRef(new Vector3())
+  const localPlayer = useRef(new Vector3())
+  const invWorld = useRef(new Matrix4())
+  const invRot = useRef(new Matrix3())
+  const prevWorld = useRef(new Vector3())
+  const currWorld = useRef(new Vector3())
+  const deltaWorld = useRef(new Vector3())
+  const deltaLocal = useRef(new Vector3())
+  usePlayerPosition((p) => {
+    worldPlayer.current.set(p.x, p.y, p.z)
+  })
 
   // ------------------
   // PARTICLE GEOMETRY SETUP
@@ -152,6 +171,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
       // Create initial textures
       const dtPosition = gpuCompute.current.createTexture()
       const dtVelocity = gpuCompute.current.createTexture()
+      // Initialize all particles as idle/invisible (life=0, zero velocity)
       fillPositionTexture(dtPosition)
       fillVelocityTexture(dtVelocity)
 
@@ -182,9 +202,13 @@ const Particles: FC<Props> = ({ isMobile }) => {
         .uniforms as PositionShaderUniforms
       if (positionUniforms.current) {
         positionUniforms.current.uIsIdle = { value: true }
+        positionUniforms.current.uSpawnBurst = { value: false }
         positionUniforms.current.uTime = { value: 0.0 }
         positionUniforms.current.uDeltaTime = { value: 0.016 }
-        positionUniforms.current.uTerrainSpeed = { value: 0.0 }
+        positionUniforms.current.uTileWidth = { value: width }
+        positionUniforms.current.uTileHeight = { value: height }
+        positionUniforms.current.uSpawnY = { value: spawnY }
+        positionUniforms.current.uParentDeltaLocal = { value: deltaLocal.current }
       }
 
       // Set velocity uniforms
@@ -192,9 +216,10 @@ const Particles: FC<Props> = ({ isMobile }) => {
         .uniforms as VelocityShaderUniforms
       if (velocityUniforms.current) {
         velocityUniforms.current.uIsIdle = { value: true }
+        velocityUniforms.current.uSpawnBurst = { value: false }
         velocityUniforms.current.uTime = { value: 0.0 }
         velocityUniforms.current.uDeltaTime = { value: 0.016 }
-        velocityUniforms.current.uTerrainSpeed = { value: 0.0 }
+        velocityUniforms.current.uPlayerPos = { value: localPlayer.current }
       }
 
       // Initialize GPU compute
@@ -203,7 +228,7 @@ const Particles: FC<Props> = ({ isMobile }) => {
     } catch (error) {
       console.error('Error initializing TunnelParticles GPUComputationRenderer:', error)
     }
-  }, [renderer, textureSize, seeds])
+  }, [renderer, textureSize, seeds, width, height, spawnY])
 
   useFrame((_, delta) => {
     if (
@@ -219,17 +244,48 @@ const Particles: FC<Props> = ({ isMobile }) => {
     accumTime.current += delta
     const time = accumTime.current
 
+    // Detect rising edge to trigger one-frame spawn
+    const justActivated = active && !lastActive.current && !hasBurst.current
+    lastActive.current = active
+    if (justActivated) hasBurst.current = true
+
+    // On first frame, initialize previous world position for delta compute
+    if (points.current && accumTime.current === delta) {
+      points.current.getWorldPosition(prevWorld.current)
+    }
+
     // Update position uniforms
-    positionUniforms.current.uIsIdle.value = !isPlaying
+    positionUniforms.current.uIsIdle.value = !isPlaying || !active
+    positionUniforms.current.uSpawnBurst.value = justActivated
     positionUniforms.current.uTime.value = time
     positionUniforms.current.uDeltaTime.value = delta
-    positionUniforms.current.uTerrainSpeed.value = terrainSpeed.current
+    positionUniforms.current.uTileWidth.value = width
+    positionUniforms.current.uTileHeight.value = height
+    positionUniforms.current.uSpawnY.value = spawnY
+    // Parent world delta -> emitter local delta compensation
+    if (points.current) {
+      // sample current world position of points origin
+      points.current.getWorldPosition(currWorld.current)
+      // compute delta in world
+      deltaWorld.current.copy(currWorld.current).sub(prevWorld.current)
+      prevWorld.current.copy(currWorld.current)
+      // compute inverse rotation
+      invWorld.current.copy(points.current.matrixWorld).invert()
+      invRot.current.setFromMatrix4(invWorld.current)
+      // transform delta into local (ignore translation)
+      deltaLocal.current.copy(deltaWorld.current).applyMatrix3(invRot.current)
+    }
 
     // Update velocity uniforms
-    velocityUniforms.current.uIsIdle.value = !isPlaying
+    velocityUniforms.current.uIsIdle.value = !isPlaying || !active
+    velocityUniforms.current.uSpawnBurst.value = justActivated
     velocityUniforms.current.uTime.value = time
     velocityUniforms.current.uDeltaTime.value = delta
-    velocityUniforms.current.uTerrainSpeed.value = terrainSpeed.current
+    // Transform player world position into this emitter's local space
+    if (points.current) {
+      invWorld.current.copy(points.current.matrixWorld).invert()
+      localPlayer.current.copy(worldPlayer.current).applyMatrix4(invWorld.current)
+    }
 
     // Compute the simulation
     gpuCompute.current.compute()
@@ -245,7 +301,12 @@ const Particles: FC<Props> = ({ isMobile }) => {
   })
 
   return (
-    <points ref={points} dispose={null} frustumCulled={false} renderOrder={-1}>
+    <points
+      ref={points}
+      dispose={null}
+      frustumCulled={false}
+      // Cancel parent -PI/2 rotation from AnswerTile so Y = world up
+      rotation={[Math.PI / 2, 0, 0]}>
       <bufferGeometry attach="geometry">
         <bufferAttribute
           attach="attributes-position"
@@ -267,7 +328,6 @@ const Particles: FC<Props> = ({ isMobile }) => {
         {...INITIAL_POINTS_UNIFORMS}
         transparent={true}
         depthTest={false}
-        // blending={AdditiveBlending}
         uDpr={dpr}
       />
     </points>
@@ -281,17 +341,11 @@ const fillPositionTexture = (texturePosition: DataTexture) => {
   const posArray = texturePosition.image.data as Float32Array
 
   for (let k = 0, kl = posArray.length; k < kl; k += 4) {
-    // Spawn inside a wide, short box above terrain (terrain at y=0)
-    // X in [-6, 6] (width ~12), Y in [0.5, 4.5] (height ~4), Z in [-60, -40]
-    const x = -6 + Math.random() * 12
-    const y = Math.random() * 8.0
-    const z = Math.random() * 40
-
-    // Position (xyz) and life (w)
-    posArray[k + 0] = x
-    posArray[k + 1] = y
-    posArray[k + 2] = z
-    posArray[k + 3] = 0.8 + Math.random() * 0.2 // Start with fairly high life
+    // Idle state: all particles invisible with zero life
+    posArray[k + 0] = 0
+    posArray[k + 1] = 0
+    posArray[k + 2] = 0
+    posArray[k + 3] = 0 // life=0 -> fully invisible until burst
   }
 
   texturePosition.needsUpdate = true
@@ -302,16 +356,11 @@ const fillVelocityTexture = (textureVelocity: DataTexture) => {
   const velArray = textureVelocity.image.data as Float32Array
 
   for (let k = 0, kl = velArray.length; k < kl; k += 4) {
-    // Initial velocity - primarily towards camera with some variation
-    const vx = (Math.random() - 0.5) * 4.0 // Small X variation
-    const vy = (Math.random() - 0.5) * 4.0 // Small Y variation
-    const vz = 15.0 + Math.random() * 10.0 // Base speed towards camera with variation
-
-    // Velocity (xyz) and unused (w)
-    velArray[k + 0] = vx
-    velArray[k + 1] = vy
-    velArray[k + 2] = vz
-    velArray[k + 3] = 1.0 // Unused
+    // Idle state: zero velocity
+    velArray[k + 0] = 0
+    velArray[k + 1] = 0
+    velArray[k + 2] = 0
+    velArray[k + 3] = 0
   }
 
   textureVelocity.needsUpdate = true

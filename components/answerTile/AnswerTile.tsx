@@ -6,6 +6,7 @@ import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { forwardRef, useMemo, useRef } from 'react'
 import { CanvasTexture, type Vector3Tuple } from 'three'
 
+import Particles from '@/components/answerTile/particles/Particles'
 import { useGameStore } from '@/components/GameProvider'
 import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
@@ -154,6 +155,14 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
             uTextTexture={canvasState?.texture ?? null}
           />
         </mesh>
+        {/* Confetti burst when this answer is confirmed */}
+        <Particles
+          width={ANSWER_TILE_WIDTH}
+          height={ANSWER_TILE_HEIGHT}
+          // Spawn on tile surface (world Y)
+          spawnY={0}
+          active={wasConfirmed}
+        />
       </RigidBody>
     )
   },
