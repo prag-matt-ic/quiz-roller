@@ -20,6 +20,23 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
 
   useGSAP(
     () => {
+      if (transitionStatus === 'entering') {
+        gsap
+          .timeline({ delay: 0.6 })
+          .fromTo(
+            'h1',
+            { y: -40, opacity: 0, scale: 1.2 },
+            { y: 0, opacity: 1, duration: 0.32, scale: 1.0, ease: 'power1.out' },
+          )
+          .fromTo('#colour-select', { opacity: 0 }, { opacity: 1, duration: 0.4 })
+          .fromTo(
+            '.splash-button',
+            { y: 32, opacity: 0 },
+            { y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: 'power1.out' },
+            '-=0.3',
+          )
+      }
+
       if (transitionStatus === 'exiting') {
         gsap
           .timeline()
@@ -64,6 +81,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
           <Button
             variant="secondary"
             color="dark"
+            className="splash-button"
             aria-label="Start in silence"
             onClick={() => onStartClick(true)}>
             <VolumeXIcon className="size-5" strokeWidth={2} />
@@ -73,6 +91,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
           <Button
             variant="primary"
             color="dark"
+            className="splash-button"
             aria-label="Start with sounds"
             onClick={() => onStartClick(false)}>
             <PlayIcon className="size-5" strokeWidth={2} />

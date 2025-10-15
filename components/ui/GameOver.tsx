@@ -1,7 +1,7 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { DoorOpen, PlayIcon } from 'lucide-react'
+import { AwardIcon, DoorOpen, PlayIcon } from 'lucide-react'
 import { type FC, useRef } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 import { useShallow } from 'zustand/react/shallow'
@@ -98,7 +98,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         <h3
           id="record-badge"
           className="heading-md my-4 flex items-center justify-center gap-2 rounded-full bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize ring-1 ring-amber-400/40">
-          🏆 You’ve set a new record! 🏆
+          <AwardIcon /> You&apos;ve set a new record!
         </h3>
       )}
       {/* Results grid */}
@@ -127,16 +127,18 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
       <div className="mt-4 flex gap-4">
         <Button
           variant="primary"
+          color="dark"
           className="game-over-fade-in capitalize opacity-0"
           onClick={handleRollAgain}>
-          roll again
+          Roll again
           <PlayIcon className="size-6" strokeWidth={1.5} />
         </Button>
         <Button
           variant="secondary"
+          color="dark"
           className="game-over-fade-in capitalize opacity-0"
           onClick={() => gameOver.goToStage(Stage.SPLASH)}>
-          exit to menu
+          Exit to menu
           <DoorOpen className="size-6" strokeWidth={1.5} />
         </Button>
       </div>
@@ -164,9 +166,7 @@ const LevelStats: FC<LevelStatsProps> = ({ title, values, highlight }) => {
       <h3 className="heading-md mb-8 text-center tracking-wide text-white/90">{title}</h3>
       {/* Star overlay for PB highlight */}
       {highlight && (
-        <span className="star-pop pointer-events-none absolute top-3 right-3 text-2xl md:top-4 md:right-4 md:text-3xl">
-          ⭐
-        </span>
+        <AwardIcon className="pointer-events-none absolute top-3 right-3 size-7 text-amber-400 md:top-4 md:right-4 md:size-8" />
       )}
 
       <div className="grid grid-cols-2 gap-1 text-center text-white">

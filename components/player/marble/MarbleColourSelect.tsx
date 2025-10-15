@@ -24,7 +24,6 @@ const MarbleColourSelect: FC = () => {
   const playerColour = useGameStore((s) => s.playerColour)
   const setPlayerColour = useGameStore((s) => s.setPlayerColour)
 
-  // Find current range index
   const currentRangeIndex = COLOUR_RANGES.findIndex(
     (range) => playerColour >= range.min && playerColour <= range.max,
   )
@@ -32,7 +31,9 @@ const MarbleColourSelect: FC = () => {
   const value = currentRangeIndex !== -1 ? currentRangeIndex : 0
 
   return (
-    <section className="my-4 flex w-fit flex-col items-center rounded-full bg-black/10 px-8 py-4 backdrop-blur-sm">
+    <section
+      id="colour-select"
+      className="my-4 flex w-fit flex-col items-center rounded-xl px-8 py-4 backdrop-blur-sm">
       <span className="mb-1 block font-semibold text-white">Choose your Marble Colour</span>
 
       <div className="mt-2 flex gap-5">
@@ -41,7 +42,6 @@ const MarbleColourSelect: FC = () => {
           return (
             <button
               key={idx}
-              type="button"
               aria-label={`Select colour range ${idx + 1}`}
               onClick={() => setPlayerColour(range.center)}
               className={twJoin(
