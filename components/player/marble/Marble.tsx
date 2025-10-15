@@ -2,7 +2,7 @@
 
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
-import { forwardRef, type RefObject } from 'react'
+import { forwardRef, type RefObject, Suspense } from 'react'
 import * as THREE from 'three'
 
 import normal from '@/assets/textures/marble/normal.png'
@@ -43,16 +43,18 @@ export const Marble = forwardRef((props: MarbleProps, ref) => {
   return (
     <mesh ref={ref}>
       <sphereGeometry args={[PLAYER_RADIUS, 48, 48]} />
-      <MarbleShaderMaterial
-        key={MarbleShader.key}
-        ref={props.playerShaderRef}
-        uTime={INITIAL_UNIFORMS.uTime}
-        uColourRange={INITIAL_UNIFORMS.uColourRange}
-        uNormalMap={normalMap}
-        uNormalScale={INITIAL_UNIFORMS.uNormalScale}
-        uAxis={INITIAL_UNIFORMS.uAxis}
-        uAngle={INITIAL_UNIFORMS.uAngle}
-      />
+      <Suspense fallback={null}>
+        <MarbleShaderMaterial
+          key={MarbleShader.key}
+          ref={props.playerShaderRef}
+          uTime={INITIAL_UNIFORMS.uTime}
+          uColourRange={INITIAL_UNIFORMS.uColourRange}
+          uNormalMap={normalMap}
+          uNormalScale={INITIAL_UNIFORMS.uNormalScale}
+          uAxis={INITIAL_UNIFORMS.uAxis}
+          uAngle={INITIAL_UNIFORMS.uAngle}
+        />
+      </Suspense>
     </mesh>
   )
 })
