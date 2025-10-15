@@ -518,6 +518,7 @@ const Terrain: FC = () => {
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
     if (!tileShader.current) return
+    if (stage === Stage.GAME_OVER) return
 
     tileShader.current.uScrollZ = currentScrollPosition.current
 

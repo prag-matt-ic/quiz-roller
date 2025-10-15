@@ -30,11 +30,38 @@ const float SPECULAR_STRENGTH = 0.4;
 // -------- Volume constants (tune in-shader) --------
 const int   RM_STEPS = 80;       // Marching steps
 const float RM_OPACITY = 0.6;    // Final opacity scale for emission
-const float RM_ABSORB = 20.0;   // Beer-Lambert absorption
+const float RM_ABSORB = 20.0;    // Beer-Lambert absorption
 const float RM_BRIGHT = 0.2;     // Emission brightness
 const float NOISE_SCALE = 0.6;   // Base noise frequency (normalized space)
 const float NOISE_STRENGTH = 0.8;// Modulation of density
 const float BLOB_RADIUS = 1.0;   // Radius in normalized space (1.0 = sphere radius)
+
+// -------- Volume animation constants --------
+const float TIME_DRIFT_X_SPEED = 0.6;
+const float TIME_DRIFT_X_SCALE = 0.6;
+const float TIME_DRIFT_Y_SPEED = 0.5;
+const float TIME_DRIFT_Y_SCALE = 0.6;
+const float TIME_DRIFT_Z_SPEED = 0.4;
+const float TIME_DRIFT_Z_SCALE = 0.6;
+const float TIME_PULSE_SPEED = 1.0;
+const float PULSE_MIN_SCALE = 0.66;
+const float PULSE_MAX_SCALE = 1.0;
+const float DENSITY_POWER = 2.2;
+const float NOISE_OCTAVE_2_SCALE = 2.0;
+const float NOISE_OCTAVE_2_WEIGHT = 0.5;
+const float NOISE_OCTAVE_2_DRIFT = 1.5;
+const float NOISE_NORMALIZATION = 1.5;
+const float DENSITY_MAX_CLAMP = 1.5;
+const float ALPHA_BREAK_THRESHOLD = 0.98;
+
+// -------- Surface constants --------
+const float NOISE_FREQUENCY = 0.3;
+const float NOISE_TO_RANGE = 0.5;
+const float NOISE_RANGE_OFFSET = 0.5;
+
+// -------- Volume shading constants --------
+const float VOLUME_AMBIENT_STRENGTH = 0.7;
+const float VOLUME_DIFFUSE_STRENGTH = 0.8;
 
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping
@@ -56,33 +83,33 @@ vec3 perturbNormal() {
 }
 
 // Ray-sphere intersection; returns near/far along ray if hit
-bool sphereRayBounds(in vec3 ro, in vec3 rd, in vec3 center, in float radius, out float tNear, out float tFar) {
-  vec3 oc = ro - center;
-  float b = dot(oc, rd);
-  float c = dot(oc, oc) - radius * radius;
-  float h = b * b - c;
-  if (h < 0.0) return false;
-  h = sqrt(h);
-  tNear = -b - h;
-  tFar = -b + h;
+bool sphereRayBounds(in vec3 rayOrigin, in vec3 rayDirection, in vec3 center, in float radius, out float tNear, out float tFar) {
+  vec3 originToCenter = rayOrigin - center;
+  float b = dot(originToCenter, rayDirection);
+  float c = dot(originToCenter, originToCenter) - radius * radius;
+  float discriminant = b * b - c;
+  if (discriminant < 0.0) return false; // no intersection
+  discriminant = sqrt(discriminant);
+  tNear = -b - discriminant;
+  tFar = -b + discriminant;
   if (tFar < 0.0) return false; // sphere behind camera
   tNear = max(tNear, 0.0);
   return tFar > tNear;
 }
 
 // Shade base color slightly for depth
-vec3 shadeVolumeSample(vec3 p, vec3 base) {
-  vec3 n = normalize(p);
-  vec3 l = normalize(vec3(0.3, 0.7, 0.5));
-  float diff = clamp(dot(n, l), 0.0, 1.0);
-  vec3 ambient = base * 0.7;
-  return ambient + base * diff * 0.8;
+vec3 shadeVolumeSample(vec3 position, vec3 baseColor) {
+  vec3 normal = normalize(position);
+  vec3 lightDir = normalize(vec3(0.3, 0.7, 0.5));
+  float diffuse = clamp(dot(normal, lightDir), 0.0, 1.0);
+  vec3 ambient = baseColor * VOLUME_AMBIENT_STRENGTH;
+  return ambient + baseColor * diffuse * VOLUME_DIFFUSE_STRENGTH;
 }
 
 // Integrated volumetric emission inside the sphere in world space
 vec4 raymarchMarbleVolume(
-  in vec3 ro,
-  in vec3 rd,
+  in vec3 rayOrigin,
+  in vec3 rayDirection,
   in vec3 center,
   in float radius,
   in vec3 axis,
@@ -90,76 +117,81 @@ vec4 raymarchMarbleVolume(
   in float time,
   in int colourIndex
 ) {
-  float t0, t1;
-  if (!sphereRayBounds(ro, rd, center, radius, t0, t1)) return vec4(0.0);
+  float tNear, tFar;
+  if (!sphereRayBounds(rayOrigin, rayDirection, center, radius, tNear, tFar)) return vec4(0.0);
 
   // March inside the sphere only
-  float dt = (t1 - t0) / float(RM_STEPS);
-  vec3 accum = vec3(0.0);
-  float alpha = 0.0;
-  float t = t0;
+  float stepSize = (tFar - tNear) / float(RM_STEPS);
+  vec3 accumulatedColor = vec3(0.0);
+  float accumulatedAlpha = 0.0;
+  float rayT = tNear;
 
   // Palette bounds
   float rangeMin, rangeMax;
   paletteRange(colourIndex, rangeMin, rangeMax);
 
   for (int i = 0; i < RM_STEPS; i++) {
-    vec3 p = ro + rd * t;          // world-space sample
-    vec3 pw = p - center;          // to sphere center
+    vec3 worldSample = rayOrigin + rayDirection * rayT;
+    vec3 sphereLocal = worldSample - center;
 
     // Normalize to sphere space (radius = 1)
-    vec3 pn = pw / radius;
+    vec3 normalized = sphereLocal / radius;
 
     // Animate field with time drift
-    vec3 drift = vec3(sin(time * 0.6) * 0.6, cos(time * 0.5) * 0.6, sin(time * 0.4) * 0.6);
+    vec3 drift = vec3(
+      sin(time * TIME_DRIFT_X_SPEED) * TIME_DRIFT_X_SCALE,
+      cos(time * TIME_DRIFT_Y_SPEED) * TIME_DRIFT_Y_SCALE,
+      sin(time * TIME_DRIFT_Z_SPEED) * TIME_DRIFT_Z_SCALE
+    );
 
     // Slight pulsation of core
-    float pulse = 0.5 + 0.5 * sin(time * 1.0);
-    float radiusScale = mix(0.66, 1.0, pulse);
-    float d2 = length(pn) / radiusScale;
-    float sphereMask = 1.0 - smoothstep(0.0, BLOB_RADIUS, d2);
-    float centered = pow(sphereMask, 2.2);
+    float pulse = NOISE_RANGE_OFFSET + NOISE_RANGE_OFFSET * sin(time * TIME_PULSE_SPEED);
+    float radiusScale = mix(PULSE_MIN_SCALE, PULSE_MAX_SCALE, pulse);
+    float distanceFromCenter = length(normalized) / radiusScale;
+    float sphereMask = 1.0 - smoothstep(0.0, BLOB_RADIUS, distanceFromCenter);
+    float centeredDensity = pow(sphereMask, DENSITY_POWER);
 
     // Rotate sampling position to follow sphere rotation
-    vec3 pr = rotate(pn, axis, angle);
+    vec3 rotated = rotate(normalized, axis, angle);
 
     // Two-octave noise, roughly normalized to [-1,1]
-    float n = noise(pr * NOISE_SCALE + drift);
-    n += 0.5 * noise(pr * (NOISE_SCALE * 2.0) + drift * 1.5);
-    n *= 1.0 / 1.5;
+    float noiseValue = noise(rotated * NOISE_SCALE + drift);
+    noiseValue += NOISE_OCTAVE_2_WEIGHT * noise(rotated * (NOISE_SCALE * NOISE_OCTAVE_2_SCALE) + drift * NOISE_OCTAVE_2_DRIFT);
+    noiseValue *= 1.0 / NOISE_NORMALIZATION;
 
     // Density stays within sphere
-    float density = clamp(centered * clamp(1.0 + NOISE_STRENGTH * n, 0.0, 1.5), 0.0, 1.0);
+    float density = clamp(centeredDensity * clamp(1.0 + NOISE_STRENGTH * noiseValue, 0.0, DENSITY_MAX_CLAMP), 0.0, 1.0);
 
     // Beer-Lambert absorption
-    float a = 1.0 - exp(-density * RM_ABSORB * dt);
+    float absorption = 1.0 - exp(-density * RM_ABSORB * stepSize);
 
     // Palette color
-    float noiseVal = clamp(n * 0.5 + 0.5, 0.0, 1.0);
-    float tPal = mix(rangeMin, rangeMax, noiseVal);
-    vec3 baseCol = getColourFromPalette(tPal) * RM_BRIGHT;
+    float normalizedNoise = clamp(noiseValue * NOISE_TO_RANGE + NOISE_RANGE_OFFSET, 0.0, 1.0);
+    float paletteT = mix(rangeMin, rangeMax, normalizedNoise);
+    vec3 baseColor = getColourFromPalette(paletteT) * RM_BRIGHT;
 
     // Subtle lighting for depth
-    vec3 shaded = shadeVolumeSample(pw, baseCol);
-    vec3 contrib = shaded * a;
+    vec3 shaded = shadeVolumeSample(sphereLocal, baseColor);
+    vec3 contribution = shaded * absorption;
 
-    accum += (1.0 - alpha) * contrib;
-    alpha += (1.0 - alpha) * a;
-    if (alpha > 0.98) break;
-    t += dt;
+    accumulatedColor += (1.0 - accumulatedAlpha) * contribution;
+    accumulatedAlpha += (1.0 - accumulatedAlpha) * absorption;
+    if (accumulatedAlpha > ALPHA_BREAK_THRESHOLD) break;
+    rayT += stepSize;
   }
 
-  return vec4(accum, alpha * RM_OPACITY);
+  return vec4(accumulatedColor, accumulatedAlpha * RM_OPACITY);
 }
 
 void main() {
-  // Base palette color via 3D noise in object space (as before)
-  float n = noise(normalize(vLocalPos) * 0.3 + uTime * 0.08);
-  float noiseValue = n * 0.5 + 0.5;
+  // Base palette color via 3D noise in object space
+  float noiseValue = noise(normalize(vLocalPos) * NOISE_FREQUENCY + uTime * 0.08);
+  noiseValue = noiseValue * NOISE_TO_RANGE + NOISE_RANGE_OFFSET;
 
-  float minV, maxV; paletteRange(uPlayerColourIndex, minV, maxV);
-  float t = mix(minV, maxV, noiseValue);
-  vec3 baseColor = getColourFromPalette(t);
+  float minValue, maxValue;
+  paletteRange(uPlayerColourIndex, minValue, maxValue);
+  float paletteT = mix(minValue, maxValue, noiseValue);
+  vec3 baseColor = getColourFromPalette(paletteT);
 
   // Surface lighting with normal map
   vec3 normal = perturbNormal();
@@ -172,9 +204,9 @@ void main() {
   // Raymarch emission inside the sphere in world space
   vec3 worldCenter = vWorldCenter;
   float worldRadius = length(vWorldPos - worldCenter);
-  vec3 ro = cameraPosition;
-  vec3 rd = normalize(vWorldPos - cameraPosition);
-  vec4 emission = raymarchMarbleVolume(ro, rd, worldCenter, worldRadius, uAxis, uAngle, uTime, uPlayerColourIndex);
+  vec3 rayOrigin = cameraPosition;
+  vec3 rayDirection = normalize(vWorldPos - cameraPosition);
+  vec4 emission = raymarchMarbleVolume(rayOrigin, rayDirection, worldCenter, worldRadius, uAxis, uAngle, uTime, uPlayerColourIndex);
 
   // Combine surface and emission (additive glow)
   vec3 finalColor = litSurface + emission.rgb;

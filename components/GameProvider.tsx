@@ -244,6 +244,7 @@ const createGameStore = () => {
         },
 
         goToStage: (stage: Stage) => {
+          console.log('Transitioning to stage:', stage)
           if (stage === Stage.SPLASH) {
             get().resetGame()
             return
@@ -253,6 +254,8 @@ const createGameStore = () => {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
           }
+
+          if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
 
           if (stage === Stage.QUESTION) {
             handleQuestionStage({ set, get })
@@ -436,12 +439,17 @@ function handleGameOverStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  const { topic, confirmedAnswers, distanceRows, currentRunStats } = get()
+  const { topic, confirmedAnswers, distanceRows } = get()
 
-  if (currentRunStats) {
-    set({ stage: Stage.GAME_OVER })
-    return
-  }
+  speedTween?.kill()
+  gsap.to(speedTweenTarget, {
+    duration: 0.4,
+    ease: 'power2.out',
+    value: 0,
+    onUpdate: () => {
+      set({ terrainSpeed: speedTweenTarget.value })
+    },
+  })
 
   if (!topic) {
     console.warn('[GAME_OVER] No topic set. Skipping PB compute.')
@@ -470,16 +478,6 @@ function handleGameOverStage({
         [topic]: [...existingRuns, run],
       },
     }
-  })
-
-  speedTween?.kill()
-  gsap.to(speedTweenTarget, {
-    duration: STOP_SPEED_DURATION,
-    ease: 'power2.out',
-    value: STOP_SPEED,
-    onUpdate: () => {
-      set({ terrainSpeed: speedTweenTarget.value })
-    },
   })
 }
 

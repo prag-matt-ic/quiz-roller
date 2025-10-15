@@ -15,7 +15,11 @@ import { GradientText } from './GradientText'
 const FADE_IN_CLASS = 'game-over-fade-in'
 const BADGE_ID = 'record-badge'
 
-const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
+type Props = {
+  transitionStatus: TransitionStatus
+}
+
+const GameOverUI: FC<Props> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
   const topic = useGameStore((s) => s.topic)
   const currentRun = useGameStore((s) => s.currentRunStats)
@@ -33,42 +37,40 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
     : runsForTopic
 
   const prevPB = calculatePersonalBest(historyExcludingCurrent)
-
   const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
 
   useGSAP(
     () => {
       if (transitionStatus === 'entered') {
-        gsap.fromTo(
-          `.${FADE_IN_CLASS}`,
-          {
-            opacity: 0,
-            scale: 1.2,
-          },
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.5,
-            ease: 'power1.out',
-            stagger: 0.08,
-            delay: 0.5,
-          },
-        )
-        if (isNewPB) {
-          gsap.fromTo(
-            `#${BADGE_ID}`,
+        const timeline = gsap
+          .timeline({ delay: 0.1 })
+          .to(container.current, { opacity: 1 })
+          .fromTo(
+            `.${FADE_IN_CLASS}`,
             {
               opacity: 0,
-              scale: 0.8,
-              y: -20,
+              scale: 1.2,
             },
             {
               opacity: 1,
               scale: 1,
-              y: 0,
+              duration: 0.5,
+              ease: 'power1.out',
+              stagger: 0.08,
+            },
+          )
+        if (isNewPB) {
+          timeline.fromTo(
+            `#${BADGE_ID}`,
+            {
+              opacity: 0,
+              scale: 1.12,
+            },
+            {
+              opacity: 1,
+              scale: 1,
               duration: 0.6,
               ease: 'back.out(1.7)',
-              delay: 0.8,
             },
           )
         }
@@ -82,9 +84,8 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
       }
     },
     {
-      dependencies: [transitionStatus, topic, currentRun],
+      dependencies: [transitionStatus, isNewPB],
       scope: container,
-      revertOnUpdate: true,
     },
   )
 
@@ -103,7 +104,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
   return (
     <section
       ref={container}
-      className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8">
+      className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>
