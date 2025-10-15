@@ -64,11 +64,11 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
   return (
     <div
       id="splash"
-      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/80 from-35% to-transparent to-60% py-24">
+      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/80 from-35% to-transparent to-60% pt-16 pb-24">
       <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
         {/* Title */}
         <header className="flex h-full flex-col items-center justify-center gap-4">
-          <h1 className="heading-xl mb-10 tracking-wide">
+          <h1 className="heading-xl mb-10 tracking-wide opacity-0">
             <GradientText>Quizroller</GradientText>
           </h1>
         </header>

@@ -13,7 +13,7 @@ import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 // Shader configuration
 export type MarbleShaderUniforms = {
   uTime: number
-  uColourRange: number
+  uPlayerColourIndex: number
   uNormalMap: THREE.Texture | null
   uNormalScale: number
   uAxis: THREE.Vector3
@@ -22,7 +22,7 @@ export type MarbleShaderUniforms = {
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uTime: 0,
-  uColourRange: 0.33, // Default to middle of palette
+  uPlayerColourIndex: 1, // Default to middle band
   uNormalMap: null,
   uNormalScale: 0.15,
   uAxis: new THREE.Vector3(0, 1, 0),
@@ -48,7 +48,7 @@ export const Marble = forwardRef((props: MarbleProps, ref) => {
           key={MarbleShader.key}
           ref={props.playerShaderRef}
           uTime={INITIAL_UNIFORMS.uTime}
-          uColourRange={INITIAL_UNIFORMS.uColourRange}
+          uPlayerColourIndex={INITIAL_UNIFORMS.uPlayerColourIndex}
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uAxis={INITIAL_UNIFORMS.uAxis}
