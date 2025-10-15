@@ -2,8 +2,8 @@ import { type LevaCustomTheme } from 'leva/dist/declarations/src/styles'
 
 export const LEVA_CONTROLS_THEME: LevaCustomTheme = {
   radii: {
-    xs: '0px', // Increased from default 4px for a slightly rounder look
-    // sm: '0px', // Increased from default 6px for a slightly rounder look
+    xs: '0px',
+    // sm: '0px',
     lg: '0px',
   },
   fontSizes: {

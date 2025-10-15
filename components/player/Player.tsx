@@ -1,8 +1,6 @@
 'use client'
 
 import { QueryFilterFlags } from '@dimforge/rapier3d-compat'
-import { shaderMaterial } from '@react-three/drei'
-import { extend } from '@react-three/fiber'
 import {
   BallCollider,
   type IntersectionEnterHandler,
@@ -11,18 +9,18 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, forwardRef, type RefObject, useRef } from 'react'
-import { type Mesh, Vector3 } from 'three'
+import { type FC, useEffect, useRef } from 'react'
+import { MathUtils, type Object3D, Quaternion, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import fragment from '@/components/player/shaders/player.frag'
-import vertex from '@/components/player/shaders/player.vert'
 import usePlayerController from '@/components/player/usePlayerController'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+
+import { Marble, MarbleShaderMaterial, MarbleShaderUniforms } from './marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -33,31 +31,21 @@ const GRAVITY_ACCELERATION = -9.81 // m/s²
 const UP_DIRECTION = new Vector3(0, 1, 0)
 const EPSILON = 1e-6 // Small value to prevent division by zero
 
-// Shader configuration
-type ShaderUniforms = {
-  uTime: number
-}
-
-const INITIAL_UNIFORMS: ShaderUniforms = {
-  uTime: 0,
-}
-
-const PlayerShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
-const PlayerShaderMaterial = extend(PlayerShader)
-
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
+  const playerColour = useGameStore((s) => s.playerColour)
   const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
+  const resetTick = useGameStore((s) => s.resetTick)
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
-  const sphereMeshRef = useRef<Mesh>(null)
-  const playerShaderRef = useRef<typeof PlayerShaderMaterial & ShaderUniforms>(null)
+  const sphereMeshRef = useRef<Object3D>(null)
+  const playerShaderRef = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
 
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
@@ -66,6 +54,12 @@ const Player: FC = () => {
   const relativeVelocity = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
+  // World orientation (axis-angle) for MarbleVolume shader
+  const marbleRotation = useRef<{ axis: Vector3; angle: number }>({
+    axis: new Vector3(0, 1, 0),
+    angle: 0,
+  })
+  const tmpWorldQuat = useRef(new Quaternion())
 
   // Reusable position objects (avoid per-frame allocations)
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
@@ -73,6 +67,25 @@ const Player: FC = () => {
 
   // Shader time accumulator
   const shaderTime = useRef(0)
+
+  useEffect(() => {
+    const b = bodyRef.current
+    if (!b) return
+    // hard reset transform & motion
+    b.setTranslation(
+      {
+        x: PLAYER_INITIAL_POSITION[0],
+        y: PLAYER_INITIAL_POSITION[1],
+        z: PLAYER_INITIAL_POSITION[2],
+      },
+      true, // wake up
+    )
+    b.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    b.setAngvel({ x: 0, y: 0, z: 0 }, true)
+    b.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true) // identity quat
+    b.wakeUp()
+    // (optional) also update any local refs used by your usePlayerPosition hook
+  }, [resetTick])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -87,6 +100,7 @@ const Player: FC = () => {
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
+    playerShaderRef.current.uColourRange = playerColour
 
     // Don't update during splash screen
     if (stage === Stage.SPLASH) return
@@ -147,7 +161,13 @@ const Player: FC = () => {
       deltaTime,
       worldScale: worldScale.current,
       rollAxis: rollAxis.current,
+      outRotation: marbleRotation.current,
+      tmpQuat: tmpWorldQuat.current,
     })
+
+    // Sync marble surface shader with world axis-angle for volume
+    playerShaderRef.current.uAxis = marbleRotation.current.axis
+    playerShaderRef.current.uAngle = marbleRotation.current.angle
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
@@ -250,12 +270,16 @@ function applyRollingPhysics({
   deltaTime,
   worldScale,
   rollAxis,
+  outRotation,
+  tmpQuat,
 }: {
-  sphereMesh: Mesh
+  sphereMesh: Object3D
   relativeVelocity: Vector3
   deltaTime: number
   worldScale: Vector3
   rollAxis: Vector3
+  outRotation: { axis: Vector3; angle: number }
+  tmpQuat: Quaternion
 }): void {
   sphereMesh.getWorldScale(worldScale)
   // Assume uniform scale for a sphere
@@ -271,25 +295,17 @@ function applyRollingPhysics({
   const rotationAngle = (speed * deltaTime) / effectiveRadius
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
+
+  // Update world axis-angle for MarbleVolume
+  sphereMesh.getWorldQuaternion(tmpQuat)
+  // Convert quaternion to axis-angle
+  const w = MathUtils.clamp(tmpQuat.w, -1, 1)
+  const angle = 2 * Math.acos(w)
+  const s = Math.sqrt(Math.max(0, 1 - w * w))
+  if (s < EPSILON) {
+    outRotation.axis.set(0, 1, 0)
+  } else {
+    outRotation.axis.set(tmpQuat.x / s, tmpQuat.y / s, tmpQuat.z / s)
+  }
+  outRotation.angle = angle
 }
-
-type MarbleProps = {
-  playerShaderRef: RefObject<(typeof PlayerShaderMaterial & ShaderUniforms) | null>
-}
-
-export const Marble = forwardRef((props: MarbleProps, ref) => {
-  return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[PLAYER_RADIUS, 32, 32]} />
-      <PlayerShaderMaterial
-        key={PlayerShader.key}
-        ref={props.playerShaderRef}
-        uTime={INITIAL_UNIFORMS.uTime}
-        transparent={false}
-        depthWrite={true}
-      />
-    </mesh>
-  )
-})
-
-Marble.displayName = 'Marble'

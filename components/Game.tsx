@@ -26,6 +26,7 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
 const Game: FC = () => {
   const simFps = useGameStore((s) => s.simFps)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
+  const resetTick = useGameStore((s) => s.resetTick)
   return (
     <Canvas
       className="!absolute !inset-0 !h-lvh w-full"
@@ -49,9 +50,9 @@ const Game: FC = () => {
       {/* <OrbitControls /> */}
       <Camera isMobile={false} />
       <Suspense>
-        <Physics debug={false} timeStep={physicsTimeStep}>
+        <Physics key={resetTick} debug={false} timeStep={physicsTimeStep}>
           {process.env.NODE_ENV === 'development' && <Stats />}
-          <Level />
+          <Level key={resetTick} />
         </Physics>
       </Suspense>
     </Canvas>

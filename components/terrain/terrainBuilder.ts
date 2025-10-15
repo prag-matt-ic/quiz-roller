@@ -19,7 +19,7 @@ export const UNSAFE_HEIGHT = -40 // sunken obstacles
 export const ENTRY_Y_OFFSET = 1 // How far down to start when entering (world units)
 export const ENTRY_RAISE_DURATION_ROWS = 4
 export const EXIT_LOWER_DURATION_ROWS = 4
-export const QUESTION_SECTION_ROWS = 16
+export const MAX_Z = TILE_SIZE * 12
 
 // Extend intro/entry section to push the first question further back
 // Entry rows are sized to fit intro banners with padding
@@ -28,7 +28,6 @@ export const INTRO_SECTION_ROWS =
   Math.max(0, INTRO_BANNERS_CONTENT.length - 1) * INTRO_BANNERS_SPACING_ROWS +
   INTRO_BANNERS_END_PADDING_ROWS
 export const OBSTACLE_SECTION_ROWS = 64
-export const MAX_Z = TILE_SIZE * 12
 
 // Terrain scrolling and animation constants
 export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 6
@@ -37,7 +36,17 @@ export const INTRO_SPEED_FAR_FACTOR = 0.5
 export const DECEL_EASE_POWER = 6
 export const DECEL_START_OFFSET_ROWS = 6
 export const OBSTACLE_BUFFER_SECTIONS = 10
+
+// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
+export const QUESTION_SECTION_ROWS = 16
+export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
+export const QUESTION_TEXT_FONT_SIZE = 0.4
+export const QUESTION_TEXT_ROWS = 4
 export const ANSWER_TILE_COUNT = 4
+export const ANSWER_TILE_COLS = 6
+export const ANSWER_TILE_ROWS = 4
+export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
+export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
 
 // Fixed entry window values for row raising animation
 export const ENTRY_END_Z = MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
@@ -45,15 +54,6 @@ export const ENTRY_START_Z = ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
 // Exit window values for row lowering (pre-wrap)
 export const EXIT_END_Z = MAX_Z
 export const EXIT_START_Z = EXIT_END_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
-
-// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const ANSWER_TILE_COLS = 6
-export const ANSWER_TILE_ROWS = 4
-export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
-export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
-export const QUESTION_TEXT_MAX_WIDTH = 8 * TILE_SIZE
-export const QUESTION_TEXT_FONT_SIZE = 0.4
-export const QUESTION_TEXT_ROWS = 4
 
 type ObstacleParams = {
   rows: number // e.g. 256

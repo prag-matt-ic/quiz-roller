@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${cinzel.variable} ${nunitoSans.variable} antialiased`}>
+      <body className={`${cinzel.variable} ${nunitoSans.variable} overflow-hidden antialiased`}>
         {children}
       </body>
     </html>

@@ -71,8 +71,8 @@ void main() {
     vec3 color = getColourFromPalette(t);
     
     // Blend with dark grey for atmospheric effect
-    vec3 darkGrey = vec3(0.06, 0.06, 0.06);
-    color = mix(darkGrey, color, 0.9);
+    // vec3 darkGrey = vec3(0.06, 0.06, 0.06);
+    // color = mix(darkGrey, color, 0.9);
     
     // Apply dark vignette (controlled by uniforms)
     float vignetteAmount = darkVignette(centeredUv, uVignetteStrength);

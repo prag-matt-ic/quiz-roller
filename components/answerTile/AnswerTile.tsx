@@ -125,9 +125,9 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
             key={AnswerTileShader.key}
             ref={shader}
             transparent={true}
-            // Respect scene depth so the player can occlude the tile as expected
+            // // Respect scene depth so the player can occlude the tile as expected
             depthTest={true}
-            // Do not write depth so the semi-transparent edges don't occlude later draws
+            // // Do not write depth so the semi-transparent edges don't occlude later draws
             depthWrite={false}
             // Mild offset to avoid coplanar artifacts with terrain
             polygonOffset={true}
@@ -144,7 +144,7 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
           anchorX="center"
           anchorY="middle"
           textAlign="center"
-          maxWidth={ANSWER_TILE_WIDTH - 0.5}
+          maxWidth={ANSWER_TILE_WIDTH - 0.4}
           position={[0, 0.0, 0.06]}
           rotation={[0, 0, 0]}>
           {text}

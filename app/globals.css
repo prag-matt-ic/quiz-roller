@@ -17,6 +17,11 @@ body {
   font-family: var(--font-nunito-sans), sans-serif;
 }
 
+button,
+a {
+  cursor: pointer;
+}
+
 h1,
 h2,
 h3,
@@ -57,5 +62,18 @@ h6 {
   }
   .paragraph-xs {
     @apply text-xs lg:text-sm;
+  }
+}
+
+@layer components {
+  .custom-range-slider {
+    &::-webkit-slider-thumb {
+      appearance: none;
+      @apply h-5 w-5 cursor-pointer rounded-full bg-transparent;
+    }
+
+    &::-moz-range-thumb {
+      @apply h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent;
+    }
   }
 }

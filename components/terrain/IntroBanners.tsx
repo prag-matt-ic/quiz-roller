@@ -8,6 +8,7 @@ import {
   colToX,
   COLUMNS,
   getIntroCorridorBounds,
+  MAX_Z,
   SAFE_HEIGHT,
   TILE_SIZE,
 } from '@/components/terrain/terrainBuilder'
@@ -60,6 +61,7 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
       () => ({
         advance: (zStep: number) => {
           if (!groupRef.current) return
+          if (groupRef.current.position.z > MAX_Z) return
           groupRef.current.position.z += zStep
         },
       }),

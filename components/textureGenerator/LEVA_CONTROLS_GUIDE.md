@@ -65,14 +65,12 @@ useFrame(() => {
     shaderRef.current.uGrainScale = grainControls.grainScale
     shaderRef.current.uGrainAmplitude = grainControls.grainAmplitude
     shaderRef.current.uGrainMix = grainControls.grainMix
-
     // Fractal Noise (FBM)
     shaderRef.current.uFbmScale = fbmControls.fbmScale
     shaderRef.current.uFbmOctaves = fbmControls.fbmOctaves
     shaderRef.current.uFbmLacunarity = fbmControls.fbmLacunarity
     shaderRef.current.uFbmGain = fbmControls.fbmGain
     shaderRef.current.uFbmMix = fbmControls.fbmMix
-
     // Vignette
     shaderRef.current.uVignetteStrength = vignetteControls.vignetteStrength
     shaderRef.current.uVignetteRadius = vignetteControls.vignetteRadius
@@ -121,8 +119,8 @@ Could add a 4th folder for IQ cosine palette controls:
 
 ### Additional Features
 
-- Save/load preset configurations
-- Animation controls (time-based parameter modulation)
+- Use query params to store the config so URL can be shared
+- User "favourite mixes" - stored in local storage.
 - Export settings with generated image
 - Multiple noise layers with independent controls
 
@@ -135,13 +133,6 @@ Could add a 4th folder for IQ cosine palette controls:
 5. **Test high-res export** - Settings apply to exported images too
 
 ## Troubleshooting
-
-If Leva controls don't appear:
-
-1. Check browser console for errors
-2. Verify Leva is installed: `npm list leva`
-3. Clear cache: `rm -rf .next node_modules/.cache`
-4. Restart dev server: `npm run dev`
 
 If shader doesn't update:
 

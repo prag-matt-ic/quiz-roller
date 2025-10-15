@@ -11,17 +11,9 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
 
-// Get colors from palette at different positions
-const COLOR_START = getPaletteHex(0.3)
-const COLOR_END = getPaletteHex(0.8)
-
 const PlayerHUD: FC = () => {
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
-
-  // for (let i = 0; i <= 10; i++) {
-  //   const color = getPaletteHex(i / 10)
-  //   console.log(`${i / 10}:`, color)
-  // }
+  const playerColour = useGameStore((s) => s.playerColour)
 
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
@@ -58,6 +50,10 @@ const PlayerHUD: FC = () => {
 
   const confirmingContainer = useRef<HTMLDivElement>(null)
 
+  // Generate gradient colors based on player color
+  const colorStart = getPaletteHex(playerColour)
+  const colorEnd = getPaletteHex(Math.min(playerColour + 0.25, 1))
+
   return (
     <Html
       sprite={true}
@@ -69,19 +65,17 @@ const PlayerHUD: FC = () => {
       <Transition
         in={!!confirmingAnswer}
         timeout={{ enter: 0, exit: 300 }}
-        mountOnEnter={true}
-        unmountOnExit={true}
         onEnter={onEnter}
         onExit={onExit}
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 shadow-md shadow-black/15">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 opacity-0 shadow-md shadow-black/15">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"
             style={{
-              background: `linear-gradient(90deg, ${COLOR_START}, ${COLOR_END})`,
+              background: `linear-gradient(90deg, ${colorStart}, ${colorEnd})`,
             }}
           />
         </div>

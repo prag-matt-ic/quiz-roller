@@ -47,7 +47,7 @@ void main() {
   
   // Use deterministic speed based on UV (consistent per instance across frames)
   float seed = rand(uv);
-  float speed = 0.6 + seed * 0.6; // Range [0.6, 1.2]
+  float speed = 0.3 + seed * 0.6; // Range [0.6, 1.2]
   
   // Update Y position
   float newY = position.y + speed * uDeltaTime;

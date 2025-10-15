@@ -27,11 +27,11 @@ export const CAMERA_CONFIG: Record<
   [Stage.SPLASH]: {
     // Close to the player with a low Y to keep the path low in view.
     // These are starting values and can be tweaked.
-    position: { x: 0, y: 2.5, z: 9 },
+    position: { x: 0, y: 3, z: 14 },
     target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
     zoom: 1.2,
   },
-  [Stage.ENTRY]: {
+  [Stage.INTRO]: {
     position: { x: 0, y: 5, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
@@ -44,10 +44,10 @@ export const CAMERA_CONFIG: Record<
   [Stage.TERRAIN]: {
     position: { x: 0, y: 6, z: 7 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 0.75,
+    zoom: 0.8,
   },
   [Stage.GAME_OVER]: {
-    position: { x: 20, y: 12, z: 8 },
+    position: { x: 16, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
   },
@@ -60,6 +60,7 @@ type Props = {
 const Camera: FC<Props> = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
+  const resetTick = useGameStore((s) => s.resetTick)
   const { playerPosition } = usePlayerPosition()
 
   // Update camera position when stage changes
@@ -68,7 +69,7 @@ const Camera: FC<Props> = () => {
 
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
 
-    if (stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Handled in useFrame below
+    if (stage === Stage.INTRO || stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Position handled in useFrame below
 
     const { position, target } = CAMERA_CONFIG[stage]
     cameraControls.current.setLookAt(
@@ -85,18 +86,7 @@ const Camera: FC<Props> = () => {
   useFrame(() => {
     if (!cameraControls.current) return
 
-    if (stage === Stage.QUESTION) {
-      cameraControls.current.setLookAt(
-        playerPosition.current.x, // Follow player X
-        CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + 5, // Follow the player from slightly behind
-        playerPosition.current.x, // Look at the player X
-        0,
-        playerPosition.current.z, // Look at the player Z
-        true,
-      )
-    }
-    if (stage === Stage.ENTRY) {
+    if (stage === Stage.INTRO) {
       // Track like question stage but keep ENTRY's zoomed-in config
       cameraControls.current.setLookAt(
         playerPosition.current.x, // Follow player X
@@ -105,6 +95,18 @@ const Camera: FC<Props> = () => {
         playerPosition.current.x,
         0,
         playerPosition.current.z,
+        true,
+      )
+    }
+
+    if (stage === Stage.QUESTION) {
+      cameraControls.current.setLookAt(
+        playerPosition.current.x, // Follow player X
+        CAMERA_CONFIG[stage].position.y,
+        playerPosition.current.z + 5, // Follow the player from slightly behind
+        playerPosition.current.x, // Look at the player X
+        0,
+        playerPosition.current.z, // Look at the player Z
         true,
       )
     }
@@ -121,6 +123,26 @@ const Camera: FC<Props> = () => {
       )
     }
   })
+
+  useEffect(() => {
+    if (!cameraControls.current) return
+    // Reset back to the control's saved default
+    cameraControls.current.reset(true) // smooth reset
+    // Immediately set the pose for the current stage (usually SPLASH → INTRO next)
+    const { position, target, zoom } = CAMERA_CONFIG[stage]
+    cameraControls.current.zoomTo(zoom, true)
+    cameraControls.current.setLookAt(
+      position.x,
+      position.y,
+      position.z,
+      target.x,
+      target.y,
+      target.z,
+      true,
+    )
+    // Optional: make this the new "default" after reset
+    cameraControls.current.saveState()
+  }, [resetTick])
 
   return (
     <CameraControls
