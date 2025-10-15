@@ -15,10 +15,10 @@ import { MathUtils, type Object3D, Quaternion, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import usePlayerController from '@/components/player/usePlayerController'
-import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/constants/game'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
 
 import { Marble, MarbleShaderMaterial, MarbleShaderUniforms } from './marble/Marble'
 

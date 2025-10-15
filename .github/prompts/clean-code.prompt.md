@@ -1,11 +1,12 @@
 ---
-mode: 'agent'
 description: 'Review and refactor code for clean code principles'
 ---
 
 ## Task
 
 Use the following Clean Code Checklist to review and refactor the current file's code.
+
+Begin first by identifying any violations of the checklist items. Then, refactor the code to address these issues.
 
 ## Checklist
 
@@ -21,12 +22,12 @@ Use the following Clean Code Checklist to review and refactor the current file's
 
 - [ ] Prefer immutability – never mutate objects or arrays directly. When updating state, return new objects instead of modifying existing ones.
 
-- [ ] Avoid magic numbers and strings – declare constants (e.g. LANE_COUNT = 3) so that values are descriptive and changeable. The exception to this rule is animation timing values (e.g. duration: 0.5) which can be left as literals.
+- [ ] Avoid magic numbers and strings – declare constants (e.g. LANE_COUNT = 3) so that values are descriptive and changeable. The exception to this rule is animation timing values (e.g. duration: 0.5, delay: 0.2) which can be left as literals.
 
 - [ ] Comment judiciously – write code that is self‑explanatory. When comments are needed, make them precise and consider using // TODO to mark work that should be improved later.
 
 - [ ] Avoid creating expensive objects/classes in loops or animation frames - reuse objects where sensible to reduce garbage collection. For example: never create a new Vector3() inside useFrame().
 
-- [ ] Review imports and ensure that types/interfaces are imported as types (e.g import { type MyType } from '...' ). Remove any unused imports.
+- [ ] Review imports and ensure that types/interfaces are imported as types (e.g import { type MyType } from '...' ). Classes should not be marked as types. Remove any unused imports.
 
-- [ ] For event handlers, use the on[Subject][Action] naming convention (e.g. onGameOverClick).
+- [ ] For event handlers, use the onSubjectAction naming convention (e.g. 'onGameOverClick' or 'onEnquiryFormSubmit') rather than handleSubjectAction.

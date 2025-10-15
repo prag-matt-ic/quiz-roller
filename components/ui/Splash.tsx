@@ -9,7 +9,11 @@ import MarbleColourSelect from '@/components/player/marble/MarbleColourSelect'
 import Button from '@/components/ui/Button'
 import { GradientText } from '@/components/ui/GradientText'
 
-const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
+type Props = {
+  transitionStatus: TransitionStatus
+}
+
+const SplashUI: FC<Props> = ({ transitionStatus }) => {
   const goToStage = useGameStore((s) => s.goToStage)
   const setIsMuted = useGameStore((s) => s.setIsMuted)
 
@@ -36,7 +40,6 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
             '-=0.3',
           )
       }
-
       if (transitionStatus === 'exiting') {
         gsap
           .timeline()
@@ -64,7 +67,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
   return (
     <div
       id="splash"
-      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/40 from-35% to-transparent to-60% pt-16 pb-24">
+      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/30 from-30% to-transparent to-60% pt-16 pb-24">
       <div className="grid w-full max-w-4xl grid-rows-3 text-center text-white">
         {/* Title */}
         <header className="flex h-full flex-col items-center justify-center gap-4">
@@ -72,10 +75,10 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
             <GradientText>Quizroller</GradientText>
           </h1>
         </header>
-
+        {/* Placeholder */}
         <div />
-
-        <div className="mx-auto flex flex-col items-center gap-3 self-end py-6">
+        {/* Colour Select + CTA Buttons */}
+        <div className="mx-auto flex flex-col items-center gap-6 self-end py-6">
           <MarbleColourSelect />
           {/* CTA Buttons */}
           <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
@@ -85,17 +88,16 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
               className="splash-button"
               aria-label="Start in silence"
               onClick={() => onStartClick(true)}>
-              <VolumeXIcon className="size-5" strokeWidth={2} />
+              <VolumeXIcon className="size-6" strokeWidth={1.75} />
               ROLL IN SILENCE
             </Button>
-
             <Button
               variant="primary"
               color="dark"
               className="splash-button"
               aria-label="Start with sounds"
               onClick={() => onStartClick(false)}>
-              <PlayIcon className="size-5" strokeWidth={2} />
+              <PlayIcon className="size-6" strokeWidth={1.75} />
               ROLL WITH SOUNDS
             </Button>
           </div>

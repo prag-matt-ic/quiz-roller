@@ -5,7 +5,7 @@ import {
   INTRO_BANNERS_END_PADDING_ROWS,
   INTRO_BANNERS_SPACING_ROWS,
   INTRO_BANNERS_START_PADDING_ROWS,
-} from '@/constants/intro'
+} from '@/resources/intro'
 
 // Grid configuration
 export const COLUMNS = 16
@@ -40,8 +40,8 @@ export const OBSTACLE_BUFFER_SECTIONS = 10
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const QUESTION_SECTION_ROWS = 16
 export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
-export const QUESTION_TEXT_FONT_SIZE = 0.4
 export const QUESTION_TEXT_ROWS = 4
+export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
 export const ANSWER_TILE_COUNT = 4
 export const ANSWER_TILE_COLS = 6
 export const ANSWER_TILE_ROWS = 4

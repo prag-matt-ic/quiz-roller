@@ -18,17 +18,16 @@ import {
   Topic,
   topicQuestion,
 } from '@/model/schema'
-import { selectNextQuestion } from '@/resources/content'
+import { getNextQuestion } from '@/resources/content'
 
 export enum Stage {
-  SPLASH = 'splash', // UI - introduction
-  INTRO = 'intro', // Pathway leading to 1st question
+  SPLASH = 'splash',
+  INTRO = 'intro',
   QUESTION = 'question',
   TERRAIN = 'terrain',
   GAME_OVER = 'game_over',
 }
 
-// Simulation frame-rate limiter. 0 = uncapped (use real delta)
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
@@ -49,7 +48,7 @@ type GameState = {
   isMuted: boolean
   setIsMuted: (muted: boolean) => void
 
-  playerColourIndex: number // selected colour band index (0,1,2)
+  playerColourIndex: number
   setPlayerColourIndex: (index: number) => void
 
   confirmationProgress: number // [0, 1]
@@ -58,7 +57,7 @@ type GameState = {
 
   // Distance travelled in rows (increments when terrain rows recycle)
   distanceRows: number
-  incrementDistanceRows: (delta?: number) => void
+  incrementDistanceRows: (delta: number) => void
 
   // Questions
   topic: Topic | null
@@ -70,12 +69,10 @@ type GameState = {
   confirmingAnswer: AnswerUserData | null
   setConfirmingAnswer: (data: AnswerUserData | null) => void
   onAnswerConfirmed: () => void
-  confirmedAnswers: AnswerUserData[] // Answers that have been confirmed
+  confirmedAnswers: AnswerUserData[]
 
   currentRunStats: RunStats | null
-  personalBests: RunStats[]
-  previousPersonalBest: RunStats | null
-  isNewPersonalBest: boolean
+  previousRuns: Record<Topic, RunStats[]>
 
   resetGame: () => void
   resetTick: number
@@ -84,6 +81,14 @@ type GameState = {
 
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
+
+const CONFIRMATION_DURATION_S = 3
+const INTRO_SPEED = 0.25
+const TERRAIN_SPEED = 1
+const STOP_SPEED = 0
+const INTRO_SPEED_DURATION = 1.2
+const TERRAIN_SPEED_DURATION = 2.4
+const STOP_SPEED_DURATION = 0.4
 
 // Start the player on the floor tiles (no drop-in):
 // y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
@@ -105,10 +110,8 @@ const INITIAL_STATE: Pick<
   | 'distanceRows'
   | 'isMuted'
   | 'playerColourIndex'
-  | 'personalBests'
   | 'currentRunStats'
-  | 'isNewPersonalBest'
-  | 'previousPersonalBest'
+  | 'previousRuns'
 > = {
   stage: Stage.SPLASH,
   terrainSpeed: 0,
@@ -127,14 +130,13 @@ const INITIAL_STATE: Pick<
   confirmedAnswers: [],
   distanceRows: 0,
   isMuted: true,
-  playerColourIndex: 1, // middle band index
+  playerColourIndex: 1,
   currentRunStats: null,
-  personalBests: [],
-  isNewPersonalBest: false,
-  previousPersonalBest: null,
+  previousRuns: {
+    [Topic.UX_UI_DESIGN]: [],
+    [Topic.ARTIFICIAL_INTELLIGENCE]: [],
+  },
 }
-
-const CONFIRMATION_DURATION_S = 3
 
 const createGameStore = () => {
   let speedTween: GSAPTween | null = null
@@ -145,7 +147,6 @@ const createGameStore = () => {
   return createStore<GameState>()(
     persist(
       (set, get) => ({
-        // Configurable parameters set on load with default values
         ...INITIAL_STATE,
         setPlayerPosition: (pos) => set({ playerPosition: pos }),
         setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
@@ -153,257 +154,121 @@ const createGameStore = () => {
         setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
-        setConfirmingAnswer: (data: AnswerUserData | null) => {
-          const cancelConfirmation = () => {
+
+        setConfirmingAnswer: (answer: AnswerUserData | null) => {
+          confirmationTween?.kill()
+
+          if (answer === null) {
             set({ confirmingAnswer: null })
-            confirmationTween?.kill()
             confirmationTween = gsap.to(confirmationTweenTarget, {
-              duration: 0.4,
+              duration: 0.3,
               ease: 'power2.out',
               value: 0,
               onUpdate: () => {
                 set({ confirmationProgress: confirmationTweenTarget.value })
               },
+              onComplete: () => {
+                confirmationTween!.kill()
+                set({ confirmationProgress: 0 })
+              },
             })
-          }
-
-          const startConfirmation = (data: AnswerUserData) => {
-            const { confirmedAnswers: answers, onAnswerConfirmed } = get()
-            const hasAlreadyAnswered = answers.find((a) => a.questionId === data.questionId)
+          } else {
+            // Start confirming this answer
+            const { confirmedAnswers, onAnswerConfirmed } = get()
+            const hasAlreadyAnswered = confirmedAnswers.some(
+              (answer) => answer.questionId === answer.questionId,
+            )
             if (hasAlreadyAnswered) return
 
-            set({ confirmingAnswer: data })
-            // Animate confirmation progress from 0 to 1
-            confirmationTween?.kill()
-            confirmationTween = gsap.to(confirmationTweenTarget, {
-              duration: CONFIRMATION_DURATION_S,
-              ease: 'none',
-              value: 1,
-              onUpdate: () => {
-                set({ confirmationProgress: confirmationTweenTarget.value })
+            set({ confirmingAnswer: answer })
+            confirmationTween = gsap.fromTo(
+              confirmationTweenTarget,
+              {
+                value: 0,
               },
-              onComplete: () => {
-                if (!!get().confirmingAnswer) onAnswerConfirmed()
+              {
+                duration: CONFIRMATION_DURATION_S,
+                ease: 'none',
+                value: 1,
+                onUpdate: () => {
+                  set({ confirmationProgress: confirmationTweenTarget.value })
+                },
+                onComplete: () => {
+                  if (!!get().confirmingAnswer) onAnswerConfirmed()
+                  confirmationTween!.kill()
+                },
               },
-            })
-          }
-
-          if (data === null) {
-            cancelConfirmation()
-          } else {
-            startConfirmation(data)
+            )
           }
         },
+
         onAnswerConfirmed: async () => {
-          const { confirmingAnswer, goToStage } = get()
+          const { topic, currentDifficulty, confirmingAnswer, goToStage } = get()
+
           if (!confirmingAnswer) {
             console.error('No answer selected to confirm')
             return
           }
 
-          // Kill confirmation animation
           confirmationTween?.kill()
-          set({ confirmationProgress: 0 })
 
           if (!confirmingAnswer.answer.isCorrect) {
-            console.warn('Wrong answer chosen! Game over.')
-            set((s) => ({
-              ...s,
-              confirmingAnswer: null,
-              confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
-            }))
-            goToStage(Stage.GAME_OVER)
+            handleIncorrectAnswer({ set, confirmingAnswer, goToStage })
             return
           }
 
-          const currentDifficulty = get().currentDifficulty
-          const newDifficulty = Math.min(currentDifficulty + 1, 10)
-          set((s) => ({
-            ...s,
-            currentDifficulty: newDifficulty,
-            confirmingAnswer: null,
-            confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
-            topic: s.topic! ?? confirmingAnswer.answer.text, // 1st correct answer becomes the topic
-          }))
+          if (!topic) {
+            handleTopicSelection({ set, confirmingAnswer })
+          } else {
+            handleCorrectAnswer({ set, currentDifficulty, confirmingAnswer })
+          }
+
           goToStage(Stage.TERRAIN)
         },
 
-        getPersonalBest: (topic: Topic) =>
-          get().personalBests.find((pb) => pb.topic === topic) ?? null,
-
-        setIsNewPersonalBest: (stats: RunStats) => {
-          const currentPB = get().personalBests.find((pb) => pb.topic === stats.topic)
-          const newPB =
-            !currentPB ||
-            stats.correctAnswers > currentPB.correctAnswers ||
-            (stats.correctAnswers === currentPB.correctAnswers &&
-              stats.distance > currentPB.distance)
-          if (!newPB) return
-
-          const newRecord: RunStats = { ...stats }
-
-          set((s) => {
-            const index = s.personalBests.findIndex((pb) => pb.topic === stats.topic)
-            const updatedPB =
-              index === -1
-                ? s.personalBests.concat(newRecord)
-                : s.personalBests.with(index, newRecord)
-            return { personalBests: updatedPB }
-          })
-        },
         resetTick: 0,
         resetGame: () => {
-          // kill animations and reset tween state
           speedTween?.kill()
-          speedTween = null
           confirmationTween?.kill()
+          speedTween = null
           confirmationTween = null
           speedTweenTarget.value = 0
           confirmationTweenTarget.value = 0
 
-          // keep persisted PBs, reset everything else
-          const keepPB = get().personalBests
-          set((s) => ({ ...INITIAL_STATE, personalBests: keepPB, resetTick: s.resetTick + 1 }))
+          const previousRunsToKeep = get().previousRuns
+          set((s) => ({
+            ...INITIAL_STATE,
+            previousRuns: previousRunsToKeep,
+            resetTick: s.resetTick + 1,
+          }))
         },
 
         goToStage: (stage: Stage) => {
+          console.log('Transitioning to stage:', stage)
           if (stage === Stage.SPLASH) {
             get().resetGame()
             return
           }
-          // Basic function for now, can be expanded later
+
           if (stage === Stage.INTRO) {
-            set({ stage: Stage.INTRO, isNewPersonalBest: false })
-            // Ease terrain speed up to 0.25 using GSAP
-            speedTween?.kill()
-            // Ensure tween starts from the current store value (likely 0 from SPLASH)
-            speedTweenTarget.value = get().terrainSpeed
-            speedTween = gsap.to(speedTweenTarget, {
-              duration: 1.2,
-              ease: 'power2.out',
-              value: 0.25,
-              onUpdate: () => {
-                set({ terrainSpeed: speedTweenTarget.value })
-              },
-            })
+            handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
           }
 
+          if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
+
           if (stage === Stage.QUESTION) {
-            const currentQuestionIndex = get().currentQuestionIndex
-            const newQuestionIndex = currentQuestionIndex + 1
-            // Speed deceleration is handled in Terrain.tsx, synchronized with row raising
-            // Increment question index and update current question
-            if (newQuestionIndex === 0) {
-              set({
-                stage: Stage.QUESTION,
-                currentQuestionIndex: newQuestionIndex,
-                currentQuestion: topicQuestion,
-                questions: [topicQuestion],
-              })
-            } else {
-              const questions = get().questions
-              const askedIds = new Set<string>(questions.slice(1).map((q) => q.id))
-              const newQuestion = selectNextQuestion({
-                topic: get().topic!,
-                currentDifficulty: get().currentDifficulty,
-                askedIds: askedIds,
-              })
-              if (!newQuestion) {
-                console.error('No more questions available for topic:', get().topic)
-                return
-              }
-              set({
-                stage: Stage.QUESTION,
-                currentQuestionIndex: newQuestionIndex,
-                currentQuestion: newQuestion,
-                questions: [...questions, newQuestion],
-              })
-            }
+            handleQuestionStage({ set, get })
             return
           }
 
           if (stage === Stage.TERRAIN) {
-            set({ stage: Stage.TERRAIN })
-            speedTween?.kill()
-            speedTween = gsap.to(speedTweenTarget, {
-              duration: 2.4,
-              ease: 'power2.out',
-              value: 1, // normalized
-              onUpdate: () => {
-                set({ terrainSpeed: speedTweenTarget.value })
-              },
-            })
+            handleTerrainStage({ set, speedTween, speedTweenTarget })
+            return
           }
 
           if (stage === Stage.GAME_OVER) {
-            const { topic, confirmedAnswers, distanceRows, personalBests } = get()
-            if (get().currentRunStats) {
-              set({ stage: Stage.GAME_OVER }) // ensure stage is set, but skip recompute
-              return
-            }
-            if (!topic) {
-              console.warn('[GAME_OVER] No topic set. Skipping PB compute.')
-              set({
-                stage: Stage.GAME_OVER,
-                isNewPersonalBest: false,
-                previousPersonalBest: null,
-                currentRunStats: null,
-              })
-              return
-            }
-            const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
-            const run: RunStats = {
-              topic,
-              correctAnswers: totalCorrect,
-              distance: distanceRows,
-              date: new Date(),
-            }
-
-            // previous PB BEFORE overwriting
-            const prevPB = personalBests.find((p) => p.topic === topic) ?? null
-            if (!prevPB) {
-              const topicsInPB = personalBests.map((p) => p.topic)
-              console.warn(
-                '[GAME_OVER] No previous PB for topic. Possible topic mismatch? topic=',
-                topic,
-                ' topicsInPB=',
-                topicsInPB,
-              )
-            }
-
-            const isNew =
-              !prevPB ||
-              run.correctAnswers > prevPB.correctAnswers ||
-              (run.correctAnswers === prevPB.correctAnswers && run.distance > prevPB.distance)
-
-            // update state for UI
-            set({
-              stage: Stage.GAME_OVER,
-              currentRunStats: run,
-              previousPersonalBest: prevPB,
-              isNewPersonalBest: isNew,
-            })
-
-            // write new PB if needed
-            if (isNew) {
-              set((s) => {
-                const idx = s.personalBests.findIndex((p) => p.topic === topic)
-                const updated =
-                  idx === -1 ? s.personalBests.concat(run) : s.personalBests.with(idx, run)
-                return { personalBests: updated }
-              })
-            }
-
-            speedTween?.kill()
-            speedTween = gsap.to(speedTweenTarget, {
-              duration: 0.4,
-              ease: 'power2.out',
-              value: 0, // normalized
-              onUpdate: () => {
-                set({ terrainSpeed: speedTweenTarget.value })
-              },
-            })
+            handleGameOverStage({ set, get, speedTween, speedTweenTarget })
             return
           }
         },
@@ -411,12 +276,209 @@ const createGameStore = () => {
       {
         name: 'quiz-roller',
         partialize: (s) => ({
-          personalBests: s.personalBests,
-          playerColour: s.playerColourIndex,
+          previousRuns: s.previousRuns,
+          playerColourIndex: s.playerColourIndex,
         }),
       },
     ),
   )
+}
+
+// Helper functions for onAnswerConfirmed
+
+function handleIncorrectAnswer({
+  set,
+  confirmingAnswer,
+  goToStage,
+}: {
+  set: StoreApi<GameState>['setState']
+  confirmingAnswer: AnswerUserData
+  goToStage: (stage: Stage) => void
+}) {
+  console.warn('Wrong answer chosen! Game over.')
+  set((s) => ({
+    confirmationProgress: 0,
+    confirmingAnswer: null,
+    confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
+  }))
+  goToStage(Stage.GAME_OVER)
+}
+
+function handleTopicSelection({
+  set,
+  confirmingAnswer,
+}: {
+  set: StoreApi<GameState>['setState']
+  confirmingAnswer: AnswerUserData
+}) {
+  console.warn('Topic selected:', confirmingAnswer.answer.text)
+  set({
+    confirmationProgress: 0,
+    currentDifficulty: 1,
+    confirmingAnswer: null,
+    topic: confirmingAnswer.answer.text as Topic,
+    confirmedAnswers: [confirmingAnswer],
+  })
+}
+
+function handleCorrectAnswer({
+  set,
+  currentDifficulty,
+  confirmingAnswer,
+}: {
+  set: StoreApi<GameState>['setState']
+  currentDifficulty: number
+  confirmingAnswer: AnswerUserData
+}) {
+  const MAX_DIFFICULTY = 10
+  const newDifficulty = Math.min(currentDifficulty + 1, MAX_DIFFICULTY)
+  set((s) => ({
+    confirmationProgress: 0,
+    currentDifficulty: newDifficulty,
+    confirmingAnswer: null,
+    confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
+  }))
+}
+
+// Helper functions for goToStage
+
+function handleIntroStage({
+  set,
+  get,
+  speedTween,
+  speedTweenTarget,
+}: {
+  set: StoreApi<GameState>['setState']
+  get: StoreApi<GameState>['getState']
+  speedTween: GSAPTween | null
+  speedTweenTarget: { value: number }
+}) {
+  set({ stage: Stage.INTRO })
+  speedTween?.kill()
+  speedTweenTarget.value = get().terrainSpeed
+  gsap.to(speedTweenTarget, {
+    duration: INTRO_SPEED_DURATION,
+    ease: 'power2.out',
+    value: INTRO_SPEED,
+    onUpdate: () => {
+      set({ terrainSpeed: speedTweenTarget.value })
+    },
+  })
+}
+
+function handleQuestionStage({
+  set,
+  get,
+}: {
+  set: StoreApi<GameState>['setState']
+  get: StoreApi<GameState>['getState']
+}) {
+  const currentQuestionIndex = get().currentQuestionIndex
+  const newQuestionIndex = currentQuestionIndex + 1
+
+  if (newQuestionIndex === 0) {
+    set({
+      stage: Stage.QUESTION,
+      currentQuestionIndex: newQuestionIndex,
+      currentQuestion: topicQuestion,
+      questions: [topicQuestion],
+    })
+    return
+  }
+
+  const questions = get().questions
+  const askedIds = new Set<string>(questions.slice(1).map((q) => q.id))
+  const newQuestion = getNextQuestion({
+    topic: get().topic!,
+    currentDifficulty: get().currentDifficulty,
+    askedIds,
+  })
+
+  if (!newQuestion) {
+    console.error('No more questions available for topic:', get().topic)
+    return
+  }
+
+  set({
+    stage: Stage.QUESTION,
+    currentQuestionIndex: newQuestionIndex,
+    currentQuestion: newQuestion,
+    questions: [...questions, newQuestion],
+  })
+}
+
+function handleTerrainStage({
+  set,
+  speedTween,
+  speedTweenTarget,
+}: {
+  set: StoreApi<GameState>['setState']
+  speedTween: GSAPTween | null
+  speedTweenTarget: { value: number }
+}) {
+  set({ stage: Stage.TERRAIN })
+  speedTween?.kill()
+  gsap.to(speedTweenTarget, {
+    duration: TERRAIN_SPEED_DURATION,
+    ease: 'power2.out',
+    value: TERRAIN_SPEED,
+    onUpdate: () => {
+      set({ terrainSpeed: speedTweenTarget.value })
+    },
+  })
+}
+
+function handleGameOverStage({
+  set,
+  get,
+  speedTween,
+  speedTweenTarget,
+}: {
+  set: StoreApi<GameState>['setState']
+  get: StoreApi<GameState>['getState']
+  speedTween: GSAPTween | null
+  speedTweenTarget: { value: number }
+}) {
+  const { topic, confirmedAnswers, distanceRows } = get()
+
+  speedTween?.kill()
+  gsap.to(speedTweenTarget, {
+    duration: 0.4,
+    ease: 'power2.out',
+    value: 0,
+    onUpdate: () => {
+      set({ terrainSpeed: speedTweenTarget.value })
+    },
+  })
+
+  if (!topic) {
+    console.warn('[GAME_OVER] No topic set. Skipping PB compute.')
+    set({
+      stage: Stage.GAME_OVER,
+      currentRunStats: null,
+    })
+    return
+  }
+
+  const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
+  const run: RunStats = {
+    topic,
+    correctAnswers: totalCorrect,
+    distance: distanceRows,
+    date: new Date(),
+  }
+
+  set((s) => {
+    const existingRuns = s.previousRuns[topic] ?? []
+    return {
+      stage: Stage.GAME_OVER,
+      currentRunStats: run,
+      previousRuns: {
+        ...s.previousRuns,
+        [topic]: [...existingRuns, run],
+      },
+    }
+  })
 }
 
 type Props = PropsWithChildren

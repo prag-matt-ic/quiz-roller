@@ -5,9 +5,9 @@ import { AwardIcon, DoorOpen, PlayIcon } from 'lucide-react'
 import { type FC, useRef } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
-import { useShallow } from 'zustand/react/shallow'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import { type RunStats, type Topic } from '@/model/schema'
 
 import Button from './Button'
 import { GradientText } from './GradientText'
@@ -15,55 +15,62 @@ import { GradientText } from './GradientText'
 const FADE_IN_CLASS = 'game-over-fade-in'
 const BADGE_ID = 'record-badge'
 
-const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus }) => {
+type Props = {
+  transitionStatus: TransitionStatus
+}
+
+const GameOverUI: FC<Props> = ({ transitionStatus }) => {
   const container = useRef<HTMLDivElement>(null)
+  const topic = useGameStore((s) => s.topic)
+  const currentRun = useGameStore((s) => s.currentRunStats)
+  const previousRuns = useGameStore((s) => s.previousRuns)
   const goToStage = useGameStore((s) => s.goToStage)
   const resetGame = useGameStore((s) => s.resetGame)
 
-  const gameOver = useGameStore(
-    useShallow((s) => ({
-      topic: s.topic,
-      currentRun: s.currentRunStats,
-      prevPB: s.previousPersonalBest,
-      isNewPB: s.isNewPersonalBest,
-    })),
-  )
+  const hasPlayedGame = topic !== null
 
-  const hasPlayedGame = gameOver.topic !== null
+  const runsForTopic: RunStats[] =
+    !!topic && previousRuns ? (previousRuns[topic as Topic] ?? []) : []
+
+  const historyExcludingCurrent = currentRun
+    ? runsForTopic.filter((r) => r.date !== currentRun.date)
+    : runsForTopic
+
+  const prevPB = calculatePersonalBest(historyExcludingCurrent)
+  const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
 
   useGSAP(
     () => {
       if (transitionStatus === 'entered') {
-        gsap.fromTo(
-          `.${FADE_IN_CLASS}`,
-          {
-            opacity: 0,
-            scale: 1.2,
-          },
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.5,
-            ease: 'power1.out',
-            stagger: 0.08,
-            delay: 0.5,
-          },
-        )
-        if (gameOver.isNewPB) {
-          gsap.fromTo(
-            `#${BADGE_ID}`,
+        const timeline = gsap
+          .timeline({ delay: 0.1 })
+          .to(container.current, { opacity: 1 })
+          .fromTo(
+            `.${FADE_IN_CLASS}`,
             {
               opacity: 0,
-              scale: 0.8,
-              y: -20,
+              scale: 1.2,
             },
             {
               opacity: 1,
               scale: 1,
-              y: 0,
+              duration: 0.5,
+              ease: 'power1.out',
+              stagger: 0.08,
+            },
+          )
+        if (isNewPB) {
+          timeline.fromTo(
+            `#${BADGE_ID}`,
+            {
+              opacity: 0,
+              scale: 1.12,
+            },
+            {
+              opacity: 1,
+              scale: 1,
               duration: 0.6,
               ease: 'back.out(1.7)',
-              delay: 0.8,
             },
           )
         }
@@ -77,9 +84,8 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
       }
     },
     {
-      dependencies: [transitionStatus, gameOver.isNewPB],
+      dependencies: [transitionStatus, isNewPB],
       scope: container,
-      revertOnUpdate: true,
     },
   )
 
@@ -98,12 +104,12 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
   return (
     <section
       ref={container}
-      className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8">
+      className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>
       {/* New record banner */}
-      {gameOver.isNewPB && (
+      {isNewPB && (
         <h3
           id={BADGE_ID}
           className={twJoin(
@@ -122,17 +128,16 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
             <span className="text-sm font-semibold tracking-widest text-white/60 uppercase">
               Topic
             </span>
-            <p className="mt-1 text-xl font-medium md:text-2xl">{gameOver.topic}</p>
+            <p className="mt-1 text-xl font-medium md:text-2xl">{topic}</p>
           </div>
           <ComparisonStats
             currentRun={{
-              correctAnswers: gameOver.currentRun?.correctAnswers ?? 0,
-              distance: gameOver.currentRun?.distance ?? 0,
+              correctAnswers: currentRun?.correctAnswers ?? 0,
+              distance: currentRun?.distance ?? 0,
             }}
             personalBest={{
-              topic: gameOver.prevPB?.topic ?? gameOver.topic,
-              correctAnswers: gameOver.prevPB?.correctAnswers ?? 0,
-              distance: gameOver.prevPB?.distance ?? 0,
+              correctAnswers: prevPB.correctAnswers,
+              distance: prevPB.distance,
             }}
           />
         </div>
@@ -161,20 +166,53 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
 
 export default GameOverUI
 
+type PersonalBest = {
+  correctAnswers: number
+  distance: number
+}
+
+function calculatePersonalBest(runs: RunStats[]): PersonalBest {
+  return runs.reduce<PersonalBest>(
+    (best, run) => {
+      if (
+        run.correctAnswers > best.correctAnswers ||
+        (run.correctAnswers === best.correctAnswers && run.distance > best.distance)
+      ) {
+        return { correctAnswers: run.correctAnswers, distance: run.distance }
+      }
+      return best
+    },
+    { correctAnswers: 0, distance: 0 },
+  )
+}
+
+function checkIsNewPersonalBest(
+  currentRun: RunStats | null,
+  personalBest: PersonalBest,
+): boolean {
+  if (!currentRun) {
+    return false
+  }
+
+  return (
+    currentRun.correctAnswers > personalBest.correctAnswers ||
+    (currentRun.correctAnswers === personalBest.correctAnswers &&
+      currentRun.distance > personalBest.distance)
+  )
+}
+
 type ComparisonStatsProps = {
   currentRun: {
     correctAnswers: number
     distance: number
   }
   personalBest: {
-    topic: string | null
     correctAnswers: number
     distance: number
   }
 }
 
 const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest }) => {
-  // Determine which values are new PBs
   const isCorrectAnswersNewPB = currentRun.correctAnswers > personalBest.correctAnswers
   const isDistanceNewPB = currentRun.distance > personalBest.distance
 

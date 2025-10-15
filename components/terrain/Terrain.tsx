@@ -14,7 +14,7 @@ import { type Group, type InstancedBufferAttribute, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { QuestionText } from '@/components/QuestionText'
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
-import { TERRAIN_SPEED_UNITS } from '@/constants/game'
+import { TERRAIN_SPEED_UNITS } from '@/resources/game'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -118,6 +118,7 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
+  const isSplashStage = stage === Stage.SPLASH
   const isIntroStage = stage === Stage.INTRO
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
@@ -517,6 +518,7 @@ const Terrain: FC = () => {
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
     if (!tileShader.current) return
+    if (stage === Stage.GAME_OVER) return
 
     tileShader.current.uScrollZ = currentScrollPosition.current
 
