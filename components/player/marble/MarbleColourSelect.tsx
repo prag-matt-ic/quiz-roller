@@ -13,7 +13,7 @@ const MarbleColourSelect: FC = () => {
   return (
     <div
       id="colour-select"
-      className="flex w-fit items-center gap-6 rounded-full bg-black/20 p-5">
+      className="flex w-fit items-center gap-6 rounded-full bg-black/20 p-3">
       {COLOUR_RANGES.map((_, idx) => {
         const isActive = idx === value
         return (

@@ -108,7 +108,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           id={BADGE_ID}
           className={twJoin(
             'heading-md flex items-center justify-center gap-2 rounded-full',
-            'bg-amber-500/20 px-4 py-2 text-center font-semibold capitalize text-white',
+            'bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize',
             'ring-1 ring-amber-400/40',
           )}>
           <AwardIcon /> You&apos;ve set a new record!
@@ -119,7 +119,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
         <div className={`${FADE_IN_CLASS} space-y-8 opacity-0`}>
           {/* Topic - spans all three columns */}
           <div className="col-span-3 mx-auto mb-4 w-fit rounded-2xl bg-black/40 p-6 text-center">
-            <span className="text-sm font-semibold uppercase tracking-widest text-white/60">
+            <span className="text-sm font-semibold tracking-widest text-white/60 uppercase">
               Topic
             </span>
             <p className="mt-1 text-xl font-medium md:text-2xl">{gameOver.topic}</p>
@@ -137,7 +137,7 @@ const GameOverUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStat
           />
         </div>
       )}
-      <div className="mt-4 flex gap-4">
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row">
         <Button
           variant="primary"
           color="dark"
@@ -185,7 +185,7 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       <h3 className="heading-sm text-white">This Run</h3>
       <h3 className="heading-sm text-white/50">Personal Best</h3>
       {/* Correct answers row */}
-      <div className="flex items-center text-sm font-semibold uppercase tracking-widest text-white/60">
+      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
         Correct Answers
       </div>
       <p
@@ -203,7 +203,7 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
         {personalBest.correctAnswers}
       </p>
       {/* Distance row */}
-      <div className="flex items-center text-sm font-semibold uppercase tracking-widest text-white/60">
+      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
         Distance Travelled
       </div>
       <p

@@ -65,7 +65,7 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
     <div
       id="splash"
       className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/40 from-35% to-transparent to-60% pt-16 pb-24">
-      <div className="grid w-full max-w-4xl grid-rows-2 text-center text-white">
+      <div className="grid w-full max-w-4xl grid-rows-3 text-center text-white">
         {/* Title */}
         <header className="flex h-full flex-col items-center justify-center gap-4">
           <h1 className="heading-xl mb-10 tracking-wide opacity-0">
@@ -73,30 +73,32 @@ const SplashUI: FC<{ transitionStatus: TransitionStatus }> = ({ transitionStatus
           </h1>
         </header>
 
-        <div className="mx-auto self-end py-6">
-          <MarbleColourSelect />
-        </div>
-        {/* CTA Buttons */}
-        <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="secondary"
-            color="dark"
-            className="splash-button"
-            aria-label="Start in silence"
-            onClick={() => onStartClick(true)}>
-            <VolumeXIcon className="size-5" strokeWidth={2} />
-            ROLL IN SILENCE
-          </Button>
+        <div />
 
-          <Button
-            variant="primary"
-            color="dark"
-            className="splash-button"
-            aria-label="Start with sounds"
-            onClick={() => onStartClick(false)}>
-            <PlayIcon className="size-5" strokeWidth={2} />
-            ROLL WITH SOUNDS
-          </Button>
+        <div className="mx-auto flex flex-col items-center gap-3 self-end py-6">
+          <MarbleColourSelect />
+          {/* CTA Buttons */}
+          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
+            <Button
+              variant="secondary"
+              color="dark"
+              className="splash-button"
+              aria-label="Start in silence"
+              onClick={() => onStartClick(true)}>
+              <VolumeXIcon className="size-5" strokeWidth={2} />
+              ROLL IN SILENCE
+            </Button>
+
+            <Button
+              variant="primary"
+              color="dark"
+              className="splash-button"
+              aria-label="Start with sounds"
+              onClick={() => onStartClick(false)}>
+              <PlayIcon className="size-5" strokeWidth={2} />
+              ROLL WITH SOUNDS
+            </Button>
+          </div>
         </div>
       </div>
     </div>
