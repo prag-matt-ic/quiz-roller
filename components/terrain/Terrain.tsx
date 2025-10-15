@@ -118,6 +118,7 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
+  const isSplashStage = stage === Stage.SPLASH
   const isIntroStage = stage === Stage.INTRO
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)

@@ -20,7 +20,7 @@ function TextureGeneratorPage() {
         </div>
       </div>
 
-      <aside className="h-full overflow-auto bg-gray-900">
+      <aside className="h-full overflow-auto bg-slate-900">
         <Leva
           theme={LEVA_CONTROLS_THEME}
           hideCopyButton={true}

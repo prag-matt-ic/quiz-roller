@@ -58,7 +58,7 @@ type GameState = {
 
   // Distance travelled in rows (increments when terrain rows recycle)
   distanceRows: number
-  incrementDistanceRows: (delta?: number) => void
+  incrementDistanceRows: (delta: number) => void
 
   // Questions
   topic: Topic | null

@@ -3,7 +3,7 @@ import { type LevaCustomTheme } from 'leva/dist/declarations/src/styles'
 export const LEVA_CONTROLS_THEME: LevaCustomTheme = {
   radii: {
     xs: '0px',
-    // sm: '0px',
+    sm: '0px',
     lg: '0px',
   },
   fontSizes: {
