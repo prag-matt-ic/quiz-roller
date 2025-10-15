@@ -40,9 +40,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
 }
 
 const AnswerTileShader = shaderMaterial(
-  {
-    ...INITIAL_ANSWER_TILE_UNIFORMS,
-  },
+  INITIAL_ANSWER_TILE_UNIFORMS,
   answerTileVertex,
   answerTileFragment,
 )
@@ -58,38 +56,37 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
     const currentQuestion = useGameStore((s) => s.currentQuestion)
     const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
     const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
-    // Compute text + userData first; used by the text canvas hook
 
-    const isConfirmingThisAnswer: boolean = useMemo(() => {
+    const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
+    const localProgress = useRef(0)
+    const { confirmationProgress } = useConfirmationProgress()
+
+    const isConfirmingThisAnswer = useMemo<boolean>(() => {
       if (!confirmingAnswer) return false
       if (!currentQuestion.answers[index]) return false
       return confirmingAnswer.answerNumber === index + 1
     }, [confirmingAnswer, currentQuestion, index])
 
-    const { text, userData }: { text: string; userData: AnswerUserData | undefined } =
-      useMemo(() => {
-        const answer = currentQuestion?.answers[index]
-        if (!answer) return { text: '', userData: undefined }
-        const userData: AnswerUserData = {
-          type: 'answer',
-          answer,
-          questionId: currentQuestion.id,
-          answerNumber: index + 1, // 1-based index for sync with row data.
-        }
-        const text = answer.text
-        return { text, userData }
-      }, [currentQuestion, index])
+    // Compute text + userData first; used by the text canvas hook
+    const { text, userData } = useMemo<{
+      text: string
+      userData: AnswerUserData | undefined
+    }>(() => {
+      const answer = currentQuestion?.answers[index]
+      if (!answer) return { text: '', userData: undefined }
+      const userData: AnswerUserData = {
+        type: 'answer',
+        answer,
+        questionId: currentQuestion.id,
+        answerNumber: index + 1, // 1-based index for sync with row data.
+      }
+      return { text: answer.text, userData }
+    }, [currentQuestion, index])
 
-    const wasConfirmed: boolean = useMemo(
+    const wasConfirmed = useMemo<boolean>(
       () => confirmedAnswers.some((a) => a.answer.text === text),
       [confirmedAnswers, text],
     )
-
-    const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
-    const localProgress = useRef(0)
-
-    // Subscribe to confirmation progress from GameProvider
-    const { confirmationProgress } = useConfirmationProgress()
 
     useFrame(({ clock }) => {
       if (!shader.current) return
