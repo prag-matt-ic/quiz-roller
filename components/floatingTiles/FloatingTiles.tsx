@@ -32,6 +32,31 @@ const CustomFloatingTilesMaterial = shaderMaterial(
 )
 const FloatingTilesMaterial = extend(CustomFloatingTilesMaterial)
 
+// Configuration constants
+const EXTRA_SIDE_COLUMNS = 8
+const Z_ROWS_HALF = 20 // rows in each direction (band depth)
+const Z_MIN_ROW = -Z_ROWS_HALF
+const Z_MAX_ROW = Z_ROWS_HALF
+const Y_MIN = -16 // spawn band start (bottom)
+const Y_MAX = 10 // recycle threshold (top)
+const Z_FADE_START = 25 // start fading distance
+const Z_FADE_END = 35 // fully faded distance
+const BOX_SIZE_SCALE = 0.75 // scale factor relative to terrain tiles
+const MAX_DELTA_TIME = 0.05 // clamp dt to avoid huge jumps on tab switch
+
+// Grid config: widen beyond terrain by EXTRA_SIDE_COLUMNS per side
+const GRID_COLS = 2 * COLUMNS + 2 * EXTRA_SIDE_COLUMNS
+const MIDDLE_START = (GRID_COLS - COLUMNS) / 2
+const MIDDLE_END = MIDDLE_START + COLUMNS - 1
+
+// Allowed columns live strictly left of terrain band and right of it
+const allowedColsLeft: number[] = Array.from({ length: MIDDLE_START }, (_, i) => i)
+const allowedColsRight: number[] = Array.from(
+  { length: GRID_COLS - MIDDLE_END - 1 },
+  (_, i) => MIDDLE_END + 1 + i,
+)
+const allowedCols = [...allowedColsLeft, ...allowedColsRight]
+
 type Props = {
   isMobile: boolean
   /** Optional override for instance count */
@@ -51,36 +76,6 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   const baseCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
   const textureSize = useMemo(() => Math.ceil(Math.sqrt(baseCount)), [baseCount])
   const instanceCount = useMemo(() => textureSize * textureSize, [textureSize])
-
-  // Grid config: widen beyond terrain by EXTRA_SIDE_COLS per side.
-  const EXTRA_SIDE_COLS = 8
-  const GRID_COLS = 2 * COLUMNS + 2 * EXTRA_SIDE_COLS // terrain band + extra per side
-  const MIDDLE_START = (GRID_COLS - COLUMNS) / 2 // 8
-  const MIDDLE_END = MIDDLE_START + COLUMNS - 1 // 23
-  // Allowed columns live strictly left of terrain band and right of it
-  const allowedColsLeft = useMemo(() => {
-    const arr: number[] = []
-    for (let c = 0; c < MIDDLE_START; c++) arr.push(c)
-    return arr
-  }, [MIDDLE_START])
-  const allowedColsRight = useMemo(() => {
-    const arr: number[] = []
-    for (let c = MIDDLE_END + 1; c < GRID_COLS; c++) arr.push(c)
-    return arr
-  }, [GRID_COLS, MIDDLE_END])
-  const allowedCols = useMemo(
-    () => [...allowedColsLeft, ...allowedColsRight],
-    [allowedColsLeft, allowedColsRight],
-  )
-
-  // Z is kept near the playfield and quantized to the terrain grid for coherence
-  // Spread further back along Z: increase rows for deeper band
-  const Z_ROWS_HALF = 20 // rows in each direction (band depth)
-  const Z_MIN_ROW = -Z_ROWS_HALF
-  const Z_MAX_ROW = Z_ROWS_HALF
-  // Vertical motion band
-  const Y_MIN = -16 // spawn band start (bottom)
-  const Y_MAX = 10 // recycle threshold (top)
 
   // Per-instance state buffers (heap-allocated once)
   const positions = useRef<Float32Array>(new Float32Array(instanceCount * 3))
@@ -201,8 +196,8 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
       positionUniforms.uZMinRow = { value: Z_MIN_ROW }
       positionUniforms.uZMaxRow = { value: Z_MAX_ROW }
       // Z fade: start fading at ~25 units, fully faded by ~35 units
-      positionUniforms.uZFadeStart = { value: 25 }
-      positionUniforms.uZFadeEnd = { value: 35 }
+      positionUniforms.uZFadeStart = { value: Z_FADE_START }
+      positionUniforms.uZFadeEnd = { value: Z_FADE_END }
       positionUniforms.uCameraZ = { value: camera.position.z }
 
       // Initialize GPU compute
@@ -223,7 +218,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     } catch (error) {
       console.error('Error initializing FloatingTiles GPUComputationRenderer:', error)
     }
-  }, [renderer, textureSize, Y_MIN, Y_MAX, GRID_COLS, Z_MIN_ROW, Z_MAX_ROW, camera.position.z])
+  }, [renderer, textureSize, camera.position.z])
 
   // GPU computation - position and alpha computed on GPU
   useFrame((_, dt) => {
@@ -233,7 +228,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     if (!materialRef.current) return
 
     // Clamp dt to avoid huge jumps on tab switch
-    const delta = Math.min(dt, 0.05)
+    const delta = Math.min(dt, MAX_DELTA_TIME)
 
     // Update position uniforms
     const positionUniforms = positionVariable.current.material.uniforms as {
@@ -256,9 +251,9 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   })
 
   // Slightly smaller than terrain tiles
-  const BOX_W = TILE_SIZE * 0.75
-  const BOX_H = TILE_THICKNESS * 0.75
-  const BOX_D = TILE_SIZE * 0.75
+  const BOX_W = TILE_SIZE * BOX_SIZE_SCALE
+  const BOX_H = TILE_THICKNESS * BOX_SIZE_SCALE
+  const BOX_D = TILE_SIZE * BOX_SIZE_SCALE
 
   return (
     <instancedMesh
