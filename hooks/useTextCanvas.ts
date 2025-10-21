@@ -35,6 +35,25 @@ const DEFAULTS: Required<Omit<TextDrawOptions, 'width' | 'height'>> = {
   textBaseline: 'middle',
 }
 
+function getLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ')
+  const lines: string[] = []
+  let currentLine = words[0]
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i]
+    const width = ctx.measureText(currentLine + ' ' + word).width
+    if (width < maxWidth) {
+      currentLine += ' ' + word
+    } else {
+      lines.push(currentLine)
+      currentLine = word
+    }
+  }
+  lines.push(currentLine)
+  return lines
+}
+
 export function setupCanvasTexture(width: number, height: number): CanvasState {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -68,12 +87,10 @@ export function writeTextToCanvas(
   context.fillRect(0, 0, width, height)
 
   const x = width / 2
-  const y = height / 2
-
   const maxTextWidth = width * (1 - options.paddingXFrac * 2)
   const maxTextHeight = height * (1 - options.paddingYFrac * 2)
 
-  // Determine base font size and shrink in steps until it fits
+  // Determine base font size
   let fontSize = Math.max(8, Math.floor(height * options.baseFontScale))
   const minFontSize = Math.max(8, Math.floor(fontSize * options.minScale))
 
@@ -82,26 +99,40 @@ export function writeTextToCanvas(
   }
   setFont()
 
+  // Get wrapped lines and calculate total height
+  let lines = getLines(context, text, maxTextWidth)
+  const lineHeight = fontSize * 1.2 // 1.2 is a typical line-height multiplier
+  let totalTextHeight = lines.length * lineHeight
+
+  // Scale down only if total height exceeds available height
   for (let i = 0; i < 10; i++) {
-    const metrics = context.measureText(text)
-    const tooWide = metrics.width > maxTextWidth
-    const tooTall = fontSize > maxTextHeight
-    if (!tooWide && !tooTall) break
+    if (totalTextHeight <= maxTextHeight) break
     const nextSize = Math.max(minFontSize, Math.floor(fontSize * options.scaleStep))
     if (nextSize === fontSize) break
     fontSize = nextSize
     setFont()
+
+    // Recalculate lines and height with new font size
+    lines = getLines(context, text, maxTextWidth)
+    const newLineHeight = fontSize * 1.2
+    totalTextHeight = lines.length * newLineHeight
   }
 
+  // Draw each line
   context.textAlign = options.textAlign
-  context.textBaseline = options.textBaseline
+  context.textBaseline = 'middle'
   context.fillStyle = options.color
-  context.fillText(text, x, y)
+
+  const actualLineHeight = fontSize * 1.2
+  const startY = (height - totalTextHeight) / 2 + actualLineHeight / 2
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineY = startY + i * actualLineHeight
+    context.fillText(lines[i], x, lineY)
+  }
 }
 
-export type UseTextCanvasOptions = TextDrawOptions
-
-export function useTextCanvas(text: string, options: UseTextCanvasOptions): CanvasState | null {
+export function useTextCanvas(text: string, options: TextDrawOptions): CanvasState | null {
   const [state, setState] = useState<CanvasState | null>(null)
 
   useEffect(() => {
