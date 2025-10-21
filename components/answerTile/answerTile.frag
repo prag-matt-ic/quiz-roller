@@ -7,7 +7,7 @@ uniform sampler2D uTextTexture;
 
 varying vec2 vUv;
 
-const float BORDER_FRACTION = 0.1; // fraction of full height
+const float BORDER_FRACTION = 0.06; // fraction of full height
 const vec4 BASE_COLOUR = vec4(0.0);
 const float BORDER_WAVE_FREQUENCY = 3.0;
 const float BORDER_WAVE_OFFSET = 0.5;

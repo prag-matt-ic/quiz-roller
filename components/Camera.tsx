@@ -32,7 +32,7 @@ export const CAMERA_CONFIG: Record<
     zoom: 1.6,
   },
   [Stage.INTRO]: {
-    position: { x: 0, y: 5, z: 8 },
+    position: { x: 0, y: 2, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
   },

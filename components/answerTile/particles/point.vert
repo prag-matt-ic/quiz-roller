@@ -50,7 +50,7 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float baseSize = mix(4.0, 12.0, seed);
+    float baseSize = mix(8.0, 20.0, seed);
     float sizeFade = 1.0 - attractionPhase * 0.4;
     gl_PointSize = baseSize * sizeFade * uDpr;
 
