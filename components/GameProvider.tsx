@@ -36,6 +36,8 @@ export enum Stage {
 // - TW: history of runs needs to omit the topic question (maybe we can re-structure store for this?)
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
+// Add an "info" button and a call to action - sponsor the development, collaborate, share feedback etc.
+
 // Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 type GameState = {
@@ -82,13 +84,12 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-const CONFIRMATION_DURATION_S = 3
-const INTRO_SPEED = 0.25
+const MAX_DIFFICULTY = 10
+const CONFIRMATION_DURATION_S = 2.4
+const INTRO_SPEED = 0.8
 const TERRAIN_SPEED = 1
-const STOP_SPEED = 0
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
-const STOP_SPEED_DURATION = 0.4
 
 // Start the player on the floor tiles (no drop-in):
 // y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
@@ -175,9 +176,11 @@ const createGameStore = () => {
           } else {
             // Start confirming this answer
             const { confirmedAnswers, onAnswerConfirmed } = get()
+
             const hasAlreadyAnswered = confirmedAnswers.some(
-              (answer) => answer.questionId === answer.questionId,
+              ({ questionId }) => questionId === answer.questionId,
             )
+
             if (hasAlreadyAnswered) return
 
             set({ confirmingAnswer: answer })
@@ -213,17 +216,16 @@ const createGameStore = () => {
           confirmationTween?.kill()
 
           if (!confirmingAnswer.answer.isCorrect) {
-            handleIncorrectAnswer({ set, confirmingAnswer, goToStage })
+            handleIncorrectAnswer({ confirmingAnswer, set })
             return
           }
 
           if (!topic) {
             handleTopicSelection({ set, confirmingAnswer })
+            // goToStage(Stage.TERRAIN) // Go to terrain immediately after topic selection
           } else {
-            handleCorrectAnswer({ set, currentDifficulty, confirmingAnswer })
+            handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
           }
-
-          goToStage(Stage.TERRAIN)
         },
 
         resetTick: 0,
@@ -289,11 +291,9 @@ const createGameStore = () => {
 function handleIncorrectAnswer({
   set,
   confirmingAnswer,
-  goToStage,
 }: {
   set: StoreApi<GameState>['setState']
   confirmingAnswer: AnswerUserData
-  goToStage: (stage: Stage) => void
 }) {
   console.warn('Wrong answer chosen! Game over.')
   set((s) => ({
@@ -301,15 +301,14 @@ function handleIncorrectAnswer({
     confirmingAnswer: null,
     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
   }))
-  goToStage(Stage.GAME_OVER)
 }
 
 function handleTopicSelection({
   set,
   confirmingAnswer,
 }: {
-  set: StoreApi<GameState>['setState']
   confirmingAnswer: AnswerUserData
+  set: StoreApi<GameState>['setState']
 }) {
   console.warn('Topic selected:', confirmingAnswer.answer.text)
   set({
@@ -326,11 +325,10 @@ function handleCorrectAnswer({
   currentDifficulty,
   confirmingAnswer,
 }: {
-  set: StoreApi<GameState>['setState']
   currentDifficulty: number
   confirmingAnswer: AnswerUserData
+  set: StoreApi<GameState>['setState']
 }) {
-  const MAX_DIFFICULTY = 10
   const newDifficulty = Math.min(currentDifficulty + 1, MAX_DIFFICULTY)
   set((s) => ({
     confirmationProgress: 0,

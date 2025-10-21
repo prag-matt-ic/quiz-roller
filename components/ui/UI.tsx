@@ -23,9 +23,10 @@ const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
 
   const stage = useGameStore((s) => s.stage)
+  const hasSelectedTopic = useGameStore((s) => !!s.topic)
   const isSplash = stage === Stage.SPLASH
   const isIntro = stage === Stage.INTRO
-  const isPlaying = stage === Stage.QUESTION || stage === Stage.TERRAIN
+  const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
 
   const switchKey = `${isSplash}-${isIntro}-${isPlaying}-${isGameOver}`

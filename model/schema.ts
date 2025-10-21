@@ -49,7 +49,7 @@ export const topicQuestion: Question = {
   id: 'topic',
   subtopic: '-',
   difficulty: 0,
-  text: 'Select a topic',
+  text: 'Confirm a topic by rolling over the tile',
   answers: Object.values(Topic).map((topic) => ({
     text: topic,
     isCorrect: true,

@@ -6,6 +6,7 @@ import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { forwardRef, useMemo, useRef } from 'react'
 import { CanvasTexture, type Vector3Tuple } from 'three'
 
+import Particles from '@/components/answerTile/particles/Particles'
 import { useGameStore } from '@/components/GameProvider'
 import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
@@ -16,8 +17,6 @@ import { type AnswerUserData } from '@/model/schema'
 
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
-
-// TODO: Add a correct/incorrect feedback. Correct should be like confetti.
 
 const ANSWER_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
 const CANVAS_WIDTH = ANSWER_TILE_WIDTH * 128
@@ -40,9 +39,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
 }
 
 const AnswerTileShader = shaderMaterial(
-  {
-    ...INITIAL_ANSWER_TILE_UNIFORMS,
-  },
+  INITIAL_ANSWER_TILE_UNIFORMS,
   answerTileVertex,
   answerTileFragment,
 )
@@ -53,43 +50,46 @@ type AnswerTileProps = {
   index: number
 }
 
+const labelColour = getPaletteHex(0.5)
+
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
     const currentQuestion = useGameStore((s) => s.currentQuestion)
     const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
     const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
-    // Compute text + userData first; used by the text canvas hook
 
-    const isConfirmingThisAnswer: boolean = useMemo(() => {
+    const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
+    const localProgress = useRef(0)
+    const { confirmationProgress } = useConfirmationProgress()
+
+    const isConfirmingThisAnswer = useMemo<boolean>(() => {
       if (!confirmingAnswer) return false
       if (!currentQuestion.answers[index]) return false
       return confirmingAnswer.answerNumber === index + 1
     }, [confirmingAnswer, currentQuestion, index])
 
-    const { text, userData }: { text: string; userData: AnswerUserData | undefined } =
-      useMemo(() => {
-        const answer = currentQuestion?.answers[index]
-        if (!answer) return { text: '', userData: undefined }
-        const userData: AnswerUserData = {
-          type: 'answer',
-          answer,
-          questionId: currentQuestion.id,
-          answerNumber: index + 1, // 1-based index for sync with row data.
-        }
-        const text = answer.text
-        return { text, userData }
-      }, [currentQuestion, index])
+    // Compute text + userData first; used by the text canvas hook
+    const { text, userData } = useMemo<{
+      text: string
+      userData: AnswerUserData | undefined
+    }>(() => {
+      const answer = currentQuestion?.answers[index]
+      if (!answer) return { text: '', userData: undefined }
+      const userData: AnswerUserData = {
+        type: 'answer',
+        answer,
+        questionId: currentQuestion.id,
+        answerNumber: index + 1, // 1-based index for sync with row data.
+      }
+      return { text: answer.text, userData }
+    }, [currentQuestion, index])
 
-    const wasConfirmed: boolean = useMemo(
-      () => confirmedAnswers.some((a) => a.answer.text === text),
-      [confirmedAnswers, text],
-    )
-
-    const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
-    const localProgress = useRef(0)
-
-    // Subscribe to confirmation progress from GameProvider
-    const { confirmationProgress } = useConfirmationProgress()
+    const { wasConfirmed, wasCorrect } = useMemo(() => {
+      const confirmedEntry = confirmedAnswers.find((a) => a.answer.text === text)
+      const wasConfirmed = Boolean(confirmedEntry)
+      const wasCorrect = Boolean(confirmedEntry?.answer.isCorrect)
+      return { wasConfirmed, wasCorrect }
+    }, [confirmedAnswers, text])
 
     useFrame(({ clock }) => {
       if (!shader.current) return
@@ -109,8 +109,6 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
       shader.current.uTime = clock.elapsedTime
     })
 
-    // Render a canvas texture for the label text (reusable hook)
-    const labelColour = wasConfirmed ? getPaletteHex(0.8) : getPaletteHex(0.5)
     const canvasState = useTextCanvas(text, {
       width: CANVAS_WIDTH,
       height: CANVAS_HEIGHT,
@@ -157,6 +155,13 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
             uTextTexture={canvasState?.texture ?? null}
           />
         </mesh>
+        {/* Confetti burst when this answer is confirmed */}
+        <Particles
+          width={ANSWER_TILE_WIDTH}
+          height={ANSWER_TILE_HEIGHT}
+          wasConfirmed={wasConfirmed}
+          wasCorrect={wasCorrect}
+        />
       </RigidBody>
     )
   },

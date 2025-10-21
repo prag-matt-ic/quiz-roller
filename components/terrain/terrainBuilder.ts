@@ -9,7 +9,7 @@ import {
 
 // Grid configuration
 export const COLUMNS = 16
-export const ROWS_VISIBLE = 32
+export const ROWS_VISIBLE = 28
 export const TILE_SIZE = 1
 export const TILE_THICKNESS = 0.16
 // Heights
