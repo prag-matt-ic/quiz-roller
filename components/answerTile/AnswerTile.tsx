@@ -18,8 +18,6 @@ import { type AnswerUserData } from '@/model/schema'
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
 
-// TODO: Add a correct/incorrect feedback. Correct should be like confetti.
-
 const ANSWER_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
 const CANVAS_WIDTH = ANSWER_TILE_WIDTH * 128
 const CANVAS_HEIGHT = ANSWER_TILE_HEIGHT * 128
@@ -51,6 +49,8 @@ type AnswerTileProps = {
   position: Vector3Tuple
   index: number
 }
+
+const labelColour = getPaletteHex(0.5)
 
 export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
   ({ position, index }, ref) => {
@@ -84,10 +84,12 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
       return { text: answer.text, userData }
     }, [currentQuestion, index])
 
-    const wasConfirmed = useMemo<boolean>(
-      () => confirmedAnswers.some((a) => a.answer.text === text),
-      [confirmedAnswers, text],
-    )
+    const { wasConfirmed, wasCorrect } = useMemo(() => {
+      const confirmedEntry = confirmedAnswers.find((a) => a.answer.text === text)
+      const wasConfirmed = Boolean(confirmedEntry)
+      const wasCorrect = Boolean(confirmedEntry?.answer.isCorrect)
+      return { wasConfirmed, wasCorrect }
+    }, [confirmedAnswers, text])
 
     useFrame(({ clock }) => {
       if (!shader.current) return
@@ -107,8 +109,6 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
       shader.current.uTime = clock.elapsedTime
     })
 
-    // Render a canvas texture for the label text (reusable hook)
-    const labelColour = wasConfirmed ? getPaletteHex(0.8) : getPaletteHex(0.5)
     const canvasState = useTextCanvas(text, {
       width: CANVAS_WIDTH,
       height: CANVAS_HEIGHT,
@@ -159,9 +159,8 @@ export const AnswerTile = forwardRef<RapierRigidBody, AnswerTileProps>(
         <Particles
           width={ANSWER_TILE_WIDTH}
           height={ANSWER_TILE_HEIGHT}
-          // Spawn on tile surface (world Y)
-          spawnY={0}
-          active={wasConfirmed}
+          wasConfirmed={wasConfirmed}
+          wasCorrect={wasCorrect}
         />
       </RigidBody>
     )

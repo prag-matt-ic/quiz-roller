@@ -27,10 +27,10 @@ const DEFAULTS: Required<Omit<TextDrawOptions, 'width' | 'height'>> = {
   fontFamily: '"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
   fontWeight: 500,
   baseFontScale: 0.1,
-  scaleStep: 0.9,
-  minScale: 0.5,
-  paddingXFrac: 0.08,
-  paddingYFrac: 0.12,
+  scaleStep: 0.95,
+  minScale: 0.4,
+  paddingXFrac: 0.12,
+  paddingYFrac: 0.1,
   textAlign: 'center',
   textBaseline: 'middle',
 }
@@ -99,9 +99,11 @@ export function writeTextToCanvas(
   }
   setFont()
 
+  const LINE_HEIGHT_MULTIPLIER = 1.25
+
   // Get wrapped lines and calculate total height
   let lines = getLines(context, text, maxTextWidth)
-  const lineHeight = fontSize * 1.2 // 1.2 is a typical line-height multiplier
+  const lineHeight = fontSize * LINE_HEIGHT_MULTIPLIER
   let totalTextHeight = lines.length * lineHeight
 
   // Scale down only if total height exceeds available height
@@ -114,7 +116,7 @@ export function writeTextToCanvas(
 
     // Recalculate lines and height with new font size
     lines = getLines(context, text, maxTextWidth)
-    const newLineHeight = fontSize * 1.2
+    const newLineHeight = fontSize * LINE_HEIGHT_MULTIPLIER
     totalTextHeight = lines.length * newLineHeight
   }
 
@@ -123,7 +125,7 @@ export function writeTextToCanvas(
   context.textBaseline = 'middle'
   context.fillStyle = options.color
 
-  const actualLineHeight = fontSize * 1.2
+  const actualLineHeight = fontSize * LINE_HEIGHT_MULTIPLIER
   const startY = (height - totalTextHeight) / 2 + actualLineHeight / 2
 
   for (let i = 0; i < lines.length; i++) {

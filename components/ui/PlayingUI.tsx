@@ -1,8 +1,9 @@
 'use client'
-import { CheckCircle2Icon } from 'lucide-react'
+import { FootprintsIcon, GaugeIcon, GemIcon, type LucideIcon, TrophyIcon } from 'lucide-react'
 import type { FC, ReactNode } from 'react'
+import { useMemo } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
-import { twMerge } from 'tailwind-merge'
+import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { getDifficultyLabel } from '@/model/difficulty'
@@ -11,52 +12,73 @@ const PlayingUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
   const difficulty = useGameStore((s) => s.currentDifficulty)
   const distanceRows = useGameStore((s) => s.distanceRows)
+  const topic = useGameStore((s) => s.topic)
+  const previousRuns = useGameStore((s) => s.previousRuns)
 
-  const correctCount = confirmedAnswers.reduce(
-    (acc, a) => acc + (a.answer.isCorrect ? 1 : 0),
-    -1, // First question is the topic, not counted
+  const correctCount = Math.max(
+    0,
+    confirmedAnswers.reduce(
+      (acc, a) => acc + (a.answer.isCorrect ? 1 : 0),
+      -1, // First question is the topic, not counted
+    ),
   )
 
   const difficultyLabel = getDifficultyLabel(difficulty)
 
+  const { maxDistance, maxCorrect } = useMemo<{
+    maxDistance: number
+    maxCorrect: number
+  }>(() => {
+    if (!topic) return { maxDistance: 0, maxCorrect: 0 }
+
+    const runs = previousRuns[topic] ?? []
+    if (!runs.length) return { maxDistance: 0, maxCorrect: 0 }
+
+    return {
+      maxDistance: Math.max(...runs.map((r) => r.distance)),
+      maxCorrect: Math.max(...runs.map((r) => r.correctAnswers)),
+    }
+  }, [topic, previousRuns])
+
+  const isDistancePB = distanceRows > maxDistance
+  const isCorrectPB = correctCount > maxCorrect
+
   const renderBlock = ({
-    className,
-    heading,
+    icon: Icon,
     content,
   }: {
-    className?: string
-    heading: string
+    icon: LucideIcon
     content: ReactNode
   }): ReactNode => {
     return (
-      <div className={twMerge('flex flex-col bg-black/40', className)}>
-        <div className="block px-4 py-2 text-center text-[13px] leading-none font-medium text-white/80 uppercase">
-          {heading}
-        </div>
-        <div className="flex-1 bg-black/40 p-2 text-center">{content}</div>
+      <div className="relative flex items-center gap-4 rounded-xl bg-black/70 px-4 py-2">
+        <Icon className="size-7 text-white" strokeWidth={1.5} />
+        {content}
       </div>
     )
   }
 
   return (
-    <section className="pointer-events-none fixed inset-x-0 top-3 flex justify-center gap-px">
+    <section className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2">
       {renderBlock({
-        heading: 'Difficulty',
-        content: <span className="text-lg font-extrabold">{difficultyLabel}</span>,
+        icon: GaugeIcon,
+        content: <span className="text-2xl font-extrabold">{difficultyLabel}</span>,
       })}
       {renderBlock({
-        heading: 'Gems',
+        icon: GemIcon,
         content: (
-          <div className="flex items-center gap-1">
-            {Array.from({ length: correctCount }).map((_, i) => (
-              <CheckCircle2Icon key={i} className="size-4 text-green-400" strokeWidth={2} />
-            ))}
-          </div>
+          <span className={twJoin('text-4xl font-extrabold', isCorrectPB && 'text-amber-300')}>
+            {correctCount}
+          </span>
         ),
       })}
       {renderBlock({
-        heading: 'Distance',
-        content: <span className="text-xl font-extrabold">{distanceRows}</span>,
+        icon: FootprintsIcon,
+        content: (
+          <span className={twJoin('text-4xl font-extrabold', isDistancePB && 'text-amber-300')}>
+            {distanceRows}
+          </span>
+        ),
       })}
     </section>
   )

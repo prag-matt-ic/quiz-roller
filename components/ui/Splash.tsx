@@ -1,7 +1,7 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { PlayIcon, VolumeXIcon } from 'lucide-react'
-import type { FC } from 'react'
+import { type FC, useRef } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -22,11 +22,14 @@ const SplashUI: FC<Props> = ({ transitionStatus }) => {
     goToStage(Stage.INTRO)
   }
 
+  const container = useRef<HTMLDivElement>(null)
+
   useGSAP(
     () => {
       if (transitionStatus === 'entering') {
         gsap
           .timeline({ delay: 0.6 })
+          .to(container.current, { opacity: 1, duration: 0.2 })
           .fromTo(
             'h1',
             { y: -40, opacity: 0, scale: 1.2 },
@@ -46,28 +49,25 @@ const SplashUI: FC<Props> = ({ transitionStatus }) => {
           .to('h1', {
             y: -80,
             opacity: 0,
-            duration: 0.32,
+            duration: 0.3,
             scale: 1.2,
             ease: 'power1.out',
           })
-          .to(
-            '#splash',
-            {
-              opacity: 0,
-              duration: 0.3,
-              ease: 'power1.out',
-            },
-            0.2,
-          )
+          .to(container.current, {
+            opacity: 0,
+            duration: 0.3,
+            ease: 'power1.out',
+          })
       }
     },
-    { dependencies: [transitionStatus] },
+    { scope: container, dependencies: [transitionStatus] },
   )
 
   return (
     <div
       id="splash"
-      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/30 from-30% to-transparent to-60% pt-16 pb-24">
+      ref={container}
+      className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/30 from-30% to-transparent to-60% pt-16 pb-24 opacity-0">
       <div className="grid w-full max-w-4xl grid-rows-3 text-center text-white">
         {/* Title */}
         <header className="flex h-full flex-col items-center justify-center gap-4">
@@ -75,12 +75,12 @@ const SplashUI: FC<Props> = ({ transitionStatus }) => {
             <GradientText>Quizroller</GradientText>
           </h1>
         </header>
-        {/* Placeholder */}
+        {/* middle section filler */}
         <div />
         {/* Colour Select + CTA Buttons */}
         <div className="mx-auto flex flex-col items-center gap-6 self-end py-6">
           <MarbleColourSelect />
-          {/* CTA Buttons */}
+
           <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
             <Button
               variant="secondary"

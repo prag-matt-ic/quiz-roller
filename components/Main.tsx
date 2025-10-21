@@ -9,7 +9,7 @@ import UI from './ui/UI'
 
 const Main: FC = () => {
   return (
-    <main>
+    <main className="h-lvh w-full overflow-hidden">
       <GameProvider>
         <Game />
         <UI isMobile={false} />
