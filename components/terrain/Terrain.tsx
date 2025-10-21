@@ -118,8 +118,7 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const isSplashStage = stage === Stage.SPLASH
-  const isIntroStage = stage === Stage.INTRO
+  const topic = useGameStore((s) => s.topic)
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
@@ -130,7 +129,8 @@ const Terrain: FC = () => {
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const hasInitialized = useRef(false)
-  const banners = useRef<IntroBannersHandle>(null)
+  const introBanners = useRef<IntroBannersHandle>(null)
+  const isIntroBannersVisible = !topic
 
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
@@ -517,7 +517,7 @@ const Terrain: FC = () => {
 
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
-    if (!tileShader.current) return
+    if (!tileShader.current || !introBanners.current) return
     if (stage === Stage.GAME_OVER) return
 
     tileShader.current.uScrollZ = currentScrollPosition.current
@@ -539,7 +539,8 @@ const Terrain: FC = () => {
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
-    banners.current?.advance(zStep)
+
+    introBanners.current.advance(zStep)
     tileShader.current.uPlayerWorldPos = playerWorldPosition.current
   })
 
@@ -589,9 +590,9 @@ const Terrain: FC = () => {
       </InstancedRigidBodies>
 
       <IntroBanners
-        ref={banners}
+        ref={introBanners}
         zOffset={INITIAL_ROWS_Z_OFFSET}
-        visible={stage === Stage.INTRO}
+        isVisible={isIntroBannersVisible}
       />
 
       <QuestionText

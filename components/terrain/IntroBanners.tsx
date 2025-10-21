@@ -8,7 +8,6 @@ import {
   colToX,
   COLUMNS,
   getIntroCorridorBounds,
-  MAX_Z,
   SAFE_HEIGHT,
   TILE_SIZE,
 } from '@/components/terrain/terrainBuilder'
@@ -18,21 +17,21 @@ import {
   INTRO_BANNERS_START_PADDING_ROWS,
 } from '@/resources/intro'
 
+const INWARD_ROTATION_RADIANS = (30 * Math.PI) / 180
+
 export type IntroBannersHandle = {
   // Move banners forward in +Z by the given world-unit step
   advance: (zStep: number) => void
 }
 
 type Props = {
-  // Initial row window offset used by Terrain to place visible rows
   zOffset: number
-  // Optional visibility toggle (we still keep in scene graph for perf)
-  visible?: boolean
+  isVisible: boolean
 }
 
 // Lightweight banner planes staggered along the entry corridor. No per-frame allocations.
 export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
-  ({ zOffset, visible = true }, ref) => {
+  ({ zOffset, isVisible }, ref) => {
     const groupRef = useRef<Group>(null)
 
     // Precompute static banner local positions (relative to the group)
@@ -44,14 +43,20 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
       const rightX = colToX(rightCol)
       const y = SAFE_HEIGHT + 1.5
 
-      const positions: { x: number; y: number; z: number; side: 'left' | 'right' }[] = []
+      const positions: {
+        x: number
+        y: number
+        z: number
+        rotationY: number
+      }[] = []
       // Place banners from content array with start/end padding and spacing
       for (let i = 0; i < INTRO_BANNERS_CONTENT.length; i++) {
         const side: 'left' | 'right' = i % 2 === 0 ? 'left' : 'right'
         const x = side === 'left' ? leftX : rightX
         const row = INTRO_BANNERS_START_PADDING_ROWS + i * INTRO_BANNERS_SPACING_ROWS
         const z = -row * TILE_SIZE + zOffset
-        positions.push({ x, y, z, side })
+        const rotationY = side === 'left' ? INWARD_ROTATION_RADIANS : -INWARD_ROTATION_RADIANS
+        positions.push({ x, y, z, rotationY })
       }
       return positions
     }, [zOffset])
@@ -60,28 +65,31 @@ export const IntroBanners = forwardRef<IntroBannersHandle, Props>(
       ref,
       () => ({
         advance: (zStep: number) => {
+          if (!isVisible) return
           if (!groupRef.current) return
-          if (groupRef.current.position.z > MAX_Z) return
           groupRef.current.position.z += zStep
         },
       }),
-      [],
+      [isVisible],
     )
 
     return (
-      <group ref={groupRef} visible={visible}>
+      <group ref={groupRef} visible={isVisible}>
         {bannerPositions.map((p, i) => (
-          <group key={`intro-banner-${i}`} position={[p.x, p.y, p.z]}>
+          <group
+            key={`intro-banner-${i}`}
+            position={[p.x, p.y, p.z]}
+            rotation={[0, p.rotationY, 0]}>
             <mesh>
-              <planeGeometry args={[2.8, 1.2, 1, 1]} />
-              <meshBasicMaterial color={p.side === 'left' ? '#4CC9F0' : '#F72585'} />
+              <planeGeometry args={[3, 2, 1, 1]} />
+              <meshBasicMaterial color="#fff" />
             </mesh>
             <Text
-              fontSize={0.28}
-              color="#111"
+              fontSize={0.2}
+              color="#000"
               anchorX="center"
               anchorY="middle"
-              maxWidth={2.6}
+              maxWidth={1.8}
               position={[0, 0, 0.01]}>
               {INTRO_BANNERS_CONTENT[i]}
             </Text>
