@@ -5,7 +5,7 @@ import { Group, type Vector3Tuple } from 'three'
 
 import { useTextCanvas } from '@/hooks/useTextCanvas'
 
-import { QUESTION_TEXT_HEIGHT, QUESTION_TEXT_WIDTH } from './terrain/terrainBuilder'
+import { QUESTION_TEXT_HEIGHT, QUESTION_TEXT_WIDTH } from '../utils/terrainBuilder'
 
 type Props = {
   text: string

@@ -12,7 +12,7 @@ import { TERRAIN_SPEED_UNITS } from '@/resources/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { useGameFrame } from '@/hooks/useGameFrame'
 
-import { InstancedTiles, type InstancedTilesHandle } from './InstancedTiles'
+import { InstancedTiles, type InstancedTilesHandle } from '../tiles/InstancedTiles'
 import {
   ANSWER_TILE_COUNT,
   COLUMNS,
@@ -36,7 +36,7 @@ import {
   type RowData,
   generateQuestionSectionRowData,
   generateIntroSectionRowData,
-} from './terrainBuilder'
+} from '../../utils/terrainBuilder'
 
 const EPSILON = {
   SMALL: 1e-6,

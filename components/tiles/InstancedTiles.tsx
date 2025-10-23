@@ -1,5 +1,5 @@
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
   type InstancedRigidBodyProps,
@@ -11,9 +11,6 @@ import { type InstancedBufferAttribute, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-
-import tileFadeFragment from './shaders/tile.frag'
-import tileFadeVertex from './shaders/tile.vert'
 import {
   ENTRY_END_Z,
   ENTRY_START_Z,
@@ -21,7 +18,10 @@ import {
   EXIT_START_Z,
   TILE_SIZE,
   TILE_THICKNESS,
-} from './terrainBuilder'
+} from '@/utils/terrainBuilder'
+
+import tileFadeFragment from './tile.frag'
+import tileFadeVertex from './tile.vert'
 
 // Shader material for fade-in/out
 type TileShaderUniforms = {

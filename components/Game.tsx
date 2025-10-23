@@ -15,8 +15,8 @@ import Terrain from '@/components/terrain/Terrain'
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage, useGameStore } from './GameProvider'
+import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
-import OutOfBounds from './terrain/OutOfBounds'
 
 gsap.registerPlugin(useGSAP)
 
