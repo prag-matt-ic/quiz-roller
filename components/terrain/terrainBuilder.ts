@@ -1,12 +1,5 @@
 import { createNoise2D } from 'simplex-noise'
 
-import {
-  INTRO_BANNERS_CONTENT,
-  INTRO_BANNERS_END_PADDING_ROWS,
-  INTRO_BANNERS_SPACING_ROWS,
-  INTRO_BANNERS_START_PADDING_ROWS,
-} from '@/resources/intro'
-
 // Grid configuration
 export const COLUMNS = 16
 export const ROWS_VISIBLE = 28
@@ -23,16 +16,11 @@ export const MAX_Z = TILE_SIZE * 12
 
 // Extend intro/entry section to push the first question further back
 // Entry rows are sized to fit intro banners with padding
-export const INTRO_SECTION_ROWS =
-  INTRO_BANNERS_START_PADDING_ROWS +
-  Math.max(0, INTRO_BANNERS_CONTENT.length - 1) * INTRO_BANNERS_SPACING_ROWS +
-  INTRO_BANNERS_END_PADDING_ROWS
+export const INTRO_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Terrain scrolling and animation constants
 export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 6
-export const INTRO_MIN_SPEED = 0.25
-export const INTRO_SPEED_FAR_FACTOR = 0.5
 export const DECEL_EASE_POWER = 6
 export const DECEL_START_OFFSET_ROWS = 6
 export const OBSTACLE_BUFFER_SECTIONS = 10
@@ -239,111 +227,7 @@ export function generateIntroSectionRowData(): RowData[] {
   return rows
 }
 
-export function generateFirstQuestionSectionRowData(): RowData[] {
-  // All rows open; no UNSAFE_HEIGHT anywhere for first question
-  const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
-    new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
-  )
-
-  // Layout goals for first question:
-  // - Question text appears before any answers
-  // - Two answer tile rows with a 2-row gap between them
-
-  // Gap between the two answer rows (in whole grid rows)
-  const ANSWER_ROW_GAP = 2
-
-  // Place the top answer row starting a bit into the section to keep
-  // a small buffer from the leading edge. This keeps everything within
-  // the 16-row window while providing the requested 2-row gap.
-  const topStartRow = 4
-  const topCenterRow = topStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 4.5
-  const topTriggerRow = Math.ceil(topCenterRow)
-  const topZRelative = (topTriggerRow - topCenterRow) * TILE_SIZE
-
-  // Bottom answer row starts after the top row plus the explicit gap
-  const bottomStartRow = topStartRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP // 3 + 4 + 2 = 9
-  const bottomCenterRow = bottomStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 10.5
-  const bottomTriggerRow = Math.ceil(bottomCenterRow)
-  const bottomZRelative = (bottomTriggerRow - bottomCenterRow) * TILE_SIZE
-
-  // Bring the question text forward so it can be read before answers.
-  // Center it ahead of the top answer row.
-  const questionTextCenterRow = 2.5
-  const textTriggerRow = Math.ceil(questionTextCenterRow)
-  const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
-
-  const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
-  const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
-  const zRelTop = topZRelative
-  const zRelBottom = bottomZRelative
-
-  // Calculate answer tile ownership for four-tile layout
-  const leftStartCol = 1
-  const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
-  const rightStartCol = 9
-  const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
-  const topStartRowComputed = Math.ceil(topCenterRow - ANSWER_TILE_ROWS / 2)
-  const topEndRow = topStartRowComputed + ANSWER_TILE_ROWS - 1
-  const bottomStartRowComputed = Math.ceil(bottomCenterRow - ANSWER_TILE_ROWS / 2)
-  const bottomEndRow = bottomStartRowComputed + ANSWER_TILE_ROWS - 1
-
-  const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
-  for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
-    const isStart = i === 0
-    const isEnd = i === QUESTION_SECTION_ROWS - 1
-
-    // Compute ownership array for this row
-    const ownership = new Array<number>(COLUMNS).fill(0)
-    // Top-left tile (answer 1)
-    if (i >= topStartRowComputed && i <= topEndRow) {
-      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
-    }
-    // Top-right tile (answer 2)
-    if (i >= topStartRowComputed && i <= topEndRow) {
-      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
-    }
-    // Bottom-left tile (answer 3)
-    if (i >= bottomStartRowComputed && i <= bottomEndRow) {
-      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 3
-    }
-    // Bottom-right tile (answer 4)
-    if (i >= bottomStartRowComputed && i <= bottomEndRow) {
-      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 4
-    }
-
-    rows[i] = {
-      heights: heights[i],
-      type: 'question',
-      isSectionStart: isStart,
-      isSectionEnd: isEnd,
-      answerNumber: ownership,
-    }
-    if (i === textTriggerRow) {
-      rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
-    }
-    if (i === topTriggerRow) {
-      // Place top-left (index 0) and top-right (index 1) only
-      rows[i].answerTilePositions = [
-        [colToX(leftCenterCol), ANSWER_TILE_Y, zRelTop],
-        [colToX(rightCenterCol), ANSWER_TILE_Y, zRelTop],
-        null,
-        null,
-      ]
-    }
-    if (i === bottomTriggerRow) {
-      // Place bottom-left (index 2) and bottom-right (index 3) only
-      rows[i].answerTilePositions = [
-        null,
-        null,
-        [colToX(leftCenterCol), ANSWER_TILE_Y, zRelBottom],
-        [colToX(rightCenterCol), ANSWER_TILE_Y, zRelBottom],
-      ]
-    }
-  }
-  return rows
-}
-
-export function generateSubsequentQuestionSectionRowData(): RowData[] {
+export function generateQuestionSectionRowData(): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows
   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
@@ -417,12 +301,101 @@ export function generateSubsequentQuestionSectionRowData(): RowData[] {
   return rows
 }
 
-export function generateQuestionSectionRowData({
-  isFirstQuestion,
-}: {
-  isFirstQuestion: boolean
-}): RowData[] {
-  return isFirstQuestion
-    ? generateFirstQuestionSectionRowData()
-    : generateSubsequentQuestionSectionRowData()
-}
+// 4 ANSWER LAYOUT - EXAMPLE FOR FUTURE USE
+// export function generateQuestionSectionRowData(): RowData[] {
+//   // All rows open; no UNSAFE_HEIGHT anywhere for questions
+//   const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
+//     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
+//   )
+
+//   // Layout: Question text appears first, then two answer tile rows with a 2-row gap
+
+//   const ANSWER_ROW_GAP = 2
+
+//   // Place the top answer row starting a bit into the section
+//   const topStartRow = 4
+//   const topCenterRow = topStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 4.5
+//   const topTriggerRow = Math.ceil(topCenterRow)
+//   const topZRelative = (topTriggerRow - topCenterRow) * TILE_SIZE
+
+//   // Bottom answer row starts after the top row plus the explicit gap
+//   const bottomStartRow = topStartRow + ANSWER_TILE_ROWS + ANSWER_ROW_GAP // 3 + 4 + 2 = 9
+//   const bottomCenterRow = bottomStartRow + ANSWER_TILE_ROWS / 2 - 0.5 // 10.5
+//   const bottomTriggerRow = Math.ceil(bottomCenterRow)
+//   const bottomZRelative = (bottomTriggerRow - bottomCenterRow) * TILE_SIZE
+
+//   // Question text appears before answers
+//   const questionTextCenterRow = 2.5
+//   const textTriggerRow = Math.ceil(questionTextCenterRow)
+//   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
+
+//   const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
+//   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
+//   const zRelTop = topZRelative
+//   const zRelBottom = bottomZRelative
+
+//   // Calculate answer tile ownership for four-tile layout
+//   const leftStartCol = 1
+//   const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
+//   const rightStartCol = 9
+//   const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
+//   const topStartRowComputed = Math.ceil(topCenterRow - ANSWER_TILE_ROWS / 2)
+//   const topEndRow = topStartRowComputed + ANSWER_TILE_ROWS - 1
+//   const bottomStartRowComputed = Math.ceil(bottomCenterRow - ANSWER_TILE_ROWS / 2)
+//   const bottomEndRow = bottomStartRowComputed + ANSWER_TILE_ROWS - 1
+
+//   const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
+//   for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
+//     const isStart = i === 0
+//     const isEnd = i === QUESTION_SECTION_ROWS - 1
+
+//     // Compute ownership array for this row
+//     const ownership = new Array<number>(COLUMNS).fill(0)
+//     // Top-left tile (answer 1)
+//     if (i >= topStartRowComputed && i <= topEndRow) {
+//       for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
+//     }
+//     // Top-right tile (answer 2)
+//     if (i >= topStartRowComputed && i <= topEndRow) {
+//       for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
+//     }
+//     // Bottom-left tile (answer 3)
+//     if (i >= bottomStartRowComputed && i <= bottomEndRow) {
+//       for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 3
+//     }
+//     // Bottom-right tile (answer 4)
+//     if (i >= bottomStartRowComputed && i <= bottomEndRow) {
+//       for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 4
+//     }
+
+//     rows[i] = {
+//       heights: heights[i],
+//       type: 'question',
+//       isSectionStart: isStart,
+//       isSectionEnd: isEnd,
+//       answerNumber: ownership,
+//     }
+//     if (i === textTriggerRow) {
+//       rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
+//     }
+//     if (i === topTriggerRow) {
+//       // Place top-left (index 0) and top-right (index 1) only
+//       rows[i].answerTilePositions = [
+//         [colToX(leftCenterCol), ANSWER_TILE_Y, zRelTop],
+//         [colToX(rightCenterCol), ANSWER_TILE_Y, zRelTop],
+//         null,
+//         null,
+//       ]
+//     }
+//     if (i === bottomTriggerRow) {
+//       // Place bottom-left (index 2) and bottom-right (index 3) only
+//       rows[i].answerTilePositions = [
+//         null,
+//         null,
+//         [colToX(leftCenterCol), ANSWER_TILE_Y, zRelBottom],
+//         [colToX(rightCenterCol), ANSWER_TILE_Y, zRelBottom],
+//       ]
+//     }
+//   }
+//   return rows
+// }

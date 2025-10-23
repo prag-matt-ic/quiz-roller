@@ -9,11 +9,11 @@ import {
   type Variable,
 } from 'three/addons/misc/GPUComputationRenderer.js'
 
+import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
+import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
+import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/components/terrain/terrainBuilder'
-
-import floatingTilesFragment from './shaders/floatingTiles.frag'
-import floatingTilesVertex from './shaders/floatingTiles.vert'
-import positionFragmentShader from './shaders/position.frag'
 
 type FloatingTilesUniforms = {
   uMix: number
@@ -57,24 +57,15 @@ const allowedColsRight: number[] = Array.from(
 )
 const allowedCols = [...allowedColsLeft, ...allowedColsRight]
 
-type Props = {
-  isMobile: boolean
-  /** Optional override for instance count */
-  count?: number
-}
-
-// FloatingTiles: lightweight instanced box field that rises upward from -Y
-// Notes:
-// - Avoid per-frame allocations; reuse scratch objects and typed arrays
-// - Geometry matches Terrain tiles (flat boxes using TILE_SIZE/TILE_THICKNESS)
-// - GPU-computed alpha fading: 0% -> 100% in first 20%, 100% -> 0% in final 20%
-const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
+const FloatingTiles: FC = () => {
+  const count = usePerformanceStore((s) => s.sceneConfig.floatingTiles.instanceCount)
   const renderer = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
 
+  const isDisabled = count === 0 // TODO: Kill the GPGPU process entirely.
+
   // Target instance count, rounded up to a perfect square to avoid wasted compute texels
-  const baseCount = useMemo(() => count ?? (isMobile ? 80 : 240), [count, isMobile])
-  const textureSize = useMemo(() => Math.ceil(Math.sqrt(baseCount)), [baseCount])
+  const textureSize = useMemo(() => Math.ceil(Math.sqrt(count)), [count])
   const instanceCount = useMemo(() => textureSize * textureSize, [textureSize])
 
   // Per-instance state buffers (heap-allocated once)
@@ -106,6 +97,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
   function randInt(min: number, max: number) {
     return (min + Math.floor(Math.random() * (max - min + 1))) | 0
   }
+
   function colToXForGrid(col: number, gridCols: number) {
     // Match Terrain's col-to-world transform but for a wider grid
     return (col - gridCols / 2 + 0.5) * TILE_SIZE
@@ -147,7 +139,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
 
   // Initialize GPU compute for position (alpha computed within position shader)
   useEffect(() => {
-    if (!renderer) return
+    if (!renderer || isDisabled) return
 
     try {
       gpuCompute.current = new GPUComputationRenderer(textureSize, textureSize, renderer)
@@ -218,7 +210,14 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     } catch (error) {
       console.error('Error initializing FloatingTiles GPUComputationRenderer:', error)
     }
-  }, [renderer, textureSize, camera.position.z])
+
+    return () => {
+      // Cleanup GPU computation resources on unmount
+      gpuCompute.current?.dispose()
+      gpuCompute.current = null
+      positionVariable.current = null
+    }
+  }, [renderer, textureSize, camera.position.z, isDisabled])
 
   // GPU computation - position and alpha computed on GPU
   useFrame((_, dt) => {
@@ -226,6 +225,7 @@ const FloatingTiles: FC<Props> = ({ isMobile, count }) => {
     if (!gpuCompute.current) return
     if (!positionVariable.current) return
     if (!materialRef.current) return
+    if (isDisabled) return
 
     // Clamp dt to avoid huge jumps on tab switch
     const delta = Math.min(dt, MAX_DELTA_TIME)

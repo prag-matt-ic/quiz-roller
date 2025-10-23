@@ -5,6 +5,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, Points, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 import particleFragment from './point.frag'
@@ -38,9 +39,8 @@ type Props = {
   wasCorrect: boolean
 }
 
-const PARTICLE_COUNT = 64
-
 const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect = false }) => {
+  const particleCount = usePerformanceStore((s) => s.sceneConfig.answerTile.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
   const goToStage = useGameStore((s) => s.goToStage)
 
@@ -62,25 +62,25 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
   const { playerPosition } = usePlayerPosition()
 
   // Geometry buffers
-  const initialPositions = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), [])
-  const spawnPositions = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), [])
-  const seeds = useMemo(() => new Float32Array(PARTICLE_COUNT), [])
+  const initialPositions = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
+  const spawnPositions = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
+  const seeds = useMemo(() => new Float32Array(particleCount), [particleCount])
 
   const spawnAttribute = useRef<BufferAttribute>(null)
   const seedAttribute = useRef<BufferAttribute>(null)
 
   const refreshSeeds = useCallback(() => {
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < particleCount; i++) {
       seeds[i] = Math.random()
     }
     if (seedAttribute.current) {
       seedAttribute.current.needsUpdate = true
     }
-  }, [seeds])
+  }, [particleCount, seeds])
 
   useEffect(() => {
     const initializeStaticParticleData = () => {
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
+      for (let i = 0; i < particleCount; i++) {
         const spawnIndex = i * 3
         // Spawn within tile footprint (local space)
         spawnPositions[spawnIndex] = (Math.random() - 0.5) * width
@@ -92,7 +92,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
       }
     }
     initializeStaticParticleData()
-  }, [height, spawnPositions, width])
+  }, [height, particleCount, spawnPositions, width])
 
   useEffect(() => {
     refreshSeeds()

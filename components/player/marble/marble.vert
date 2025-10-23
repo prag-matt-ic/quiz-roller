@@ -6,8 +6,6 @@ varying vec3 vLocalPos;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vViewPosition;
-varying vec3 vWorldPos;
-varying vec3 vWorldCenter;
 
 // Convert 3D position to spherical UV coordinates
 vec2 sphericalUV(vec3 pos) {
@@ -27,10 +25,6 @@ void main() {
   // Calculate view-space position for normal mapping
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   vViewPosition = -mvPosition.xyz;
-  
-  // World position and center for volume ray marching in fragment
-  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-  vWorldCenter = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
   
   gl_Position = projectionMatrix * mvPosition;
 }

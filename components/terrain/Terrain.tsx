@@ -2,25 +2,17 @@
 'use client'
 
 import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
-import { shaderMaterial } from '@react-three/drei'
-import { extend } from '@react-three/fiber'
-import {
-  InstancedRigidBodies,
-  type InstancedRigidBodyProps,
-  type RapierRigidBody,
-} from '@react-three/rapier'
-import { type Group, type InstancedBufferAttribute, Vector3 } from 'three'
+import { InstancedRigidBodyProps, type RapierRigidBody } from '@react-three/rapier'
+import { type Group, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import { QuestionText } from '@/components/QuestionText'
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/resources/game'
-import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { useGameFrame } from '@/hooks/useGameFrame'
 
-import tileFadeFragment from './shaders/tile.frag'
-import tileFadeVertex from './shaders/tile.vert'
+import { InstancedTiles, type InstancedTilesHandle } from './InstancedTiles'
 import {
   ANSWER_TILE_COUNT,
   COLUMNS,
@@ -32,8 +24,6 @@ import {
   EXIT_END_Z,
   EXIT_START_Z,
   INITIAL_ROWS_Z_OFFSET,
-  INTRO_MIN_SPEED,
-  INTRO_SPEED_FAR_FACTOR,
   MAX_Z,
   OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
@@ -41,14 +31,12 @@ import {
   ROWS_VISIBLE,
   SAFE_HEIGHT,
   TILE_SIZE,
-  TILE_THICKNESS,
   colToX,
   generateObstacleHeights,
   type RowData,
   generateQuestionSectionRowData,
   generateIntroSectionRowData,
 } from './terrainBuilder'
-import IntroBanners, { type IntroBannersHandle } from '@/components/terrain/IntroBanners'
 
 const EPSILON = {
   SMALL: 1e-6,
@@ -66,36 +54,6 @@ const INITIAL_QUESTION_POSITION = {
   Y: 0.01,
   Z: -999,
 } as const
-
-// Shader material for fade-in/out
-type TileShaderUniforms = {
-  uEntryStartZ: number
-  uEntryEndZ: number
-  uPlayerWorldPos: Vector3
-  uScrollZ: number
-  uExitStartZ: number
-  uExitEndZ: number
-}
-
-const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uEntryStartZ: ENTRY_START_Z,
-  uEntryEndZ: ENTRY_END_Z,
-  uPlayerWorldPos: new Vector3(
-    PLAYER_INITIAL_POSITION[0],
-    PLAYER_INITIAL_POSITION[1],
-    PLAYER_INITIAL_POSITION[2],
-  ),
-  uScrollZ: 0,
-  uExitStartZ: EXIT_START_Z,
-  uExitEndZ: EXIT_END_Z,
-}
-
-const CustomTileShaderMaterial = shaderMaterial(
-  INITIAL_TILE_UNIFORMS,
-  tileFadeVertex,
-  tileFadeFragment,
-)
-const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {
@@ -118,7 +76,6 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Terrain: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const topic = useGameStore((s) => s.topic)
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
@@ -126,11 +83,9 @@ const Terrain: FC = () => {
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
 
   const { terrainSpeed } = useTerrainSpeed()
-  const tileRigidBodies = useRef<RapierRigidBody[]>(null)
+  const instancedTilesRef = useRef<InstancedTilesHandle>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const hasInitialized = useRef(false)
-  const introBanners = useRef<IntroBannersHandle>(null)
-  const isIntroBannersVisible = !topic
 
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
@@ -142,12 +97,8 @@ const Terrain: FC = () => {
   // Per-instance GPU attributes
   const instanceSeed = useRef<Float32Array | null>(null)
   const instanceVisibility = useRef<Float32Array | null>(null)
-  const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const instanceAnswerNumber = useRef<Float32Array | null>(null)
-  const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
-  const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
-  const playerWorldPosition = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Obstacle section precomputation buffer
@@ -172,8 +123,8 @@ const Terrain: FC = () => {
   const initialSpeedAtSectionStart = useRef<number>(1)
   const isRowRaised = useRef<boolean[]>([])
 
-  function insertQuestionRows(isFirstQuestion = false) {
-    const rows = generateQuestionSectionRowData({ isFirstQuestion })
+  function insertQuestionRows() {
+    const rows = generateQuestionSectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
   }
 
@@ -229,7 +180,7 @@ const Terrain: FC = () => {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
       insertIntroRows()
-      insertQuestionRows(true)
+      insertQuestionRows()
       insertObstacleRows()
       insertQuestionRows()
       insertObstacleRows()
@@ -277,10 +228,6 @@ const Terrain: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  usePlayerPosition((position) => {
-    playerWorldPosition.current.set(position.x, position.y, position.z)
-  })
-
   useEffect(() => {
     if (stage === Stage.TERRAIN) {
       resetQuestionSectionDeceleration()
@@ -315,8 +262,12 @@ const Terrain: FC = () => {
         instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[columnIndex] ?? 0
       }
 
-      instanceVisibilityBufferAttribute.current!.needsUpdate = true
-      instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
+      if (instancedTilesRef.current?.visibilityAttribute) {
+        instancedTilesRef.current.visibilityAttribute.needsUpdate = true
+      }
+      if (instancedTilesRef.current?.answerNumberAttribute) {
+        instancedTilesRef.current.answerNumberAttribute.needsUpdate = true
+      }
 
       if (hasCompletedIntro.current) {
         incrementDistanceRows(1)
@@ -375,9 +326,11 @@ const Terrain: FC = () => {
 
   function updateRowPositions(rowIndex: number, rowZ: number, yOffset: number) {
     const firstBodyIndex = rowIndex * COLUMNS
+    const rigidBodies = instancedTilesRef.current?.rigidBodies
+    if (!rigidBodies) return
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-      const body = tileRigidBodies.current![firstBodyIndex + columnIndex]
+      const body = rigidBodies[firstBodyIndex + columnIndex]
       if (!body) continue
 
       const bodyIndex = firstBodyIndex + columnIndex
@@ -410,7 +363,7 @@ const Terrain: FC = () => {
   }
 
   function updateTiles(zStep: number) {
-    if (!tileRigidBodies.current) return
+    if (!instancedTilesRef.current?.rigidBodies) return
 
     const cycleDistance = ROWS_VISIBLE * TILE_SIZE
     currentScrollPosition.current += zStep
@@ -506,28 +459,17 @@ const Terrain: FC = () => {
     }
   }
 
-  function computeEntrySpeedFromPlayerZ(): number {
-    const playerZ = playerWorldPosition.current.z
-    const nearZ = 0
-    const farZ = ENTRY_START_Z * INTRO_SPEED_FAR_FACTOR
-    const denominator = Math.max(EPSILON.SMALL, nearZ - farZ)
-    const normalizedDistance = Math.max(0, Math.min(1, (nearZ - playerZ) / denominator))
-    return INTRO_MIN_SPEED + (1 - INTRO_MIN_SPEED) * normalizedDistance
-  }
-
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
-    if (!tileShader.current || !introBanners.current) return
+    if (!instancedTilesRef.current?.shader) return
     if (stage === Stage.GAME_OVER) return
 
-    tileShader.current.uScrollZ = currentScrollPosition.current
+    instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
     let computedSpeed = terrainSpeed.current
 
     if (stage === Stage.SPLASH) {
       computedSpeed = 0
-    } else if (stage === Stage.INTRO) {
-      computedSpeed = computeEntrySpeedFromPlayerZ()
     } else if (stage === Stage.QUESTION) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
     }
@@ -539,62 +481,19 @@ const Terrain: FC = () => {
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
     moveQuestionElements(zStep)
-
-    introBanners.current.advance(zStep)
-    tileShader.current.uPlayerWorldPos = playerWorldPosition.current
   })
 
   if (!tileInstances.length) return null
 
   return (
     <group>
-      <InstancedRigidBodies
-        ref={tileRigidBodies}
+      <InstancedTiles
+        ref={instancedTilesRef}
         instances={tileInstances}
-        type="fixed"
-        canSleep={false}
-        sensor={false}
-        colliders="cuboid"
-        friction={0.0}>
-        <instancedMesh
-          args={[undefined, undefined, tileInstances.length]}
-          count={tileInstances.length}>
-          <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
-            <instancedBufferAttribute
-              ref={instanceVisibilityBufferAttribute}
-              attach="attributes-visibility"
-              args={[instanceVisibility.current!, 1]}
-            />
-            <instancedBufferAttribute
-              attach="attributes-seed"
-              args={[instanceSeed.current!, 1]}
-            />
-            <instancedBufferAttribute
-              ref={instanceAnswerNumberBufferAttribute}
-              attach="attributes-answerNumber"
-              args={[instanceAnswerNumber.current!, 1]}
-            />
-          </boxGeometry>
-          <TileShaderMaterial
-            ref={tileShader}
-            key={(CustomTileShaderMaterial as unknown as { key: string }).key}
-            transparent={true}
-            uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
-            uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
-            uPlayerWorldPos={playerWorldPosition.current}
-            uScrollZ={INITIAL_TILE_UNIFORMS.uScrollZ}
-            uExitStartZ={INITIAL_TILE_UNIFORMS.uExitStartZ}
-            uExitEndZ={INITIAL_TILE_UNIFORMS.uExitEndZ}
-          />
-        </instancedMesh>
-      </InstancedRigidBodies>
-
-      <IntroBanners
-        ref={introBanners}
-        zOffset={INITIAL_ROWS_Z_OFFSET}
-        isVisible={isIntroBannersVisible}
+        instanceVisibility={instanceVisibility.current!}
+        instanceSeed={instanceSeed.current!}
+        instanceAnswerNumber={instanceAnswerNumber.current!}
       />
-
       <QuestionText
         ref={questionGroup}
         text={currentQuestion.text}

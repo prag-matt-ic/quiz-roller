@@ -10,7 +10,7 @@ import {
   RigidBody,
 } from '@react-three/rapier'
 import { type FC, useEffect, useRef } from 'react'
-import { MathUtils, type Object3D, Quaternion, Vector3 } from 'three'
+import { type Object3D, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
@@ -20,7 +20,7 @@ import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
 
-import { Marble, MarbleShaderMaterial, MarbleShaderUniforms } from './marble/Marble'
+import { Marble, MarbleShaderMaterial, type MarbleShaderUniforms } from './marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -34,7 +34,6 @@ const EPSILON = 1e-6 // Small value to prevent division by zero
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
   const goToStage = useGameStore((s) => s.goToStage)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
@@ -54,12 +53,6 @@ const Player: FC = () => {
   const relativeVelocity = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
-  // World orientation (axis-angle) for MarbleVolume shader
-  const marbleRotation = useRef<{ axis: Vector3; angle: number }>({
-    axis: new Vector3(0, 1, 0),
-    angle: 0,
-  })
-  const tmpWorldQuat = useRef(new Quaternion())
 
   // Reusable position objects (avoid per-frame allocations)
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
@@ -89,20 +82,17 @@ const Player: FC = () => {
 
   useGameFrame((_, deltaTime) => {
     if (
-      !playerShaderRef.current ||
       !bodyRef.current ||
       !controllerRef.current ||
       !ballColliderRef.current ||
-      !sphereMeshRef.current
+      !sphereMeshRef.current ||
+      !playerShaderRef.current
     )
       return
 
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
-    // Sync selected colour band index to shader
-    const idx = Math.max(0, Math.min(2, Math.round(playerColourIndex)))
-    playerShaderRef.current.uPlayerColourIndex = idx
 
     // Don't update during splash screen
     if (stage === Stage.SPLASH) return
@@ -163,13 +153,7 @@ const Player: FC = () => {
       deltaTime,
       worldScale: worldScale.current,
       rollAxis: rollAxis.current,
-      outRotation: marbleRotation.current,
-      tmpQuat: tmpWorldQuat.current,
     })
-
-    // Sync marble surface shader with world axis-angle for volume
-    playerShaderRef.current.uAxis = marbleRotation.current.axis
-    playerShaderRef.current.uAngle = marbleRotation.current.angle
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
@@ -272,16 +256,12 @@ function applyRollingPhysics({
   deltaTime,
   worldScale,
   rollAxis,
-  outRotation,
-  tmpQuat,
 }: {
   sphereMesh: Object3D
   relativeVelocity: Vector3
   deltaTime: number
   worldScale: Vector3
   rollAxis: Vector3
-  outRotation: { axis: Vector3; angle: number }
-  tmpQuat: Quaternion
 }): void {
   sphereMesh.getWorldScale(worldScale)
   // Assume uniform scale for a sphere
@@ -297,17 +277,4 @@ function applyRollingPhysics({
   const rotationAngle = (speed * deltaTime) / effectiveRadius
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
-
-  // Update world axis-angle for MarbleVolume
-  sphereMesh.getWorldQuaternion(tmpQuat)
-  // Convert quaternion to axis-angle
-  const w = MathUtils.clamp(tmpQuat.w, -1, 1)
-  const angle = 2 * Math.acos(w)
-  const s = Math.sqrt(Math.max(0, 1 - w * w))
-  if (s < EPSILON) {
-    outRotation.axis.set(0, 1, 0)
-  } else {
-    outRotation.axis.set(tmpQuat.x / s, tmpQuat.y / s, tmpQuat.z / s)
-  }
-  outRotation.angle = angle
 }

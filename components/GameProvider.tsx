@@ -11,13 +11,7 @@ import { type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import {
-  type AnswerUserData,
-  type Question,
-  type RunStats,
-  Topic,
-  topicQuestion,
-} from '@/model/schema'
+import { type AnswerUserData, type Question, type RunStats, Topic } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
 
 export enum Stage {
@@ -31,14 +25,10 @@ export enum Stage {
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+// - MF: Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 // TODO:
-// - TW: history of runs needs to omit the topic question (maybe we can re-structure store for this?)
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
-
-// Add an "info" button and a call to action - sponsor the development, collaborate, share feedback etc.
-
-// Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 type GameState = {
   stage: Stage
@@ -95,6 +85,20 @@ const TERRAIN_SPEED_DURATION = 2.4
 // y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 0.1, 4]
 
+// Get initial question for the default topic
+const getInitialQuestion = (): Question => {
+  const defaultTopic = Topic.UX_UI_DESIGN
+  const question = getNextQuestion({
+    topic: defaultTopic,
+    currentDifficulty: 1,
+    askedIds: new Set(),
+  })
+  if (!question) {
+    throw new Error(`No questions available for initial topic: ${defaultTopic}`)
+  }
+  return question
+}
+
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
@@ -122,11 +126,11 @@ const INITIAL_STATE: Pick<
     y: PLAYER_INITIAL_POSITION[1],
     z: PLAYER_INITIAL_POSITION[2],
   },
-  topic: null,
-  currentDifficulty: 0,
-  questions: [topicQuestion],
-  currentQuestion: topicQuestion,
-  currentQuestionIndex: -1,
+  topic: Topic.UX_UI_DESIGN,
+  currentDifficulty: 1,
+  questions: [getInitialQuestion()],
+  currentQuestion: getInitialQuestion(),
+  currentQuestionIndex: 0,
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
@@ -206,7 +210,7 @@ const createGameStore = () => {
         },
 
         onAnswerConfirmed: async () => {
-          const { topic, currentDifficulty, confirmingAnswer, goToStage } = get()
+          const { currentDifficulty, confirmingAnswer } = get()
 
           if (!confirmingAnswer) {
             console.error('No answer selected to confirm')
@@ -220,12 +224,7 @@ const createGameStore = () => {
             return
           }
 
-          if (!topic) {
-            handleTopicSelection({ set, confirmingAnswer })
-            // goToStage(Stage.TERRAIN) // Go to terrain immediately after topic selection
-          } else {
-            handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
-          }
+          handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
         },
 
         resetTick: 0,
@@ -245,31 +244,30 @@ const createGameStore = () => {
           }))
         },
 
-        goToStage: (stage: Stage) => {
-          console.log('Transitioning to stage:', stage)
-          if (stage === Stage.SPLASH) {
+        goToStage: (newStage: Stage) => {
+          if (newStage === Stage.SPLASH) {
             get().resetGame()
             return
           }
 
-          if (stage === Stage.INTRO) {
+          if (newStage === Stage.INTRO) {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
           }
 
           if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
 
-          if (stage === Stage.QUESTION) {
+          if (newStage === Stage.QUESTION) {
             handleQuestionStage({ set, get })
             return
           }
 
-          if (stage === Stage.TERRAIN) {
+          if (newStage === Stage.TERRAIN) {
             handleTerrainStage({ set, speedTween, speedTweenTarget })
             return
           }
 
-          if (stage === Stage.GAME_OVER) {
+          if (newStage === Stage.GAME_OVER) {
             handleGameOverStage({ set, get, speedTween, speedTweenTarget })
             return
           }
@@ -301,23 +299,6 @@ function handleIncorrectAnswer({
     confirmingAnswer: null,
     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
   }))
-}
-
-function handleTopicSelection({
-  set,
-  confirmingAnswer,
-}: {
-  confirmingAnswer: AnswerUserData
-  set: StoreApi<GameState>['setState']
-}) {
-  console.warn('Topic selected:', confirmingAnswer.answer.text)
-  set({
-    confirmationProgress: 0,
-    currentDifficulty: 1,
-    confirmingAnswer: null,
-    topic: confirmingAnswer.answer.text as Topic,
-    confirmedAnswers: [confirmingAnswer],
-  })
 }
 
 function handleCorrectAnswer({
@@ -374,18 +355,8 @@ function handleQuestionStage({
   const currentQuestionIndex = get().currentQuestionIndex
   const newQuestionIndex = currentQuestionIndex + 1
 
-  if (newQuestionIndex === 0) {
-    set({
-      stage: Stage.QUESTION,
-      currentQuestionIndex: newQuestionIndex,
-      currentQuestion: topicQuestion,
-      questions: [topicQuestion],
-    })
-    return
-  }
-
   const questions = get().questions
-  const askedIds = new Set<string>(questions.slice(1).map((q) => q.id))
+  const askedIds = new Set<string>(questions.map((q) => q.id))
   const newQuestion = getNextQuestion({
     topic: get().topic!,
     currentDifficulty: get().currentDifficulty,
@@ -490,7 +461,7 @@ export const GameProvider: FC<Props> = ({ children }) => {
     }
   }, [])
 
-  return <GameContext.Provider value={store.current}>{children}</GameContext.Provider>
+  return <GameContext value={store.current}>{children}</GameContext>
 }
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {

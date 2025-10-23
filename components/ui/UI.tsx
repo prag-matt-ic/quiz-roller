@@ -9,6 +9,8 @@ import { Stage, useGameStore } from '@/components/GameProvider'
 import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
 import SplashUI from '@/components/ui/Splash'
+
+import { usePerformanceStore } from '../PerformanceProvider'
 // import useAudio from '@/hooks/useAudio' // TODO: add sound effects
 
 // Register plugins
@@ -21,7 +23,7 @@ type Props = {
 
 const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
-
+  const isPerformanceReady = usePerformanceStore((s) => s.isReady)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
   const isSplash = stage === Stage.SPLASH
