@@ -65,21 +65,21 @@ const Player: FC = () => {
   const shaderTime = useRef(0)
 
   useEffect(() => {
-    const b = bodyRef.current
-    if (!b) return
+    const body = bodyRef.current
+    if (!body) return
     // hard reset transform & motion
-    b.setTranslation(
+    body.setTranslation(
       {
         x: PLAYER_INITIAL_HOME_POSITION[0],
         y: PLAYER_INITIAL_HOME_POSITION[1],
         z: PLAYER_INITIAL_HOME_POSITION[2],
       },
-      true, // wake up
+      true,
     )
-    b.setLinvel({ x: 0, y: 0, z: 0 }, true)
-    b.setAngvel({ x: 0, y: 0, z: 0 }, true)
-    b.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true) // identity quat
-    b.wakeUp()
+    body.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+    body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true) // identity quat
+    body.wakeUp()
     // (optional) also update any local refs used by your usePlayerPosition hook
   }, [resetTick])
 
@@ -194,6 +194,7 @@ const Player: FC = () => {
 
     if (otherUserData.type === 'answer') {
       setConfirmingAnswer(null)
+      return
     }
   }
 
@@ -204,7 +205,6 @@ const Player: FC = () => {
       ref={bodyRef}
       type="kinematicPosition"
       userData={userData}
-      restitution={1}
       colliders={false}
       position={PLAYER_INITIAL_HOME_POSITION}
       onIntersectionEnter={onIntersectionEnter}
