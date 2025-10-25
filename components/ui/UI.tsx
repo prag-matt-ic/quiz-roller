@@ -7,9 +7,8 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import GameOverUI from '@/components/ui/GameOver'
 import AudioToggle from '@/components/ui/AudioToggle'
-import HomeUI from '@/components/ui/HomeUI'
+import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
 // import useAudio from '@/hooks/useAudio' // TODO: add sound effects
 
@@ -23,15 +22,13 @@ type Props = {
 
 const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
-  const isPerformanceReady = usePerformanceStore((s) => s.isReady)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
-  const isHome = stage === Stage.HOME
   const isIntro = stage === Stage.INTRO
   const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
 
-  const switchKey = `${isHome}-${isIntro}-${isPlaying}-${isGameOver}`
+  const switchKey = `${isIntro}-${isPlaying}-${isGameOver}`
 
   // const { playAudio: playBackgroundAudio } = useAudio({
   //   src: '/sounds/background.aac',
@@ -53,7 +50,6 @@ const UI: FC<Props> = () => {
 
   return (
     <>
-      <AudioToggle />
       <SwitchTransition>
         <Transition
           key={switchKey}
@@ -61,12 +57,6 @@ const UI: FC<Props> = () => {
           nodeRef={wrapper}
           appear={true}>
           {(transitionStatus) => {
-            if (isHome)
-              return (
-                <div ref={wrapper} className="">
-                  {/* <HomeUI transitionStatus={transitionStatus} /> */}
-                </div>
-              )
             if (isPlaying)
               return (
                 <div ref={wrapper} className="">
@@ -85,6 +75,7 @@ const UI: FC<Props> = () => {
           }}
         </Transition>
       </SwitchTransition>
+      <AudioToggle />
     </>
   )
 }
