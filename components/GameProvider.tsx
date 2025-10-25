@@ -16,12 +16,14 @@ import {
   type Question,
   type RunStats,
   Topic,
-  topicQuestion,
+  TopicUserData,
 } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
 
+import { PLAYER_RADIUS } from './player/ConfirmationBar'
+
 export enum Stage {
-  SPLASH = 'splash',
+  HOME = 'home',
   INTRO = 'intro',
   QUESTION = 'question',
   TERRAIN = 'terrain',
@@ -31,14 +33,10 @@ export enum Stage {
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+// - MF: Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 // TODO:
-// - TW: history of runs needs to omit the topic question (maybe we can re-structure store for this?)
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
-
-// Add an "info" button and a call to action - sponsor the development, collaborate, share feedback etc.
-
-// Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 type GameState = {
   stage: Stage
@@ -61,13 +59,17 @@ type GameState = {
   distanceRows: number
   incrementDistanceRows: (delta: number) => void
 
-  // Questions
+  // Topic selection
   topic: Topic | null
+  confirmingTopic: TopicUserData | null
+  setConfirmingTopic: (data: TopicUserData | null) => void
+  onTopicConfirmed: () => void
+
+  // Questions
   currentDifficulty: number
   currentQuestionIndex: number
-  currentQuestion: Question
+  currentQuestion: Question | null
   questions: Question[]
-
   confirmingAnswer: AnswerUserData | null
   setConfirmingAnswer: (data: AnswerUserData | null) => void
   onAnswerConfirmed: () => void
@@ -75,6 +77,8 @@ type GameState = {
 
   currentRunStats: RunStats | null
   previousRuns: Record<Topic, RunStats[]>
+
+  onOutOfBounds: () => void
 
   resetGame: () => void
   resetTick: number
@@ -86,14 +90,18 @@ const GameContext = createContext<GameStore>(undefined!)
 
 const MAX_DIFFICULTY = 10
 const CONFIRMATION_DURATION_S = 2.4
-const INTRO_SPEED = 0.8
-const TERRAIN_SPEED = 1
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
-// Start the player on the floor tiles (no drop-in):
-// y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 0.1, 4]
+export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 1] // Used when re-spawning to home
+
+function getFirstQuestionForTopic(topic: Topic, difficulty: number): Question | undefined {
+  return getNextQuestion({
+    topic,
+    currentDifficulty: difficulty,
+    askedIds: new Set(),
+  })
+}
 
 const INITIAL_STATE: Pick<
   GameState,
@@ -102,6 +110,7 @@ const INITIAL_STATE: Pick<
   | 'confirmationProgress'
   | 'playerPosition'
   | 'topic'
+  | 'confirmingTopic'
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
@@ -114,19 +123,20 @@ const INITIAL_STATE: Pick<
   | 'currentRunStats'
   | 'previousRuns'
 > = {
-  stage: Stage.SPLASH,
+  stage: Stage.HOME,
   terrainSpeed: 0,
   confirmationProgress: 0,
   playerPosition: {
-    x: PLAYER_INITIAL_POSITION[0],
-    y: PLAYER_INITIAL_POSITION[1],
-    z: PLAYER_INITIAL_POSITION[2],
+    x: PLAYER_INITIAL_HOME_POSITION[0],
+    y: PLAYER_INITIAL_HOME_POSITION[1],
+    z: PLAYER_INITIAL_HOME_POSITION[2],
   },
   topic: null,
-  currentDifficulty: 0,
-  questions: [topicQuestion],
-  currentQuestion: topicQuestion,
-  currentQuestionIndex: -1,
+  confirmingTopic: null,
+  currentDifficulty: 1,
+  questions: [],
+  currentQuestion: null,
+  currentQuestionIndex: 0,
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
@@ -145,68 +155,139 @@ const createGameStore = () => {
   let confirmationTween: GSAPTween | null = null
   const confirmationTweenTarget = { value: 0 }
 
+  function startConfirmation(set: StoreApi<GameState>['setState'], onComplete: () => void) {
+    confirmationTweenTarget.value = 0
+    confirmationTween = gsap.fromTo(
+      confirmationTweenTarget,
+      { value: 0 },
+      {
+        duration: CONFIRMATION_DURATION_S,
+        ease: 'none',
+        value: 1,
+        onUpdate: () => {
+          set({ confirmationProgress: confirmationTweenTarget.value })
+        },
+        onComplete: () => {
+          onComplete()
+          confirmationTween?.kill()
+          confirmationTween = null
+        },
+      },
+    )
+  }
+
+  function cancelConfirmation(set: StoreApi<GameState>['setState']) {
+    set({ confirmingTopic: null })
+    confirmationTween = gsap.to(confirmationTweenTarget, {
+      duration: 0.3,
+      ease: 'power2.out',
+      value: 0,
+      onUpdate: () => {
+        set({ confirmationProgress: confirmationTweenTarget.value })
+      },
+      onComplete: () => {
+        confirmationTweenTarget.value = 0
+        confirmationTween?.kill()
+        confirmationTween = null
+        set({ confirmationProgress: 0 })
+      },
+    })
+  }
+
   return createStore<GameState>()(
     persist(
       (set, get) => ({
         ...INITIAL_STATE,
-        setPlayerPosition: (pos) => set({ playerPosition: pos }),
-        setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
-        setIsMuted: (muted) => set({ isMuted: muted }),
-        setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
+        setPlayerPosition: (playerPosition) => set({ playerPosition }),
+        setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
+        setIsMuted: (isMuted) => set({ isMuted }),
+        setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 
+        setConfirmingTopic: (topicData: TopicUserData | null) => {
+          const { stage, topic, confirmingTopic } = get()
+
+          if (topicData?.topic === confirmingTopic?.topic) return // No change
+          confirmationTween?.kill()
+
+          if (topicData === null) {
+            cancelConfirmation(set)
+            return
+          }
+
+          if (stage !== Stage.HOME || topic !== null) return
+
+          set({ confirmingTopic: topicData, confirmationProgress: 0 })
+
+          const onConfirmed = () => {
+            if (get().confirmingTopic?.topic === topicData.topic) {
+              get().onTopicConfirmed()
+            }
+          }
+
+          startConfirmation(set, onConfirmed)
+        },
+
         setConfirmingAnswer: (answer: AnswerUserData | null) => {
+          const { confirmingAnswer, confirmedAnswers, onAnswerConfirmed } = get()
+          if (answer?.questionId === confirmingAnswer?.questionId) return // No change
+
           confirmationTween?.kill()
 
           if (answer === null) {
-            set({ confirmingAnswer: null })
-            confirmationTween = gsap.to(confirmationTweenTarget, {
-              duration: 0.3,
-              ease: 'power2.out',
-              value: 0,
-              onUpdate: () => {
-                set({ confirmationProgress: confirmationTweenTarget.value })
-              },
-              onComplete: () => {
-                confirmationTween!.kill()
-                set({ confirmationProgress: 0 })
-              },
-            })
-          } else {
-            // Start confirming this answer
-            const { confirmedAnswers, onAnswerConfirmed } = get()
-
-            const hasAlreadyAnswered = confirmedAnswers.some(
-              ({ questionId }) => questionId === answer.questionId,
-            )
-
-            if (hasAlreadyAnswered) return
-
-            set({ confirmingAnswer: answer })
-            confirmationTween = gsap.fromTo(
-              confirmationTweenTarget,
-              {
-                value: 0,
-              },
-              {
-                duration: CONFIRMATION_DURATION_S,
-                ease: 'none',
-                value: 1,
-                onUpdate: () => {
-                  set({ confirmationProgress: confirmationTweenTarget.value })
-                },
-                onComplete: () => {
-                  if (!!get().confirmingAnswer) onAnswerConfirmed()
-                  confirmationTween!.kill()
-                },
-              },
-            )
+            cancelConfirmation(set)
+            return
           }
+
+          const hasAlreadyAnswered = confirmedAnswers.some(
+            ({ questionId }) => questionId === answer.questionId,
+          )
+          if (hasAlreadyAnswered) return
+
+          set({ confirmingAnswer: answer, confirmationProgress: 0 })
+
+          const onConfirmed = () => {
+            if (!!get().confirmingAnswer) onAnswerConfirmed()
+          }
+
+          startConfirmation(set, onConfirmed)
+        },
+
+        onTopicConfirmed: () => {
+          const { confirmingTopic, goToStage } = get()
+
+          if (!confirmingTopic) {
+            console.error('No topic selected to confirm')
+            return
+          }
+
+          const firstQuestion = getFirstQuestionForTopic(confirmingTopic.topic, 1)
+
+          if (!firstQuestion) {
+            console.error('No questions available for topic:', confirmingTopic.topic)
+            set({ confirmingTopic: null, confirmationProgress: 0 })
+            return
+          }
+
+          set({
+            topic: confirmingTopic.topic,
+            confirmingTopic: null,
+            confirmationProgress: 0,
+            questions: [firstQuestion],
+            currentQuestionIndex: 0,
+            currentQuestion: firstQuestion,
+            confirmingAnswer: null,
+            confirmedAnswers: [],
+            distanceRows: 0,
+            currentRunStats: null,
+          })
+
+          goToStage(Stage.INTRO)
         },
 
         onAnswerConfirmed: async () => {
-          const { topic, currentDifficulty, confirmingAnswer, goToStage } = get()
+          const { currentDifficulty, confirmingAnswer } = get()
 
           if (!confirmingAnswer) {
             console.error('No answer selected to confirm')
@@ -220,12 +301,7 @@ const createGameStore = () => {
             return
           }
 
-          if (!topic) {
-            handleTopicSelection({ set, confirmingAnswer })
-            // goToStage(Stage.TERRAIN) // Go to terrain immediately after topic selection
-          } else {
-            handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
-          }
+          handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
         },
 
         resetTick: 0,
@@ -236,40 +312,50 @@ const createGameStore = () => {
           confirmationTween = null
           speedTweenTarget.value = 0
           confirmationTweenTarget.value = 0
-
           const previousRunsToKeep = get().previousRuns
           set((s) => ({
             ...INITIAL_STATE,
+            playerColourIndex: s.playerColourIndex,
             previousRuns: previousRunsToKeep,
             resetTick: s.resetTick + 1,
           }))
         },
 
-        goToStage: (stage: Stage) => {
-          console.log('Transitioning to stage:', stage)
-          if (stage === Stage.SPLASH) {
+        onOutOfBounds: () => {
+          const { stage, resetGame, goToStage } = get()
+
+          if (stage === Stage.HOME) {
+            resetGame()
+            return
+          }
+
+          goToStage(Stage.GAME_OVER)
+        },
+
+        goToStage: (newStage: Stage) => {
+          if (newStage === Stage.HOME) {
             get().resetGame()
             return
           }
 
-          if (stage === Stage.INTRO) {
+          if (newStage === Stage.INTRO) {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
           }
 
           if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
 
-          if (stage === Stage.QUESTION) {
+          if (newStage === Stage.QUESTION) {
             handleQuestionStage({ set, get })
             return
           }
 
-          if (stage === Stage.TERRAIN) {
+          if (newStage === Stage.TERRAIN) {
             handleTerrainStage({ set, speedTween, speedTweenTarget })
             return
           }
 
-          if (stage === Stage.GAME_OVER) {
+          if (newStage === Stage.GAME_OVER) {
             handleGameOverStage({ set, get, speedTween, speedTweenTarget })
             return
           }
@@ -301,23 +387,6 @@ function handleIncorrectAnswer({
     confirmingAnswer: null,
     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
   }))
-}
-
-function handleTopicSelection({
-  set,
-  confirmingAnswer,
-}: {
-  confirmingAnswer: AnswerUserData
-  set: StoreApi<GameState>['setState']
-}) {
-  console.warn('Topic selected:', confirmingAnswer.answer.text)
-  set({
-    confirmationProgress: 0,
-    currentDifficulty: 1,
-    confirmingAnswer: null,
-    topic: confirmingAnswer.answer.text as Topic,
-    confirmedAnswers: [confirmingAnswer],
-  })
 }
 
 function handleCorrectAnswer({
@@ -357,7 +426,7 @@ function handleIntroStage({
   gsap.to(speedTweenTarget, {
     duration: INTRO_SPEED_DURATION,
     ease: 'power2.out',
-    value: INTRO_SPEED,
+    value: 1.0,
     onUpdate: () => {
       set({ terrainSpeed: speedTweenTarget.value })
     },
@@ -374,18 +443,8 @@ function handleQuestionStage({
   const currentQuestionIndex = get().currentQuestionIndex
   const newQuestionIndex = currentQuestionIndex + 1
 
-  if (newQuestionIndex === 0) {
-    set({
-      stage: Stage.QUESTION,
-      currentQuestionIndex: newQuestionIndex,
-      currentQuestion: topicQuestion,
-      questions: [topicQuestion],
-    })
-    return
-  }
-
   const questions = get().questions
-  const askedIds = new Set<string>(questions.slice(1).map((q) => q.id))
+  const askedIds = new Set<string>(questions.map((q) => q.id))
   const newQuestion = getNextQuestion({
     topic: get().topic!,
     currentDifficulty: get().currentDifficulty,
@@ -419,7 +478,7 @@ function handleTerrainStage({
   gsap.to(speedTweenTarget, {
     duration: TERRAIN_SPEED_DURATION,
     ease: 'power2.out',
-    value: TERRAIN_SPEED,
+    value: 1.0,
     onUpdate: () => {
       set({ terrainSpeed: speedTweenTarget.value })
     },
@@ -490,7 +549,7 @@ export const GameProvider: FC<Props> = ({ children }) => {
     }
   }, [])
 
-  return <GameContext.Provider value={store.current}>{children}</GameContext.Provider>
+  return <GameContext value={store.current}>{children}</GameContext>
 }
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {

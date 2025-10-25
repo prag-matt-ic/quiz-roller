@@ -10,17 +10,17 @@ import {
   RigidBody,
 } from '@react-three/rapier'
 import { type FC, useEffect, useRef } from 'react'
-import { MathUtils, type Object3D, Quaternion, Vector3 } from 'three'
+import { type Object3D, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
-import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import usePlayerController from '@/components/player/usePlayerController'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
 
-import { Marble, MarbleShaderMaterial, MarbleShaderUniforms } from './marble/Marble'
+import { Marble, MarbleShaderMaterial, type MarbleShaderUniforms } from './marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -34,11 +34,13 @@ const EPSILON = 1e-6 // Small value to prevent division by zero
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
-  const goToStage = useGameStore((s) => s.goToStage)
+  const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
+
+  const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const resetTick = useGameStore((s) => s.resetTick)
+  const setPlayerColourIndex = useGameStore((s) => s.setPlayerColourIndex)
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
@@ -54,12 +56,6 @@ const Player: FC = () => {
   const relativeVelocity = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
-  // World orientation (axis-angle) for MarbleVolume shader
-  const marbleRotation = useRef<{ axis: Vector3; angle: number }>({
-    axis: new Vector3(0, 1, 0),
-    angle: 0,
-  })
-  const tmpWorldQuat = useRef(new Quaternion())
 
   // Reusable position objects (avoid per-frame allocations)
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
@@ -74,9 +70,9 @@ const Player: FC = () => {
     // hard reset transform & motion
     b.setTranslation(
       {
-        x: PLAYER_INITIAL_POSITION[0],
-        y: PLAYER_INITIAL_POSITION[1],
-        z: PLAYER_INITIAL_POSITION[2],
+        x: PLAYER_INITIAL_HOME_POSITION[0],
+        y: PLAYER_INITIAL_HOME_POSITION[1],
+        z: PLAYER_INITIAL_HOME_POSITION[2],
       },
       true, // wake up
     )
@@ -89,23 +85,17 @@ const Player: FC = () => {
 
   useGameFrame((_, deltaTime) => {
     if (
-      !playerShaderRef.current ||
       !bodyRef.current ||
       !controllerRef.current ||
       !ballColliderRef.current ||
-      !sphereMeshRef.current
+      !sphereMeshRef.current ||
+      !playerShaderRef.current
     )
       return
 
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
-    // Sync selected colour band index to shader
-    const idx = Math.max(0, Math.min(2, Math.round(playerColourIndex)))
-    playerShaderRef.current.uPlayerColourIndex = idx
-
-    // Don't update during splash screen
-    if (stage === Stage.SPLASH) return
 
     // Get player input and normalize direction
     const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
@@ -163,18 +153,18 @@ const Player: FC = () => {
       deltaTime,
       worldScale: worldScale.current,
       rollAxis: rollAxis.current,
-      outRotation: marbleRotation.current,
-      tmpQuat: tmpWorldQuat.current,
     })
-
-    // Sync marble surface shader with world axis-angle for volume
-    playerShaderRef.current.uAxis = marbleRotation.current.axis
-    playerShaderRef.current.uAngle = marbleRotation.current.angle
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
+
+    if (otherUserData.type === 'topic') {
+      if (stage !== Stage.HOME) return
+      setConfirmingTopic(otherUserData)
+      return
+    }
 
     if (otherUserData.type === 'answer') {
       if (stage !== Stage.QUESTION) return
@@ -182,8 +172,13 @@ const Player: FC = () => {
       return
     }
 
+    if (otherUserData.type === 'marble-colour') {
+      setPlayerColourIndex(otherUserData.colourIndex)
+      return
+    }
+
     if (otherUserData.type === 'out-of-bounds') {
-      goToStage(Stage.GAME_OVER)
+      onOutOfBounds()
       return
     }
   }
@@ -191,6 +186,11 @@ const Player: FC = () => {
   const onIntersectionExit: IntersectionExitHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
+
+    if (otherUserData.type === 'topic') {
+      setConfirmingTopic(null)
+      return
+    }
 
     if (otherUserData.type === 'answer') {
       setConfirmingAnswer(null)
@@ -206,12 +206,12 @@ const Player: FC = () => {
       userData={userData}
       restitution={1}
       colliders={false}
-      position={PLAYER_INITIAL_POSITION}
+      position={PLAYER_INITIAL_HOME_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
       <Marble ref={sphereMeshRef} playerShaderRef={playerShaderRef} />
-      <PlayerHUD />
+      <ConfirmationBar />
     </RigidBody>
   )
 }
@@ -272,16 +272,12 @@ function applyRollingPhysics({
   deltaTime,
   worldScale,
   rollAxis,
-  outRotation,
-  tmpQuat,
 }: {
   sphereMesh: Object3D
   relativeVelocity: Vector3
   deltaTime: number
   worldScale: Vector3
   rollAxis: Vector3
-  outRotation: { axis: Vector3; angle: number }
-  tmpQuat: Quaternion
 }): void {
   sphereMesh.getWorldScale(worldScale)
   // Assume uniform scale for a sphere
@@ -297,17 +293,4 @@ function applyRollingPhysics({
   const rotationAngle = (speed * deltaTime) / effectiveRadius
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
-
-  // Update world axis-angle for MarbleVolume
-  sphereMesh.getWorldQuaternion(tmpQuat)
-  // Convert quaternion to axis-angle
-  const w = MathUtils.clamp(tmpQuat.w, -1, 1)
-  const angle = 2 * Math.acos(w)
-  const s = Math.sqrt(Math.max(0, 1 - w * w))
-  if (s < EPSILON) {
-    outRotation.axis.set(0, 1, 0)
-  } else {
-    outRotation.axis.set(tmpQuat.x / s, tmpQuat.y / s, tmpQuat.z / s)
-  }
-  outRotation.angle = angle
 }

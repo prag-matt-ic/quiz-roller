@@ -5,22 +5,15 @@ import { type FC, useRef } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import MarbleColourSelect from '@/components/player/marble/MarbleColourSelect'
 import Button from '@/components/ui/Button'
-import { GradientText } from '@/components/ui/GradientText'
 
 type Props = {
   transitionStatus: TransitionStatus
 }
 
-const SplashUI: FC<Props> = ({ transitionStatus }) => {
+const HomeUI: FC<Props> = ({ transitionStatus }) => {
   const goToStage = useGameStore((s) => s.goToStage)
   const setIsMuted = useGameStore((s) => s.setIsMuted)
-
-  const onStartClick = (isMuted: boolean) => {
-    setIsMuted(isMuted)
-    goToStage(Stage.INTRO)
-  }
 
   const container = useRef<HTMLDivElement>(null)
 
@@ -69,42 +62,32 @@ const SplashUI: FC<Props> = ({ transitionStatus }) => {
       ref={container}
       className="pointer-events-auto fixed inset-0 z-100 flex justify-center bg-linear-180 from-black/30 from-30% to-transparent to-60% pt-16 pb-24 opacity-0">
       <div className="grid w-full max-w-4xl grid-rows-3 text-center text-white">
-        {/* Title */}
-        <header className="flex h-full flex-col items-center justify-center gap-4">
-          <h1 className="heading-xl mb-10 tracking-wide opacity-0">
-            <GradientText>Quizroller</GradientText>
-          </h1>
-        </header>
         {/* middle section filler */}
         <div />
         {/* Colour Select + CTA Buttons */}
         <div className="mx-auto flex flex-col items-center gap-6 self-end py-6">
-          <MarbleColourSelect />
-
-          <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
-            <Button
-              variant="secondary"
-              color="dark"
-              className="splash-button"
-              aria-label="Start in silence"
-              onClick={() => onStartClick(true)}>
-              <VolumeXIcon className="size-6" strokeWidth={1.75} />
-              ROLL IN SILENCE
-            </Button>
-            <Button
-              variant="primary"
-              color="dark"
-              className="splash-button"
-              aria-label="Start with sounds"
-              onClick={() => onStartClick(false)}>
-              <PlayIcon className="size-6" strokeWidth={1.75} />
-              ROLL WITH SOUNDS
-            </Button>
-          </div>
+          <Button
+            variant="secondary"
+            color="dark"
+            className="splash-button"
+            aria-label="Start in silence"
+            onClick={() => setIsMuted(true)}>
+            <VolumeXIcon className="size-6" strokeWidth={1.75} />
+            GIVE ME SILENCE
+          </Button>
+          <Button
+            variant="primary"
+            color="dark"
+            className="splash-button"
+            aria-label="Start with sounds"
+            onClick={() => setIsMuted(false)}>
+            <PlayIcon className="size-6" strokeWidth={1.75} />
+            ROLL WITH SOUNDS
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
-export default SplashUI
+export default HomeUI

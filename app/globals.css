@@ -11,6 +11,10 @@
   --font-serif: var(--font-cinzel);
 }
 
+@theme {
+  --color-black: #0f0d0f;
+}
+
 body {
   background: var(--background);
   color: #fff;

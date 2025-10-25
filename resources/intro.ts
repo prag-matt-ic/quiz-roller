@@ -6,7 +6,3 @@ export const INTRO_BANNERS_CONTENT: string[] = [
   'Each correct answer unlocks a piece of the future web',
   "Ready? Let's roll into the future!",
 ]
-
-export const INTRO_BANNERS_START_PADDING_ROWS = 8
-export const INTRO_BANNERS_SPACING_ROWS = 3
-export const INTRO_BANNERS_END_PADDING_ROWS = 8

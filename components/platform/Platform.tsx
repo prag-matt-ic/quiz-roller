@@ -1,101 +1,48 @@
-/* eslint-disable simple-import-sort/imports */
 'use client'
 
-import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
-import { shaderMaterial } from '@react-three/drei'
-import { extend } from '@react-three/fiber'
-import {
-  InstancedRigidBodies,
-  type InstancedRigidBodyProps,
-  type RapierRigidBody,
-} from '@react-three/rapier'
-import { type Group, type InstancedBufferAttribute, Vector3 } from 'three'
+import { type InstancedRigidBodyProps } from '@react-three/rapier'
+import { type FC, startTransition, useEffect, useRef, useState } from 'react'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
-import { QuestionText } from '@/components/QuestionText'
-import { AnswerTile } from '@/components/answerTile/AnswerTile'
-import { TERRAIN_SPEED_UNITS } from '@/resources/game'
-import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import { Stage, useGameStore } from '@/components/GameProvider'
+import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
+import QuestionElements, {
+  type QuestionElementsHandle,
+} from '@/components/platform/question/QuestionElements'
+import { InstancedTiles, type InstancedTilesHandle } from '@/components/tiles/InstancedTiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
-
-import tileFadeFragment from './shaders/tile.frag'
-import tileFadeVertex from './shaders/tile.vert'
+import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import { TERRAIN_SPEED_UNITS } from '@/resources/game'
+import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
+import { generateIntroSectionRowData } from '@/utils/platform/introSection'
+import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
-  ANSWER_TILE_COUNT,
-  COLUMNS,
   DECEL_EASE_POWER,
   DECEL_START_OFFSET_ROWS,
-  ENTRY_END_Z,
-  ENTRY_START_Z,
-  ENTRY_Y_OFFSET,
-  EXIT_END_Z,
-  EXIT_START_Z,
-  INITIAL_ROWS_Z_OFFSET,
-  INTRO_MIN_SPEED,
-  INTRO_SPEED_FAR_FACTOR,
-  MAX_Z,
+  generateQuestionSectionRowData,
   OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
   QUESTION_SECTION_ROWS,
+  QUESTIONS_ENTRY_END_Z,
+  QUESTIONS_ENTRY_START_Z,
+  QUESTIONS_EXIT_END_Z,
+  QUESTIONS_EXIT_START_Z,
+} from '@/utils/platform/questionSection'
+import {
+  colToX,
+  COLUMNS,
+  ENTRY_Y_OFFSET,
+  INITIAL_ROWS_Z_OFFSET,
+  MAX_Z,
+  RowData,
   ROWS_VISIBLE,
   SAFE_HEIGHT,
   TILE_SIZE,
-  TILE_THICKNESS,
-  colToX,
-  generateObstacleHeights,
-  type RowData,
-  generateQuestionSectionRowData,
-  generateIntroSectionRowData,
-} from './terrainBuilder'
-import IntroBanners, { type IntroBannersHandle } from '@/components/terrain/IntroBanners'
+} from '@/utils/tiles'
 
 const EPSILON = {
   SMALL: 1e-6,
   TINY: 1e-4,
 } as const
-
-const HIDE_POSITION = {
-  QUESTION_Y: -40,
-  QUESTION_Z: 40,
-  ANSWER_Y: -100,
-  ANSWER_Z: -100,
-} as const
-
-const INITIAL_QUESTION_POSITION = {
-  Y: 0.01,
-  Z: -999,
-} as const
-
-// Shader material for fade-in/out
-type TileShaderUniforms = {
-  uEntryStartZ: number
-  uEntryEndZ: number
-  uPlayerWorldPos: Vector3
-  uScrollZ: number
-  uExitStartZ: number
-  uExitEndZ: number
-}
-
-const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uEntryStartZ: ENTRY_START_Z,
-  uEntryEndZ: ENTRY_END_Z,
-  uPlayerWorldPos: new Vector3(
-    PLAYER_INITIAL_POSITION[0],
-    PLAYER_INITIAL_POSITION[1],
-    PLAYER_INITIAL_POSITION[2],
-  ),
-  uScrollZ: 0,
-  uExitStartZ: EXIT_START_Z,
-  uExitEndZ: EXIT_END_Z,
-}
-
-const CustomTileShaderMaterial = shaderMaterial(
-  INITIAL_TILE_UNIFORMS,
-  tileFadeVertex,
-  tileFadeFragment,
-)
-const TileShaderMaterial = extend(CustomTileShaderMaterial)
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {
@@ -116,21 +63,17 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
   notchChance: 0.1,
 }
 
-const Terrain: FC = () => {
+const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const topic = useGameStore((s) => s.topic)
   const isQuestionStage = stage === Stage.QUESTION
-  const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
 
   const { terrainSpeed } = useTerrainSpeed()
-  const tileRigidBodies = useRef<RapierRigidBody[]>(null)
+  const instancedTilesRef = useRef<InstancedTilesHandle>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const hasInitialized = useRef(false)
-  const introBanners = useRef<IntroBannersHandle>(null)
-  const isIntroBannersVisible = !topic
 
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
@@ -142,12 +85,8 @@ const Terrain: FC = () => {
   // Per-instance GPU attributes
   const instanceSeed = useRef<Float32Array | null>(null)
   const instanceVisibility = useRef<Float32Array | null>(null)
-  const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const instanceAnswerNumber = useRef<Float32Array | null>(null)
-  const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
 
-  const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
-  const playerWorldPosition = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Obstacle section precomputation buffer
@@ -160,11 +99,10 @@ const Terrain: FC = () => {
   const activeRowsData = useRef<RowData[]>([])
   const hasCompletedIntro = useRef(false)
 
-  // Question/answers instance refs
-  const questionGroup = useRef<Group>(null)
-  const answerRefs = useRef(
-    Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
-  ).current
+  // Question Elements
+  const questionElements = useRef<QuestionElementsHandle | null>(null)
+  // Home Elements
+  const homeElements = useRef<HomeElementsHandle | null>(null)
 
   // Question section speed deceleration state
   const questionSectionStartZ = useRef<number | null>(null)
@@ -172,8 +110,13 @@ const Terrain: FC = () => {
   const initialSpeedAtSectionStart = useRef<number>(1)
   const isRowRaised = useRef<boolean[]>([])
 
-  function insertQuestionRows(isFirstQuestion = false) {
-    const rows = generateQuestionSectionRowData({ isFirstQuestion })
+  function insertQuestionRows() {
+    const rows = generateQuestionSectionRowData()
+    rowsData.current = [...rowsData.current, ...rows]
+  }
+
+  function insertHomeRows() {
+    const rows = generateHomeSectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
   }
 
@@ -228,8 +171,9 @@ const Terrain: FC = () => {
     function setupInitialRowsAndInstances() {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
+      insertHomeRows()
       insertIntroRows()
-      insertQuestionRows(true)
+      insertQuestionRows()
       insertObstacleRows()
       insertQuestionRows()
       insertObstacleRows()
@@ -277,10 +221,6 @@ const Terrain: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  usePlayerPosition((position) => {
-    playerWorldPosition.current.set(position.x, position.y, position.z)
-  })
-
   useEffect(() => {
     if (stage === Stage.TERRAIN) {
       resetQuestionSectionDeceleration()
@@ -315,8 +255,12 @@ const Terrain: FC = () => {
         instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[columnIndex] ?? 0
       }
 
-      instanceVisibilityBufferAttribute.current!.needsUpdate = true
-      instanceAnswerNumberBufferAttribute.current!.needsUpdate = true
+      if (instancedTilesRef.current?.visibilityAttribute) {
+        instancedTilesRef.current.visibilityAttribute.needsUpdate = true
+      }
+      if (instancedTilesRef.current?.answerNumberAttribute) {
+        instancedTilesRef.current.answerNumberAttribute.needsUpdate = true
+      }
 
       if (hasCompletedIntro.current) {
         incrementDistanceRows(1)
@@ -359,14 +303,16 @@ const Terrain: FC = () => {
 
   function computeLiftLowerOffset(rowZ: number): number {
     // Entry lift: raise from -ENTRY_Y_OFFSET up to 0 across the entry window
-    if (rowZ < ENTRY_START_Z) return -ENTRY_Y_OFFSET
-    if (rowZ < ENTRY_END_Z) {
-      const tIn = (rowZ - ENTRY_START_Z) / (ENTRY_END_Z - ENTRY_START_Z)
+    if (rowZ < QUESTIONS_ENTRY_START_Z) return -ENTRY_Y_OFFSET
+    if (rowZ < QUESTIONS_ENTRY_END_Z) {
+      const tIn =
+        (rowZ - QUESTIONS_ENTRY_START_Z) / (QUESTIONS_ENTRY_END_Z - QUESTIONS_ENTRY_START_Z)
       return -ENTRY_Y_OFFSET * (1 - tIn)
     }
     // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
-    if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
-      const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
+    if (rowZ >= QUESTIONS_EXIT_START_Z && rowZ < QUESTIONS_EXIT_END_Z) {
+      const tOut =
+        (rowZ - QUESTIONS_EXIT_START_Z) / (QUESTIONS_EXIT_END_Z - QUESTIONS_EXIT_START_Z)
       return ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
@@ -375,9 +321,11 @@ const Terrain: FC = () => {
 
   function updateRowPositions(rowIndex: number, rowZ: number, yOffset: number) {
     const firstBodyIndex = rowIndex * COLUMNS
+    const rigidBodies = instancedTilesRef.current?.rigidBodies
+    if (!rigidBodies) return
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-      const body = tileRigidBodies.current![firstBodyIndex + columnIndex]
+      const body = rigidBodies[firstBodyIndex + columnIndex]
       if (!body) continue
 
       const bodyIndex = firstBodyIndex + columnIndex
@@ -390,10 +338,11 @@ const Terrain: FC = () => {
   }
 
   function handleRowRaised(rowIndex: number, rowZ: number) {
-    positionQuestionElementsIfNeeded(rowIndex, rowZ)
+    const rowMetadata = activeRowsData.current[rowIndex]
+    homeElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
     isRowRaised.current[rowIndex] = true
 
-    const rowMetadata = activeRowsData.current[rowIndex]
     const isQuestionSectionStart =
       rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
 
@@ -410,7 +359,7 @@ const Terrain: FC = () => {
   }
 
   function updateTiles(zStep: number) {
-    if (!tileRigidBodies.current) return
+    if (!instancedTilesRef.current?.rigidBodies) return
 
     const cycleDistance = ROWS_VISIBLE * TILE_SIZE
     currentScrollPosition.current += zStep
@@ -434,7 +383,7 @@ const Terrain: FC = () => {
       updateRowPositions(rowIndex, rowZ, yOffset)
 
       const wasRaised = isRowRaised.current[rowIndex] === true
-      const isRaised = rowZ >= ENTRY_END_Z
+      const isRaised = rowZ >= QUESTIONS_ENTRY_END_Z
 
       if (!wasRaised && isRaised) {
         handleRowRaised(rowIndex, rowZ)
@@ -442,92 +391,18 @@ const Terrain: FC = () => {
     }
   }
 
-  function positionQuestionElementsIfNeeded(rowIndex: number, rowZ: number) {
-    const row = activeRowsData.current[rowIndex]
-    if (!row) return
-
-    const textPosition = row.questionTextPosition
-    if (textPosition && questionGroup.current) {
-      questionGroup.current.position.set(
-        textPosition[0],
-        textPosition[1],
-        rowZ + textPosition[2],
-      )
-    }
-
-    const answerPositions = row.answerTilePositions
-    if (!answerPositions) return
-
-    for (
-      let answerIndex = 0;
-      answerIndex < answerPositions.length && answerIndex < answerRefs.length;
-      answerIndex++
-    ) {
-      const position = answerPositions[answerIndex]
-      if (!position) continue
-
-      const answerRef = answerRefs[answerIndex]
-      if (!answerRef.current) continue
-
-      translation.current.x = position[0]
-      translation.current.y = position[1]
-      translation.current.z = rowZ + position[2]
-      answerRef.current.setTranslation(translation.current, true)
-    }
-  }
-
-  function moveQuestionElements(zStep: number) {
-    if (!questionGroup.current) return
-
-    const isQuestionBehindCamera = questionGroup.current.position.z > MAX_Z
-    if (isQuestionBehindCamera) {
-      questionGroup.current.position.z = HIDE_POSITION.QUESTION_Z
-      questionGroup.current.position.y = HIDE_POSITION.QUESTION_Y
-    } else {
-      questionGroup.current.position.z += zStep
-    }
-
-    for (const answerRef of answerRefs) {
-      if (!answerRef.current) continue
-
-      const currentTranslation = answerRef.current.translation()
-      if (currentTranslation.z > MAX_Z) {
-        translation.current.x = currentTranslation.x
-        translation.current.y = HIDE_POSITION.ANSWER_Y
-        translation.current.z = HIDE_POSITION.ANSWER_Z
-        answerRef.current.setTranslation(translation.current, false)
-        continue
-      }
-
-      translation.current.x = currentTranslation.x
-      translation.current.y = currentTranslation.y
-      translation.current.z = currentTranslation.z + zStep
-      answerRef.current.setTranslation(translation.current, true)
-    }
-  }
-
-  function computeEntrySpeedFromPlayerZ(): number {
-    const playerZ = playerWorldPosition.current.z
-    const nearZ = 0
-    const farZ = ENTRY_START_Z * INTRO_SPEED_FAR_FACTOR
-    const denominator = Math.max(EPSILON.SMALL, nearZ - farZ)
-    const normalizedDistance = Math.max(0, Math.min(1, (nearZ - playerZ) / denominator))
-    return INTRO_MIN_SPEED + (1 - INTRO_MIN_SPEED) * normalizedDistance
-  }
-
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
-    if (!tileShader.current || !introBanners.current) return
+    if (!instancedTilesRef.current?.shader) return
+    if (!homeElements.current || !questionElements.current) return
     if (stage === Stage.GAME_OVER) return
 
-    tileShader.current.uScrollZ = currentScrollPosition.current
+    instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
     let computedSpeed = terrainSpeed.current
 
-    if (stage === Stage.SPLASH) {
+    if (stage === Stage.HOME) {
       computedSpeed = 0
-    } else if (stage === Stage.INTRO) {
-      computedSpeed = computeEntrySpeedFromPlayerZ()
     } else if (stage === Stage.QUESTION) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
     }
@@ -538,78 +413,29 @@ const Terrain: FC = () => {
 
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
-    moveQuestionElements(zStep)
-
-    introBanners.current.advance(zStep)
-    tileShader.current.uPlayerWorldPos = playerWorldPosition.current
+    questionElements.current.moveElements(zStep)
+    homeElements.current.moveElements(zStep)
   })
 
   if (!tileInstances.length) return null
 
   return (
     <group>
-      <InstancedRigidBodies
-        ref={tileRigidBodies}
+      <InstancedTiles
+        ref={instancedTilesRef}
         instances={tileInstances}
-        type="fixed"
-        canSleep={false}
-        sensor={false}
-        colliders="cuboid"
-        friction={0.0}>
-        <instancedMesh
-          args={[undefined, undefined, tileInstances.length]}
-          count={tileInstances.length}>
-          <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
-            <instancedBufferAttribute
-              ref={instanceVisibilityBufferAttribute}
-              attach="attributes-visibility"
-              args={[instanceVisibility.current!, 1]}
-            />
-            <instancedBufferAttribute
-              attach="attributes-seed"
-              args={[instanceSeed.current!, 1]}
-            />
-            <instancedBufferAttribute
-              ref={instanceAnswerNumberBufferAttribute}
-              attach="attributes-answerNumber"
-              args={[instanceAnswerNumber.current!, 1]}
-            />
-          </boxGeometry>
-          <TileShaderMaterial
-            ref={tileShader}
-            key={(CustomTileShaderMaterial as unknown as { key: string }).key}
-            transparent={true}
-            uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
-            uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
-            uPlayerWorldPos={playerWorldPosition.current}
-            uScrollZ={INITIAL_TILE_UNIFORMS.uScrollZ}
-            uExitStartZ={INITIAL_TILE_UNIFORMS.uExitStartZ}
-            uExitEndZ={INITIAL_TILE_UNIFORMS.uExitEndZ}
-          />
-        </instancedMesh>
-      </InstancedRigidBodies>
-
-      <IntroBanners
-        ref={introBanners}
-        zOffset={INITIAL_ROWS_Z_OFFSET}
-        isVisible={isIntroBannersVisible}
+        instanceVisibility={instanceVisibility.current!}
+        instanceSeed={instanceSeed.current!}
+        instanceAnswerNumber={instanceAnswerNumber.current!}
       />
 
-      <QuestionText
-        ref={questionGroup}
-        text={currentQuestion.text}
-        position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
-      />
-      {answerRefs.map((answerRef, answerIndex) => (
-        <AnswerTile
-          key={`answer-tile-${answerIndex}`}
-          ref={answerRef}
-          index={answerIndex}
-          position={[0, HIDE_POSITION.ANSWER_Y, HIDE_POSITION.ANSWER_Z]}
-        />
-      ))}
+      {/* Home Elements */}
+      <HomeElements ref={homeElements} />
+
+      {/* Question Elements */}
+      <QuestionElements ref={questionElements} />
     </group>
   )
 }
 
-export default Terrain
+export default Platform

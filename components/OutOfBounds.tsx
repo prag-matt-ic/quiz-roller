@@ -11,7 +11,7 @@ const OutOfBounds: FC = () => {
 
   return (
     <RigidBody type="fixed" colliders={false} position={[0, 0, 0]} userData={userData}>
-      {/* Large, thin sensor plane below the playable tiles. Half-extents used here. */}
+      {/* Large, thin sensor plane below the playable tiles to trigger game over / reset */}
       <CuboidCollider
         position={[0, -6, 0]}
         args={[50, 1, 50]}
