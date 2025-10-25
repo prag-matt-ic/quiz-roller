@@ -12,8 +12,8 @@ import {
 import { type FC, useEffect, useRef } from 'react'
 import { type Object3D, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
-import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import usePlayerController from '@/components/player/usePlayerController'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
@@ -34,10 +34,13 @@ const EPSILON = 1e-6 // Small value to prevent division by zero
 const Player: FC = () => {
   const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
-  const goToStage = useGameStore((s) => s.goToStage)
+  const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
+
+  const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const resetTick = useGameStore((s) => s.resetTick)
+  const setPlayerColourIndex = useGameStore((s) => s.setPlayerColourIndex)
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
@@ -67,9 +70,9 @@ const Player: FC = () => {
     // hard reset transform & motion
     b.setTranslation(
       {
-        x: PLAYER_INITIAL_POSITION[0],
-        y: PLAYER_INITIAL_POSITION[1],
-        z: PLAYER_INITIAL_POSITION[2],
+        x: PLAYER_INITIAL_HOME_POSITION[0],
+        y: PLAYER_INITIAL_HOME_POSITION[1],
+        z: PLAYER_INITIAL_HOME_POSITION[2],
       },
       true, // wake up
     )
@@ -93,9 +96,6 @@ const Player: FC = () => {
     // Update shader animation time
     shaderTime.current += deltaTime
     playerShaderRef.current.uTime = shaderTime.current
-
-    // Don't update during splash screen
-    if (stage === Stage.SPLASH) return
 
     // Get player input and normalize direction
     const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
@@ -160,14 +160,25 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
+    if (otherUserData.type === 'topic') {
+      if (stage !== Stage.HOME) return
+      setConfirmingTopic(otherUserData)
+      return
+    }
+
     if (otherUserData.type === 'answer') {
       if (stage !== Stage.QUESTION) return
       setConfirmingAnswer(otherUserData)
       return
     }
 
+    if (otherUserData.type === 'marble-colour') {
+      setPlayerColourIndex(otherUserData.colourIndex)
+      return
+    }
+
     if (otherUserData.type === 'out-of-bounds') {
-      goToStage(Stage.GAME_OVER)
+      onOutOfBounds()
       return
     }
   }
@@ -175,6 +186,11 @@ const Player: FC = () => {
   const onIntersectionExit: IntersectionExitHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
+
+    if (otherUserData.type === 'topic') {
+      setConfirmingTopic(null)
+      return
+    }
 
     if (otherUserData.type === 'answer') {
       setConfirmingAnswer(null)
@@ -190,12 +206,12 @@ const Player: FC = () => {
       userData={userData}
       restitution={1}
       colliders={false}
-      position={PLAYER_INITIAL_POSITION}
+      position={PLAYER_INITIAL_HOME_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
       <Marble ref={sphereMeshRef} playerShaderRef={playerShaderRef} />
-      <PlayerHUD />
+      <ConfirmationBar />
     </RigidBody>
   )
 }

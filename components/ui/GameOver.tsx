@@ -98,7 +98,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
   }
 
   const onExitToMenuClick = () => {
-    goToStage(Stage.SPLASH)
+    goToStage(Stage.HOME)
   }
 
   return (

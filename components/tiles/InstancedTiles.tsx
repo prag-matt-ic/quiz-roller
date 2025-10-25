@@ -8,17 +8,16 @@ import {
 import { useImperativeHandle, useRef } from 'react'
 import { type InstancedBufferAttribute, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
+import { PLAYER_INITIAL_HOME_POSITION } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
-  ENTRY_END_Z,
-  ENTRY_START_Z,
-  EXIT_END_Z,
-  EXIT_START_Z,
-  TILE_SIZE,
-  TILE_THICKNESS,
+  QUESTIONS_ENTRY_END_Z,
+  QUESTIONS_ENTRY_START_Z,
+  QUESTIONS_EXIT_END_Z,
+  QUESTIONS_EXIT_START_Z,
 } from '@/utils/terrainBuilder'
+import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 import tileFadeFragment from './tile.frag'
 import tileFadeVertex from './tile.vert'
@@ -34,16 +33,16 @@ type TileShaderUniforms = {
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uEntryStartZ: ENTRY_START_Z,
-  uEntryEndZ: ENTRY_END_Z,
   uPlayerWorldPos: new Vector3(
-    PLAYER_INITIAL_POSITION[0],
-    PLAYER_INITIAL_POSITION[1],
-    PLAYER_INITIAL_POSITION[2],
+    PLAYER_INITIAL_HOME_POSITION[0],
+    PLAYER_INITIAL_HOME_POSITION[1],
+    PLAYER_INITIAL_HOME_POSITION[2],
   ),
   uScrollZ: 0,
-  uExitStartZ: EXIT_START_Z,
-  uExitEndZ: EXIT_END_Z,
+  uEntryStartZ: QUESTIONS_ENTRY_START_Z,
+  uEntryEndZ: QUESTIONS_ENTRY_END_Z,
+  uExitStartZ: QUESTIONS_EXIT_START_Z,
+  uExitEndZ: QUESTIONS_EXIT_END_Z,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(
@@ -66,6 +65,7 @@ type InstancedTilesProps = {
   instanceSeed: Float32Array
   instanceAnswerNumber: Float32Array
   ref?: React.Ref<InstancedTilesHandle>
+  initialUniforms?: Partial<TileShaderUniforms>
 }
 
 export function InstancedTiles({
@@ -73,6 +73,7 @@ export function InstancedTiles({
   instanceVisibility,
   instanceSeed,
   instanceAnswerNumber,
+  initialUniforms,
   ref,
 }: InstancedTilesProps) {
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
@@ -136,12 +137,8 @@ export function InstancedTiles({
           ref={tileShader}
           key={(CustomTileShaderMaterial as unknown as { key: string }).key}
           transparent={true}
-          uEntryStartZ={INITIAL_TILE_UNIFORMS.uEntryStartZ}
-          uEntryEndZ={INITIAL_TILE_UNIFORMS.uEntryEndZ}
-          uPlayerWorldPos={playerWorldPosition.current}
-          uScrollZ={INITIAL_TILE_UNIFORMS.uScrollZ}
-          uExitStartZ={INITIAL_TILE_UNIFORMS.uExitStartZ}
-          uExitEndZ={INITIAL_TILE_UNIFORMS.uExitEndZ}
+          {...INITIAL_TILE_UNIFORMS}
+          {...initialUniforms}
         />
       </instancedMesh>
     </InstancedRigidBodies>

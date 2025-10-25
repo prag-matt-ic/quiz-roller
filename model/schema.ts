@@ -32,11 +32,26 @@ export type AnswerUserData = {
   answerNumber: number
 }
 
+export type TopicUserData = {
+  type: 'topic'
+  topic: Topic
+}
+
 export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
 
-export type RigidBodyUserData = PlayerUserData | AnswerUserData | OutOfBoundsUserData
+export type MarbleColourUserData = {
+  type: 'marble-colour'
+  colourIndex: number
+}
+
+export type RigidBodyUserData =
+  | PlayerUserData
+  | TopicUserData
+  | AnswerUserData
+  | OutOfBoundsUserData
+  | MarbleColourUserData
 
 export enum Topic {
   UX_UI_DESIGN = 'UX/UI Design',

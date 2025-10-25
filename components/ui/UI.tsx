@@ -26,7 +26,7 @@ const UI: FC<Props> = () => {
   const isPerformanceReady = usePerformanceStore((s) => s.isReady)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
-  const isSplash = stage === Stage.SPLASH
+  const isSplash = stage === Stage.HOME
   const isIntro = stage === Stage.INTRO
   const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
@@ -62,7 +62,7 @@ const UI: FC<Props> = () => {
           if (isSplash)
             return (
               <div ref={wrapper} className="">
-                <SplashUI transitionStatus={transitionStatus} />
+                {/* <SplashUI transitionStatus={transitionStatus} /> */}
               </div>
             )
           if (isPlaying)

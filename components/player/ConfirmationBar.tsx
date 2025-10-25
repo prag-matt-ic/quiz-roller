@@ -11,7 +11,8 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
 
-const PlayerHUD: FC = () => {
+const ConfirmationBar: FC = () => {
+  const confirmingTopic = useGameStore((s) => s.confirmingTopic)
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
   const playerColourIndex = useGameStore((s) => s.playerColourIndex)
 
@@ -65,14 +66,14 @@ const PlayerHUD: FC = () => {
       position={[PLAYER_RADIUS, PLAYER_RADIUS * 6, PLAYER_RADIUS]}
       className="pointer-events-none relative select-none">
       <Transition
-        in={!!confirmingAnswer}
-        timeout={{ enter: 0, exit: 300 }}
+        in={!!confirmingAnswer || !!confirmingTopic}
+        timeout={{ enter: 0, exit: 240 }}
         onEnter={onEnter}
         onExit={onExit}
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-3 border-white bg-slate-200 opacity-0 shadow-md shadow-black/15">
+          className="relative h-5 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"
@@ -86,4 +87,4 @@ const PlayerHUD: FC = () => {
   )
 }
 
-export default PlayerHUD
+export default ConfirmationBar

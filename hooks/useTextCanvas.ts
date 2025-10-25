@@ -7,7 +7,7 @@ export type CanvasState = {
   texture: CanvasTexture
 }
 
-export type TextDrawOptions = {
+export type TextCanvasOptions = {
   width: number
   height: number
   color?: string
@@ -22,7 +22,7 @@ export type TextDrawOptions = {
   textBaseline?: CanvasTextBaseline
 }
 
-const DEFAULTS: Required<Omit<TextDrawOptions, 'width' | 'height'>> = {
+const DEFAULTS: Required<Omit<TextCanvasOptions, 'width' | 'height'>> = {
   color: '#ffffff',
   fontFamily: '"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
   fontWeight: 500,
@@ -76,7 +76,7 @@ export function setupCanvasTexture(width: number, height: number): CanvasState {
 export function writeTextToCanvas(
   context: CanvasRenderingContext2D,
   text: string,
-  opts: TextDrawOptions,
+  opts: TextCanvasOptions,
 ): void {
   const options = { ...DEFAULTS, ...opts }
   const { width, height } = options
@@ -134,7 +134,7 @@ export function writeTextToCanvas(
   }
 }
 
-export function useTextCanvas(text: string, options: TextDrawOptions): CanvasState | null {
+export function useTextCanvas(text: string, options: TextCanvasOptions): CanvasState | null {
   const [state, setState] = useState<CanvasState | null>(null)
 
   useEffect(() => {

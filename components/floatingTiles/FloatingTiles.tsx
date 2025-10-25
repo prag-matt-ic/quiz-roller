@@ -13,7 +13,7 @@ import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTi
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/utils/terrainBuilder'
+import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 type FloatingTilesUniforms = {
   uMix: number

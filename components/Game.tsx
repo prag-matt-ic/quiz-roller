@@ -10,18 +10,19 @@ import * as THREE from 'three'
 
 import Background from '@/components/background/Background'
 import Player from '@/components/player/Player'
-import Terrain from '@/components/terrain/Terrain'
+import TopicRun from '@/components/topicRun/TopicRun'
 
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage, useGameStore } from './GameProvider'
+import Home from './home/Home'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
 
 gsap.registerPlugin(useGSAP)
 
 // Start at the intro sweep position to avoid a jump before animation
-const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.SPLASH].position
+const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
 
 const Game: FC = () => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
@@ -77,7 +78,7 @@ const Game: FC = () => {
         <ambientLight intensity={1.0} />
         <Camera isMobile={isMobile} />
         <Suspense>
-          <Physics key={refreshKey} debug={true} interpolate={false} timeStep={physicsTimeStep}>
+          <Physics key={refreshKey} debug={false} timeStep={physicsTimeStep}>
             {process.env.NODE_ENV === 'development' && <Stats />}
             <Level />
           </Physics>
@@ -95,7 +96,8 @@ const Level: FC = () => {
       <Background />
       <FloatingTiles />
       <OutOfBounds />
-      <Terrain />
+      <Home />
+      <TopicRun />
       <Player />
     </>
   )

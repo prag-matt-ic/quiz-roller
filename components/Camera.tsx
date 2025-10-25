@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import React, { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
@@ -24,17 +24,17 @@ export const CAMERA_CONFIG: Record<
     zoom: number
   }
 > = {
-  [Stage.SPLASH]: {
+  [Stage.HOME]: {
     // Close to the player with a low Y to keep the path low in view.
     // These are starting values and can be tweaked.
-    position: { x: 0, y: 0.25, z: 14 },
-    target: { x: 0, y: PLAYER_INITIAL_POSITION[1], z: PLAYER_INITIAL_POSITION[2] - 2 },
-    zoom: 1.6,
+    position: { x: 0, y: 8.5, z: 5 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1.0,
   },
   [Stage.INTRO]: {
     position: { x: 0, y: 2, z: 8 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1,
+    zoom: 1.2,
   },
   [Stage.QUESTION]: {
     position: { x: 0, y: 12, z: 5 },
@@ -85,6 +85,18 @@ const Camera: FC<Props> = () => {
 
   useFrame(() => {
     if (!cameraControls.current) return
+
+    if (stage === Stage.HOME) {
+      cameraControls.current.setLookAt(
+        playerPosition.current.x,
+        CAMERA_CONFIG[stage].position.y,
+        playerPosition.current.z + 2,
+        playerPosition.current.x,
+        0,
+        playerPosition.current.z,
+        true,
+      )
+    }
 
     if (stage === Stage.INTRO) {
       // Track like question stage but keep ENTRY's zoomed-in config

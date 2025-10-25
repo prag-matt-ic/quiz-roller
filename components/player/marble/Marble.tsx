@@ -5,12 +5,12 @@ import { extend } from '@react-three/fiber'
 import { forwardRef, type RefObject, Suspense } from 'react'
 import * as THREE from 'three'
 
-import normal from '@/assets/textures/marble/normal.png'
+import normal from '@/assets/textures/marble/normal.webp'
 import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
+import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import fragment from '@/components/player/marble/marble.frag'
 import vertex from '@/components/player/marble/marble.vert'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 
 // Shader configuration
 export type MarbleShaderUniforms = {

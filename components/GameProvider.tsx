@@ -11,11 +11,19 @@ import { type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { type AnswerUserData, type Question, type RunStats, Topic } from '@/model/schema'
+import {
+  type AnswerUserData,
+  type Question,
+  type RunStats,
+  Topic,
+  TopicUserData,
+} from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
+import { PLAYER_RADIUS } from './player/ConfirmationBar'
+import { ANSWER_TILE_Y } from '@/utils/tiles'
 
 export enum Stage {
-  SPLASH = 'splash',
+  HOME = 'home',
   INTRO = 'intro',
   QUESTION = 'question',
   TERRAIN = 'terrain',
@@ -51,13 +59,17 @@ type GameState = {
   distanceRows: number
   incrementDistanceRows: (delta: number) => void
 
-  // Questions
+  // Topic selection
   topic: Topic | null
+  confirmingTopic: TopicUserData | null
+  setConfirmingTopic: (data: TopicUserData | null) => void
+  onTopicConfirmed: () => void
+
+  // Questions
   currentDifficulty: number
   currentQuestionIndex: number
-  currentQuestion: Question
+  currentQuestion: Question | null
   questions: Question[]
-
   confirmingAnswer: AnswerUserData | null
   setConfirmingAnswer: (data: AnswerUserData | null) => void
   onAnswerConfirmed: () => void
@@ -65,6 +77,8 @@ type GameState = {
 
   currentRunStats: RunStats | null
   previousRuns: Record<Topic, RunStats[]>
+
+  onOutOfBounds: () => void
 
   resetGame: () => void
   resetTick: number
@@ -81,22 +95,16 @@ const TERRAIN_SPEED = 1
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
-// Start the player on the floor tiles (no drop-in):
-// y ≈ tile top (SAFE tile) + player radius ≈ ~0.1
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 0.1, 4]
+// Start the player on the floor tiles
+export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, ANSWER_TILE_Y, 12.0]
+export const PLAYER_INITIAL_QUESTIONS_POSITION: Vector3Tuple = [0.0, ANSWER_TILE_Y, 4.0]
 
-// Get initial question for the default topic
-const getInitialQuestion = (): Question => {
-  const defaultTopic = Topic.UX_UI_DESIGN
-  const question = getNextQuestion({
-    topic: defaultTopic,
-    currentDifficulty: 1,
+function getFirstQuestionForTopic(topic: Topic, difficulty: number): Question | undefined {
+  return getNextQuestion({
+    topic,
+    currentDifficulty: difficulty,
     askedIds: new Set(),
   })
-  if (!question) {
-    throw new Error(`No questions available for initial topic: ${defaultTopic}`)
-  }
-  return question
 }
 
 const INITIAL_STATE: Pick<
@@ -106,6 +114,7 @@ const INITIAL_STATE: Pick<
   | 'confirmationProgress'
   | 'playerPosition'
   | 'topic'
+  | 'confirmingTopic'
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
@@ -118,18 +127,19 @@ const INITIAL_STATE: Pick<
   | 'currentRunStats'
   | 'previousRuns'
 > = {
-  stage: Stage.SPLASH,
+  stage: Stage.HOME,
   terrainSpeed: 0,
   confirmationProgress: 0,
   playerPosition: {
-    x: PLAYER_INITIAL_POSITION[0],
-    y: PLAYER_INITIAL_POSITION[1],
-    z: PLAYER_INITIAL_POSITION[2],
+    x: PLAYER_INITIAL_HOME_POSITION[0],
+    y: PLAYER_INITIAL_HOME_POSITION[1],
+    z: PLAYER_INITIAL_HOME_POSITION[2],
   },
-  topic: Topic.UX_UI_DESIGN,
+  topic: null,
+  confirmingTopic: null,
   currentDifficulty: 1,
-  questions: [getInitialQuestion()],
-  currentQuestion: getInitialQuestion(),
+  questions: [],
+  currentQuestion: null,
   currentQuestionIndex: 0,
   confirmingAnswer: null,
   confirmedAnswers: [],
@@ -149,64 +159,138 @@ const createGameStore = () => {
   let confirmationTween: GSAPTween | null = null
   const confirmationTweenTarget = { value: 0 }
 
+  function startConfirmation(set: StoreApi<GameState>['setState'], onComplete: () => void) {
+    confirmationTweenTarget.value = 0
+    confirmationTween = gsap.fromTo(
+      confirmationTweenTarget,
+      { value: 0 },
+      {
+        duration: CONFIRMATION_DURATION_S,
+        ease: 'none',
+        value: 1,
+        onUpdate: () => {
+          set({ confirmationProgress: confirmationTweenTarget.value })
+        },
+        onComplete: () => {
+          onComplete()
+          confirmationTween?.kill()
+          confirmationTween = null
+        },
+      },
+    )
+  }
+
+  function cancelConfirmation(set: StoreApi<GameState>['setState']) {
+    set({ confirmingTopic: null })
+    confirmationTween = gsap.to(confirmationTweenTarget, {
+      duration: 0.3,
+      ease: 'power2.out',
+      value: 0,
+      onUpdate: () => {
+        set({ confirmationProgress: confirmationTweenTarget.value })
+      },
+      onComplete: () => {
+        confirmationTweenTarget.value = 0
+        confirmationTween?.kill()
+        confirmationTween = null
+        set({ confirmationProgress: 0 })
+      },
+    })
+  }
+
   return createStore<GameState>()(
     persist(
       (set, get) => ({
         ...INITIAL_STATE,
-        setPlayerPosition: (pos) => set({ playerPosition: pos }),
+        setPlayerPosition: (pos) => {
+          console.log('Setting player position:', pos)
+          set({ playerPosition: pos })
+        },
         setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
         setIsMuted: (muted) => set({ isMuted: muted }),
         setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 
+        setConfirmingTopic: (topicData: TopicUserData | null) => {
+          const { stage, topic, confirmingTopic } = get()
+
+          if (topicData?.topic === confirmingTopic?.topic) return // No change
+          confirmationTween?.kill()
+
+          if (topicData === null) {
+            cancelConfirmation(set)
+            return
+          }
+
+          if (stage !== Stage.HOME || topic !== null) return
+
+          set({ confirmingTopic: topicData, confirmationProgress: 0 })
+
+          const onConfirmed = () => {
+            if (get().confirmingTopic?.topic === topicData.topic) {
+              get().onTopicConfirmed()
+            }
+          }
+
+          startConfirmation(set, onConfirmed)
+        },
+
         setConfirmingAnswer: (answer: AnswerUserData | null) => {
+          const { confirmingAnswer, confirmedAnswers, onAnswerConfirmed } = get()
+          if (answer?.questionId === confirmingAnswer?.questionId) return // No change
+
           confirmationTween?.kill()
 
           if (answer === null) {
-            set({ confirmingAnswer: null })
-            confirmationTween = gsap.to(confirmationTweenTarget, {
-              duration: 0.3,
-              ease: 'power2.out',
-              value: 0,
-              onUpdate: () => {
-                set({ confirmationProgress: confirmationTweenTarget.value })
-              },
-              onComplete: () => {
-                confirmationTween!.kill()
-                set({ confirmationProgress: 0 })
-              },
-            })
-          } else {
-            // Start confirming this answer
-            const { confirmedAnswers, onAnswerConfirmed } = get()
-
-            const hasAlreadyAnswered = confirmedAnswers.some(
-              ({ questionId }) => questionId === answer.questionId,
-            )
-
-            if (hasAlreadyAnswered) return
-
-            set({ confirmingAnswer: answer })
-            confirmationTween = gsap.fromTo(
-              confirmationTweenTarget,
-              {
-                value: 0,
-              },
-              {
-                duration: CONFIRMATION_DURATION_S,
-                ease: 'none',
-                value: 1,
-                onUpdate: () => {
-                  set({ confirmationProgress: confirmationTweenTarget.value })
-                },
-                onComplete: () => {
-                  if (!!get().confirmingAnswer) onAnswerConfirmed()
-                  confirmationTween!.kill()
-                },
-              },
-            )
+            cancelConfirmation(set)
+            return
           }
+
+          const hasAlreadyAnswered = confirmedAnswers.some(
+            ({ questionId }) => questionId === answer.questionId,
+          )
+          if (hasAlreadyAnswered) return
+
+          set({ confirmingAnswer: answer, confirmationProgress: 0 })
+
+          const onConfirmed = () => {
+            if (!!get().confirmingAnswer) onAnswerConfirmed()
+          }
+
+          startConfirmation(set, onConfirmed)
+        },
+
+        onTopicConfirmed: () => {
+          const { confirmingTopic, goToStage } = get()
+
+          if (!confirmingTopic) {
+            console.error('No topic selected to confirm')
+            return
+          }
+
+          const firstQuestion = getFirstQuestionForTopic(confirmingTopic.topic, 1)
+
+          if (!firstQuestion) {
+            console.error('No questions available for topic:', confirmingTopic.topic)
+            set({ confirmingTopic: null, confirmationProgress: 0 })
+            return
+          }
+
+          set({
+            topic: confirmingTopic.topic,
+            confirmingTopic: null,
+            confirmationProgress: 0,
+            questions: [firstQuestion],
+            currentQuestionIndex: 0,
+            currentQuestion: firstQuestion,
+            confirmingAnswer: null,
+            confirmedAnswers: [],
+            distanceRows: 0,
+            currentRunStats: null,
+          })
+
+          goToStage(Stage.INTRO)
         },
 
         onAnswerConfirmed: async () => {
@@ -235,7 +319,6 @@ const createGameStore = () => {
           confirmationTween = null
           speedTweenTarget.value = 0
           confirmationTweenTarget.value = 0
-
           const previousRunsToKeep = get().previousRuns
           set((s) => ({
             ...INITIAL_STATE,
@@ -244,8 +327,19 @@ const createGameStore = () => {
           }))
         },
 
+        onOutOfBounds: () => {
+          const { stage, resetGame, goToStage } = get()
+
+          if (stage === Stage.HOME) {
+            resetGame()
+            return
+          }
+
+          goToStage(Stage.GAME_OVER)
+        },
+
         goToStage: (newStage: Stage) => {
-          if (newStage === Stage.SPLASH) {
+          if (newStage === Stage.HOME) {
             get().resetGame()
             return
           }

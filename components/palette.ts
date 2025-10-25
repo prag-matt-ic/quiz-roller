@@ -21,8 +21,7 @@ export function palette(
   c: Vector3Tuple,
   d: Vector3Tuple,
 ): Vector3Tuple {
-  const TAU = 6.283185 // 2 * PI
-
+  const TAU = Math.PI * 2
   return [
     a[0] + b[0] * Math.cos(TAU * (c[0] * t + d[0])),
     a[1] + b[1] * Math.cos(TAU * (c[1] * t + d[1])),
@@ -106,9 +105,9 @@ export const GRADIENT_STEPS = 8
 
 // Keep these in sync with paletteRange.glsl
 export const COLOUR_RANGES: readonly ColourRange[] = [
-  { min: 0.0, max: 0.4, center: 0.2 },
-  { min: 0.3, max: 0.7, center: 0.5 },
-  { min: 0.6, max: 1.0, center: 0.8 },
+  { min: 0.0, max: 0.5, center: 0.25 },
+  { min: 0.25, max: 0.75, center: 0.5 },
+  { min: 0.5, max: 1.0, center: 0.75 },
 ] as const
 
 // Pre-compute gradient stops for each range

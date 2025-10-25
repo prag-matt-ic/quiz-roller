@@ -3,40 +3,40 @@
 
 import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
 import { InstancedRigidBodyProps, type RapierRigidBody } from '@react-three/rapier'
-import { type Group, Vector3 } from 'three'
+import { type Group } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import { QuestionText } from '@/components/QuestionText'
-import { AnswerTile } from '@/components/answerTile/AnswerTile'
+import { Text } from '@/components/Text'
+import { QuestionAnswerTile } from '@/components/answerTile/AnswerTile'
 import { TERRAIN_SPEED_UNITS } from '@/resources/game'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { useGameFrame } from '@/hooks/useGameFrame'
 
 import { InstancedTiles, type InstancedTilesHandle } from '../tiles/InstancedTiles'
+import { COLUMNS, ROWS_VISIBLE, SAFE_HEIGHT, TILE_SIZE, colToX } from '@/utils/tiles'
+
 import {
   ANSWER_TILE_COUNT,
-  COLUMNS,
   DECEL_EASE_POWER,
   DECEL_START_OFFSET_ROWS,
-  ENTRY_END_Z,
-  ENTRY_START_Z,
   ENTRY_Y_OFFSET,
-  EXIT_END_Z,
-  EXIT_START_Z,
+  QUESTIONS_ENTRY_END_Z,
+  QUESTIONS_ENTRY_START_Z,
+  QUESTIONS_EXIT_END_Z,
+  QUESTIONS_EXIT_START_Z,
   INITIAL_ROWS_Z_OFFSET,
   MAX_Z,
   OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
   QUESTION_SECTION_ROWS,
-  ROWS_VISIBLE,
-  SAFE_HEIGHT,
-  TILE_SIZE,
-  colToX,
-  generateObstacleHeights,
   type RowData,
   generateQuestionSectionRowData,
   generateIntroSectionRowData,
-} from '../../utils/terrainBuilder'
+  QUESTION_TEXT_WIDTH,
+  QUESTION_TEXT_HEIGHT,
+} from '@/utils/terrainBuilder'
+
+import { generateObstacleHeights } from '@/utils/obstacles'
 
 const EPSILON = {
   SMALL: 1e-6,
@@ -74,7 +74,9 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
   notchChance: 0.1,
 }
 
-const Terrain: FC = () => {
+// The Topic Run begins after a user has selected a topic in the Home stage.
+
+const TopicRun: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isQuestionStage = stage === Stage.QUESTION
   const currentQuestion = useGameStore((s) => s.currentQuestion)
@@ -310,14 +312,16 @@ const Terrain: FC = () => {
 
   function computeLiftLowerOffset(rowZ: number): number {
     // Entry lift: raise from -ENTRY_Y_OFFSET up to 0 across the entry window
-    if (rowZ < ENTRY_START_Z) return -ENTRY_Y_OFFSET
-    if (rowZ < ENTRY_END_Z) {
-      const tIn = (rowZ - ENTRY_START_Z) / (ENTRY_END_Z - ENTRY_START_Z)
+    if (rowZ < QUESTIONS_ENTRY_START_Z) return -ENTRY_Y_OFFSET
+    if (rowZ < QUESTIONS_ENTRY_END_Z) {
+      const tIn =
+        (rowZ - QUESTIONS_ENTRY_START_Z) / (QUESTIONS_ENTRY_END_Z - QUESTIONS_ENTRY_START_Z)
       return -ENTRY_Y_OFFSET * (1 - tIn)
     }
     // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
-    if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
-      const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
+    if (rowZ >= QUESTIONS_EXIT_START_Z && rowZ < QUESTIONS_EXIT_END_Z) {
+      const tOut =
+        (rowZ - QUESTIONS_EXIT_START_Z) / (QUESTIONS_EXIT_END_Z - QUESTIONS_EXIT_START_Z)
       return ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
@@ -387,7 +391,7 @@ const Terrain: FC = () => {
       updateRowPositions(rowIndex, rowZ, yOffset)
 
       const wasRaised = isRowRaised.current[rowIndex] === true
-      const isRaised = rowZ >= ENTRY_END_Z
+      const isRaised = rowZ >= QUESTIONS_ENTRY_END_Z
 
       if (!wasRaised && isRaised) {
         handleRowRaised(rowIndex, rowZ)
@@ -468,7 +472,7 @@ const Terrain: FC = () => {
 
     let computedSpeed = terrainSpeed.current
 
-    if (stage === Stage.SPLASH) {
+    if (stage === Stage.HOME) {
       computedSpeed = 0
     } else if (stage === Stage.QUESTION) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
@@ -494,13 +498,15 @@ const Terrain: FC = () => {
         instanceSeed={instanceSeed.current!}
         instanceAnswerNumber={instanceAnswerNumber.current!}
       />
-      <QuestionText
+      <Text
         ref={questionGroup}
-        text={currentQuestion.text}
+        text={currentQuestion?.text ?? ''}
         position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
+        width={QUESTION_TEXT_WIDTH}
+        height={QUESTION_TEXT_HEIGHT}
       />
       {answerRefs.map((answerRef, answerIndex) => (
-        <AnswerTile
+        <QuestionAnswerTile
           key={`answer-tile-${answerIndex}`}
           ref={answerRef}
           index={answerIndex}
@@ -511,4 +517,4 @@ const Terrain: FC = () => {
   )
 }
 
-export default Terrain
+export default TopicRun

@@ -1,5 +1,6 @@
 ---
 description: 'Review and refactor code for clean code principles'
+tools: ['edit', 'search', 'runCommands', 'changes', 'fetch', 'todos']
 ---
 
 ## Task

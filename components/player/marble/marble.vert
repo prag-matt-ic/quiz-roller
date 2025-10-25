@@ -7,11 +7,13 @@ varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vViewPosition;
 
+const float PI = 3.14159265359;
+
 // Convert 3D position to spherical UV coordinates
 vec2 sphericalUV(vec3 pos) {
   vec3 n = normalize(pos);
-  float u = 0.5 + atan(n.z, n.x) / (2.0 * 3.14159265359);
-  float v = 0.5 - asin(n.y) / 3.14159265359;
+  float u = 0.5 + atan(n.z, n.x) / (2.0 * PI);
+  float v = 0.5 - asin(n.y) / PI;
   return vec2(u, v);
 }
 
