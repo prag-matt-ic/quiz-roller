@@ -10,10 +10,15 @@ const OutOfBounds: FC = () => {
   const userData: OutOfBoundsUserData = { type: 'out-of-bounds' }
 
   return (
-    <RigidBody type="fixed" colliders={false} position={[0, 0, 0]} userData={userData}>
-      {/* Large, thin sensor plane below the playable tiles to trigger game over / reset */}
+    <RigidBody
+      type="fixed"
+      friction={0}
+      colliders={false}
+      position={[0, 0, 0]}
+      userData={userData}>
+      {/* Large, sensor plane below the playable tiles to trigger game over / reset */}
       <CuboidCollider
-        position={[0, -6, 0]}
+        position={[0, -10, 0]}
         args={[50, 1, 50]}
         sensor={true}
         activeCollisionTypes={
