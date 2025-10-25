@@ -1,6 +1,6 @@
 'use client'
 import { FootprintsIcon, GaugeIcon, GemIcon, type LucideIcon, TrophyIcon } from 'lucide-react'
-import type { FC, ReactNode } from 'react'
+import type { FC, ReactNode, RefObject } from 'react'
 import { useMemo } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -8,7 +8,12 @@ import { twJoin } from 'tailwind-merge'
 import { useGameStore } from '@/components/GameProvider'
 import { getDifficultyLabel } from '@/model/difficulty'
 
-const PlayingUI: FC<{ transitionStatus: TransitionStatus }> = () => {
+type Props = {
+  transitionStatus: TransitionStatus
+  ref: RefObject<HTMLDivElement | null>
+}
+
+const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
   const difficulty = useGameStore((s) => s.currentDifficulty)
   const distanceRows = useGameStore((s) => s.distanceRows)
@@ -59,7 +64,9 @@ const PlayingUI: FC<{ transitionStatus: TransitionStatus }> = () => {
   }
 
   return (
-    <section className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2">
+    <section
+      ref={ref}
+      className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2">
       {renderBlock({
         icon: GaugeIcon,
         content: <span className="text-2xl font-extrabold">{difficultyLabel}</span>,

@@ -28,7 +28,7 @@ const Game: FC = () => {
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
-  // const resetTick = useGameStore((s) => s.resetTick)
+  const resetTick = useGameStore((s) => s.resetTick)
 
   const [dpr, setDpr] = useState(1)
 
@@ -75,8 +75,11 @@ const Game: FC = () => {
         <Camera />
         <Stats />
         <Suspense>
-          <Physics debug={process.env.NODE_ENV === 'development'} timeStep={physicsTimeStep}>
-            <Level />
+          <Physics
+            key={resetTick}
+            debug={process.env.NODE_ENV === 'development'}
+            timeStep={physicsTimeStep}>
+            <Level key={resetTick} />
           </Physics>
         </Suspense>
       </PerformanceMonitor>
