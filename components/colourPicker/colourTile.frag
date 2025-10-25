@@ -1,19 +1,19 @@
-precision highp float;
+precision mediump float; // Lowered for general math
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require('../palette.glsl')
 #pragma glslify: paletteRange = require('../paletteRange.glsl')
 
 uniform float uTime;
-uniform int uColourIndex;
-uniform float uIsActive;
+uniform lowp int uColourIndex;
+uniform lowp float uIsActive;
 
 varying vec2 vUv;
 
 const float NOISE_SCALE = 1.4;
-const float ACTIVE_NOISE_TIME_SPEED = 0.3;
-const float INACTIVE_NOISE_TIME_SPEED = 0.08;
-const float BORDER_THICKNESS = 0.05;
+const float ACTIVE_NOISE_TIME_SPEED = 0.8;
+const float INACTIVE_NOISE_TIME_SPEED = 0.12;
+const float BORDER_THICKNESS = 0.04;
 
 float sdCircle(in vec2 p, in float r) {
   return length(p) - r;
@@ -25,7 +25,7 @@ void main() {
   float radialLength = length(centeredUv);
   float radial = radialLength / OUTER_RADIUS;
 
-  float outerDistance = sdCircle(centeredUv, OUTER_RADIUS);
+  float outerDistance = radialLength - OUTER_RADIUS;
   if (outerDistance > 0.0) {
     discard;
   }
@@ -45,17 +45,16 @@ void main() {
   paletteRange(uColourIndex, minValue, maxValue);
   
   float paletteT = mix(minValue, maxValue, noiseValue);
-  vec3 baseColour = getColourFromPalette(paletteT);
+  lowp vec3 baseColour = getColourFromPalette(paletteT); // Use lowp for color
 
   // Vignette shading
   float edgeVignette = smoothstep(0.35, 1.0, radial);
-  vec3 shadedColour = mix(baseColour, vec3(0.0), edgeVignette * 0.3);
-
-  vec3 finalColour = shadedColour;
+  lowp vec3 shadedColour = mix(baseColour, vec3(0.0), edgeVignette * 0.3);
+  lowp vec3 finalColour = shadedColour;
 
   // Border
   float innerRadius = max(OUTER_RADIUS - BORDER_THICKNESS, 0.0);
-  float innerDistance = sdCircle(centeredUv, innerRadius);
+  float innerDistance = radialLength - innerRadius; // Hoisted sdCircle
   float innerAntiAliasing = fwidth(innerDistance);
   float borderMask = smoothstep(innerRadius, innerRadius + innerAntiAliasing, radialLength);
 

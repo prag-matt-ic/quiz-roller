@@ -8,20 +8,21 @@ import ColourPicker from '@/components/colourPicker/ColourPicker'
 import { useGameStore } from '@/components/GameProvider'
 import { Text } from '@/components/Text'
 import { Topic, type TopicUserData } from '@/model/schema'
-import { COLOUR_TILE_OPTIONS, COLOUR_TILE_TEXT_RELATIVE_Z } from '@/utils/platform/homeSection'
+import {
+  COLOUR_TILE_OPTIONS,
+  COLOUR_TILE_TEXT_RELATIVE_Z,
+  TEXT_HEIGHT,
+  TEXT_WIDTH,
+} from '@/utils/platform/homeSection'
 import {
   HIDE_POSITION_Y,
   HIDE_POSITION_Z,
   MAX_Z,
   ON_TILE_Y,
   RowData,
-  TILE_SIZE,
 } from '@/utils/tiles'
 
 import Logo from './Logo'
-
-const HOME_PROMPT_WIDTH = TILE_SIZE * 12
-const HOME_PROMPT_HEIGHT = TILE_SIZE * 2
 
 const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
   {
@@ -205,8 +206,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
         ref={topicText}
         text="Roll over a topic to begin"
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        width={HOME_PROMPT_WIDTH}
-        height={HOME_PROMPT_HEIGHT}
+        width={TEXT_WIDTH}
+        height={TEXT_HEIGHT}
       />
       {topicAnswerRefs.map((topicRef, index) => (
         <AnswerTile

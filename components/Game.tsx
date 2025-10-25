@@ -1,7 +1,7 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
+import { PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
@@ -77,7 +77,10 @@ const Game: FC = () => {
         {/* <OrbitControls /> */}
         <Camera />
         <Suspense>
-          <Physics key={refreshKey} debug={true} timeStep={physicsTimeStep}>
+          <Physics
+            key={refreshKey}
+            debug={process.env.NODE_ENV === 'development'}
+            timeStep={physicsTimeStep}>
             {process.env.NODE_ENV === 'development' && <Stats />}
             <Level />
           </Physics>

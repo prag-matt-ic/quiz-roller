@@ -27,8 +27,14 @@ const COLOUR_PICKER_RELATIVE_Z =
   (COLOUR_PICKER_TRIGGER_ROW - COLOUR_PICKER_CENTER_ROW) * TILE_SIZE
 
 // Text position
+const TEXT_ROWS = 2
+
+export const TEXT_WIDTH = 12 * TILE_SIZE
+export const TEXT_HEIGHT = TEXT_ROWS * TILE_SIZE
+
 const TEXT_CENTER_ROW = 9
-const TEXT_TRIGGER_ROW = TEXT_CENTER_ROW
+const TEXT_TRIGGER_ROW = Math.ceil(TEXT_CENTER_ROW + TEXT_ROWS / 2)
+// Align trigger to the row whose visible edge contains the top of the text block.
 const TEXT_Z_RELATIVE = (TEXT_TRIGGER_ROW - TEXT_CENTER_ROW) * TILE_SIZE
 
 // Answer tiles positions
@@ -36,7 +42,11 @@ const ANSWER_LEFT_TILE_START_COL = 1
 const ANSWER_RIGHT_TILE_START_COL = 9
 const ANSWER_TILE_START_ROW = 11
 const ANSWER_TILE_END_ROW = ANSWER_TILE_START_ROW + ANSWER_TILE_ROWS - 1
-const ANSWER_TILE_TRIGGER_ROW = ANSWER_TILE_START_ROW
+const ANSWER_TILE_CENTER_ROW = ANSWER_TILE_START_ROW + (ANSWER_TILE_ROWS - 1) / 2
+// Trigger row fires when the leading edge of the row reaches the player, so we place answer
+// bodies on the row whose animation window contains the tile centre.
+const ANSWER_TILE_TRIGGER_ROW = Math.ceil(ANSWER_TILE_CENTER_ROW)
+const ANSWER_TILE_RELATIVE_Z = (ANSWER_TILE_TRIGGER_ROW - ANSWER_TILE_CENTER_ROW) * TILE_SIZE
 
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
@@ -49,7 +59,9 @@ export function generateHomeSectionRowData(): RowData[] {
     const heights = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
     const ownership = new Array<number>(COLUMNS).fill(0)
 
-    if (rowIndex >= ANSWER_TILE_START_ROW && rowIndex <= ANSWER_TILE_END_ROW) {
+    // Match the question section by carving out only the columns owned by each answer tile.
+    const isAnswerRow = rowIndex >= ANSWER_TILE_START_ROW && rowIndex <= ANSWER_TILE_END_ROW
+    if (isAnswerRow) {
       for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
         const inLeftTile =
           columnIndex >= ANSWER_LEFT_TILE_START_COL && columnIndex <= leftEndCol
@@ -79,9 +91,10 @@ export function generateHomeSectionRowData(): RowData[] {
     }
 
     if (rowIndex === ANSWER_TILE_TRIGGER_ROW) {
+      // Offset Z so the dynamic bodies land on the visual tile centres instead of the row edge.
       rows[rowIndex].answerTilePositions = [
-        [colToX(leftCenterCol), ON_TILE_Y, -1],
-        [colToX(rightCenterCol), ON_TILE_Y, -1],
+        [colToX(leftCenterCol), ON_TILE_Y, ANSWER_TILE_RELATIVE_Z],
+        [colToX(rightCenterCol), ON_TILE_Y, ANSWER_TILE_RELATIVE_Z],
       ]
     }
 

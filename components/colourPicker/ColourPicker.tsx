@@ -9,7 +9,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { Text } from '@/components/Text'
 import { type MarbleColourUserData } from '@/model/schema'
-import { COLOUR_TILE_TEXT_RELATIVE_Z, COLOUR_TILE_SIZE } from '@/utils/platform/homeSection'
+import { COLOUR_TILE_SIZE, COLOUR_TILE_TEXT_RELATIVE_Z } from '@/utils/platform/homeSection'
 import { ON_TILE_Y, TILE_SIZE } from '@/utils/tiles'
 
 import colourTileFragment from './colourTile.frag'
@@ -47,14 +47,12 @@ type ColourTileProps = {
   ref: RefObject<RapierRigidBody | null>
 }
 
-const COLOUR_TILE_TIME_MULTIPLIER = 2.5
-
 const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref }) => {
   const shader = useRef<typeof ColourTileShaderMaterial & ColourTileShaderUniforms>(null)
 
   useFrame(({ clock }) => {
     if (!shader.current) return
-    shader.current.uTime = clock.elapsedTime * COLOUR_TILE_TIME_MULTIPLIER
+    shader.current.uTime = clock.elapsedTime
   })
 
   return (
