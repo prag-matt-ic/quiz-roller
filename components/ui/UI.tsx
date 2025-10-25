@@ -8,6 +8,7 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import GameOverUI from '@/components/ui/GameOver'
+import AudioToggle from '@/components/ui/AudioToggle'
 import HomeUI from '@/components/ui/HomeUI'
 import PlayingUI from '@/components/ui/PlayingUI'
 // import useAudio from '@/hooks/useAudio' // TODO: add sound effects
@@ -51,37 +52,40 @@ const UI: FC<Props> = () => {
   // })
 
   return (
-    <SwitchTransition>
-      <Transition
-        key={switchKey}
-        timeout={{ enter: 0, exit: 600 }}
-        nodeRef={wrapper}
-        appear={true}>
-        {(transitionStatus) => {
-          if (isHome)
-            return (
-              <div ref={wrapper} className="">
-                {/* <HomeUI transitionStatus={transitionStatus} /> */}
-              </div>
-            )
-          if (isPlaying)
-            return (
-              <div ref={wrapper} className="">
-                <PlayingUI transitionStatus={transitionStatus} />
-              </div>
-            )
+    <>
+      <AudioToggle />
+      <SwitchTransition>
+        <Transition
+          key={switchKey}
+          timeout={{ enter: 0, exit: 600 }}
+          nodeRef={wrapper}
+          appear={true}>
+          {(transitionStatus) => {
+            if (isHome)
+              return (
+                <div ref={wrapper} className="">
+                  {/* <HomeUI transitionStatus={transitionStatus} /> */}
+                </div>
+              )
+            if (isPlaying)
+              return (
+                <div ref={wrapper} className="">
+                  <PlayingUI transitionStatus={transitionStatus} />
+                </div>
+              )
 
-          if (stage === Stage.GAME_OVER)
-            return (
-              <div ref={wrapper} className="">
-                <GameOverUI transitionStatus={transitionStatus} />
-              </div>
-            )
+            if (stage === Stage.GAME_OVER)
+              return (
+                <div ref={wrapper} className="">
+                  <GameOverUI transitionStatus={transitionStatus} />
+                </div>
+              )
 
-          return <div ref={wrapper} className="hidden" />
-        }}
-      </Transition>
-    </SwitchTransition>
+            return <div ref={wrapper} className="hidden" />
+          }}
+        </Transition>
+      </SwitchTransition>
+    </>
   )
 }
 

@@ -1,10 +1,14 @@
 'use client'
 
 import { useThree } from '@react-three/fiber'
-import { FC, type RefObject } from 'react'
+import { FC, type RefObject, Suspense } from 'react'
 import { Mesh, type Vector3Tuple } from 'three'
 
-import { type TextCanvasOptions, useTextCanvas } from '@/hooks/useTextCanvas'
+import {
+  type TextCanvasOptions,
+  TRANSPARENT_TEXTURE,
+  useTextCanvas,
+} from '@/hooks/useTextCanvas'
 
 type Props = {
   ref?: RefObject<Mesh | null>
@@ -29,19 +33,21 @@ export const Text: FC<Props> = ({
     width: width * 80 * dpr,
     height: height * 80 * dpr,
     color: '#0f0d0f', // TODO: get colour from palette
-    fontSize: 28,
     ...textCanvasOptions,
+    fontSize: textCanvasOptions?.fontSize ?? 28 * dpr,
   })
 
   return (
-    <mesh ref={ref} position={position} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[width, height]} />
-      <meshBasicMaterial
-        map={canvasState?.texture ?? null}
-        transparent={true}
-        depthTest={true}
-        depthWrite={false}
-      />
-    </mesh>
+    <Suspense fallback={null}>
+      <mesh ref={ref} position={position} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial
+          map={canvasState?.texture ?? TRANSPARENT_TEXTURE}
+          transparent={true}
+          depthTest={true}
+          depthWrite={false}
+        />
+      </mesh>
+    </Suspense>
   )
 }

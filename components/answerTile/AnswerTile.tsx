@@ -4,14 +4,14 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
-import { CanvasTexture, type Vector3Tuple } from 'three'
+import { Texture, type Vector3Tuple } from 'three'
 
 import Particles from '@/components/answerTile/particles/Particles'
 import { useGameStore } from '@/components/GameProvider'
 import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
-import { useTextCanvas } from '@/hooks/useTextCanvas'
+import { TRANSPARENT_TEXTURE, useTextCanvas } from '@/hooks/useTextCanvas'
 import { type AnswerUserData, type TopicUserData } from '@/model/schema'
 import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/tiles'
 
@@ -27,7 +27,7 @@ type AnswerTileShaderUniforms = {
   uIsConfirming: number
   uTileAspect: number
   uTime: number
-  uTextTexture: CanvasTexture | null
+  uTextTexture: Texture | null
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
@@ -126,12 +126,9 @@ export const AnswerTile: FC<AnswerTileProps> = ({
           transparent={true}
           depthTest={true}
           depthWrite={false}
-          // polygonOffset={true}
-          // polygonOffsetFactor={-1}
-          // polygonOffsetUnits={-1}
-          // uConfirmingProgress={0}
+          uConfirmingProgress={0}
           uIsConfirming={0}
-          uTextTexture={canvasState?.texture ?? null}
+          uTextTexture={canvasState?.texture ?? TRANSPARENT_TEXTURE}
         />
       </mesh>
       {/* Particles burst when this answer is confirmed */}

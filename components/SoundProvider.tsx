@@ -1,33 +1,36 @@
 'use client'
-import { createContext, type FC, type PropsWithChildren, useContext, useEffect, useRef } from 'react'
+import {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useRef,
+} from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
 export enum SoundFX {
-  GET_READY = 'GET_READY',
-  COUNTDOWN = 'COUNTDOWN',
+  BACKGROUND = 'BACKGROUND',
+  CONFIRMED = 'CONFIRMED',
   CORRECT_ANSWER = 'CORRECT_ANSWER',
-  WRONG_ANSWER = 'WRONG_ANSWER',
-  OBSTACLE_HIT = 'OBSTACLE_HIT',
-  OBSTACLE_AVOIDED = 'OBSTACLE_AVOIDED',
+  INCORRECT_ANSWER = 'WRONG_ANSWER',
   GAME_OVER = 'GAME_OVER',
-  LEVEL_COMPLETE = 'LEVEL_COMPLETE',
 }
 
 const SOUND_FILES: Record<SoundFX, string> = {
-  [SoundFX.GET_READY]: '/audio/mixkit-retro-car-engine-glitch-2712.wav',
-  [SoundFX.COUNTDOWN]: '/audio/mixkit-simple-game-countdown-921.wav',
-  [SoundFX.GAME_OVER]: '/audio/mixkit-player-losing-or-failing-2042.wav',
-  [SoundFX.LEVEL_COMPLETE]: '/audio/mixkit-ethereal-fairy-win-sound-2019.wav',
-  [SoundFX.CORRECT_ANSWER]: '/audio/mixkit-fantasy-game-success-notification-270.wav',
-  [SoundFX.WRONG_ANSWER]: '/audio/mixkit-wrong-answer-bass-buzzer-948.wav',
-  [SoundFX.OBSTACLE_AVOIDED]: '/audio/mixkit-futuristic-sweep-pass-by-169.wav',
-  [SoundFX.OBSTACLE_HIT]: '/audio/mixkit-8-bit-bomb-explosion-2811.wav',
+  [SoundFX.CONFIRMED]: '/audio/center.aac',
+  [SoundFX.GAME_OVER]: '/audio/background.aac',
+  [SoundFX.BACKGROUND]: '/audio/background.aac',
+  [SoundFX.CORRECT_ANSWER]: '/audio/background.aac',
+  [SoundFX.INCORRECT_ANSWER]: '/audio/background.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
 
 type SoundState = {
   isLoading: boolean
+  isMuted: boolean
+  setIsMuted: (isMuted: boolean) => void
   initialise: () => Promise<void>
   playSoundFX: (fx: SoundFX) => void
   setMasterGain: (v: number) => void
@@ -78,10 +81,16 @@ const createSoundStore = () => {
 
   return createStore<SoundState>()((set, get) => ({
     isLoading: true,
+    isMuted: true,
 
     initialise: async () => {
       if (!ready) ready = loadAllSounds().finally(() => set({ isLoading: false }))
       await ready
+    },
+
+    setIsMuted: (isMuted: boolean) => {
+      set({ isMuted })
+      get().setMasterGain(isMuted ? 0 : 0.5)
     },
 
     playSoundFX: (fx: SoundFX) => {
@@ -124,8 +133,7 @@ export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     const initialiseAudio = async () => {
       try {
-        const { initialise } = soundStore.current.getState()
-        await initialise()
+        await soundStore.current.getState().initialise()
       } catch (error) {
         console.error('[SoundProvider] Audio initialisation failed', error)
       }
@@ -133,7 +141,7 @@ export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {
     initialiseAudio()
   }, [])
 
-  return <SoundContext.Provider value={soundStore.current}>{children}</SoundContext.Provider>
+  return <SoundContext value={soundStore.current}>{children}</SoundContext>
 }
 
 export function useSoundStore<T>(selector: (state: SoundState) => T): T {
