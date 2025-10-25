@@ -1,72 +1,83 @@
 ---
-description: 'Review and refactor shader code for best practices'
+description: 'Review and refactor GLSL shaders for performance, clarity, and portability'
 tools: ['edit', 'search', 'runCommands', 'changes', 'fetch', 'todos']
 ---
 
-## Task
+## Goal
 
-Use the following Checklist to review and refactor the current shader's vertex and fragment code.
+Review and refactor the provided **vertex** and **fragment** shaders to reduce GPU cost and improve readability **without visible regressions**.
 
-Begin first by identifying any violations of the checklist items. Then, refactor the code to address these issues.
+**Success criteria**
 
-## Checklist
+- Visual output is indistinguishable under normal viewing (treat small numeric drift as acceptable).
+- No feature regressions; interfaces (uniforms/attributes) remain compatible unless explicitly justified.
+- Fewer or cheaper instructions on the bottleneck stage and no added texture fetches unless justified.
 
-### General
+## Inputs
 
-- [ ] Identify the bottleneck before refactoring: if vertex-bound, reduce vertex instruction count; if fragment-bound, prioritize cutting fragment work (precision, move work to vertex).
+- Current vertex + fragment shader sources.
+- (Optional) Active light count, material flags, pipeline notes.
 
-- [ ] Lights: calculate only the number of lights you actually use; limit light count and avoid iterating over unused lights (use a uniform active-light count). Consider per-vertex lighting when acceptable.
+## Procedure (follow in order)
 
-### Performance and optimization
+1. **Determine bottleneck**
+   - State whether the pass is vertex-bound, fragment-bound, or bandwidth-bound and why (e.g., full-screen pass → likely fragment-bound; heavy skinning/instancing → vertex-bound).
+   - If uncertain, assume fragment-bound for full-screen/high overdraw, otherwise vertex-bound.
 
-- [ ] Use precision qualifiers: declare variables with the appropriate precision qualifier (lowp, mediump, highp) to optimize memory usage and performance. lowp uses the least resources but may sacrifice accuracy. See Vertex/Fragment precision items for specifics.
+2. **Static audit (find issues)**
+   - Unused or redundant: attributes, varyings, uniforms, macros.
+   - Precision: missing or too-high qualifiers; mismatched varying precisions.
+   - Hot ops in fragment: trig (`sin/cos`), `pow`, `exp`, divisions, conditionals/loops, multiple texture fetches.
+   - Light loops: iterating beyond active lights; per-fragment work that could be per-vertex.
+   - Recomputation: repeated expressions, invariant terms.
+   - Interface bloat: varyings produced but not consumed.
 
-- [ ] Minimize branching: use conditionals judiciously, especially in fragment shaders. Where possible, replace branches with branchless math (for example, mix/step/smoothstep or multiplications) so cores follow the same instruction path.
+3. **Plan (write before changing code)**
+   - List concrete edits you will make, ordered by expected impact (largest → smallest), tied to the identified bottleneck.
+   - Note any quality trade-offs and why they are acceptable.
 
-- [ ] Avoid redundant calculations: hoist common subexpressions, reuse intermediates, and compute shared values once (per draw or per vertex) instead of per fragment.
+4. **Refactor (apply changes)**
+   - **Move work out of fragment when acceptable:** compute per-vertex values that interpolate well (e.g., sin(time), simple factors) and pass via varyings.
+   - **Precision policy (apply consistently):**
+     - Vertex: `highp` for matrices/positions; `mediump` for normals/dirs; colors as `lowp`.
+     - Fragment: declare default precision at top; use `lowp` for colors/intensities in [0..1], `mediump` for texcoords/general math; `highp` only when depth/3D accuracy truly requires it.
+     - Ensure varying precisions **match** between stages.
+   - **Reduce branching:** replace `if`/`?:` with `mix/step/smoothstep` where safe; use masks instead of branches for toggles.
+   - **Hoist & reuse:** common subexpressions, invariant terms (per draw/per vertex), precompute reciprocals for divides.
+   - **Light handling:** use a uniform **activeLightCount**; cap loops; prefer simpler models if acceptable; consider per-vertex lighting for broad, soft lighting.
+   - **Texture discipline:** avoid redundant fetches; sample once and reuse; keep coordinate math cheap (`mediump`).
+   - **Keep interface lean:** only emit varyings actually used by fragment.
 
-- [ ] Simplify logic: prefer simpler lighting/shading models when quality allows and remove unnecessary computations and features.
+5. **Output (deliverables)**
+   - **Findings table**
+     | Issue | Location | Severity | Fix summary |
+     |---|---|---|---|
+   - **Refactor plan** (bulleted, 5–10 lines).
+   - **Refactored code**: updated **vertex** and **fragment** shaders.
+   - **Change diff**: minimal unified diff or `changes` tool entries.
+   - **Impact estimate**: which stage got cheaper and why (e.g., removed N trig ops per fragment).
+   - **TODOs**: further safe optimizations or optional quality dials.
 
-- [ ] Organize with functions: break complex shaders into small, reusable helper functions to improve readability and maintainability (GLSL compilers typically inline small functions).
+## Checks (single consolidated checklist)
 
-### Vertex Shader
+- **Bottleneck-aligned:** Optimization focuses on the limiting stage (vertex vs fragment).
+- **Precision right-sized:** Default precision declared in fragment; qualifiers minimized; varying precisions match.
+- **Uniform precision aligned:** Vertex/fragment uniform precision qualifiers remain consistent across stages.
+- **Branching minimized:** Replaced with branchless math where visually safe.
+- **Work moved up:** Expensive fragment computations shifted to vertex if they interpolate acceptably.
+- **Redundancy removed:** Reused intermediates; hoisted invariants; reduced divides via reciprocals.
+- **Light loops bounded:** Iterate up to `activeLightCount`; avoid unused lights; consider per-vertex lighting when acceptable.
+- **Texture fetches minimized:** No duplicate samples; coordinate math at `mediump`.
+- **Interface trimmed:** No unused varyings/inputs.
+- **Readability maintained:** Small helper functions allowed (compilers inline); clear naming.
+- **Portability minded:** Avoids extensions/special cases unless justified; respects GLES precision model.
 
-#### Move work out of the fragment stage when quality allows.
+## Notes & guardrails
 
-- [ ] Move calculations from fragment to vertex when results can be interpolated without noticeable artifacts (for example, trigonometric terms like sin/cos on a time value, simple lighting factors).
+- Do **not** change color spaces, tonemapping, or gamma unless explicitly requested.
+- Preserve semantic behavior; call out any intentional approximations.
+- If `highp` is not available in fragment on target, fall back to `mediump` and document.
 
-#### Use only the precision you need, and match varyings with the fragment stage.
+## Optional: measurement hooks
 
-- [ ] Choose appropriate precision for computations and varyings:
-  - highp only when strictly required (for example, matrix multiplications and precise 3D transforms)
-  - mediump for most general math
-  - lowp for color-like data
-- [ ] Ensure varying precision matches the fragment input to avoid unintended upcasts (for example, vColor as lowp when consumed as lowp in fragment).
-
-#### Keep the interface lean.
-
-- [ ] Output only the varyings actually used by the fragment shader to minimize interpolation overhead.
-
-#### If vertex becomes the bottleneck, simplify math.
-
-- [ ] Reduce instruction count when vertex-bound: remove redundant calculations, share intermediate results, and avoid expensive functions when not needed.
-
-### Fragment Shader
-
-#### Decrease precision where possible to reduce cycles.
-
-- [ ] Use the lowest precision that preserves quality:
-  - lowp for colors and intensities in [0..1]
-  - mediump for most math and texture coordinates (texture coords typically need at least mediump)
-  - highp only if required for accurate 3D math
-- [ ] Declare precision explicitly at the top of the fragment shader (for example, `precision lowp float;`) and set uniform precisions appropriately (for example, `uniform lowp float BlendIntensity;`).
-
-// Prefer interpolated inputs over recomputation per fragment.
-
-- [ ] Prefer using varyings computed in the vertex shader (for example, a color derived from sin(time)) instead of recomputing expensive functions in the fragment shader.
-
-// Practical checks derived from the article examples.
-
-- [ ] Audit any trigonometric, power, or division operations in the fragment shader; if visually acceptable, precompute per-vertex and pass via varyings.
-- [ ] For fragment-bound scenes, validate whether lowering precision (for example, mediump → lowp for colors) yields a measurable gain; some GPUs halve cycle cost when dropping precision.
-- [ ] For full-screen or high fill-rate passes, keep fragment code minimal and avoid unnecessary work (texture fetches, non-linear functions) to reduce pixel processing cost.
+- If `runCommands` is available, attempt a compile or stats call and report instruction/texture count or compile warnings.
