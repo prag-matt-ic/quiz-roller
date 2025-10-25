@@ -24,11 +24,10 @@ const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
-  const isIntro = stage === Stage.INTRO
   const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
 
-  const switchKey = `${isIntro}-${isPlaying}-${isGameOver}`
+  const switchKey = `${isPlaying}-${isGameOver}`
 
   // const { playAudio: playBackgroundAudio } = useAudio({
   //   src: '/sounds/background.aac',
@@ -58,18 +57,10 @@ const UI: FC<Props> = () => {
           appear={true}>
           {(transitionStatus) => {
             if (isPlaying)
-              return (
-                <div ref={wrapper} className="">
-                  <PlayingUI transitionStatus={transitionStatus} />
-                </div>
-              )
+              return <PlayingUI ref={wrapper} transitionStatus={transitionStatus} />
 
             if (stage === Stage.GAME_OVER)
-              return (
-                <div ref={wrapper} className="">
-                  <GameOverUI transitionStatus={transitionStatus} />
-                </div>
-              )
+              return <GameOverUI ref={wrapper} transitionStatus={transitionStatus} />
 
             return <div ref={wrapper} className="hidden" />
           }}

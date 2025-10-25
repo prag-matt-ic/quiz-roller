@@ -2,7 +2,7 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { AwardIcon, PlayIcon } from 'lucide-react'
-import { type FC, useRef } from 'react'
+import { type FC, type RefObject } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
@@ -17,10 +17,10 @@ const BADGE_ID = 'record-badge'
 
 type Props = {
   transitionStatus: TransitionStatus
+  ref: RefObject<HTMLDivElement | null>
 }
 
-const GameOverUI: FC<Props> = ({ transitionStatus }) => {
-  const container = useRef<HTMLDivElement>(null)
+const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const topic = useGameStore((s) => s.topic)
   const currentRun = useGameStore((s) => s.currentRunStats)
   const previousRuns = useGameStore((s) => s.previousRuns)
@@ -41,23 +41,20 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
   useGSAP(
     () => {
       if (transitionStatus === 'entered') {
-        const timeline = gsap
-          .timeline({ delay: 0.1 })
-          .to(container.current, { opacity: 1 })
-          .fromTo(
-            `.${FADE_IN_CLASS}`,
-            {
-              opacity: 0,
-              scale: 1.2,
-            },
-            {
-              opacity: 1,
-              scale: 1,
-              duration: 0.5,
-              ease: 'power1.out',
-              stagger: 0.08,
-            },
-          )
+        const timeline = gsap.timeline({ delay: 0.1 }).to(ref.current, { opacity: 1 }).fromTo(
+          `.${FADE_IN_CLASS}`,
+          {
+            opacity: 0,
+            scale: 1.2,
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.5,
+            ease: 'power1.out',
+            stagger: 0.08,
+          },
+        )
         if (isNewPB) {
           timeline.fromTo(
             `#${BADGE_ID}`,
@@ -75,7 +72,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
         }
       }
       if (transitionStatus === 'exiting') {
-        gsap.to(container.current, {
+        gsap.to(ref.current, {
           opacity: 0,
           duration: 0.4,
           ease: 'power1.out',
@@ -84,7 +81,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
     },
     {
       dependencies: [transitionStatus, isNewPB],
-      scope: container,
+      scope: ref,
     },
   )
 
@@ -94,7 +91,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
 
   return (
     <section
-      ref={container}
+      ref={ref}
       className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
