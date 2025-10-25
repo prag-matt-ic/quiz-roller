@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CanvasTexture, ClampToEdgeWrapping, LinearFilter } from 'three'
+import { CanvasTexture, ClampToEdgeWrapping, DataTexture, LinearFilter, Texture } from 'three'
 
 export type CanvasState = {
   canvas: HTMLCanvasElement
@@ -53,6 +53,16 @@ function getLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   lines.push(currentLine)
   return lines
 }
+
+const transparentPixel = new Uint8Array([0, 0, 0, 0])
+
+export const TRANSPARENT_TEXTURE: Texture = new DataTexture(transparentPixel, 1, 1)
+TRANSPARENT_TEXTURE.generateMipmaps = false
+TRANSPARENT_TEXTURE.needsUpdate = true
+TRANSPARENT_TEXTURE.minFilter = LinearFilter
+TRANSPARENT_TEXTURE.magFilter = LinearFilter
+TRANSPARENT_TEXTURE.wrapS = ClampToEdgeWrapping
+TRANSPARENT_TEXTURE.wrapT = ClampToEdgeWrapping
 
 export function setupCanvasTexture(width: number, height: number): CanvasState {
   const canvas = document.createElement('canvas')

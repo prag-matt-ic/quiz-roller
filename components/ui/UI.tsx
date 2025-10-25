@@ -7,8 +7,8 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
+import AudioToggle from '@/components/ui/AudioToggle'
 import GameOverUI from '@/components/ui/GameOver'
-import HomeUI from '@/components/ui/HomeUI'
 import PlayingUI from '@/components/ui/PlayingUI'
 // import useAudio from '@/hooks/useAudio' // TODO: add sound effects
 
@@ -22,15 +22,13 @@ type Props = {
 
 const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
-  const isPerformanceReady = usePerformanceStore((s) => s.isReady)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
-  const isHome = stage === Stage.HOME
   const isIntro = stage === Stage.INTRO
   const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
 
-  const switchKey = `${isHome}-${isIntro}-${isPlaying}-${isGameOver}`
+  const switchKey = `${isIntro}-${isPlaying}-${isGameOver}`
 
   // const { playAudio: playBackgroundAudio } = useAudio({
   //   src: '/sounds/background.aac',
@@ -51,37 +49,34 @@ const UI: FC<Props> = () => {
   // })
 
   return (
-    <SwitchTransition>
-      <Transition
-        key={switchKey}
-        timeout={{ enter: 0, exit: 600 }}
-        nodeRef={wrapper}
-        appear={true}>
-        {(transitionStatus) => {
-          if (isHome)
-            return (
-              <div ref={wrapper} className="">
-                {/* <HomeUI transitionStatus={transitionStatus} /> */}
-              </div>
-            )
-          if (isPlaying)
-            return (
-              <div ref={wrapper} className="">
-                <PlayingUI transitionStatus={transitionStatus} />
-              </div>
-            )
+    <>
+      <SwitchTransition>
+        <Transition
+          key={switchKey}
+          timeout={{ enter: 0, exit: 600 }}
+          nodeRef={wrapper}
+          appear={true}>
+          {(transitionStatus) => {
+            if (isPlaying)
+              return (
+                <div ref={wrapper} className="">
+                  <PlayingUI transitionStatus={transitionStatus} />
+                </div>
+              )
 
-          if (stage === Stage.GAME_OVER)
-            return (
-              <div ref={wrapper} className="">
-                <GameOverUI transitionStatus={transitionStatus} />
-              </div>
-            )
+            if (stage === Stage.GAME_OVER)
+              return (
+                <div ref={wrapper} className="">
+                  <GameOverUI transitionStatus={transitionStatus} />
+                </div>
+              )
 
-          return <div ref={wrapper} className="hidden" />
-        }}
-      </Transition>
-    </SwitchTransition>
+            return <div ref={wrapper} className="hidden" />
+          }}
+        </Transition>
+      </SwitchTransition>
+      <AudioToggle />
+    </>
   )
 }
 

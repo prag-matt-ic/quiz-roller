@@ -21,6 +21,7 @@ import {
 import { getNextQuestion } from '@/resources/content'
 
 import { PLAYER_RADIUS } from './player/ConfirmationBar'
+import { SoundFX, useSoundStore } from './SoundProvider'
 
 export enum Stage {
   HOME = 'home',
@@ -30,10 +31,13 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
-// TODO:
-// - MF: Setup intro/entry content - so it's more about building the future of the web
-// - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
+// - [ ] Update UX/UI questions
+// - [ ] Add AI content
 
+// - [ ] Add “ControlsUI” which will mount keyboard keys with pressed indicators on desktop
+// - [ ] Add Mobile/touch controls
+// - [ ] Add sound effects
+// - [ ] Design “about” content
 // TODO:
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
@@ -42,10 +46,6 @@ type GameState = {
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number // Normalized speed in range [0, 1].
   setTerrainSpeed: (speed: number) => void
-
-  // Sound
-  isMuted: boolean
-  setIsMuted: (muted: boolean) => void
 
   playerColourIndex: number
   setPlayerColourIndex: (index: number) => void
@@ -117,7 +117,6 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'distanceRows'
-  | 'isMuted'
   | 'playerColourIndex'
   | 'currentRunStats'
   | 'previousRuns'
@@ -139,7 +138,6 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
-  isMuted: true,
   playerColourIndex: 1,
   currentRunStats: null,
   previousRuns: {
@@ -148,7 +146,7 @@ const INITIAL_STATE: Pick<
   },
 }
 
-const createGameStore = () => {
+const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
   let speedTween: GSAPTween | null = null
   const speedTweenTarget = { value: 0 }
   let confirmationTween: GSAPTween | null = null
@@ -170,6 +168,7 @@ const createGameStore = () => {
           onComplete()
           confirmationTween?.kill()
           confirmationTween = null
+          playSoundFX(SoundFX.CONFIRMED)
         },
       },
     )
@@ -199,7 +198,6 @@ const createGameStore = () => {
         ...INITIAL_STATE,
         setPlayerPosition: (playerPosition) => set({ playerPosition }),
         setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
-        setIsMuted: (isMuted) => set({ isMuted }),
         setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
@@ -537,7 +535,8 @@ function handleGameOverStage({
 type Props = PropsWithChildren
 
 export const GameProvider: FC<Props> = ({ children }) => {
-  const store = useRef<GameStore>(createGameStore())
+  const playSoundFX = useSoundStore((s) => s.playSoundFX)
+  const store = useRef<GameStore>(createGameStore(playSoundFX))
 
   useEffect(() => {
     return () => {
