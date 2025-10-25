@@ -73,9 +73,9 @@ const Game: FC = () => {
         <ambientLight intensity={1.0} />
         {/* <OrbitControls /> */}
         <Camera />
+        <Stats />
         <Suspense>
           <Physics debug={process.env.NODE_ENV === 'development'} timeStep={physicsTimeStep}>
-            {process.env.NODE_ENV === 'development' && <Stats />}
             <Level />
           </Physics>
         </Suspense>
