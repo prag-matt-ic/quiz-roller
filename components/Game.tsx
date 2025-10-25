@@ -26,10 +26,9 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
 const Game: FC = () => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
-  const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
-  const resetTick = useGameStore((s) => s.resetTick)
+  // const resetTick = useGameStore((s) => s.resetTick)
 
   const [dpr, setDpr] = useState(1)
 
@@ -40,8 +39,6 @@ const Game: FC = () => {
       setDpr(window.devicePixelRatio ?? 1)
     }
   }, [maxDPR])
-
-  const refreshKey = `${resetTick}-${sceneQuality}`
 
   return (
     <Canvas
@@ -77,10 +74,7 @@ const Game: FC = () => {
         {/* <OrbitControls /> */}
         <Camera />
         <Suspense>
-          <Physics
-            key={refreshKey}
-            debug={process.env.NODE_ENV === 'development'}
-            timeStep={physicsTimeStep}>
+          <Physics debug={process.env.NODE_ENV === 'development'} timeStep={physicsTimeStep}>
             {process.env.NODE_ENV === 'development' && <Stats />}
             <Level />
           </Physics>

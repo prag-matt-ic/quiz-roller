@@ -1,12 +1,12 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { AwardIcon, DoorOpen, PlayIcon } from 'lucide-react'
+import { AwardIcon, PlayIcon } from 'lucide-react'
 import { type FC, useRef } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 import { type RunStats, type Topic } from '@/model/schema'
 
 import Button from './Button'
@@ -24,7 +24,6 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
   const topic = useGameStore((s) => s.topic)
   const currentRun = useGameStore((s) => s.currentRunStats)
   const previousRuns = useGameStore((s) => s.previousRuns)
-  const goToStage = useGameStore((s) => s.goToStage)
   const resetGame = useGameStore((s) => s.resetGame)
 
   const hasPlayedGame = topic !== null
@@ -91,14 +90,6 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
 
   const onRollAgainClick = () => {
     resetGame()
-    // Small delay to ensure reset completes before starting intro
-    setTimeout(() => {
-      goToStage(Stage.INTRO)
-    }, 100)
-  }
-
-  const onExitToMenuClick = () => {
-    goToStage(Stage.HOME)
   }
 
   return (
@@ -150,14 +141,6 @@ const GameOverUI: FC<Props> = ({ transitionStatus }) => {
           onClick={onRollAgainClick}>
           Roll Again
           <PlayIcon className="size-6" strokeWidth={1.5} />
-        </Button>
-        <Button
-          variant="secondary"
-          color="dark"
-          className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={onExitToMenuClick}>
-          Exit to Menu
-          <DoorOpen className="size-6" strokeWidth={1.5} />
         </Button>
       </div>
     </section>
