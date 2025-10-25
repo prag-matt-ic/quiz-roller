@@ -1,5 +1,6 @@
 import './globals.css'
 
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Cinzel, Nunito_Sans } from 'next/font/google'
 
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${cinzel.variable} ${nunitoSans.variable} overflow-hidden antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   )
