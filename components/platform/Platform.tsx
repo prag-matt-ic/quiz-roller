@@ -1,58 +1,47 @@
-/* eslint-disable simple-import-sort/imports */
 'use client'
 
-import { createRef, type FC, startTransition, useEffect, useRef, useState } from 'react'
-import { InstancedRigidBodyProps, type RapierRigidBody } from '@react-three/rapier'
-import { type Group } from 'three'
+import { type InstancedRigidBodyProps } from '@react-three/rapier'
+import { type FC, startTransition, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import { Text } from '@/components/Text'
-import { QuestionAnswerTile } from '@/components/answerTile/AnswerTile'
-import { TERRAIN_SPEED_UNITS } from '@/resources/game'
-import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
+import QuestionElements, {
+  type QuestionElementsHandle,
+} from '@/components/platform/question/QuestionElements'
+import { InstancedTiles, type InstancedTilesHandle } from '@/components/tiles/InstancedTiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
-
-import { InstancedTiles, type InstancedTilesHandle } from '../tiles/InstancedTiles'
-import { COLUMNS, ROWS_VISIBLE, SAFE_HEIGHT, TILE_SIZE, colToX } from '@/utils/tiles'
-
+import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
+import { TERRAIN_SPEED_UNITS } from '@/resources/game'
+import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
+import { generateIntroSectionRowData } from '@/utils/platform/introSection'
+import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
-  ANSWER_TILE_COUNT,
   DECEL_EASE_POWER,
   DECEL_START_OFFSET_ROWS,
-  ENTRY_Y_OFFSET,
+  generateQuestionSectionRowData,
+  OBSTACLE_BUFFER_SECTIONS,
+  OBSTACLE_SECTION_ROWS,
+  QUESTION_SECTION_ROWS,
   QUESTIONS_ENTRY_END_Z,
   QUESTIONS_ENTRY_START_Z,
   QUESTIONS_EXIT_END_Z,
   QUESTIONS_EXIT_START_Z,
+} from '@/utils/platform/questionSection'
+import {
+  colToX,
+  COLUMNS,
+  ENTRY_Y_OFFSET,
   INITIAL_ROWS_Z_OFFSET,
   MAX_Z,
-  OBSTACLE_BUFFER_SECTIONS,
-  OBSTACLE_SECTION_ROWS,
-  QUESTION_SECTION_ROWS,
-  type RowData,
-  generateQuestionSectionRowData,
-  generateIntroSectionRowData,
-  QUESTION_TEXT_WIDTH,
-  QUESTION_TEXT_HEIGHT,
-} from '@/utils/terrainBuilder'
-
-import { generateObstacleHeights } from '@/utils/obstacles'
+  RowData,
+  ROWS_VISIBLE,
+  SAFE_HEIGHT,
+  TILE_SIZE,
+} from '@/utils/tiles'
 
 const EPSILON = {
   SMALL: 1e-6,
   TINY: 1e-4,
-} as const
-
-const HIDE_POSITION = {
-  QUESTION_Y: -40,
-  QUESTION_Z: 40,
-  ANSWER_Y: -100,
-  ANSWER_Z: -100,
-} as const
-
-const INITIAL_QUESTION_POSITION = {
-  Y: 0.01,
-  Z: -999,
 } as const
 
 // Type for obstacle generation configuration
@@ -74,12 +63,9 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
   notchChance: 0.1,
 }
 
-// The Topic Run begins after a user has selected a topic in the Home stage.
-
-const TopicRun: FC = () => {
+const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isQuestionStage = stage === Stage.QUESTION
-  const currentQuestion = useGameStore((s) => s.currentQuestion)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
@@ -113,11 +99,10 @@ const TopicRun: FC = () => {
   const activeRowsData = useRef<RowData[]>([])
   const hasCompletedIntro = useRef(false)
 
-  // Question/answers instance refs
-  const questionGroup = useRef<Group>(null)
-  const answerRefs = useRef(
-    Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
-  ).current
+  // Question Elements
+  const questionElements = useRef<QuestionElementsHandle | null>(null)
+  // Home Elements
+  const homeElements = useRef<HomeElementsHandle | null>(null)
 
   // Question section speed deceleration state
   const questionSectionStartZ = useRef<number | null>(null)
@@ -127,6 +112,11 @@ const TopicRun: FC = () => {
 
   function insertQuestionRows() {
     const rows = generateQuestionSectionRowData()
+    rowsData.current = [...rowsData.current, ...rows]
+  }
+
+  function insertHomeRows() {
+    const rows = generateHomeSectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
   }
 
@@ -181,6 +171,7 @@ const TopicRun: FC = () => {
     function setupInitialRowsAndInstances() {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
 
+      insertHomeRows()
       insertIntroRows()
       insertQuestionRows()
       insertObstacleRows()
@@ -347,10 +338,11 @@ const TopicRun: FC = () => {
   }
 
   function handleRowRaised(rowIndex: number, rowZ: number) {
-    positionQuestionElementsIfNeeded(rowIndex, rowZ)
+    const rowMetadata = activeRowsData.current[rowIndex]
+    homeElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
     isRowRaised.current[rowIndex] = true
 
-    const rowMetadata = activeRowsData.current[rowIndex]
     const isQuestionSectionStart =
       rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
 
@@ -399,73 +391,10 @@ const TopicRun: FC = () => {
     }
   }
 
-  function positionQuestionElementsIfNeeded(rowIndex: number, rowZ: number) {
-    const row = activeRowsData.current[rowIndex]
-    if (!row) return
-
-    const textPosition = row.questionTextPosition
-    if (textPosition && questionGroup.current) {
-      questionGroup.current.position.set(
-        textPosition[0],
-        textPosition[1],
-        rowZ + textPosition[2],
-      )
-    }
-
-    const answerPositions = row.answerTilePositions
-    if (!answerPositions) return
-
-    for (
-      let answerIndex = 0;
-      answerIndex < answerPositions.length && answerIndex < answerRefs.length;
-      answerIndex++
-    ) {
-      const position = answerPositions[answerIndex]
-      if (!position) continue
-
-      const answerRef = answerRefs[answerIndex]
-      if (!answerRef.current) continue
-
-      translation.current.x = position[0]
-      translation.current.y = position[1]
-      translation.current.z = rowZ + position[2]
-      answerRef.current.setTranslation(translation.current, true)
-    }
-  }
-
-  function moveQuestionElements(zStep: number) {
-    if (!questionGroup.current) return
-
-    const isQuestionBehindCamera = questionGroup.current.position.z > MAX_Z
-    if (isQuestionBehindCamera) {
-      questionGroup.current.position.z = HIDE_POSITION.QUESTION_Z
-      questionGroup.current.position.y = HIDE_POSITION.QUESTION_Y
-    } else {
-      questionGroup.current.position.z += zStep
-    }
-
-    for (const answerRef of answerRefs) {
-      if (!answerRef.current) continue
-
-      const currentTranslation = answerRef.current.translation()
-      if (currentTranslation.z > MAX_Z) {
-        translation.current.x = currentTranslation.x
-        translation.current.y = HIDE_POSITION.ANSWER_Y
-        translation.current.z = HIDE_POSITION.ANSWER_Z
-        answerRef.current.setTranslation(translation.current, false)
-        continue
-      }
-
-      translation.current.x = currentTranslation.x
-      translation.current.y = currentTranslation.y
-      translation.current.z = currentTranslation.z + zStep
-      answerRef.current.setTranslation(translation.current, true)
-    }
-  }
-
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
+    if (!homeElements.current || !questionElements.current) return
     if (stage === Stage.GAME_OVER) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
@@ -484,7 +413,8 @@ const TopicRun: FC = () => {
 
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
     updateTiles(zStep)
-    moveQuestionElements(zStep)
+    questionElements.current.moveElements(zStep)
+    homeElements.current.moveElements(zStep)
   })
 
   if (!tileInstances.length) return null
@@ -498,23 +428,14 @@ const TopicRun: FC = () => {
         instanceSeed={instanceSeed.current!}
         instanceAnswerNumber={instanceAnswerNumber.current!}
       />
-      <Text
-        ref={questionGroup}
-        text={currentQuestion?.text ?? ''}
-        position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
-        width={QUESTION_TEXT_WIDTH}
-        height={QUESTION_TEXT_HEIGHT}
-      />
-      {answerRefs.map((answerRef, answerIndex) => (
-        <QuestionAnswerTile
-          key={`answer-tile-${answerIndex}`}
-          ref={answerRef}
-          index={answerIndex}
-          position={[0, HIDE_POSITION.ANSWER_Y, HIDE_POSITION.ANSWER_Z]}
-        />
-      ))}
+
+      {/* Home Elements */}
+      <HomeElements ref={homeElements} />
+
+      {/* Question Elements */}
+      <QuestionElements ref={questionElements} />
     </group>
   )
 }
 
-export default TopicRun
+export default Platform

@@ -1,6 +1,6 @@
 import { createNoise2D } from 'simplex-noise'
 
-import { clamp, COLUMNS, lerp, SAFE_HEIGHT, UNSAFE_HEIGHT } from './tiles'
+import { clamp, COLUMNS, lerp, SAFE_HEIGHT, UNSAFE_HEIGHT } from '@/utils/tiles'
 
 type ObstacleParams = {
   rows: number // e.g. 256

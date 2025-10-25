@@ -16,7 +16,7 @@ import {
   QUESTIONS_ENTRY_START_Z,
   QUESTIONS_EXIT_END_Z,
   QUESTIONS_EXIT_START_Z,
-} from '@/utils/terrainBuilder'
+} from '@/utils/platform/questionSection'
 import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 import tileFadeFragment from './tile.frag'
@@ -60,11 +60,11 @@ export type InstancedTilesHandle = {
 }
 
 type InstancedTilesProps = {
+  ref: React.Ref<InstancedTilesHandle>
   instances: InstancedRigidBodyProps[]
   instanceVisibility: Float32Array
   instanceSeed: Float32Array
   instanceAnswerNumber: Float32Array
-  ref?: React.Ref<InstancedTilesHandle>
   initialUniforms?: Partial<TileShaderUniforms>
 }
 

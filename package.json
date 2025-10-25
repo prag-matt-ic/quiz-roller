@@ -15,6 +15,7 @@
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.3.0",
     "@react-three/rapier": "^2.1.0",
+    "@thi.ng/color": "^5.7.66",
     "ai": "^5.0.51",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "glsl-noise": "^0.0.0",

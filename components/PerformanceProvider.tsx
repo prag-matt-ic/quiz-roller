@@ -31,7 +31,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     answerTile: { particleCount: 64 },
     player: { segments: 64 },
-    floatingTiles: { instanceCount: Math.pow(2, 8) },
+    floatingTiles: { instanceCount: Math.pow(2, 9) },
   },
   [SceneQuality.MEDIUM]: {
     player: { segments: 40 },
@@ -145,10 +145,7 @@ type Props = PropsWithChildren<{
 
 export const PerformanceProvider: FC<Props> = ({ children, isMobile }) => {
   const store = useRef<PerformanceStore>(createPerformanceStore({ isMobile }))
-
-  return (
-    <PerformanceContext.Provider value={store.current}>{children}</PerformanceContext.Provider>
-  )
+  return <PerformanceContext value={store.current}>{children}</PerformanceContext>
 }
 
 export function usePerformanceStore<T>(selector: (state: PerformanceState) => T): T {

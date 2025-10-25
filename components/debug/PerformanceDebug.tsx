@@ -39,14 +39,17 @@ const PerformanceDebug: FC = () => {
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
 
   const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    event.target.blur()
     setSimFps(Number(event.target.value) as RapierSimFPS)
   }
 
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    event.target.blur()
     setSceneQuality(event.target.value as SceneQuality)
   }
 
   const handleDprChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    event.target.blur()
     const next = event.target.value === 'native' ? undefined : Number(event.target.value)
     setMaxDpr(next)
   }

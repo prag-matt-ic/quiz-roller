@@ -6,7 +6,7 @@ import { type FC, useCallback, useRef } from 'react'
 import { Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLOUR_RANGES, getPaletteHex } from '@/components/palette'
+import { COLOUR_RANGES, createPaletteGradient } from '@/components/palette'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
@@ -29,6 +29,7 @@ const ConfirmationBar: FC = () => {
   useConfirmationProgress(onConfirmationProgressChange)
 
   const containerTween = useRef<GSAPTween>(null)
+  const confirmingContainer = useRef<HTMLDivElement>(null)
 
   const onEnter = () => {
     containerTween.current?.kill()
@@ -49,13 +50,14 @@ const ConfirmationBar: FC = () => {
     })
   }
 
-  const confirmingContainer = useRef<HTMLDivElement>(null)
-
   // Generate gradient colors based on selected colour band
-  const idx = Math.max(0, Math.min(2, Math.round(playerColourIndex)))
-  const range = COLOUR_RANGES[idx]
-  const colorStart = getPaletteHex(range.min)
-  const colorEnd = getPaletteHex(range.max)
+  const range = COLOUR_RANGES[playerColourIndex]
+  const rgbGradient = createPaletteGradient(range.min, range.max, {
+    mode: 'rgb',
+  })
+  const oklchGradient = createPaletteGradient(range.min, range.max, {
+    mode: 'oklch',
+  })
 
   return (
     <Html
@@ -78,7 +80,8 @@ const ConfirmationBar: FC = () => {
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"
             style={{
-              background: `linear-gradient(90deg, ${colorStart}, ${colorEnd})`,
+              background: rgbGradient,
+              backgroundImage: oklchGradient,
             }}
           />
         </div>

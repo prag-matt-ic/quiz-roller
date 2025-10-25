@@ -1,32 +1,32 @@
-import { ANSWER_TILE_Y, colToX, COLUMNS, SAFE_HEIGHT, TILE_SIZE, UNSAFE_HEIGHT } from './tiles'
+import {
+  ANSWER_TILE_COLS,
+  ANSWER_TILE_ROWS,
+  colToX,
+  COLUMNS,
+  ENTRY_RAISE_DURATION_ROWS,
+  EXIT_LOWER_DURATION_ROWS,
+  MAX_Z,
+  ON_TILE_Y,
+  RowData,
+  SAFE_HEIGHT,
+  TILE_SIZE,
+  UNSAFE_HEIGHT,
+} from '@/utils/tiles'
 
-// Extend intro/entry section to push the first question further back
-// Entry rows are sized to fit intro banners with padding
-export const INTRO_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Terrain scrolling and animation constants
-export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 6
 export const DECEL_EASE_POWER = 6
 export const DECEL_START_OFFSET_ROWS = 6
 export const OBSTACLE_BUFFER_SECTIONS = 10
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const QUESTION_SECTION_ROWS = 16
-export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
-export const QUESTION_TEXT_ROWS = 4
+export const QUESTION_TEXT_WIDTH = 10 * TILE_SIZE
+export const QUESTION_TEXT_ROWS = 6
 export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
-export const ANSWER_TILE_COUNT = 2
-export const ANSWER_TILE_COLS = 6
-export const ANSWER_TILE_ROWS = 4
-export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
-export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
 
-// Entry lift animation config (rows -> world units via TILE_SIZE)
-export const ENTRY_Y_OFFSET = 1 // How far down to start when entering (world units)
-export const ENTRY_RAISE_DURATION_ROWS = 4
-export const EXIT_LOWER_DURATION_ROWS = 4
-export const MAX_Z = TILE_SIZE * 12
+export const ANSWER_TILE_COUNT = 2
 
 // Fixed entry window values for row raising animation
 export const QUESTIONS_ENTRY_END_Z =
@@ -37,50 +37,6 @@ export const QUESTIONS_ENTRY_START_Z =
 export const QUESTIONS_EXIT_END_Z = MAX_Z
 export const QUESTIONS_EXIT_START_Z =
   QUESTIONS_EXIT_END_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
-
-export type SectionType = 'intro' | 'question' | 'obstacles'
-
-export type RowData = {
-  heights: number[]
-  type: SectionType
-  isSectionStart: boolean
-  isSectionEnd: boolean
-  questionTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
-  // Optional per-index answer tile placements for this trigger row.
-  // Use null for indices that should not be placed on this trigger.
-  // Example: for a 4-tile layout, top trigger provides [pos, pos, null, null],
-  // bottom trigger provides [null, null, pos, pos].
-  answerTilePositions?: ([number, number, number] | null)[]
-  // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
-  answerNumber?: number[]
-}
-
-// --- Intro section ---
-// Intro rows with a 6-column central safe corridor; everything else sunken.
-export const INTRO_OPEN_COLS = 6
-
-export function getIntroCorridorBounds() {
-  const startCol = Math.floor((COLUMNS - INTRO_OPEN_COLS) / 2)
-  const endCol = startCol + INTRO_OPEN_COLS - 1
-  return { startCol, endCol }
-}
-
-export function generateIntroSectionRowData(): RowData[] {
-  const rows: RowData[] = new Array(INTRO_SECTION_ROWS)
-  const { startCol, endCol } = getIntroCorridorBounds()
-
-  for (let i = 0; i < INTRO_SECTION_ROWS; i++) {
-    const heights = new Array<number>(COLUMNS).fill(UNSAFE_HEIGHT)
-    for (let c = startCol; c <= endCol; c++) heights[c] = SAFE_HEIGHT
-    rows[i] = {
-      heights,
-      type: 'intro',
-      isSectionStart: i === 0,
-      isSectionEnd: i === INTRO_SECTION_ROWS - 1,
-    }
-  }
-  return rows
-}
 
 export function generateQuestionSectionRowData(): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows
@@ -144,12 +100,12 @@ export function generateQuestionSectionRowData(): RowData[] {
       answerNumber: ownership,
     }
     if (i === textTriggerRow) {
-      rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ANSWER_TILE_Y, textZRelative]
+      rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
     }
     if (i === tilesTriggerRow) {
       rows[i].answerTilePositions = [
-        [colToX(leftCenterCol), ANSWER_TILE_Y, tilesZRelative],
-        [colToX(rightCenterCol), ANSWER_TILE_Y, tilesZRelative],
+        [colToX(leftCenterCol), ON_TILE_Y, tilesZRelative],
+        [colToX(rightCenterCol), ON_TILE_Y, tilesZRelative],
       ]
     }
   }

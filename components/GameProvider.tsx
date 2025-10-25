@@ -19,8 +19,8 @@ import {
   TopicUserData,
 } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
+
 import { PLAYER_RADIUS } from './player/ConfirmationBar'
-import { ANSWER_TILE_Y } from '@/utils/tiles'
 
 export enum Stage {
   HOME = 'home',
@@ -90,14 +90,10 @@ const GameContext = createContext<GameStore>(undefined!)
 
 const MAX_DIFFICULTY = 10
 const CONFIRMATION_DURATION_S = 2.4
-const INTRO_SPEED = 0.8
-const TERRAIN_SPEED = 1
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
-// Start the player on the floor tiles
-export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, ANSWER_TILE_Y, 12.0]
-export const PLAYER_INITIAL_QUESTIONS_POSITION: Vector3Tuple = [0.0, ANSWER_TILE_Y, 4.0]
+export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 1] // Used when re-spawning to home
 
 function getFirstQuestionForTopic(topic: Topic, difficulty: number): Question | undefined {
   return getNextQuestion({
@@ -202,13 +198,10 @@ const createGameStore = () => {
     persist(
       (set, get) => ({
         ...INITIAL_STATE,
-        setPlayerPosition: (pos) => {
-          console.log('Setting player position:', pos)
-          set({ playerPosition: pos })
-        },
-        setTerrainSpeed: (speed) => set({ terrainSpeed: speed }),
-        setIsMuted: (muted) => set({ isMuted: muted }),
-        setPlayerColourIndex: (index) => set({ playerColourIndex: index }),
+        setPlayerPosition: (playerPosition) => set({ playerPosition }),
+        setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
+        setIsMuted: (isMuted) => set({ isMuted }),
+        setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 
@@ -322,6 +315,7 @@ const createGameStore = () => {
           const previousRunsToKeep = get().previousRuns
           set((s) => ({
             ...INITIAL_STATE,
+            playerColourIndex: s.playerColourIndex,
             previousRuns: previousRunsToKeep,
             resetTick: s.resetTick + 1,
           }))
@@ -432,7 +426,7 @@ function handleIntroStage({
   gsap.to(speedTweenTarget, {
     duration: INTRO_SPEED_DURATION,
     ease: 'power2.out',
-    value: INTRO_SPEED,
+    value: 1.0,
     onUpdate: () => {
       set({ terrainSpeed: speedTweenTarget.value })
     },
@@ -484,7 +478,7 @@ function handleTerrainStage({
   gsap.to(speedTweenTarget, {
     duration: TERRAIN_SPEED_DURATION,
     ease: 'power2.out',
-    value: TERRAIN_SPEED,
+    value: 1.0,
     onUpdate: () => {
       set({ terrainSpeed: speedTweenTarget.value })
     },

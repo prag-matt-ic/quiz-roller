@@ -1,8 +1,8 @@
 precision highp float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
-#pragma glslify: getColourFromPalette = require('../../palette.glsl')
-#pragma glslify: paletteRange = require('../../paletteRange.glsl')
+#pragma glslify: getColourFromPalette = require('../palette.glsl')
+#pragma glslify: paletteRange = require('../paletteRange.glsl')
 
 uniform float uTime;
 uniform int uColourIndex;

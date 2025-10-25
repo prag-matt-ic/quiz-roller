@@ -1,7 +1,7 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { PerformanceMonitor, Stats } from '@react-three/drei'
+import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
@@ -9,13 +9,12 @@ import { type FC, Suspense, useLayoutEffect, useState } from 'react'
 import * as THREE from 'three'
 
 import Background from '@/components/background/Background'
+import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
-import TopicRun from '@/components/topicRun/TopicRun'
 
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage, useGameStore } from './GameProvider'
-import Home from './home/Home'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
 
@@ -26,7 +25,6 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
 
 const Game: FC = () => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
-  const isMobile = usePerformanceStore((s) => s.isMobile)
   const simFps = usePerformanceStore((s) => s.simFps)
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
@@ -57,7 +55,7 @@ const Game: FC = () => {
           INITIAL_CAMERA_POSITION.z,
         ],
         far: 40,
-        fov: 60,
+        fov: 65,
       }}
       gl={{
         alpha: false,
@@ -76,9 +74,10 @@ const Game: FC = () => {
           console.warn('performance fallback triggered')
         }}>
         <ambientLight intensity={1.0} />
-        <Camera isMobile={isMobile} />
+        {/* <OrbitControls /> */}
+        <Camera />
         <Suspense>
-          <Physics key={refreshKey} debug={false} timeStep={physicsTimeStep}>
+          <Physics key={refreshKey} debug={true} timeStep={physicsTimeStep}>
             {process.env.NODE_ENV === 'development' && <Stats />}
             <Level />
           </Physics>
@@ -96,8 +95,7 @@ const Level: FC = () => {
       <Background />
       <FloatingTiles />
       <OutOfBounds />
-      <Home />
-      <TopicRun />
+      <Platform />
       <Player />
     </>
   )

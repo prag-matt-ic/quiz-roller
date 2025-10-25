@@ -1,7 +1,18 @@
 // Typescript color helpers
-// Based on: https://iquilezles.org/articles/palettes/
 
+import { css, CSS_LEVEL4, oklch, rgb as toLinearRgb, srgb } from '@thi.ng/color'
 import { type Vector3Tuple } from 'three'
+
+type PaletteGradientMode = 'rgb' | 'oklch'
+
+type PaletteSampleOptions = {
+  steps?: number
+  mode?: PaletteGradientMode
+}
+
+export type PaletteGradientOptions = PaletteSampleOptions & {
+  angle?: number
+}
 
 /**
  * Cosine-based palette function
@@ -52,26 +63,31 @@ export function getColourFromPalette(t: number): Vector3Tuple {
  * @param rgb - RGB color as Vector3Tuple with values in [0, 1]
  * @returns CSS hex color string (e.g., "#ff8800")
  */
-export function rgbToHex(rgb: Vector3Tuple): string {
-  const r = Math.round(Math.max(0, Math.min(1, rgb[0])) * 255)
-  const g = Math.round(Math.max(0, Math.min(1, rgb[1])) * 255)
-  const b = Math.round(Math.max(0, Math.min(1, rgb[2])) * 255)
+const clampUnit = (value: number): number => Math.min(1, Math.max(0, value))
 
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+const toSrgbColor = (rgb: Vector3Tuple) =>
+  srgb(clampUnit(rgb[0]), clampUnit(rgb[1]), clampUnit(rgb[2]), 1)
+
+const toSrgbCss = (rgb: Vector3Tuple): string => css(toSrgbColor(rgb))
+
+const toOklchCss = (rgb: Vector3Tuple): string =>
+  css(oklch(toLinearRgb(toSrgbColor(rgb))), CSS_LEVEL4)
+
+const formatCssNumber = (value: number, fractionDigits = 4): string =>
+  value.toFixed(fractionDigits).replace(/\.?0+$/, '')
+
+/**
+ * Convert RGB color (0-1 range) to CSS hex string
+ */
+export function rgbToHex(rgb: Vector3Tuple): string {
+  return toSrgbCss(rgb)
 }
 
 /**
- * Convert RGB color (0-1 range) to CSS rgb() string
- *
- * @param rgb - RGB color as Vector3Tuple with values in [0, 1]
- * @returns CSS rgb color string (e.g., "rgb(255, 136, 0)")
+ * Convert RGB color (0-1 range) to CSS color string (currently srgb hex)
  */
 export function rgbToCss(rgb: Vector3Tuple): string {
-  const r = Math.round(Math.max(0, Math.min(1, rgb[0])) * 255)
-  const g = Math.round(Math.max(0, Math.min(1, rgb[1])) * 255)
-  const b = Math.round(Math.max(0, Math.min(1, rgb[2])) * 255)
-
-  return `rgb(${r}, ${g}, ${b})`
+  return toSrgbCss(rgb)
 }
 
 /**
@@ -93,6 +109,59 @@ export function getPaletteHex(t: number): string {
 export function getPaletteCss(t: number): string {
   return rgbToCss(getColourFromPalette(t))
 }
+const getSampleColour = (t: number, mode: PaletteGradientMode): string => {
+  const colour = getColourFromPalette(t)
+  return mode === 'oklch' ? toOklchCss(colour) : toSrgbCss(colour)
+}
+
+const createStopStrings = (
+  start: number,
+  end: number,
+  { steps = GRADIENT_STEPS, mode = 'rgb' }: PaletteSampleOptions = {},
+): string[] => {
+  const safeSteps = Math.max(2, steps)
+  const denominator = safeSteps - 1
+  const range = end - start
+
+  return Array.from({ length: safeSteps }, (_, index) => {
+    const ratio = denominator === 0 ? 0 : index / denominator
+    const t = start + ratio * range
+    const position = ratio * 100
+    return `${getSampleColour(t, mode)} ${formatCssNumber(position, 2)}%`
+  })
+}
+
+export const createPaletteStopString = (
+  start: number,
+  end: number,
+  options?: PaletteSampleOptions,
+): string => createStopStrings(start, end, options).join(', ')
+
+export const createPaletteGradient = (
+  start: number,
+  end: number,
+  { angle = 90, ...rest }: PaletteGradientOptions = {},
+): string => `linear-gradient(${angle}deg, ${createPaletteStopString(start, end, rest)})`
+
+export const createPaletteCustomProperties = (
+  prefix: string,
+  start: number,
+  end: number,
+  { steps = GRADIENT_STEPS, mode = 'rgb' }: PaletteSampleOptions = {},
+): Record<string, string> => {
+  const safeSteps = Math.max(2, steps)
+  const denominator = safeSteps - 1
+  const range = end - start
+
+  return Array.from({ length: safeSteps }, (_, index) => {
+    const ratio = denominator === 0 ? 0 : index / denominator
+    const t = start + ratio * range
+    return [index, getSampleColour(t, mode)] as const
+  }).reduce<Record<string, string>>((acc, [index, color]) => {
+    acc[`${prefix}-${index}`] = color
+    return acc
+  }, {})
+}
 
 // ---------------- Colour Range UI helpers ----------------
 // IMPORTANT: If you edit these ranges, also update the GLSL counterpart
@@ -112,9 +181,8 @@ export const COLOUR_RANGES: readonly ColourRange[] = [
 
 // Pre-compute gradient stops for each range
 export const GRADIENT_STOPS: readonly string[] = COLOUR_RANGES.map((range) => {
-  return Array.from({ length: GRADIENT_STEPS }, (_, i) => {
-    const t = range.min + (i / (GRADIENT_STEPS - 1)) * (range.max - range.min)
-    const pos = (i / (GRADIENT_STEPS - 1)) * 100
-    return `${getPaletteHex(t)} ${pos.toFixed(1)}%`
-  }).join(', ')
+  return createPaletteStopString(range.min, range.max, {
+    steps: GRADIENT_STEPS,
+    mode: 'rgb',
+  })
 })

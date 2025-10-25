@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import React, { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
-import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
@@ -60,7 +60,6 @@ type Props = {
 const Camera: FC<Props> = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
-  const resetTick = useGameStore((s) => s.resetTick)
   const { playerPosition } = usePlayerPosition()
 
   // Update camera position when stage changes
@@ -136,25 +135,25 @@ const Camera: FC<Props> = () => {
     }
   })
 
-  useEffect(() => {
-    if (!cameraControls.current) return
-    // Reset back to the control's saved default
-    cameraControls.current.reset(true) // smooth reset
-    // Immediately set the pose for the current stage (usually SPLASH → INTRO next)
-    const { position, target, zoom } = CAMERA_CONFIG[stage]
-    cameraControls.current.zoomTo(zoom, true)
-    cameraControls.current.setLookAt(
-      position.x,
-      position.y,
-      position.z,
-      target.x,
-      target.y,
-      target.z,
-      true,
-    )
-    // Optional: make this the new "default" after reset
-    cameraControls.current.saveState()
-  }, [resetTick])
+  // useEffect(() => {
+  //   if (!cameraControls.current) return
+  //   // Reset back to the control's saved default
+  //   cameraControls.current.reset(true) // smooth reset
+  //   // Immediately set the pose for the current stage (usually SPLASH → INTRO next)
+  //   const { position, target, zoom } = CAMERA_CONFIG[stage]
+  //   cameraControls.current.zoomTo(zoom, true)
+  //   cameraControls.current.setLookAt(
+  //     position.x,
+  //     position.y,
+  //     position.z,
+  //     target.x,
+  //     target.y,
+  //     target.z,
+  //     true,
+  //   )
+  //   // Optional: make this the new "default" after reset
+  //   cameraControls.current.saveState()
+  // }, [resetTick])
 
   return (
     <CameraControls

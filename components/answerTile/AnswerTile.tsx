@@ -13,7 +13,7 @@ import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import { useTextCanvas } from '@/hooks/useTextCanvas'
 import { type AnswerUserData, type TopicUserData } from '@/model/schema'
-import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/terrainBuilder'
+import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/tiles'
 
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
@@ -96,7 +96,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
     height: CANVAS_HEIGHT,
     color: labelColour,
     fontWeight: 400,
-    baseFontScale: 0.1,
+    fontSize: 48,
   })
 
   return (

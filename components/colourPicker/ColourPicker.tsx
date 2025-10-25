@@ -1,27 +1,19 @@
-// Create a home grid of instanced tiles which the player can freely navigate around
 'use client'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
-import { CylinderCollider, RigidBody } from '@react-three/rapier'
-import { type FC, useMemo, useRef } from 'react'
-import { type Vector3Tuple } from 'three'
+import { CylinderCollider, type RapierRigidBody, RigidBody } from '@react-three/rapier'
+import { type FC, type RefObject, useRef } from 'react'
+import { Mesh, type Vector3Tuple } from 'three'
 
-import { PLAYER_INITIAL_HOME_POSITION, useGameStore } from '@/components/GameProvider'
-import { COLOUR_RANGES } from '@/components/palette'
+import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { Text } from '@/components/Text'
 import { type MarbleColourUserData } from '@/model/schema'
-import { ANSWER_TILE_Y, SAFE_HEIGHT, TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
+import { COLOUR_TILE_TEXT_RELATIVE_Z, COLOUR_TILE_SIZE } from '@/utils/platform/homeSection'
+import { ON_TILE_Y, TILE_SIZE } from '@/utils/tiles'
 
 import colourTileFragment from './colourTile.frag'
 import colourTileVertex from './colourTile.vert'
-
-const COLOUR_TILE_SIZE = TILE_SIZE * 2
-const COLOUR_TILE_GAP_BETWEEN = TILE_SIZE
-const COLOUR_TILE_BASE_Z = TILE_SIZE * 6
-const COLOUR_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.02
-const COLOUR_TILE_ROTATION: [number, number, number] = [-Math.PI / 2, 0, 0]
-const COLOUR_TILE_MESH_OFFSET: Vector3Tuple = [0, 0, 0.03]
 
 type ColourTileShaderUniforms = {
   uTime: number
@@ -42,20 +34,22 @@ const ColourTileShader = shaderMaterial(
 )
 const ColourTileShaderMaterial = extend(ColourTileShader)
 
-type ColourTileOption = {
+export type ColourTileOption = {
   index: number
   position: Vector3Tuple
+  relativeZ: number
   userData: MarbleColourUserData
 }
 
 type ColourTileProps = {
   option: ColourTileOption
   isActive: boolean
+  ref: RefObject<RapierRigidBody | null>
 }
 
 const COLOUR_TILE_TIME_MULTIPLIER = 2.5
 
-const ColourTile: FC<ColourTileProps> = ({ option, isActive }) => {
+const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref }) => {
   const shader = useRef<typeof ColourTileShaderMaterial & ColourTileShaderUniforms>(null)
 
   useFrame(({ clock }) => {
@@ -65,14 +59,14 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive }) => {
 
   return (
     <RigidBody
-      key={option.index}
+      ref={ref}
       // KEEP DYNAMIC
       type="dynamic"
       gravityScale={0}
       friction={0}
       mass={0}
       position={option.position}
-      rotation={COLOUR_TILE_ROTATION}
+      rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={option.userData}>
       <CylinderCollider
@@ -80,7 +74,7 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive }) => {
         args={[COLOUR_TILE_SIZE / 2, PLAYER_RADIUS * 2]}
         sensor={true}
       />
-      <mesh position={COLOUR_TILE_MESH_OFFSET}>
+      <mesh>
         <planeGeometry args={[COLOUR_TILE_SIZE, COLOUR_TILE_SIZE]} />
         <ColourTileShaderMaterial
           ref={shader}
@@ -93,39 +87,30 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive }) => {
   )
 }
 
-const ColourPicker: FC = () => {
+type ColourPickerProps = {
+  options: ColourTileOption[]
+  optionRefs: ReadonlyArray<RefObject<RapierRigidBody | null>>
+  textRef: RefObject<Mesh | null>
+}
+
+const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs, textRef }) => {
   const playerColourIndex = useGameStore((s) => s.playerColourIndex)
-
-  const options = useMemo<ColourTileOption[]>(() => {
-    const horizontalCenterOffset = (COLOUR_RANGES.length - 1) / 2
-
-    return COLOUR_RANGES.map((_, index) => {
-      const xOffset =
-        (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP_BETWEEN)
-      const position: Vector3Tuple = [xOffset, COLOUR_TILE_Y, COLOUR_TILE_BASE_Z]
-      const userData: MarbleColourUserData = {
-        type: 'marble-colour',
-        colourIndex: index,
-      }
-
-      return { index, position, userData }
-    })
-  }, [])
 
   return (
     <group>
       <Text
-        position={[0, ANSWER_TILE_Y, COLOUR_TILE_BASE_Z - 2]}
+        ref={textRef}
+        position={[0, ON_TILE_Y, COLOUR_TILE_TEXT_RELATIVE_Z]}
         width={TILE_SIZE * 8}
         height={TILE_SIZE * 2}
         text="Paint your marble"
-        textCanvasOptions={{}}
       />
       {options.map((option) => (
         <ColourTile
           key={option.index}
           option={option}
           isActive={option.index === playerColourIndex}
+          ref={optionRefs?.[option.index]}
         />
       ))}
     </group>

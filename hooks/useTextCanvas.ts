@@ -13,7 +13,7 @@ export type TextCanvasOptions = {
   color?: string
   fontFamily?: string
   fontWeight?: number | string
-  baseFontScale?: number // relative to height (e.g. 0.1)
+  fontSize?: number // in pixels (e.g. 24)
   scaleStep?: number // e.g. 0.9 (reduce by 10%)
   minScale?: number // e.g. 0.5 (50%)
   paddingXFrac?: number // each side fraction (e.g. 0.08)
@@ -26,10 +26,10 @@ const DEFAULTS: Required<Omit<TextCanvasOptions, 'width' | 'height'>> = {
   color: '#ffffff',
   fontFamily: '"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
   fontWeight: 500,
-  baseFontScale: 0.1,
+  fontSize: 24,
   scaleStep: 0.95,
   minScale: 0.4,
-  paddingXFrac: 0.12,
+  paddingXFrac: 0.1,
   paddingYFrac: 0.1,
   textAlign: 'center',
   textBaseline: 'middle',
@@ -91,8 +91,8 @@ export function writeTextToCanvas(
   const maxTextHeight = height * (1 - options.paddingYFrac * 2)
 
   // Determine base font size
-  let fontSize = Math.max(8, Math.floor(height * options.baseFontScale))
-  const minFontSize = Math.max(8, Math.floor(fontSize * options.minScale))
+  let fontSize = options.fontSize
+  const minFontSize = Math.floor(fontSize * options.minScale)
 
   const setFont = () => {
     context.font = `${options.fontWeight} ${fontSize}px ${options.fontFamily}`
