@@ -33,7 +33,6 @@ export enum Stage {
 // TODO:
 // - MF: Setup intro/entry content - so it's more about building the future of the web
 // - MF: Add sound effects (background terrain, background question, correct answer, wrong answer, UI interactions)
-// - MF: Implement basic performance optimisations - less floating tiles, full opacity on floor tiles.
 
 // TODO:
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
@@ -312,24 +311,21 @@ const createGameStore = () => {
           confirmationTween = null
           speedTweenTarget.value = 0
           confirmationTweenTarget.value = 0
-          const previousRunsToKeep = get().previousRuns
           set((s) => ({
             ...INITIAL_STATE,
             playerColourIndex: s.playerColourIndex,
-            previousRuns: previousRunsToKeep,
+            previousRuns: s.previousRuns,
             resetTick: s.resetTick + 1,
           }))
         },
 
         onOutOfBounds: () => {
           const { stage, resetGame, goToStage } = get()
-
           if (stage === Stage.HOME) {
             resetGame()
-            return
+          } else {
+            goToStage(Stage.GAME_OVER)
           }
-
-          goToStage(Stage.GAME_OVER)
         },
 
         goToStage: (newStage: Stage) => {
@@ -362,7 +358,7 @@ const createGameStore = () => {
         },
       }),
       {
-        name: 'quiz-roller',
+        name: 'quizroller',
         partialize: (s) => ({
           previousRuns: s.previousRuns,
           playerColourIndex: s.playerColourIndex,

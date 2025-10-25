@@ -1,6 +1,6 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "Quizroller",
+  "short_name": "Quizroller",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
