@@ -4,6 +4,8 @@ import { KinematicCharacterController } from '@dimforge/rapier3d-compat'
 import { useRapier } from '@react-three/rapier'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 
+import { PLAYER_RADIUS } from './ConfirmationBar'
+
 type Input = {
   forward: boolean
   backward: boolean
@@ -23,7 +25,7 @@ function usePlayerController() {
       const controller = world.createCharacterController(0.01)
 
       // Enable auto-stepping over small obstacles (like terrain gaps)
-      controller.enableAutostep(0.5, 0.2, true)
+      controller.enableAutostep(0.5, PLAYER_RADIUS / 2, true)
 
       // Enable snap-to-ground to stick to terrain surfaces
       controller.enableSnapToGround(0.5)

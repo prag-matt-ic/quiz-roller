@@ -4,7 +4,7 @@ import gsap from 'gsap'
 import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, Points, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
@@ -51,13 +51,6 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
   const progressTween = useRef<GSAPTween | null>(null)
   const isActive = useRef(false)
 
-  const playerWorldPosition = useRef(
-    new Vector3(
-      PLAYER_INITIAL_HOME_POSITION[0],
-      PLAYER_INITIAL_HOME_POSITION[1],
-      PLAYER_INITIAL_HOME_POSITION[2],
-    ),
-  )
   const playerLocalPosition = useRef(new Vector3())
   const { playerPosition } = usePlayerPosition()
 
@@ -136,12 +129,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
     materialRef.current.uBurstProgress = progress.current.value
 
     // Update player position in local particle space
-    playerWorldPosition.current.set(
-      playerPosition.current.x,
-      playerPosition.current.y,
-      playerPosition.current.z,
-    )
-    points.current.worldToLocal(playerLocalPosition.current.copy(playerWorldPosition.current))
+    points.current.worldToLocal(playerLocalPosition.current.copy(playerPosition.current))
     materialRef.current.uPlayerPosition.copy(playerLocalPosition.current)
   })
 

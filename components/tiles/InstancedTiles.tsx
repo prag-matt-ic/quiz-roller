@@ -8,7 +8,7 @@ import {
 import { useImperativeHandle, useRef } from 'react'
 import { type InstancedBufferAttribute, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_HOME_POSITION } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION_VEC3 } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
@@ -33,11 +33,7 @@ type TileShaderUniforms = {
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uPlayerWorldPos: new Vector3(
-    PLAYER_INITIAL_HOME_POSITION[0],
-    PLAYER_INITIAL_HOME_POSITION[1],
-    PLAYER_INITIAL_HOME_POSITION[2],
-  ),
+  uPlayerWorldPos: PLAYER_INITIAL_POSITION_VEC3,
   uScrollZ: 0,
   uEntryStartZ: QUESTIONS_ENTRY_START_Z,
   uEntryEndZ: QUESTIONS_ENTRY_END_Z,

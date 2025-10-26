@@ -92,11 +92,12 @@ const CONFIRMATION_DURATION_S = 2.4
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
-export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 0] // Used when re-spawning to home
-const INITIAL_PLAYER_POSITION = new Vector3(
-  PLAYER_INITIAL_HOME_POSITION[0],
-  PLAYER_INITIAL_HOME_POSITION[1],
-  PLAYER_INITIAL_HOME_POSITION[2],
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 0] // Used when re-spawning to home
+
+export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
+  PLAYER_INITIAL_POSITION[0],
+  PLAYER_INITIAL_POSITION[1],
+  PLAYER_INITIAL_POSITION[2],
 )
 
 const INITIAL_STATE: Pick<
@@ -121,7 +122,7 @@ const INITIAL_STATE: Pick<
   stage: Stage.HOME,
   terrainSpeed: 0,
   confirmationProgress: 0,
-  playerWorldPosition: INITIAL_PLAYER_POSITION,
+  playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   topic: null,
   confirmingTopic: null,
   currentDifficulty: 1,
@@ -320,7 +321,7 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
           const { stage, goToStage } = get()
           if (stage === Stage.HOME) {
             set((s) => ({
-              playerWorldPosition: INITIAL_PLAYER_POSITION,
+              playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
               resetPlayerTick: s.resetPlayerTick + 1,
             }))
           } else {

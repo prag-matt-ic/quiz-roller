@@ -12,7 +12,7 @@ import {
 import { type FC, useEffect, useRef } from 'react'
 import { type Object3D, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_HOME_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import usePlayerController from '@/components/player/usePlayerController'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -71,9 +71,9 @@ const Player: FC = () => {
     // hard reset transform & motion
     body.setTranslation(
       {
-        x: PLAYER_INITIAL_HOME_POSITION[0],
-        y: PLAYER_INITIAL_HOME_POSITION[1],
-        z: PLAYER_INITIAL_HOME_POSITION[2],
+        x: PLAYER_INITIAL_POSITION[0],
+        y: PLAYER_INITIAL_POSITION[1],
+        z: PLAYER_INITIAL_POSITION[2],
       },
       true,
     )
@@ -201,7 +201,7 @@ const Player: FC = () => {
       type="kinematicPosition"
       userData={userData}
       colliders={false}
-      position={PLAYER_INITIAL_HOME_POSITION}
+      position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
