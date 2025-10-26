@@ -80,7 +80,6 @@ export function InstancedTiles({
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
-  const playerWorldPosition = useRef<Vector3>(INITIAL_TILE_UNIFORMS.uPlayerWorldPos)
 
   useImperativeHandle(
     ref,
@@ -101,13 +100,11 @@ export function InstancedTiles({
     [],
   )
 
-  usePlayerPosition((position) => {
-    playerWorldPosition.current.set(position.x, position.y, position.z)
-  })
+  const { playerPosition } = usePlayerPosition()
 
   useGameFrame(() => {
     if (!tileShader.current) return
-    tileShader.current.uPlayerWorldPos = playerWorldPosition.current
+    tileShader.current.uPlayerWorldPos = playerPosition.current
   })
 
   return (

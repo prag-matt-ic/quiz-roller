@@ -123,7 +123,7 @@ const horizontalCenterOffset = (COLOUR_RANGES.length - 1) / 2
 
 export const COLOUR_TILE_OPTIONS: ColourTileOption[] = COLOUR_RANGES.map((_, index) => {
   const xOffset = (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP)
-  const position: Vector3Tuple = [xOffset, ON_TILE_Y, -40]
+  const position: Vector3Tuple = [xOffset, ON_TILE_Y, COLOUR_TILE_TEXT_RELATIVE_Z]
   const userData: MarbleColourUserData = {
     type: 'marble-colour',
     colourIndex: index,

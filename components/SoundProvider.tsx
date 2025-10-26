@@ -11,29 +11,29 @@ import { createStore, type StoreApi, useStore } from 'zustand'
 
 export enum SoundFX {
   BACKGROUND = 'BACKGROUND',
-  CONFIRMED = 'CONFIRMED',
   CORRECT_ANSWER = 'CORRECT_ANSWER',
   INCORRECT_ANSWER = 'WRONG_ANSWER',
   GAME_OVER = 'GAME_OVER',
 }
 
 const SOUND_FILES: Record<SoundFX, string> = {
-  [SoundFX.CONFIRMED]: '/audio/center.aac',
   [SoundFX.GAME_OVER]: '/audio/background.aac',
   [SoundFX.BACKGROUND]: '/audio/background.aac',
-  [SoundFX.CORRECT_ANSWER]: '/audio/background.aac',
-  [SoundFX.INCORRECT_ANSWER]: '/audio/background.aac',
+  [SoundFX.CORRECT_ANSWER]: '/audio/correct.aac',
+  [SoundFX.INCORRECT_ANSWER]: '/audio/incorrect.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
+
+export type PlaySoundFX = (fx: SoundFX, loop?: boolean) => void
 
 type SoundState = {
   isLoading: boolean
   isMuted: boolean
   setIsMuted: (isMuted: boolean) => void
   initialise: () => Promise<void>
-  playSoundFX: (fx: SoundFX) => void
-  setMasterGain: (v: number) => void
+  playSoundFX: PlaySoundFX
+  stopAllSounds: () => void
 }
 
 type SoundStore = StoreApi<SoundState>
@@ -44,10 +44,13 @@ const createSoundStore = () => {
   let master: GainNode | null = null
   let buffers: Buffers = {}
   let ready: Promise<void> | null = null
+  const activeSources: Set<AudioBufferSourceNode> = new Set()
 
   async function ensureContext() {
     if (!audioContext) {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      audioContext = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext)()
       master = audioContext.createGain()
       master.connect(audioContext.destination)
       master.gain.value = 0.5
@@ -89,11 +92,31 @@ const createSoundStore = () => {
     },
 
     setIsMuted: (isMuted: boolean) => {
+      const { playSoundFX, stopAllSounds } = get()
       set({ isMuted })
-      get().setMasterGain(isMuted ? 0 : 0.5)
+      if (!isMuted) {
+        // Start background music when unmuting
+        playSoundFX(SoundFX.BACKGROUND, true)
+      } else {
+        stopAllSounds()
+      }
     },
 
-    playSoundFX: (fx: SoundFX) => {
+    stopAllSounds: () => {
+      activeSources.forEach((src) => {
+        try {
+          src.stop()
+          src.disconnect()
+        } catch (error) {
+          console.error('[SoundProvider] Failed to stop sound source', src, error)
+        }
+      })
+      activeSources.clear()
+    },
+
+    playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
+      const { isMuted } = get()
+
       const run = async () => {
         await ensureContext() // ensure resumed after a gesture (or later)
         if (!buffers[fx]) {
@@ -102,13 +125,16 @@ const createSoundStore = () => {
         }
         const audioBuffer = buffers[fx]
         if (!audioBuffer) {
-          console.warn(`[SoundProvider] Missing buffer for ${fx} after init`)
+          console.error(`[SoundProvider] Missing buffer for ${fx} after init`)
           return
         }
         const src = audioContext!.createBufferSource()
         src.buffer = audioBuffer
+        src.loop = loop
         src.connect(master!)
+        activeSources.add(src)
         src.onended = () => {
+          activeSources.delete(src)
           try {
             src.disconnect()
           } catch {}
@@ -116,12 +142,12 @@ const createSoundStore = () => {
         src.start(0)
       }
 
-      run().catch((err) => console.warn(`[SoundProvider] Failed to play ${fx}`, err))
-    },
+      if (isMuted) return
 
-    setMasterGain: (v: number) => {
-      if (master) {
-        master.gain.value = Math.max(0, Math.min(1, v))
+      try {
+        await run()
+      } catch (err) {
+        console.warn(`[SoundProvider] Failed to play ${fx}`, err)
       }
     },
   }))
