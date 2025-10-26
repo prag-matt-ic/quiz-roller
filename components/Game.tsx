@@ -75,10 +75,7 @@ const Game: FC = () => {
         <Camera />
         <Stats />
         <Suspense>
-          <Physics
-            key={resetTick}
-            debug={process.env.NODE_ENV === 'development'}
-            timeStep={physicsTimeStep}>
+          <Physics debug={process.env.NODE_ENV === 'development'} timeStep={physicsTimeStep}>
             <Level />
           </Physics>
         </Suspense>

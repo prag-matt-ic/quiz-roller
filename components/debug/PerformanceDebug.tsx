@@ -8,6 +8,7 @@ import {
   SceneQuality,
   usePerformanceStore,
 } from '@/components/PerformanceProvider'
+import { useGameStore } from '../GameProvider'
 
 type Option<T> = {
   label: string
@@ -37,6 +38,7 @@ const PerformanceDebug: FC = () => {
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
+  const resetGame = useGameStore((s) => s.resetGame)
 
   const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
@@ -95,6 +97,14 @@ const PerformanceDebug: FC = () => {
             </option>
           ))}
         </SelectRow>
+        <button
+          onClick={resetGame}
+          className={twJoin(
+            'mt-2 w-full rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white',
+            'hover:bg-red-700 active:bg-red-800',
+          )}>
+          Reset Game
+        </button>
       </div>
     </div>
   )
