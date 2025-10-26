@@ -32,6 +32,7 @@ import {
   COLUMNS,
   ENTRY_Y_OFFSET,
   INITIAL_ROWS_Z_OFFSET,
+  // INITIAL_ROWS_Z_OFFSET,
   MAX_Z,
   RowData,
   ROWS_VISIBLE,
@@ -66,6 +67,7 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isQuestionStage = stage === Stage.QUESTION
+  const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
@@ -166,10 +168,20 @@ const Platform: FC = () => {
   }
 
   useEffect(() => {
-    if (hasInitialized.current) return
-
     function setupInitialRowsAndInstances() {
       topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
+
+      // Reset state
+      rowsData.current = []
+      nextRowDataIndex.current = 0
+      activeRowsData.current = []
+      baseZByRow.current = []
+      wrapCountByRow.current = []
+      xByBodyIndex.current = []
+      yByBodyIndex.current = []
+      isRowRaised.current = []
+      hasCompletedIntro.current = false
+      currentScrollPosition.current = 0
 
       insertHomeRows()
       insertIntroRows()
@@ -219,7 +231,14 @@ const Platform: FC = () => {
 
     setupInitialRowsAndInstances()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [resetPlatformTick])
+
+  useEffect(() => {
+    if (!tileInstances.length) return
+    if (!homeElements.current) return
+    // Position home elements after initial tiles are set up or when the platform resets
+    homeElements.current.positionElements(rowsData.current)
+  }, [resetPlatformTick, tileInstances.length])
 
   useEffect(() => {
     if (stage === Stage.TERRAIN) {
@@ -339,9 +358,9 @@ const Platform: FC = () => {
 
   function handleRowRaised(rowIndex: number, rowZ: number) {
     const rowMetadata = activeRowsData.current[rowIndex]
-    homeElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
-    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+
     isRowRaised.current[rowIndex] = true
+    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
 
     const isQuestionSectionStart =
       rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
@@ -358,11 +377,9 @@ const Platform: FC = () => {
     }
   }
 
-  function updateTiles(zStep: number) {
+  function updateTiles() {
     if (!instancedTilesRef.current?.rigidBodies) return
-
     const cycleDistance = ROWS_VISIBLE * TILE_SIZE
-    currentScrollPosition.current += zStep
 
     for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
       let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
@@ -395,15 +412,13 @@ const Platform: FC = () => {
     if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
     if (!homeElements.current || !questionElements.current) return
-    if (stage === Stage.GAME_OVER) return
+    if (stage === Stage.GAME_OVER || stage === Stage.HOME) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
     let computedSpeed = terrainSpeed.current
 
-    if (stage === Stage.HOME) {
-      computedSpeed = 0
-    } else if (stage === Stage.QUESTION) {
+    if (stage === Stage.QUESTION) {
       computedSpeed = computeTerrainSpeedForQuestionSection()
     }
 
@@ -412,7 +427,8 @@ const Platform: FC = () => {
     }
 
     const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
-    updateTiles(zStep)
+    currentScrollPosition.current += zStep
+    updateTiles()
     questionElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })
@@ -430,10 +446,10 @@ const Platform: FC = () => {
       />
 
       {/* Home Elements */}
-      <HomeElements ref={homeElements} />
+      <HomeElements ref={homeElements} key={`${resetPlatformTick}-home`} />
 
       {/* Question Elements */}
-      <QuestionElements ref={questionElements} />
+      <QuestionElements ref={questionElements} key={`${resetPlatformTick}-question`} />
     </group>
   )
 }

@@ -17,9 +17,11 @@ import {
 import {
   HIDE_POSITION_Y,
   HIDE_POSITION_Z,
+  INITIAL_ROWS_Z_OFFSET,
   MAX_Z,
   ON_TILE_Y,
   RowData,
+  TILE_SIZE,
 } from '@/utils/tiles'
 
 import Logo from './Logo'
@@ -35,9 +37,11 @@ const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
   },
 ]
 
+const LOG_PREFIX = '[HomeElements]'
+
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
-  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
+  positionElements: (rowData: RowData[]) => void
 }
 
 type Props = {
@@ -63,65 +67,111 @@ const HomeElements: FC<Props> = ({ ref }) => {
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
 
-  const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row) return
-      if (row.type !== 'home') return
+  const positionElements = useCallback(
+    (rowData: RowData[]) => {
+      console.log(`${LOG_PREFIX} positionElements called with ${rowData.length} rows`)
 
-      const answerPositions = row.answerTilePositions
-      if (!!answerPositions) {
-        for (
-          let index = 0;
-          index < answerPositions.length && index < topicAnswerRefs.length;
-          index++
-        ) {
-          const position = answerPositions[index]
-          if (!position) continue
-          const answerRef = topicAnswerRefs[index]
-          if (!answerRef.current) continue
+      rowData.forEach((row, rowIndex) => {
+        if (row.type !== 'home') return
+        const rowZ = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
 
-          translation.current.x = position[0]
-          translation.current.y = position[1]
-          translation.current.z = rowZ + position[2]
-          answerRef.current.setTranslation(translation.current, true)
+        console.log(`${LOG_PREFIX} positioning home row ${rowIndex} with rowZ ${rowZ}`)
+
+        const answerPositions = row.answerTilePositions
+        if (!!answerPositions) {
+          for (
+            let index = 0;
+            index < answerPositions.length && index < topicAnswerRefs.length;
+            index++
+          ) {
+            const position = answerPositions[index]
+            if (!position) continue
+
+            const answerRef = topicAnswerRefs[index]
+            if (!answerRef.current) {
+              console.warn(`${LOG_PREFIX} topicAnswerRef[${index}] missing during positioning`)
+              continue
+            }
+
+            translation.current.x = position[0]
+            translation.current.y = position[1]
+            translation.current.z = position[2] + rowZ
+            answerRef.current.setTranslation(translation.current, true)
+
+            console.log(
+              `${LOG_PREFIX} positioned topicAnswer[${index}] at [${translation.current.x}, ${translation.current.y}, ${translation.current.z}]`,
+            )
+          }
         }
-      }
 
-      const textPosition = row.topicTextPosition
-      if (!!textPosition && !!topicText.current) {
-        topicText.current.position.set(textPosition[0], textPosition[1], rowZ + textPosition[2])
-      }
+        const textPosition = row.topicTextPosition
+        if (!!textPosition && !!topicText.current) {
+          topicText.current.position.set(
+            textPosition[0],
+            textPosition[1],
+            textPosition[2] + rowZ,
+          )
 
-      const logoPosition = row.logoPosition
-      if (!!logoPosition && !!logo.current) {
-        logo.current.position.set(logoPosition[0], logoPosition[1], rowZ + logoPosition[2])
-      }
+          console.log(
+            `${LOG_PREFIX} topic text moved to [${topicText.current.position.x}, ${topicText.current.position.y}, ${topicText.current.position.z}]`,
+          )
+        } else if (!!textPosition) {
+          console.warn(`${LOG_PREFIX} topicText ref missing when positioning text`)
+        }
 
-      const colourPickerPlacement = row.colourPickerPosition
-      if (!colourPickerPlacement) return
+        const logoPosition = row.logoPosition
+        if (!!logoPosition && !!logo.current) {
+          logo.current.position.set(logoPosition[0], logoPosition[1], logoPosition[2] + rowZ)
 
-      const baseZ = rowZ + colourPickerPlacement[2]
+          console.log(
+            `${LOG_PREFIX} logo moved to [${logo.current.position.x}, ${logo.current.position.y}, ${logo.current.position.z}]`,
+          )
+        } else if (!!logoPosition) {
+          console.warn(`${LOG_PREFIX} logo ref missing when positioning logo`)
+        }
 
-      for (let index = 0; index < COLOUR_TILE_OPTIONS.length; index++) {
-        const optionRef = colourPickerOptionRefs[index]
-        const option = COLOUR_TILE_OPTIONS[index]
-        if (!optionRef?.current) continue
+        const colourPickerPlacement = row.colourPickerPosition
+        if (!colourPickerPlacement) return
 
-        translation.current.x = option.position[0]
-        translation.current.y = option.position[1]
-        translation.current.z = baseZ + option.relativeZ
-        optionRef.current.setTranslation(translation.current, true)
-      }
+        const baseZ = colourPickerPlacement[2] + rowZ
 
-      if (colourPickerText.current) {
-        colourPickerText.current.position.set(0, ON_TILE_Y, baseZ + COLOUR_TILE_TEXT_RELATIVE_Z)
-      }
+        for (let index = 0; index < COLOUR_TILE_OPTIONS.length; index++) {
+          const optionRef = colourPickerOptionRefs[index]
+          const option = COLOUR_TILE_OPTIONS[index]
+          if (!optionRef?.current) continue
+
+          translation.current.x = option.position[0]
+          translation.current.y = option.position[1]
+          translation.current.z = baseZ + option.relativeZ
+          optionRef.current.setTranslation(translation.current, true)
+
+          console.log(
+            `${LOG_PREFIX} colour option[${index}] positioned at [${translation.current.x}, ${translation.current.y}, ${translation.current.z}]`,
+          )
+        }
+
+        if (colourPickerText.current) {
+          colourPickerText.current.position.set(
+            0,
+            ON_TILE_Y,
+            baseZ + COLOUR_TILE_TEXT_RELATIVE_Z,
+          )
+
+          console.log(
+            `${LOG_PREFIX} colour picker text moved to [${colourPickerText.current.position.x}, ${colourPickerText.current.position.y}, ${colourPickerText.current.position.z}]`,
+          )
+        } else {
+          console.warn(`${LOG_PREFIX} colourPickerText ref missing when positioning text`)
+        }
+      })
     },
     [colourPickerOptionRefs, topicAnswerRefs],
   )
 
   const moveElements = useCallback(
     (zStep: number) => {
+      console.log(`${LOG_PREFIX} moveElements called with zStep ${zStep}`)
+
       for (const topicAnswerRef of topicAnswerRefs) {
         if (!topicAnswerRef.current) continue
 
@@ -134,11 +184,15 @@ const HomeElements: FC<Props> = ({ ref }) => {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
           topicAnswerRef.current.setTranslation(translation.current, false)
+          console.log(`${LOG_PREFIX} hid topic answer at indices [${currentTranslation.x}, ${currentTranslation.y}, ${currentTranslation.z}]`)
           continue
         }
 
         translation.current.z = nextZ
         topicAnswerRef.current.setTranslation(translation.current, true)
+        console.log(
+          `${LOG_PREFIX} moved topic answer to [${translation.current.x}, ${translation.current.y}, ${translation.current.z}]`,
+        )
       }
 
       if (!!topicText.current) {
@@ -146,8 +200,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         if (nextZ > MAX_Z) {
           topicText.current.position.z = HIDE_POSITION_Z
           topicText.current.position.y = HIDE_POSITION_Y
+          console.log(`${LOG_PREFIX} hid topic text`)
         } else {
           topicText.current.position.z = nextZ
+          console.log(
+            `${LOG_PREFIX} moved topic text to [${topicText.current.position.x}, ${topicText.current.position.y}, ${topicText.current.position.z}]`,
+          )
         }
       }
 
@@ -156,8 +214,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         if (nextZ > MAX_Z) {
           logo.current.position.z = HIDE_POSITION_Z
           logo.current.position.y = HIDE_POSITION_Y
+          console.log(`${LOG_PREFIX} hid logo`)
         } else {
           logo.current.position.z = nextZ
+          console.log(
+            `${LOG_PREFIX} moved logo to [${logo.current.position.x}, ${logo.current.position.y}, ${logo.current.position.z}]`,
+          )
         }
       }
 
@@ -166,8 +228,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         if (nextZ > MAX_Z) {
           colourPickerText.current.position.z = HIDE_POSITION_Z
           colourPickerText.current.position.y = HIDE_POSITION_Y
+          console.log(`${LOG_PREFIX} hid colour picker text`)
         } else {
           colourPickerText.current.position.z = nextZ
+          console.log(
+            `${LOG_PREFIX} moved colour picker text to [${colourPickerText.current.position.x}, ${colourPickerText.current.position.y}, ${colourPickerText.current.position.z}]`,
+          )
         }
       }
 
@@ -183,11 +249,17 @@ const HomeElements: FC<Props> = ({ ref }) => {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
           optionRef.current.setTranslation(translation.current, false)
+          console.log(
+            `${LOG_PREFIX} hid colour option at [${currentTranslation.x}, ${currentTranslation.y}, ${currentTranslation.z}]`,
+          )
           continue
         }
 
         translation.current.z = nextZ
         optionRef.current.setTranslation(translation.current, true)
+        console.log(
+          `${LOG_PREFIX} moved colour option to [${translation.current.x}, ${translation.current.y}, ${translation.current.z}]`,
+        )
       }
     },
     [colourPickerOptionRefs, topicAnswerRefs],
@@ -196,9 +268,9 @@ const HomeElements: FC<Props> = ({ ref }) => {
   useImperativeHandle(ref, () => {
     return {
       moveElements,
-      positionElementsIfNeeded,
+      positionElements,
     }
-  }, [moveElements, positionElementsIfNeeded])
+  }, [moveElements, positionElements])
 
   return (
     <>

@@ -92,7 +92,7 @@ const CONFIRMATION_DURATION_S = 2.4
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
-export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 1] // Used when re-spawning to home
+export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 0] // Used when re-spawning to home
 const INITIAL_PLAYER_POSITION = new Vector3(
   PLAYER_INITIAL_HOME_POSITION[0],
   PLAYER_INITIAL_HOME_POSITION[1],
