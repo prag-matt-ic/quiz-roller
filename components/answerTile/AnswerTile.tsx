@@ -133,6 +133,9 @@ export const AnswerTile: FC<AnswerTileProps> = ({
           uIsConfirming={0}
           uTextTexture={canvasState?.texture ?? TRANSPARENT_TEXTURE}
           uPlayerColourIndex={playerColourIndex}
+          polygonOffset={true}
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
         />
       </mesh>
       {/* Particles burst when this answer is confirmed */}
