@@ -12,7 +12,7 @@ export enum SceneQuality {
 
 export type SceneConfig = {
   player: {
-    segments: 32 | 40 | 64
+    segments: number
   }
   answerTile: {
     particleCount: number
@@ -29,9 +29,9 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
-    answerTile: { particleCount: 64 },
+    answerTile: { particleCount: 81 },
     player: { segments: 64 },
-    floatingTiles: { instanceCount: Math.pow(2, 9) },
+    floatingTiles: { instanceCount: Math.pow(2, 8) },
   },
   [SceneQuality.MEDIUM]: {
     player: { segments: 40 },
@@ -39,8 +39,8 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingTiles: { instanceCount: Math.pow(2, 6) },
   },
   [SceneQuality.LOW]: {
-    answerTile: { particleCount: 32 },
-    player: { segments: 32 },
+    answerTile: { particleCount: 36 },
+    player: { segments: 24 },
     floatingTiles: { instanceCount: 0 },
   },
 }
