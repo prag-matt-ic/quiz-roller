@@ -107,7 +107,7 @@ export function generateHomeSectionRowData(): RowData[] {
     }
 
     if (rowIndex === COLOUR_PICKER_TRIGGER_ROW) {
-      rows[rowIndex].colourPickerPosition = [0, 0, COLOUR_PICKER_RELATIVE_Z]
+      rows[rowIndex].colourPickerPosition = [0, ON_TILE_Y, COLOUR_PICKER_RELATIVE_Z]
     }
   }
 
