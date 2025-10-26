@@ -65,18 +65,20 @@ const createSoundStore = () => {
     const { audioContext } = await ensureContext()
     const entries: [SoundFX, AudioBuffer][] = []
 
+    const loadSound = async (fx: SoundFX, url: string) => {
+      try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
+        const arrayBuffer = await response.arrayBuffer()
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+        entries.push([fx as SoundFX, audioBuffer])
+      } catch (event) {
+        console.error('[SoundProvider] Failed to load', fx, url, event)
+      }
+    }
+
     await Promise.all(
-      Object.entries(SOUND_FILES).map(async ([fx, url]) => {
-        try {
-          const response = await fetch(url)
-          if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
-          const arrayBuffer = await response.arrayBuffer()
-          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-          entries.push([fx as SoundFX, audioBuffer])
-        } catch (event) {
-          console.error('[SoundProvider] Failed to load', fx, url, event)
-        }
-      }),
+      Object.entries(SOUND_FILES).map(([fx, url]) => loadSound(fx as SoundFX, url)),
     )
 
     buffers = Object.fromEntries(entries)

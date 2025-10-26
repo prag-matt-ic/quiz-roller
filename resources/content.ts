@@ -1,7 +1,30 @@
-import { ContentLibrary, type Question, Topic } from '@/model/schema'
+import { type ContentLibrary, type Question, Topic } from '@/model/schema'
 import { UX_UI_CONTENT } from '@/resources/content/uxui'
 
-export const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+export const pickRandom = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)]
+
+const findFallbackDifficulty = ({
+  availableDifficulties,
+  currentDifficulty,
+}: {
+  availableDifficulties: number[]
+  currentDifficulty: number
+}): number | undefined => {
+  let fallbackDifficulty: number | undefined
+
+  for (let index = 0; index < availableDifficulties.length; index += 1) {
+    const difficulty = availableDifficulties[index]
+
+    if (difficulty <= currentDifficulty) {
+      fallbackDifficulty = difficulty
+      continue
+    }
+
+    return fallbackDifficulty ?? difficulty
+  }
+
+  return fallbackDifficulty
+}
 
 export function getNextQuestion({
   topic,
@@ -12,32 +35,43 @@ export function getNextQuestion({
   currentDifficulty: number
   askedIds: Set<string>
 }): Question | undefined {
-  const topicBank = CONTENT[topic]
-  if (!topicBank) {
+  const topicQuestionBank = CONTENT[topic]
+  if (!topicQuestionBank) {
     console.error('[CONTENT] Unknown topic:', topic)
     return undefined
   }
 
-  const diffs = Object.keys(topicBank)
-    .map((d) => Number(d))
+  const sortedDifficultyLevels = Object.keys(topicQuestionBank)
+    .map((difficultyKey) => Number(difficultyKey))
     .sort((a, b) => a - b)
 
-  let pool = topicBank[currentDifficulty] ?? []
-  if (!pool.length) {
-    const lower = diffs.filter((d) => d <= currentDifficulty).reverse()
-    const higher = diffs.filter((d) => d > currentDifficulty)
-    const chosen = lower[0] ?? higher[0]
-    pool = chosen ? (topicBank[chosen] ?? []) : []
+  let availableQuestions = topicQuestionBank[currentDifficulty] ?? []
+
+  if (!availableQuestions.length) {
+    const fallbackDifficulty = findFallbackDifficulty({
+      availableDifficulties: sortedDifficultyLevels,
+      currentDifficulty,
+    })
+
+    availableQuestions =
+      fallbackDifficulty !== undefined ? topicQuestionBank[fallbackDifficulty] ?? [] : []
   }
 
-  if (!pool.length) {
+  if (!availableQuestions.length) {
     console.warn('[CONTENT] No questions available for topic', topic)
     return undefined
   }
 
-  const unasked = pool.filter((q) => !askedIds.has(q.id))
-  const candidates = unasked.length ? unasked : pool
-  return pickRandom(candidates)
+  const unaskedQuestions = availableQuestions.filter((question) => !askedIds.has(question.id))
+  const candidateQuestions = unaskedQuestions.length ? unaskedQuestions : availableQuestions
+  const randomQuestion = pickRandom(candidateQuestions)
+
+  const shuffledAnswers = [...randomQuestion.answers].sort(() => Math.random() - 0.5)
+
+  return {
+    ...randomQuestion,
+    answers: shuffledAnswers,
+  }
 }
 
 // Placeholder questions for each topic and difficulty.

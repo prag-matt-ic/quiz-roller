@@ -3,12 +3,12 @@
 import { type ChangeEvent, type FC, type ReactNode } from 'react'
 import { twJoin } from 'tailwind-merge'
 
+import { useGameStore } from '@/components/GameProvider'
 import {
   type RapierSimFPS,
   SceneQuality,
   usePerformanceStore,
 } from '@/components/PerformanceProvider'
-import { useGameStore } from '../GameProvider'
 
 type Option<T> = {
   label: string
