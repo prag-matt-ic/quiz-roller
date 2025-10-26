@@ -39,7 +39,7 @@ const Player: FC = () => {
   const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
-  const resetTick = useGameStore((s) => s.resetTick)
+  const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
   const setPlayerColourIndex = useGameStore((s) => s.setPlayerColourIndex)
   const { controllerRef, input } = usePlayerController()
 
@@ -65,6 +65,7 @@ const Player: FC = () => {
   const shaderTime = useRef(0)
 
   useEffect(() => {
+    if (resetPlayerTick === 0) return
     const body = bodyRef.current
     if (!body) return
     // hard reset transform & motion
@@ -78,10 +79,8 @@ const Player: FC = () => {
     )
     body.setLinvel({ x: 0, y: 0, z: 0 }, true)
     body.setAngvel({ x: 0, y: 0, z: 0 }, true)
-    body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true) // identity quat
-    body.wakeUp()
-    // (optional) also update any local refs used by your usePlayerPosition hook
-  }, [resetTick])
+    body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true)
+  }, [resetPlayerTick])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -129,11 +128,7 @@ const Player: FC = () => {
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
     // Update global player position in store (immutable update)
-    setPlayerPosition({
-      x: nextPosition.current.x,
-      y: nextPosition.current.y,
-      z: nextPosition.current.z,
-    })
+    setPlayerPosition(nextPosition.current)
 
     // Calculate physics for rolling animation
     frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)

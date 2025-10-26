@@ -28,6 +28,7 @@ type AnswerTileShaderUniforms = {
   uTileAspect: number
   uTime: number
   uTextTexture: Texture | null
+  uPlayerColourIndex: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
@@ -36,6 +37,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
   uTileAspect: ANSWER_TILE_ASPECT,
   uTime: 0,
   uTextTexture: null,
+  uPlayerColourIndex: 1,
 }
 
 const AnswerTileShader = shaderMaterial(
@@ -70,6 +72,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   wasConfirmed,
   wasCorrect,
 }) => {
+  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
@@ -129,6 +132,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
           uConfirmingProgress={0}
           uIsConfirming={0}
           uTextTexture={canvasState?.texture ?? TRANSPARENT_TEXTURE}
+          uPlayerColourIndex={playerColourIndex}
         />
       </mesh>
       {/* Particles burst when this answer is confirmed */}

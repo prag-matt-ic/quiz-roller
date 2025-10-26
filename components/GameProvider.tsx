@@ -7,7 +7,7 @@ import {
   useEffect,
   useRef,
 } from 'react'
-import { type Vector3Tuple } from 'three'
+import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -21,7 +21,7 @@ import {
 import { getNextQuestion } from '@/resources/content'
 
 import { PLAYER_RADIUS } from './player/ConfirmationBar'
-import { SoundFX, useSoundStore } from './SoundProvider'
+import { type PlaySoundFX, SoundFX, useSoundStore } from './SoundProvider'
 
 export enum Stage {
   HOME = 'home',
@@ -36,7 +36,6 @@ export enum Stage {
 
 // - [ ] Add “ControlsUI” which will mount keyboard keys with pressed indicators on desktop
 // - [ ] Add Mobile/touch controls
-// - [ ] Add sound effects
 // - [ ] Design “about” content
 // TODO:
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
@@ -51,7 +50,7 @@ type GameState = {
   setPlayerColourIndex: (index: number) => void
 
   confirmationProgress: number // [0, 1]
-  playerPosition: { x: number; y: number; z: number }
+  playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
   // Distance travelled in rows (increments when terrain rows recycle)
@@ -80,7 +79,8 @@ type GameState = {
   onOutOfBounds: () => void
 
   resetGame: () => void
-  resetTick: number
+  resetPlatformTick: number
+  resetPlayerTick: number
   goToStage: (stage: Stage) => void
 }
 
@@ -93,6 +93,11 @@ const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
 export const PLAYER_INITIAL_HOME_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 3, 1] // Used when re-spawning to home
+const INITIAL_PLAYER_POSITION = new Vector3(
+  PLAYER_INITIAL_HOME_POSITION[0],
+  PLAYER_INITIAL_HOME_POSITION[1],
+  PLAYER_INITIAL_HOME_POSITION[2],
+)
 
 function getFirstQuestionForTopic(topic: Topic, difficulty: number): Question | undefined {
   return getNextQuestion({
@@ -107,7 +112,7 @@ const INITIAL_STATE: Pick<
   | 'stage'
   | 'terrainSpeed'
   | 'confirmationProgress'
-  | 'playerPosition'
+  | 'playerWorldPosition'
   | 'topic'
   | 'confirmingTopic'
   | 'questions'
@@ -124,11 +129,7 @@ const INITIAL_STATE: Pick<
   stage: Stage.HOME,
   terrainSpeed: 0,
   confirmationProgress: 0,
-  playerPosition: {
-    x: PLAYER_INITIAL_HOME_POSITION[0],
-    y: PLAYER_INITIAL_HOME_POSITION[1],
-    z: PLAYER_INITIAL_HOME_POSITION[2],
-  },
+  playerWorldPosition: INITIAL_PLAYER_POSITION,
   topic: null,
   confirmingTopic: null,
   currentDifficulty: 1,
@@ -146,7 +147,7 @@ const INITIAL_STATE: Pick<
   },
 }
 
-const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
+const createGameStore = (playSoundFX: PlaySoundFX) => {
   let speedTween: GSAPTween | null = null
   const speedTweenTarget = { value: 0 }
   let confirmationTween: GSAPTween | null = null
@@ -168,7 +169,6 @@ const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
           onComplete()
           confirmationTween?.kill()
           confirmationTween = null
-          playSoundFX(SoundFX.CONFIRMED)
         },
       },
     )
@@ -196,7 +196,11 @@ const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
     persist(
       (set, get) => ({
         ...INITIAL_STATE,
-        setPlayerPosition: (playerPosition) => set({ playerPosition }),
+        setPlayerPosition: (position) => {
+          set((s) => ({
+            playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
+          }))
+        },
         setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
         setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
         incrementDistanceRows: (delta = 1) =>
@@ -295,13 +299,16 @@ const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
 
           if (!confirmingAnswer.answer.isCorrect) {
             handleIncorrectAnswer({ confirmingAnswer, set })
+            playSoundFX(SoundFX.INCORRECT_ANSWER)
             return
           }
 
           handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
+          playSoundFX(SoundFX.CORRECT_ANSWER)
         },
 
-        resetTick: 0,
+        resetPlatformTick: 0,
+        resetPlayerTick: 0,
         resetGame: () => {
           speedTween?.kill()
           confirmationTween?.kill()
@@ -313,14 +320,18 @@ const createGameStore = (playSoundFX: (name: SoundFX) => void) => {
             ...INITIAL_STATE,
             playerColourIndex: s.playerColourIndex,
             previousRuns: s.previousRuns,
-            resetTick: s.resetTick + 1,
+            resetPlatformTick: s.resetPlatformTick + 1,
+            resetPlayerTick: s.resetPlayerTick + 1,
           }))
         },
 
         onOutOfBounds: () => {
-          const { stage, resetGame, goToStage } = get()
+          const { stage, goToStage } = get()
           if (stage === Stage.HOME) {
-            resetGame()
+            set((s) => ({
+              playerWorldPosition: INITIAL_PLAYER_POSITION,
+              resetPlayerTick: s.resetPlayerTick + 1,
+            }))
           } else {
             goToStage(Stage.GAME_OVER)
           }
