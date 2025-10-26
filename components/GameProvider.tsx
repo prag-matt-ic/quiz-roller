@@ -99,14 +99,6 @@ const INITIAL_PLAYER_POSITION = new Vector3(
   PLAYER_INITIAL_HOME_POSITION[2],
 )
 
-function getFirstQuestionForTopic(topic: Topic, difficulty: number): Question | undefined {
-  return getNextQuestion({
-    topic,
-    currentDifficulty: difficulty,
-    askedIds: new Set(),
-  })
-}
-
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
@@ -263,7 +255,11 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
             return
           }
 
-          const firstQuestion = getFirstQuestionForTopic(confirmingTopic.topic, 1)
+          const firstQuestion = getNextQuestion({
+            topic: confirmingTopic.topic,
+            currentDifficulty: 1,
+            askedIds: new Set(),
+          })
 
           if (!firstQuestion) {
             console.error('No questions available for topic:', confirmingTopic.topic)
@@ -273,15 +269,10 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
 
           set({
             topic: confirmingTopic.topic,
-            confirmingTopic: null,
-            confirmationProgress: 0,
             questions: [firstQuestion],
             currentQuestionIndex: 0,
             currentQuestion: firstQuestion,
             confirmingAnswer: null,
-            confirmedAnswers: [],
-            distanceRows: 0,
-            currentRunStats: null,
           })
 
           goToStage(Stage.INTRO)
@@ -338,11 +329,6 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
         },
 
         goToStage: (newStage: Stage) => {
-          if (newStage === Stage.HOME) {
-            get().resetGame()
-            return
-          }
-
           if (newStage === Stage.INTRO) {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
