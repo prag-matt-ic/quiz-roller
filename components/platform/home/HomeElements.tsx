@@ -6,11 +6,14 @@ import { Group, Mesh } from 'three'
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import ColourPicker from '@/components/colourPicker/ColourPicker'
 import { useGameStore } from '@/components/GameProvider'
+import { InfoZone } from '@/components/infoZone/InfoZone'
 import { Text } from '@/components/Text'
 import { Topic, type TopicUserData } from '@/model/schema'
 import {
   COLOUR_TILE_OPTIONS,
   COLOUR_TILE_TEXT_RELATIVE_Z,
+  INFO_ZONE_HEIGHT,
+  INFO_ZONE_WIDTH,
   TEXT_HEIGHT,
   TEXT_WIDTH,
 } from '@/utils/platform/homeSection'
@@ -63,6 +66,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
     COLOUR_TILE_OPTIONS.map(() => createRef<RapierRigidBody>()),
   ).current
 
+  const infoZone = useRef<RapierRigidBody>(null)
+
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const skipFutureMoves = useRef(false)
 
@@ -94,7 +99,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
           }
         }
 
-        const textPosition = row.topicTextPosition
+        const textPosition = row.questionTextPosition
         if (!!textPosition && !!topicText.current) {
           topicText.current.position.set(
             textPosition[0],
@@ -106,6 +111,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
         const logoPosition = row.logoPosition
         if (!!logoPosition && !!logo.current) {
           logo.current.position.set(logoPosition[0], logoPosition[1], logoPosition[2] + rowZ)
+        }
+
+        const infoZonePlacement = row.infoZonePosition
+        if (!!infoZonePlacement && !!infoZone.current) {
+          translation.current.x = infoZonePlacement[0]
+          translation.current.y = infoZonePlacement[1]
+          translation.current.z = infoZonePlacement[2] + rowZ
+          infoZone.current.setTranslation(translation.current, true)
         }
 
         const colourPickerPlacement = row.colourPickerPosition
@@ -133,7 +146,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
         }
       })
     },
-    [colourPickerOptionRefs, topicAnswerRefs],
+    [colourPickerOptionRefs, infoZone, topicAnswerRefs],
   )
 
   const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
@@ -194,7 +207,6 @@ const HomeElements: FC<Props> = ({ ref }) => {
 
       for (const optionRef of colourPickerOptionRefs) {
         if (!optionRef.current) continue
-
         const currentTranslation = optionRef.current.translation()
         const nextZ = currentTranslation.z + zStep
         translation.current.x = currentTranslation.x
@@ -210,8 +222,24 @@ const HomeElements: FC<Props> = ({ ref }) => {
         translation.current.z = nextZ
         optionRef.current.setTranslation(translation.current, true)
       }
+
+      if (!!infoZone.current) {
+        const currentTranslation = infoZone.current.translation()
+        const nextZ = currentTranslation.z + zStep
+        translation.current.x = currentTranslation.x
+        translation.current.y = currentTranslation.y
+
+        if (nextZ > maxZ) {
+          translation.current.y = HIDE_POSITION_Y
+          translation.current.z = HIDE_POSITION_Z
+          infoZone.current.setTranslation(translation.current, false)
+        } else {
+          translation.current.z = nextZ
+          infoZone.current.setTranslation(translation.current, true)
+        }
+      }
     },
-    [colourPickerOptionRefs, maxZ, topicAnswerRefs],
+    [colourPickerOptionRefs, infoZone, maxZ, topicAnswerRefs],
   )
 
   useImperativeHandle(ref, () => {
@@ -243,11 +271,22 @@ const HomeElements: FC<Props> = ({ ref }) => {
         />
       ))}
       <Logo ref={logo} />
+
       <ColourPicker
         options={COLOUR_TILE_OPTIONS}
         optionRefs={colourPickerOptionRefs}
         textRef={colourPickerText}
       />
+
+      <InfoZone
+        ref={infoZone}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={INFO_ZONE_WIDTH}
+        height={INFO_ZONE_HEIGHT}
+        infoContainerClassName="space-y-3">
+        <h2 className="text-xl font-black text-black">Welcome</h2>
+        <p>This is some intro content placeholder</p>
+      </InfoZone>
     </>
   )
 }

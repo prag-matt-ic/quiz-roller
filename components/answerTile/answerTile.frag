@@ -1,6 +1,7 @@
 // AnswerTile fragment shader
 #pragma glslify: getColourFromPalette = require(../palette.glsl)
 #pragma glslify: paletteRange = require(../paletteRange.glsl)
+#pragma glslify: sdBox = require(../sdBox.glsl)
 
 precision mediump float;
 precision mediump int;
@@ -16,11 +17,6 @@ varying mediump vec2 vHeightSpacePosition;
 const float BORDER_FRACTION = 0.06; // fraction of full height
 const float BORDER_WAVE_FREQUENCY = 3.0;
 const float BORDER_WAVE_OFFSET = 0.5;
-
-float sdBox(in vec2 position, in vec2 bounds) {
-    vec2 distance = abs(position) - bounds;
-    return length(max(distance, 0.0)) + min(max(distance.x, distance.y), 0.0);
-}
 
 void main() {
   // Always render the inner area; border reacts to uConfirmingProgress

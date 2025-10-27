@@ -77,7 +77,3 @@ Review and refactor the provided **vertex** and **fragment** shaders to reduce G
 - Do **not** change color spaces, tonemapping, or gamma unless explicitly requested.
 - Preserve semantic behavior; call out any intentional approximations.
 - If `highp` is not available in fragment on target, fall back to `mediump` and document.
-
-## Optional: measurement hooks
-
-- If `runCommands` is available, attempt a compile or stats call and report instruction/texture count or compile warnings.

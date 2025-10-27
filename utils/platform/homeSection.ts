@@ -48,6 +48,17 @@ const ANSWER_TILE_CENTER_ROW = ANSWER_TILE_START_ROW + (ANSWER_TILE_ROWS - 1) / 
 const ANSWER_TILE_TRIGGER_ROW = Math.ceil(ANSWER_TILE_CENTER_ROW)
 const ANSWER_TILE_RELATIVE_Z = (ANSWER_TILE_TRIGGER_ROW - ANSWER_TILE_CENTER_ROW) * TILE_SIZE
 
+const INFO_ZONE_COLS = 2
+const INFO_ZONE_ROWS = 5
+const INFO_ZONE_START_COL = COLUMNS - INFO_ZONE_COLS
+const INFO_ZONE_CENTER_COL = INFO_ZONE_START_COL + (INFO_ZONE_COLS - 1) / 2
+const INFO_ZONE_CENTER_ROW = 5
+const INFO_ZONE_TRIGGER_ROW = Math.round(INFO_ZONE_CENTER_ROW)
+const INFO_ZONE_RELATIVE_Z = (INFO_ZONE_TRIGGER_ROW - INFO_ZONE_CENTER_ROW) * TILE_SIZE
+
+export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
+export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
+
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
   const leftEndCol = ANSWER_LEFT_TILE_START_COL + ANSWER_TILE_COLS - 1
@@ -99,7 +110,11 @@ export function generateHomeSectionRowData(): RowData[] {
     }
 
     if (rowIndex === TEXT_TRIGGER_ROW) {
-      rows[rowIndex].topicTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, TEXT_Z_RELATIVE]
+      rows[rowIndex].questionTextPosition = [
+        colToX(COLUMNS / 2 - 0.5),
+        ON_TILE_Y,
+        TEXT_Z_RELATIVE,
+      ]
     }
 
     if (rowIndex === LOGO_TRIGGER_ROW) {
@@ -108,6 +123,14 @@ export function generateHomeSectionRowData(): RowData[] {
 
     if (rowIndex === COLOUR_PICKER_TRIGGER_ROW) {
       rows[rowIndex].colourPickerPosition = [0, ON_TILE_Y, COLOUR_PICKER_RELATIVE_Z]
+    }
+
+    if (rowIndex === INFO_ZONE_TRIGGER_ROW) {
+      rows[rowIndex].infoZonePosition = [
+        colToX(INFO_ZONE_CENTER_COL),
+        ON_TILE_Y,
+        INFO_ZONE_RELATIVE_Z,
+      ]
     }
   }
 

@@ -53,6 +53,9 @@ type GameState = {
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
+  cameraLookAtPosition: Vector3 | null // Used if you want to look at something other than the player
+  setCameraLookAtPosition: (pos: Vector3 | null) => void
+
   // Distance travelled in rows (increments when terrain rows recycle)
   distanceRows: number
   incrementDistanceRows: (delta: number) => void
@@ -118,6 +121,7 @@ const INITIAL_STATE: Pick<
   | 'playerColourIndex'
   | 'currentRunStats'
   | 'previousRuns'
+  | 'cameraLookAtPosition'
 > = {
   stage: Stage.HOME,
   terrainSpeed: 0,
@@ -134,6 +138,7 @@ const INITIAL_STATE: Pick<
   distanceRows: 0,
   playerColourIndex: 1,
   currentRunStats: null,
+  cameraLookAtPosition: null,
   previousRuns: {
     [Topic.UX_UI_DESIGN]: [],
     [Topic.ARTIFICIAL_INTELLIGENCE]: [],
@@ -193,6 +198,9 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
           set((s) => ({
             playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
           }))
+        },
+        setCameraLookAtPosition: (cameraLookAtPosition) => {
+          set({ cameraLookAtPosition })
         },
         setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
         setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),

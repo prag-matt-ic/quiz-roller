@@ -46,12 +46,18 @@ export type MarbleColourUserData = {
   colourIndex: number
 }
 
+export type InfoHotspotUserData = {
+  type: 'info'
+  // Other values
+}
+
 export type RigidBodyUserData =
   | PlayerUserData
   | TopicUserData
   | AnswerUserData
   | OutOfBoundsUserData
   | MarbleColourUserData
+  | InfoHotspotUserData
 
 export enum Topic {
   UX_UI_DESIGN = 'UX/UI Design',

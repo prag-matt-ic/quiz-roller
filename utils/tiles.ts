@@ -52,9 +52,8 @@ export type RowData = {
   // Example: for a 4-tile layout, top trigger provides [pos, pos, null, null],
   // bottom trigger provides [null, null, pos, pos].
   answerTilePositions?: ([number, number, number] | null)[]
-  // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
-  answerNumber?: number[]
-  topicTextPosition?: [number, number, number]
+  answerNumber?: number[] // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
   logoPosition?: [number, number, number]
   colourPickerPosition?: [number, number, number]
+  infoZonePosition?: [number, number, number]
 }
