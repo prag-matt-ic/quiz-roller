@@ -55,5 +55,7 @@ export type RowData = {
   answerNumber?: number[] // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
   logoPosition?: [number, number, number]
   colourPickerPosition?: [number, number, number]
-  infoZonePosition?: [number, number, number]
+  // Optional per-index info zone placements for this trigger row.
+  // Use null to skip moving a specific info zone on this trigger.
+  infoZonePositions?: ([number, number, number] | null)[]
 }

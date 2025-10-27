@@ -13,9 +13,9 @@ import {
 } from '@react-three/rapier'
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
-import { InfoIcon } from 'lucide-react'
-import { type FC, PropsWithChildren, type RefObject, useRef, useState } from 'react'
-import { SwitchTransition, Transition } from 'react-transition-group'
+import { type LucideIcon } from 'lucide-react'
+import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
+import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
 
@@ -50,27 +50,30 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 type Props = PropsWithChildren<{
   ref?: RefObject<RapierRigidBody | null>
   position: Vector3Tuple
-  width?: number
-  height?: number
-
+  width: number
+  height: number
   infoContainerClassName?: string
+  Icon: LucideIcon
 }>
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
   position,
-  width = 2,
-  height = 4,
+  width,
+  height,
   infoContainerClassName,
+  Icon,
   children,
 }) => {
   const playerColourIndex = useGameStore((s) => s.playerColourIndex)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
 
   const [showInfo, setShowInfo] = useState(false)
-  const infoContainer = useRef<HTMLDivElement>(null)
-  const infoPositionOffset: Vector3Tuple = [0, 0, 1]
+  const iconContainer = useRef<HTMLDivElement>(null)
+  const infoContentContainer = useRef<HTMLDivElement>(null)
+  const iconPositionOffset: Vector3Tuple = [0, 0, 1]
+  const infoPositionOffset: Vector3Tuple = [0, 5, 0]
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
@@ -99,23 +102,41 @@ export const InfoZone: FC<Props> = ({
     setCameraLookAtPosition(null)
   }
 
-  const { contextSafe } = useGSAP({ scope: infoContainer })
+  const { contextSafe } = useGSAP({ dependencies: [showInfo] })
 
-  const onEnter = contextSafe(() => {
+  const onIconEnter = contextSafe(() => {
     gsap.fromTo(
-      infoContainer.current,
+      iconContainer.current,
+      { opacity: 0, y: -48 },
+      { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' },
+    )
+  })
+
+  const onIconExit = contextSafe(() => {
+    gsap.to(iconContainer.current, { opacity: 0, y: -48, duration: 0.3, ease: 'power1.out' })
+  })
+
+  const onInfoEnter = contextSafe(() => {
+    gsap.fromTo(
+      infoContentContainer.current,
       { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
         scale: 1,
-        duration: 0.32,
+        duration: 0.4,
+        delay: 0.1,
         ease: 'expoScale(0.8,1.0,power1.out)',
       },
     )
   })
 
-  const onExit = contextSafe(() => {
-    gsap.to(infoContainer.current, { opacity: 0, scale: 0.9, duration: 0.2 })
+  const onInfoExit = contextSafe(() => {
+    gsap.to(infoContentContainer.current, {
+      opacity: 0,
+      scale: 0.8,
+      duration: 0.3,
+      ease: 'expoScale(0.8,1.0,power1.out)',
+    })
   })
 
   const userData: RigidBodyUserData = {
@@ -123,18 +144,18 @@ export const InfoZone: FC<Props> = ({
   }
 
   const aspect = width / height
-  const tilesX = Math.max(width / TILE_SIZE, 0.01)
-  const tilesY = Math.max(height / TILE_SIZE, 0.01)
+  const tilesX = width / TILE_SIZE
+  const tilesY = height / TILE_SIZE
 
   // Generate gradient colors based on selected colour band
   const range = COLOUR_RANGES[playerColourIndex]
   const rgbGradient = createPaletteGradient(range.min, range.max, {
     mode: 'rgb',
-    angle: 45,
+    angle: 50,
   })
   const oklchGradient = createPaletteGradient(range.min, range.max, {
     mode: 'oklch',
-    angle: 45,
+    angle: 50,
   })
 
   return (
@@ -169,53 +190,67 @@ export const InfoZone: FC<Props> = ({
           />
         </mesh>
 
-        {/* Temp mesh to show the info is placed. */}
+        {/* Icon */}
+        <Html
+          sprite={true}
+          center={true}
+          pointerEvents="none"
+          position={iconPositionOffset}
+          className="relative select-none">
+          <Transition
+            in={!showInfo}
+            mountOnEnter={true}
+            unmountOnExit={true}
+            timeout={{ enter: 0, exit: 250 }}
+            onEnter={onIconEnter}
+            onExit={onIconExit}
+            nodeRef={iconContainer}>
+            {() => (
+              <div
+                ref={iconContainer}
+                className="flex items-center justify-center overflow-hidden rounded-full border border-black p-2.5"
+                style={{
+                  background: rgbGradient,
+                  backgroundImage: oklchGradient,
+                }}>
+                <Icon strokeWidth={1.5} className="size-13" />
+              </div>
+            )}
+          </Transition>
+        </Html>
+
+        {/* Mesh to show where info is placed. */}
         {/* <mesh position={infoPositionOffset}>
-          <sphereGeometry args={[0.2, 16, 16]} />
+          <sphereGeometry args={[0.5, 16, 16]} />
           <meshBasicMaterial color="white" />
         </mesh> */}
+
         {/* Info Content */}
         <Html
           sprite={true}
-          // transform={true}
           center={true}
           pointerEvents="none"
           position={infoPositionOffset}
           className="relative select-none">
-          <SwitchTransition>
-            <Transition
-              key={`${showInfo}`}
-              mountOnEnter={true}
-              unmountOnExit={true}
-              timeout={{ enter: 0, exit: 350 }}
-              onEnter={onEnter}
-              onExit={onExit}
-              nodeRef={infoContainer}>
-              {() =>
-                showInfo ? (
-                  <div
-                    ref={infoContainer}
-                    className={twMerge(
-                      'relative h-80 w-120 max-w-full rounded-2xl bg-white p-6 opacity-0 shadow-lg ring-2 shadow-black/25 ring-black/20 sm:p-10',
-                      infoContainerClassName,
-                    )}>
-                    {children}
-                  </div>
-                ) : (
-                  <div ref={infoContainer} className="flex items-center justify-center">
-                    <div
-                      className="absolute size-12 overflow-hidden rounded-full bg-linear-60 from-white to-black shadow-md shadow-black/25"
-                      style={{
-                        background: rgbGradient,
-                        backgroundImage: oklchGradient,
-                      }}
-                    />
-                    <InfoIcon strokeWidth={1.75} className="relative size-14" />
-                  </div>
-                )
-              }
-            </Transition>
-          </SwitchTransition>
+          <Transition
+            in={showInfo}
+            mountOnEnter={true}
+            unmountOnExit={true}
+            timeout={{ enter: 0, exit: 350 }}
+            onEnter={onInfoEnter}
+            onExit={onInfoExit}
+            nodeRef={infoContentContainer}>
+            {() => (
+              <div
+                ref={infoContentContainer}
+                className={twMerge(
+                  'relative h-fit w-120 max-w-full origin-bottom rounded-2xl bg-white p-6 opacity-0 shadow-lg ring shadow-black/25 ring-black sm:p-10',
+                  infoContainerClassName,
+                )}>
+                {children}
+              </div>
+            )}
+          </Transition>
         </Html>
       </RigidBody>
     </>
