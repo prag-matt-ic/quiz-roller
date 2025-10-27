@@ -14,9 +14,8 @@ const Background: FC = () => {
 
   useEffect(() => {
     if (!texture || viewportWidth === 0 || viewportHeight === 0) return
-    const image = texture.image as { width: number; height: number } | undefined
-    const imageWidth = image?.width ?? backgroundImage.width
-    const imageHeight = image?.height ?? backgroundImage.height
+    const imageWidth = backgroundImage.width
+    const imageHeight = backgroundImage.height
     if (!imageWidth || !imageHeight) return
 
     texture.colorSpace = THREE.LinearSRGBColorSpace

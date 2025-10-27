@@ -13,7 +13,7 @@ varying vec2 vUv;
 const float NOISE_SCALE = 1.4;
 const float ACTIVE_NOISE_TIME_SPEED = 0.8;
 const float INACTIVE_NOISE_TIME_SPEED = 0.12;
-const float BORDER_THICKNESS = 0.04;
+const float BORDER_THICKNESS = 0.05;
 
 float sdCircle(in vec2 p, in float r) {
   return length(p) - r;

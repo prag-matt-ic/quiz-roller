@@ -55,6 +55,7 @@ const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
   const stage = useGameStore((s) => s.stage)
   const { playerPosition } = usePlayerPosition()
+  const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
   // Update camera position when stage changes
   useEffect(() => {
@@ -78,76 +79,20 @@ const Camera: FC = () => {
 
   useFrame(() => {
     if (!cameraControls.current) return
+    if (stage === Stage.GAME_OVER) return
 
-    if (stage === Stage.HOME) {
-      cameraControls.current.setLookAt(
-        playerPosition.current.x,
-        CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + CAMERA_CONFIG[stage].position.z,
-        playerPosition.current.x,
-        0,
-        playerPosition.current.z,
-        true,
-      )
-    }
+    const lookAt = !!cameraLookAtPosition ? cameraLookAtPosition : playerPosition.current
 
-    if (stage === Stage.INTRO) {
-      // Track like question stage but keep ENTRY's zoomed-in config
-      cameraControls.current.setLookAt(
-        playerPosition.current.x, // Follow player X
-        CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + CAMERA_CONFIG[stage].position.z, // Follow the player from slightly behind
-        playerPosition.current.x,
-        0,
-        playerPosition.current.z,
-        true,
-      )
-    }
-
-    if (stage === Stage.QUESTION) {
-      cameraControls.current.setLookAt(
-        playerPosition.current.x, // Follow player X
-        CAMERA_CONFIG[stage].position.y,
-        playerPosition.current.z + CAMERA_CONFIG[stage].position.z, // Follow the player from slightly behind
-        playerPosition.current.x, // Look at the player X
-        0,
-        playerPosition.current.z, // Look at the player Z
-        true,
-      )
-    }
-    if (stage === Stage.TERRAIN) {
-      // Follow player X, but with some lag/smoothing
-      cameraControls.current.setLookAt(
-        playerPosition.current.x, // Follow player X
-        CAMERA_CONFIG[stage].position.y, // Fixed Y
-        CAMERA_CONFIG[stage].position.z, // Fixed Z
-        playerPosition.current.x, // Look at the player X
-        0,
-        playerPosition.current.z, // Look at the player Z
-        true,
-      )
-    }
+    cameraControls.current.setLookAt(
+      playerPosition.current.x,
+      CAMERA_CONFIG[stage].position.y,
+      playerPosition.current.z + CAMERA_CONFIG[stage].position.z,
+      lookAt.x,
+      lookAt.y,
+      lookAt.z,
+      true,
+    )
   })
-
-  // useEffect(() => {
-  //   if (!cameraControls.current) return
-  //   // Reset back to the control's saved default
-  //   cameraControls.current.reset(true) // smooth reset
-  //   // Immediately set the pose for the current stage (usually SPLASH → INTRO next)
-  //   const { position, target, zoom } = CAMERA_CONFIG[stage]
-  //   cameraControls.current.zoomTo(zoom, true)
-  //   cameraControls.current.setLookAt(
-  //     position.x,
-  //     position.y,
-  //     position.z,
-  //     target.x,
-  //     target.y,
-  //     target.z,
-  //     true,
-  //   )
-  //   // Optional: make this the new "default" after reset
-  //   cameraControls.current.saveState()
-  // }, [resetTick])
 
   return (
     <CameraControls

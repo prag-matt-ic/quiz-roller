@@ -17,7 +17,7 @@ import {
 
 const HOME_SECTION_ROWS = 20
 
-const LOGO_CENTER_ROW = 7
+const LOGO_CENTER_ROW = 5
 const LOGO_TRIGGER_ROW = LOGO_CENTER_ROW
 const LOGO_RELATIVE_Z = 0
 
@@ -47,6 +47,24 @@ const ANSWER_TILE_CENTER_ROW = ANSWER_TILE_START_ROW + (ANSWER_TILE_ROWS - 1) / 
 // bodies on the row whose animation window contains the tile centre.
 const ANSWER_TILE_TRIGGER_ROW = Math.ceil(ANSWER_TILE_CENTER_ROW)
 const ANSWER_TILE_RELATIVE_Z = (ANSWER_TILE_TRIGGER_ROW - ANSWER_TILE_CENTER_ROW) * TILE_SIZE
+
+const INFO_ZONE_COLS = 2
+const INFO_ZONE_ROWS = 3
+const INFO_ZONE_CENTER_ROW = 5
+const INFO_ZONE_TRIGGER_ROW = Math.round(INFO_ZONE_CENTER_ROW)
+const INFO_ZONE_RELATIVE_Z = (INFO_ZONE_TRIGGER_ROW - INFO_ZONE_CENTER_ROW) * TILE_SIZE
+const INFO_ZONE_RIGHT_START_COL = COLUMNS - INFO_ZONE_COLS
+const INFO_ZONE_RIGHT_CENTER_COL = INFO_ZONE_RIGHT_START_COL + (INFO_ZONE_COLS - 1) / 2
+const INFO_ZONE_LEFT_START_COL = 0
+const INFO_ZONE_LEFT_CENTER_COL = INFO_ZONE_LEFT_START_COL + (INFO_ZONE_COLS - 1) / 2
+
+const INFO_ZONE_POSITIONS: [number, number, number][] = [
+  [colToX(INFO_ZONE_RIGHT_CENTER_COL), ON_TILE_Y, INFO_ZONE_RELATIVE_Z],
+  [colToX(INFO_ZONE_LEFT_CENTER_COL), ON_TILE_Y, INFO_ZONE_RELATIVE_Z],
+]
+
+export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
+export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
@@ -99,7 +117,11 @@ export function generateHomeSectionRowData(): RowData[] {
     }
 
     if (rowIndex === TEXT_TRIGGER_ROW) {
-      rows[rowIndex].topicTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, TEXT_Z_RELATIVE]
+      rows[rowIndex].questionTextPosition = [
+        colToX(COLUMNS / 2 - 0.5),
+        ON_TILE_Y,
+        TEXT_Z_RELATIVE,
+      ]
     }
 
     if (rowIndex === LOGO_TRIGGER_ROW) {
@@ -109,6 +131,10 @@ export function generateHomeSectionRowData(): RowData[] {
     if (rowIndex === COLOUR_PICKER_TRIGGER_ROW) {
       rows[rowIndex].colourPickerPosition = [0, ON_TILE_Y, COLOUR_PICKER_RELATIVE_Z]
     }
+
+    if (rowIndex === INFO_ZONE_TRIGGER_ROW) {
+      rows[rowIndex].infoZonePositions = INFO_ZONE_POSITIONS
+    }
   }
 
   return rows
@@ -117,13 +143,13 @@ export function generateHomeSectionRowData(): RowData[] {
 // Colour picker config
 export const COLOUR_TILE_SIZE = TILE_SIZE * 2
 export const COLOUR_TILE_GAP = TILE_SIZE
-export const COLOUR_TILE_TEXT_RELATIVE_Z = -2
+// export const COLOUR_TILE_TEXT_RELATIVE_Z = -2
 
 const horizontalCenterOffset = (COLOUR_RANGES.length - 1) / 2
 
 export const COLOUR_TILE_OPTIONS: ColourTileOption[] = COLOUR_RANGES.map((_, index) => {
   const xOffset = (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP)
-  const position: Vector3Tuple = [xOffset, ON_TILE_Y, COLOUR_TILE_TEXT_RELATIVE_Z]
+  const position: Vector3Tuple = [xOffset, ON_TILE_Y, 0]
   const userData: MarbleColourUserData = {
     type: 'marble-colour',
     colourIndex: index,

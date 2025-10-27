@@ -65,8 +65,9 @@ const ConfirmationBar: FC = () => {
       zIndexRange={[1000, 0]}
       distanceFactor={5}
       transform={true}
+      pointerEvents="none"
       position={[PLAYER_RADIUS, PLAYER_RADIUS * 6, PLAYER_RADIUS]}
-      className="pointer-events-none relative select-none">
+      className="relative select-none">
       <Transition
         in={!!confirmingAnswer || !!confirmingTopic}
         timeout={{ enter: 0, exit: 240 }}
