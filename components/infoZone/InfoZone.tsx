@@ -73,7 +73,7 @@ export const InfoZone: FC<Props> = ({
   const iconContainer = useRef<HTMLDivElement>(null)
   const infoContainer = useRef<HTMLDivElement>(null)
   const iconPositionOffset: Vector3Tuple = [0, 0, 1]
-  const infoPositionOffset: Vector3Tuple = [0, 0, 3]
+  const infoPositionOffset: Vector3Tuple = [0, 0, 3.5]
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
@@ -244,7 +244,7 @@ export const InfoZone: FC<Props> = ({
               <div
                 ref={infoContainer}
                 className={twMerge(
-                  'relative h-fit w-120 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-white p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
+                  'relative h-fit w-128 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-white p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
                   infoContainerClassName,
                 )}>
                 {children}
