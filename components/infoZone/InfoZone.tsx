@@ -71,17 +71,17 @@ export const InfoZone: FC<Props> = ({
 
   const [showInfo, setShowInfo] = useState(false)
   const iconContainer = useRef<HTMLDivElement>(null)
-  const infoContentContainer = useRef<HTMLDivElement>(null)
+  const infoContainer = useRef<HTMLDivElement>(null)
   const iconPositionOffset: Vector3Tuple = [0, 0, 1]
-  const infoPositionOffset: Vector3Tuple = [0, 5, 0]
+  const infoPositionOffset: Vector3Tuple = [0, 0, 3]
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
     const currentTranslation = ref.current.translation()
     const targetPosition = new Vector3(
-      currentTranslation.x + infoPositionOffset[0],
-      currentTranslation.y + infoPositionOffset[1],
-      currentTranslation.z + infoPositionOffset[2],
+      currentTranslation.x - infoPositionOffset[0],
+      currentTranslation.y - infoPositionOffset[1],
+      currentTranslation.z - infoPositionOffset[2],
     )
     setCameraLookAtPosition(targetPosition)
   }
@@ -107,18 +107,18 @@ export const InfoZone: FC<Props> = ({
   const onIconEnter = contextSafe(() => {
     gsap.fromTo(
       iconContainer.current,
-      { opacity: 0, y: -48 },
+      { opacity: 0, y: -40 },
       { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' },
     )
   })
 
   const onIconExit = contextSafe(() => {
-    gsap.to(iconContainer.current, { opacity: 0, y: -48, duration: 0.3, ease: 'power1.out' })
+    gsap.to(iconContainer.current, { opacity: 0, y: -40, duration: 0.3, ease: 'power1.out' })
   })
 
   const onInfoEnter = contextSafe(() => {
     gsap.fromTo(
-      infoContentContainer.current,
+      infoContainer.current,
       { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
@@ -131,7 +131,7 @@ export const InfoZone: FC<Props> = ({
   })
 
   const onInfoExit = contextSafe(() => {
-    gsap.to(infoContentContainer.current, {
+    gsap.to(infoContainer.current, {
       opacity: 0,
       scale: 0.8,
       duration: 0.3,
@@ -201,7 +201,7 @@ export const InfoZone: FC<Props> = ({
             in={!showInfo}
             mountOnEnter={true}
             unmountOnExit={true}
-            timeout={{ enter: 0, exit: 250 }}
+            timeout={{ enter: 0, exit: 300 }}
             onEnter={onIconEnter}
             onExit={onIconExit}
             nodeRef={iconContainer}>
@@ -219,7 +219,7 @@ export const InfoZone: FC<Props> = ({
           </Transition>
         </Html>
 
-        {/* Mesh to show where info is placed. */}
+        {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>
           <sphereGeometry args={[0.5, 16, 16]} />
           <meshBasicMaterial color="white" />
@@ -239,12 +239,12 @@ export const InfoZone: FC<Props> = ({
             timeout={{ enter: 0, exit: 350 }}
             onEnter={onInfoEnter}
             onExit={onInfoExit}
-            nodeRef={infoContentContainer}>
+            nodeRef={infoContainer}>
             {() => (
               <div
-                ref={infoContentContainer}
+                ref={infoContainer}
                 className={twMerge(
-                  'relative h-fit w-120 max-w-full origin-bottom rounded-2xl bg-white p-6 opacity-0 shadow-lg ring shadow-black/25 ring-black sm:p-10',
+                  'relative h-fit w-120 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-white p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
                   infoContainerClassName,
                 )}>
                 {children}
