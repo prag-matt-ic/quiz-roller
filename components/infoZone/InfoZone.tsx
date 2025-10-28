@@ -244,7 +244,7 @@ export const InfoZone: FC<Props> = ({
               <div
                 ref={infoContainer}
                 className={twMerge(
-                  'relative h-fit w-128 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-white p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
+                  'relative h-fit w-128 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-linear-70 from-white from-40% to-white/80 p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
                   infoContainerClassName,
                 )}>
                 {children}

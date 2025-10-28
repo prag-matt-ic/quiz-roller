@@ -46,17 +46,29 @@ const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
   },
 ] as const
 
-// TODO: populate with real content
+// TODO: Add images here.
 const INFO_ZONES: { Icon: LucideIcon; children: ReactNode }[] = [
   {
     Icon: InfoIcon,
     children: (
       <>
         <h2 className="text-xl font-bold text-black">About</h2>
-        <p className="sm:text-lg">
+        <p className="paragraph">
           Quizroller is a proof of concept game designed and developed by{' '}
-          <a href="https://github.com/prag-matt-ic" className="underline underline-offset-2">
-            prag-matt-ic
+          <a
+            href="https://github.com/prag-matt-ic"
+            className="underline underline-offset-2"
+            target="_blank"
+            rel="noopener noreferrer">
+            Matthew Frawley
+          </a>{' '}
+          with help from{' '}
+          <a
+            href="https://github.com/Void-vlk"
+            className="underline underline-offset-2"
+            target="_blank"
+            rel="noopener noreferrer">
+            Theo Walton
           </a>
           . It showcases the potential of 3D web experiences for educational purposes.
           <br />
@@ -76,17 +88,20 @@ const INFO_ZONES: { Icon: LucideIcon; children: ReactNode }[] = [
     children: (
       <>
         <h2 className="text-xl font-bold text-black">Build the future of the web</h2>
-        <p className="sm:text-lg">
+        <p className="paragraph">
           As the Innovation Orb, your task is to master user experience, artificial
           intelligence, psychology and English - critical skills for tomorrow&apos;s digital
           experiences.
         </p>
-        <ul className="list-inside list-decimal sm:text-lg">
+        <ul className="paragraph list-inside list-decimal">
           <li>Confirm a topic by rolling over the tile.</li>
           <li>
-            Navigate the web frontier. Each correct answer unlocks a piece of the future web.
+            Navigate the web frontier. Each correct answer unlocks fragments of the future web.
           </li>
-          <li>Questions will challenge your knowledge and get harder as you progress.</li>
+          <li>
+            Questions will challenge your knowledge and increase in difficulty the further you
+            travel.
+          </li>
         </ul>
       </>
     ),
