@@ -33,7 +33,7 @@ export const CAMERA_CONFIG: Record<
   [Stage.HOME]: {
     position: { x: 0, y: 8, z: 5 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.0,
+    zoom: 0.8,
   },
   [Stage.INTRO]: TERRAIN_CONFIG,
   [Stage.QUESTION]: {
@@ -60,8 +60,7 @@ const Camera: FC = () => {
     if (!cameraControls.current) return
 
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
-
-    if (stage === Stage.INTRO || stage === Stage.QUESTION || stage === Stage.TERRAIN) return // Position handled in useFrame below
+    if (stage !== Stage.GAME_OVER) return // Position handled in useFrame below
 
     const { position, target } = CAMERA_CONFIG[stage]
     cameraControls.current.setLookAt(
