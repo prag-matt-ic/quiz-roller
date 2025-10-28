@@ -10,11 +10,7 @@ type Props = {
   fadeDurationMs?: number // fade-out duration
 }
 
-const LoadingOverlay: FC<Props> = ({
-  className,
-  minVisibleMs = 2000,
-  fadeDurationMs = 400,
-}) => {
+const LoadingOverlay: FC<Props> = ({ className, minVisibleMs = 900, fadeDurationMs = 400 }) => {
   const { active } = useProgress()
 
   const [hasMinTime, setHasMinTime] = useState(minVisibleMs === 0)
@@ -58,19 +54,18 @@ const LoadingOverlay: FC<Props> = ({
       aria-busy={!isReady}
       aria-live="polite"
       className={twJoin(
-        'fixed inset-0 z-5000 flex items-center justify-center bg-black',
+        'fixed inset-0 z-5000 flex items-center justify-center bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
         'transition-opacity duration-400 ease-out',
         isFading ? 'opacity-0' : 'opacity-100',
         className,
       )}>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
       <div className="relative size-20" aria-label="Loading">
-        <div className="absolute inset-0 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
         <div
-          className="absolute inset-2 rounded-full"
-          style={{ background: 'var(--palette-range-1-oklch)' }}
+          className="absolute inset-0 animate-pulse rounded-full bg-linear-0 from-[#dc9704] to-[#f9ca0e]"
           aria-hidden="true"
         />
+        <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/70 border-t-transparent" />
       </div>
     </div>
   )
