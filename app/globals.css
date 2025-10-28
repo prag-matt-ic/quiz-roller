@@ -95,6 +95,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-nunito-sans);
   --font-serif: var(--font-cinzel);
+
+  --color-palette-5: var(--palette-5);
 }
 
 @theme {
