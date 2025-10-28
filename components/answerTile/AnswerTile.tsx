@@ -72,7 +72,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   wasConfirmed,
   wasCorrect,
 }) => {
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()

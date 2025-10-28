@@ -54,10 +54,12 @@ type GameState = {
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 
-  playerColourIndex: number
-  setPlayerColourIndex: (index: number) => void
+  colourIndex: number
+  confirmingColourIndex: number | null
+  setConfirmingColourIndex: (index: number | null) => void
 
   confirmationProgress: number // [0, 1]
+
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
@@ -99,7 +101,8 @@ type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
 const MAX_DIFFICULTY = 10
-const CONFIRMATION_DURATION_S = 2.4
+const CONFIRMING_ANSWER_DURATION_S = 2.4
+const CONFIRMING_COLOUR_DURATION_S = 1.5
 const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
@@ -120,6 +123,7 @@ const INITIAL_STATE: Pick<
   | 'playerWorldPosition'
   | 'topic'
   | 'confirmingTopic'
+  | 'confirmingColourIndex'
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
@@ -127,7 +131,7 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'distanceRows'
-  | 'playerColourIndex'
+  | 'colourIndex'
   | 'currentRunStats'
   | 'previousRuns'
   | 'cameraLookAtPosition'
@@ -151,7 +155,8 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
-  playerColourIndex: 1,
+  colourIndex: 1,
+  confirmingColourIndex: null,
   currentRunStats: null,
   cameraLookAtPosition: null,
   previousRuns: {
@@ -160,19 +165,23 @@ const INITIAL_STATE: Pick<
   },
 }
 
-const createGameStore = (playSoundFX: PlaySoundFX) => {
+const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
   let speedTween: GSAPTween | null = null
   const speedTweenTarget = { value: 0 }
   let confirmationTween: GSAPTween | null = null
   const confirmationTweenTarget = { value: 0 }
 
-  function startConfirmation(set: StoreApi<GameState>['setState'], onComplete: () => void) {
+  function startConfirmation(
+    set: StoreApi<GameState>['setState'],
+    onComplete: () => void,
+    duration: number = CONFIRMING_ANSWER_DURATION_S,
+  ) {
     confirmationTweenTarget.value = 0
     confirmationTween = gsap.fromTo(
       confirmationTweenTarget,
       { value: 0 },
       {
-        duration: CONFIRMATION_DURATION_S,
+        duration,
         ease: 'none',
         value: 1,
         onUpdate: () => {
@@ -188,7 +197,11 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
   }
 
   function cancelConfirmation(set: StoreApi<GameState>['setState']) {
-    set({ confirmingTopic: null, confirmingAnswer: null })
+    set({
+      confirmingTopic: null,
+      confirmingAnswer: null,
+      confirmingColourIndex: null,
+    })
     confirmationTween = gsap.to(confirmationTweenTarget, {
       duration: 0.3,
       ease: 'power2.out',
@@ -220,13 +233,41 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
         setPlayerInput(input) {
           set({ playerInput: input })
         },
-        setPlayerColourIndex: (playerColourIndex) => {
-          if (playerColourIndex === get().playerColourIndex) return
-          set({ playerColourIndex })
-          playSoundFX(SoundFX.CHANGE_COLOUR)
-        },
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
+
+        setConfirmingColourIndex: (newColourIndex) => {
+          const { colourIndex } = get()
+
+          if (newColourIndex === colourIndex) return // Already selected
+          confirmationTween?.kill()
+
+          if (newColourIndex === null) {
+            cancelConfirmation(set)
+            stopSoundFX(SoundFX.CHANGE_COLOUR)
+            return
+          }
+
+          playSoundFX(SoundFX.CHANGE_COLOUR)
+
+          set({
+            confirmingColourIndex: newColourIndex,
+            confirmingTopic: null,
+            confirmingAnswer: null,
+            confirmationProgress: 0,
+          })
+
+          const onConfirmed = () => {
+            if (get().confirmingColourIndex !== newColourIndex) return
+            set({
+              colourIndex: newColourIndex,
+              confirmingColourIndex: null,
+              confirmationProgress: 0,
+            })
+          }
+
+          startConfirmation(set, onConfirmed, CONFIRMING_COLOUR_DURATION_S)
+        },
 
         setConfirmingTopic: (topicData: TopicUserData | null) => {
           const { stage, topic, confirmingTopic } = get()
@@ -241,7 +282,12 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
 
           if (stage !== Stage.HOME || topic !== null) return
 
-          set({ confirmingTopic: topicData, confirmationProgress: 0 })
+          set({
+            confirmingTopic: topicData,
+            confirmingAnswer: null,
+            confirmingColourIndex: null,
+            confirmationProgress: 0,
+          })
 
           const onConfirmed = () => {
             if (get().confirmingTopic?.topic === topicData.topic) {
@@ -268,7 +314,12 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
           )
           if (hasAlreadyAnswered) return
 
-          set({ confirmingAnswer: answer, confirmationProgress: 0 })
+          set({
+            confirmingAnswer: answer,
+            confirmingTopic: null,
+            confirmingColourIndex: null,
+            confirmationProgress: 0,
+          })
 
           const onConfirmed = () => {
             if (!!get().confirmingAnswer) onAnswerConfirmed()
@@ -339,7 +390,7 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
           confirmationTweenTarget.value = 0
           set((s) => ({
             ...INITIAL_STATE,
-            playerColourIndex: s.playerColourIndex,
+            colourIndex: s.colourIndex,
             previousRuns: s.previousRuns,
             resetPlatformTick: s.resetPlatformTick + 1,
             resetPlayerTick: s.resetPlayerTick + 1,
@@ -386,7 +437,7 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
         name: 'quizroller',
         partialize: (s) => ({
           previousRuns: s.previousRuns,
-          playerColourIndex: s.playerColourIndex,
+          playerColourIndex: s.colourIndex,
         }),
       },
     ),
@@ -563,7 +614,8 @@ type Props = PropsWithChildren
 
 export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
-  const store = useRef<GameStore>(createGameStore(playSoundFX))
+  const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
+  const store = useRef<GameStore>(createGameStore(playSoundFX, stopSoundFX))
   const input = useRef(store.current.getState().playerInput)
 
   useEffect(() => {

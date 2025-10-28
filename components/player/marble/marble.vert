@@ -2,24 +2,24 @@
 // Pass object-space position and normal to fragment for seamless spherical mapping
 // Normal mapping for surface detail
 
-varying vec3 vLocalPos;
-varying vec3 vNormal;
-varying vec2 vUv;
-varying vec3 vViewPosition;
+varying highp vec3 vLocalPos;
+varying mediump vec3 vNormal;
+varying mediump vec2 vUv;
+varying highp vec3 vViewPosition;
 
 const float PI = 3.14159265359;
 
-// Convert 3D position to spherical UV coordinates
-vec2 sphericalUV(vec3 pos) {
-  vec3 n = normalize(pos);
-  float u = 0.5 + atan(n.z, n.x) / (2.0 * PI);
-  float v = 0.5 - asin(n.y) / PI;
+// Convert unit-length position to spherical UV coordinates
+vec2 sphericalUV(vec3 unitPos) {
+  float u = 0.5 + atan(unitPos.z, unitPos.x) / (2.0 * PI);
+  float v = 0.5 - asin(unitPos.y) / PI;
   return vec2(u, v);
 }
 
 void main() {
   vLocalPos = position;
-  vUv = sphericalUV(position);
+  vec3 unitLocalPos = normalize(position);
+  vUv = sphericalUV(unitLocalPos);
 
   // Calculate normal in view space for lighting
   vNormal = normalize(normalMatrix * normal);

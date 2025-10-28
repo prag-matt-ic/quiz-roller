@@ -1,23 +1,26 @@
 // Marble fragment shader without volumetric raymarching
-precision highp float;
+precision mediump float;
+precision mediump int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require(../../palette.glsl)
 #pragma glslify: paletteRange = require(../../paletteRange.glsl)
 
-uniform float uTime;
-uniform int uPlayerColourIndex; // 0,1,2: selected palette band
+uniform highp float uTime;
+uniform mediump int uColourIndex; // 0,1,2: selected palette band
+uniform mediump int uConfirmingColourIndex; // -1 when not confirming
+uniform mediump float uConfirmingProgress; // [0,1]
 uniform sampler2D uNormalMap;
-uniform float uNormalScale;
+uniform mediump float uNormalScale;
+uniform bool uIsFlat;
 
-varying vec3 vLocalPos;
-varying vec3 vNormal;
-varying vec2 vUv;
-varying vec3 vViewPosition;
+varying highp vec3 vLocalPos;
+varying mediump vec3 vNormal;
+varying mediump vec2 vUv;
+varying highp vec3 vViewPosition;
 
 // -------- Surface lighting constants --------
 const vec3 LIGHT_DIR = normalize(vec3(1.0, 1.0, 1.0));
-const float SPECULAR_POWER = 10.0;
 const float AMBIENT_STRENGTH = 0.8;
 const float DIFFUSE_STRENGTH = 0.5;
 const float SPECULAR_STRENGTH = 0.4;
@@ -26,6 +29,7 @@ const float SPECULAR_STRENGTH = 0.4;
 const float NOISE_FREQUENCY = 0.3;
 const float NOISE_TO_RANGE = 0.5;
 const float NOISE_RANGE_OFFSET = 0.5;
+const float REVEAL_SMOOTHNESS = 0.1;
 
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping
@@ -48,21 +52,46 @@ vec3 perturbNormal() {
 
 void main() {
   // Base palette color via 3D noise in object space
-  float noiseValue = noise(normalize(vLocalPos) * NOISE_FREQUENCY + uTime * 0.08);
+  highp vec3 unitLocalPos = normalize(vLocalPos);
+  float noiseValue = noise(unitLocalPos * NOISE_FREQUENCY + uTime * 0.08);
   noiseValue = noiseValue * NOISE_TO_RANGE + NOISE_RANGE_OFFSET;
 
   float minValue, maxValue;
-  paletteRange(uPlayerColourIndex, minValue, maxValue);
+  paletteRange(uColourIndex, minValue, maxValue);
   float paletteT = mix(minValue, maxValue, noiseValue);
   vec3 baseColor = getColourFromPalette(paletteT);
+  vec3 marbleColor = baseColor;
+
+  if (uConfirmingColourIndex >= 0 && uConfirmingProgress > 0.0) {
+    float confirmMin, confirmMax;
+    paletteRange(uConfirmingColourIndex, confirmMin, confirmMax);
+    float confirmT = mix(confirmMin, confirmMax, noiseValue);
+    vec3 confirmingColor = getColourFromPalette(confirmT);
+
+    float clampedProgress = clamp(uConfirmingProgress, 0.0, 1.0);
+    float height01 = unitLocalPos.y * 0.5 + 0.5;
+    vec2 revealEdges = clamp(vec2(height01 - REVEAL_SMOOTHNESS, height01 + REVEAL_SMOOTHNESS), 0.0, 1.0);
+    float reveal = smoothstep(revealEdges.x, revealEdges.y, clampedProgress);
+
+    marbleColor = mix(baseColor, confirmingColor, reveal);
+  }
+
+  if (uIsFlat) {
+    gl_FragColor = vec4(marbleColor, 1.0);
+    return;
+  }
 
   // Surface lighting with normal map
   vec3 normal = perturbNormal();
   vec3 viewDir = normalize(vViewPosition);
   float diffuse = max(dot(normal, LIGHT_DIR), 0.0);
   vec3 halfDir = normalize(LIGHT_DIR + viewDir);
-  float specular = pow(max(dot(normal, halfDir), 0.0), SPECULAR_POWER);
-  vec3 litSurface = baseColor * (AMBIENT_STRENGTH + diffuse * DIFFUSE_STRENGTH) + specular * SPECULAR_STRENGTH;
+  float specularBase = max(dot(normal, halfDir), 0.0);
+  float specular2 = specularBase * specularBase;
+  float specular4 = specular2 * specular2;
+  float specular8 = specular4 * specular4;
+  float specular = specular8 * specular2; // specularBase^10
+  vec3 litSurface = marbleColor * (AMBIENT_STRENGTH + diffuse * DIFFUSE_STRENGTH) + specular * SPECULAR_STRENGTH;
 
   gl_FragColor = vec4(litSurface, 1.0);
 }

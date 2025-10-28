@@ -7,7 +7,7 @@ import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
-import { type MarbleColourUserData } from '@/model/schema'
+import { type ColourTileUserData } from '@/model/schema'
 import { COLOUR_TILE_SIZE } from '@/utils/platform/homeSection'
 
 import colourTileFragment from './colourTile.frag'
@@ -36,7 +36,7 @@ export type ColourTileOption = {
   index: number
   position: Vector3Tuple
   relativeZ: number
-  userData: MarbleColourUserData
+  userData: ColourTileUserData
 }
 
 type ColourTileProps = {
@@ -89,7 +89,7 @@ type ColourPickerProps = {
 }
 
 const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [] }) => {
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
 
   return (
     <group>

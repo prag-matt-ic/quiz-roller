@@ -2,7 +2,7 @@ import { type Vector3Tuple } from 'three'
 
 import type { ColourTileOption } from '@/components/colourPicker/ColourPicker'
 import { COLOUR_RANGES } from '@/components/palette'
-import { type MarbleColourUserData } from '@/model/schema'
+import { type ColourTileUserData } from '@/model/schema'
 import {
   ANSWER_TILE_COLS,
   ANSWER_TILE_ROWS,
@@ -150,8 +150,8 @@ const horizontalCenterOffset = (COLOUR_RANGES.length - 1) / 2
 export const COLOUR_TILE_OPTIONS: ColourTileOption[] = COLOUR_RANGES.map((_, index) => {
   const xOffset = (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP)
   const position: Vector3Tuple = [xOffset, ON_TILE_Y, 0]
-  const userData: MarbleColourUserData = {
-    type: 'marble-colour',
+  const userData: ColourTileUserData = {
+    type: 'colour',
     colourIndex: index,
   }
   return {

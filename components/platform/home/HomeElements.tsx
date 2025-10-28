@@ -249,7 +249,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
     }
   }, [moveElements, positionElements])
 
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
 
   return (
     <>

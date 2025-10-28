@@ -41,8 +41,8 @@ export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
 
-export type MarbleColourUserData = {
-  type: 'marble-colour'
+export type ColourTileUserData = {
+  type: 'colour'
   colourIndex: number
 }
 
@@ -56,7 +56,7 @@ export type RigidBodyUserData =
   | TopicUserData
   | AnswerUserData
   | OutOfBoundsUserData
-  | MarbleColourUserData
+  | ColourTileUserData
   | InfoZoneUserData
 
 export enum Topic {
