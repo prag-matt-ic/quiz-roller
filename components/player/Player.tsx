@@ -14,8 +14,8 @@ import { type Object3D, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
-import usePlayerController from '@/components/player/usePlayerController'
 import { useGameFrame } from '@/hooks/useGameFrame'
+import usePlayerController from '@/hooks/usePlayerController'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
@@ -98,7 +98,7 @@ const Player: FC = () => {
 
     // Get player input and normalize direction
     const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
-    const inputDirectionZ = (input.current.backward ? 1 : 0) - (input.current.forward ? 1 : 0)
+    const inputDirectionZ = (input.current.down ? 1 : 0) - (input.current.up ? 1 : 0)
     const normalizedDirection = normalizeInputDirection(inputDirectionX, inputDirectionZ)
 
     // Calculate desired movement including gravity

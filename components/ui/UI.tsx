@@ -1,20 +1,17 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { SplitText } from 'gsap/SplitText'
 import { type FC, useRef } from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 import AudioToggle from '@/components/ui/AudioToggle'
+import Controls from '@/components/ui/Controls'
 import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
-// import useAudio from '@/hooks/useAudio' // TODO: add sound effects
 
-// Register plugins
-gsap.registerPlugin(useGSAP, SplitText)
-gsap.ticker.fps(60) // Cap GSAP animations at 60fps
+gsap.registerPlugin(useGSAP)
+// gsap.ticker.fps(60) // Cap GSAP animations at 60fps
 
 type Props = {
   isMobile: boolean
@@ -24,28 +21,11 @@ const UI: FC<Props> = () => {
   const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
+
   const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
 
   const switchKey = `${isPlaying}-${isGameOver}`
-
-  // const { playAudio: playBackgroundAudio } = useAudio({
-  //   src: '/sounds/background.aac',
-  //   loop: true,
-  //   volume: 0.45,
-  // })
-
-  // const { playAudio: playTransitionAudio } = useAudio({
-  //   src: '/sounds/transition.aac',
-  //   loop: false,
-  //   volume: 0.66,
-  // })
-
-  // const { playAudio: playCenterAudio, pauseAudio: pauseCenterAudio } = useAudio({
-  //   src: '/sounds/center.aac',
-  //   loop: true,
-  //   volume: 1,
-  // })
 
   return (
     <>
@@ -67,6 +47,7 @@ const UI: FC<Props> = () => {
         </Transition>
       </SwitchTransition>
       <AudioToggle />
+      <Controls />
     </>
   )
 }
