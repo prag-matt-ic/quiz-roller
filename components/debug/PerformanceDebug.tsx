@@ -57,55 +57,49 @@ const PerformanceDebug: FC = () => {
   }
 
   return (
-    <div className="fixed bottom-3 left-3 z-[1000] max-w-64 rounded-md bg-black/80 p-3 font-mono text-xs text-white shadow-lg backdrop-blur">
-      <p className="mb-3 text-sm font-semibold tracking-wide text-white/80 uppercase">
-        Performance Debug
-      </p>
-      <div className="flex flex-col gap-2">
-        <SelectRow
-          id="performance-debug-sim-fps"
-          label="Sim FPS"
-          value={simFps.toString()}
-          onChange={handleSimFpsChange}>
-          {SIM_FPS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </SelectRow>
-        <SelectRow
-          id="performance-debug-scene-quality"
-          label="Scene"
-          value={sceneQuality}
-          onChange={handleQualityChange}>
-          {Object.values(SceneQuality).map((quality) => (
-            <option key={quality} value={quality}>
-              {quality}
-            </option>
-          ))}
-        </SelectRow>
-        <SelectRow
-          id="performance-debug-dpr"
-          label="Max DPR"
-          value={maxDpr === undefined ? 'native' : maxDpr.toString()}
-          onChange={handleDprChange}>
-          {DPR_OPTIONS.map((option) => (
-            <option
-              key={option.label}
-              value={option.value === undefined ? 'native' : option.value.toString()}>
-              {option.label}
-            </option>
-          ))}
-        </SelectRow>
-        <button
-          onClick={resetGame}
-          className={twJoin(
-            'mt-2 w-full rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white',
-            'hover:bg-red-700 active:bg-red-800',
-          )}>
-          Reset Game
-        </button>
-      </div>
+    <div className="fixed right-3 bottom-3 z-1000 max-w-64 space-y-3 rounded-md bg-black p-3 font-mono text-xs text-white shadow-lg backdrop-blur">
+      <SelectRow
+        id="performance-debug-sim-fps"
+        label="Sim FPS"
+        value={simFps.toString()}
+        onChange={handleSimFpsChange}>
+        {SIM_FPS_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-scene-quality"
+        label="Scene Quality"
+        value={sceneQuality}
+        onChange={handleQualityChange}>
+        {Object.values(SceneQuality).map((quality) => (
+          <option key={quality} value={quality}>
+            {quality}
+          </option>
+        ))}
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-dpr"
+        label="Max DPR"
+        value={maxDpr === undefined ? 'native' : maxDpr.toString()}
+        onChange={handleDprChange}>
+        {DPR_OPTIONS.map((option) => (
+          <option
+            key={option.label}
+            value={option.value === undefined ? 'native' : option.value.toString()}>
+            {option.label}
+          </option>
+        ))}
+      </SelectRow>
+      <button
+        onClick={resetGame}
+        className={twJoin(
+          'w-full rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white',
+        )}>
+        Reset Game
+      </button>
     </div>
   )
 }

@@ -33,18 +33,26 @@ export enum Stage {
 
 // - [ ] Update UX/UI questions
 // - [ ] Add AI content
-
-// - [ ] Add “ControlsUI” which will mount keyboard keys with pressed indicators on desktop
 // - [ ] Add Mobile/touch controls
 // - [ ] Design “about” content
 // TODO:
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
+
+export type PlayerInput = {
+  up: boolean
+  down: boolean
+  left: boolean
+  right: boolean
+}
 
 type GameState = {
   stage: Stage
   // Consumers can scale by a constant to get world units per second.
   terrainSpeed: number // Normalized speed in range [0, 1].
   setTerrainSpeed: (speed: number) => void
+
+  playerInput: PlayerInput
+  setPlayerInput: (input: PlayerInput) => void
 
   playerColourIndex: number
   setPlayerColourIndex: (index: number) => void
@@ -108,6 +116,7 @@ const INITIAL_STATE: Pick<
   | 'stage'
   | 'terrainSpeed'
   | 'confirmationProgress'
+  | 'playerInput'
   | 'playerWorldPosition'
   | 'topic'
   | 'confirmingTopic'
@@ -128,6 +137,12 @@ const INITIAL_STATE: Pick<
   confirmationProgress: 0,
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   topic: null,
+  playerInput: {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+  },
   confirmingTopic: null,
   currentDifficulty: 1,
   questions: [],
@@ -202,6 +217,9 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
           set({ cameraLookAtPosition })
         },
         setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
+        setPlayerInput(input) {
+          set({ playerInput: input })
+        },
         setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
@@ -542,10 +560,65 @@ type Props = PropsWithChildren
 export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const store = useRef<GameStore>(createGameStore(playSoundFX))
+  const input = useRef(store.current.getState().playerInput)
 
   useEffect(() => {
+    const setPlayerInput = store.current.getState().setPlayerInput
+
+    const updateInput = (key: keyof PlayerInput, value: boolean) => {
+      if (input.current[key] === value) return
+      const nextInput = { ...input.current, [key]: value }
+      input.current = nextInput
+      setPlayerInput(nextInput)
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+          updateInput('up', true)
+          break
+        case 'ArrowDown':
+        case 'KeyS':
+          updateInput('down', true)
+          break
+        case 'ArrowLeft':
+        case 'KeyA':
+          updateInput('left', true)
+          break
+        case 'ArrowRight':
+        case 'KeyD':
+          updateInput('right', true)
+          break
+      }
+    }
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+          updateInput('up', false)
+          break
+        case 'ArrowDown':
+        case 'KeyS':
+          updateInput('down', false)
+          break
+        case 'ArrowLeft':
+        case 'KeyA':
+          updateInput('left', false)
+          break
+        case 'ArrowRight':
+        case 'KeyD':
+          updateInput('right', false)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
     return () => {
-      // Any cleanup logic if needed when Provider is unmounted
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
     }
   }, [])
 
