@@ -118,13 +118,14 @@ export const InfoZone: FC<Props> = ({
 
   const onInfoEnter = contextSafe(() => {
     gsap.fromTo(
-      infoContainer.current,
+      '.card',
       { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
         scale: 1,
-        duration: 0.4,
+        duration: 0.36,
         delay: 0.1,
+        stagger: -0.07,
         ease: 'expoScale(0.8,1.0,power1.out)',
       },
     )
@@ -244,7 +245,7 @@ export const InfoZone: FC<Props> = ({
               <div
                 ref={infoContainer}
                 className={twMerge(
-                  'relative h-fit w-128 max-w-[80vw] origin-bottom rounded-2xl border border-black bg-linear-70 from-white from-40% to-white/80 p-6 text-black opacity-0 shadow-lg shadow-black/25 sm:p-8',
+                  'relative size-fit max-h-[calc(100svh-40px)] max-w-[calc(100vw-40px)]',
                   infoContainerClassName,
                 )}>
                 {children}

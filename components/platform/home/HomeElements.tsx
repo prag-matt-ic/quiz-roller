@@ -1,13 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { FlagIcon, GemIcon, InfoIcon, type LucideIcon, RocketIcon } from 'lucide-react'
-import React, {
-  createRef,
-  type FC,
-  type ReactNode,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-} from 'react'
+import React, { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
 import { type RefObject } from 'react'
 import { Group, Mesh } from 'three'
 
@@ -33,6 +25,7 @@ import {
   TILE_SIZE,
 } from '@/utils/tiles'
 
+import { HOME_INFO_ZONES } from './HomeInfo'
 import Logo from './Logo'
 
 const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
@@ -45,68 +38,6 @@ const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
     topic: Topic.ARTIFICIAL_INTELLIGENCE,
   },
 ] as const
-
-// TODO: Add images here.
-const INFO_ZONES: { Icon: LucideIcon; children: ReactNode }[] = [
-  {
-    Icon: InfoIcon,
-    children: (
-      <>
-        <h2 className="text-xl font-bold text-black">About</h2>
-        <p className="paragraph">
-          Quizroller is a proof of concept game designed and developed by{' '}
-          <a
-            href="https://github.com/prag-matt-ic"
-            className="underline underline-offset-2"
-            target="_blank"
-            rel="noopener noreferrer">
-            Matthew Frawley
-          </a>{' '}
-          with help from{' '}
-          <a
-            href="https://github.com/Void-vlk"
-            className="underline underline-offset-2"
-            target="_blank"
-            rel="noopener noreferrer">
-            Theo Walton
-          </a>
-          . It showcases the potential of 3D web experiences for educational purposes.
-          <br />
-          <br />
-          If you&apos;re interested in sponsoring further development of this project (or one
-          like it) email:{' '}
-          <a href="mailto:pragmattic.ltd@gmail.com" className="underline underline-offset-2">
-            pragmattic.ltd@gmail.com
-          </a>
-          .
-        </p>
-      </>
-    ),
-  },
-  {
-    Icon: FlagIcon,
-    children: (
-      <>
-        <h2 className="text-xl font-bold text-black">Build the future of the web</h2>
-        <p className="paragraph">
-          As the Innovation Orb, your task is to master user experience, artificial
-          intelligence, psychology and English - critical skills for tomorrow&apos;s digital
-          experiences.
-        </p>
-        <ul className="paragraph list-inside list-decimal">
-          <li>Confirm a topic by rolling over the tile.</li>
-          <li>
-            Navigate the web frontier. Each correct answer unlocks fragments of the future web.
-          </li>
-          <li>
-            Questions will challenge your knowledge and increase in difficulty the further you
-            travel.
-          </li>
-        </ul>
-      </>
-    ),
-  },
-]
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
@@ -134,7 +65,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
   ).current
 
   const infoZoneRefs = useRef(
-    Array.from({ length: INFO_ZONES.length }, () => createRef<RapierRigidBody>()),
+    Array.from({ length: HOME_INFO_ZONES.length }, () => createRef<RapierRigidBody>()),
   ).current
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
@@ -342,14 +273,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
 
       <ColourPicker options={COLOUR_TILE_OPTIONS} optionRefs={colourPickerOptions} />
 
-      {INFO_ZONES.map((infoZoneConfig, index) => (
+      {HOME_INFO_ZONES.map((infoZoneConfig, index) => (
         <InfoZone
           key={`info-zone-${index}`}
           ref={infoZoneRefs[index]}
           position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
           width={INFO_ZONE_WIDTH}
           height={INFO_ZONE_HEIGHT}
-          infoContainerClassName="space-y-3"
+          infoContainerClassName={infoZoneConfig.containerClassName}
           Icon={infoZoneConfig.Icon}>
           {infoZoneConfig.children}
         </InfoZone>
