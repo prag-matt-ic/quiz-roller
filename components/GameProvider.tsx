@@ -173,7 +173,7 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
   }
 
   function cancelConfirmation(set: StoreApi<GameState>['setState']) {
-    set({ confirmingTopic: null })
+    set({ confirmingTopic: null, confirmingAnswer: null })
     confirmationTween = gsap.to(confirmationTweenTarget, {
       duration: 0.3,
       ease: 'power2.out',
@@ -185,7 +185,6 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
         confirmationTweenTarget.value = 0
         confirmationTween?.kill()
         confirmationTween = null
-        set({ confirmationProgress: 0 })
       },
     })
   }

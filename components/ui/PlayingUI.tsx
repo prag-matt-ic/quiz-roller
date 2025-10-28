@@ -1,5 +1,7 @@
 'use client'
-import { FootprintsIcon, GaugeIcon, GemIcon, type LucideIcon, TrophyIcon } from 'lucide-react'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { FootprintsIcon, GaugeIcon, GemIcon, type LucideIcon } from 'lucide-react'
 import type { FC, ReactNode, RefObject } from 'react'
 import { useMemo } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
@@ -22,10 +24,7 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
 
   const correctCount = Math.max(
     0,
-    confirmedAnswers.reduce(
-      (acc, a) => acc + (a.answer.isCorrect ? 1 : 0),
-      -1, // First question is the topic, not counted
-    ),
+    confirmedAnswers.reduce((acc, a) => acc + (a.answer.isCorrect ? 1 : 0), 0),
   )
 
   const difficultyLabel = getDifficultyLabel(difficulty)
@@ -48,6 +47,22 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   const isDistancePB = distanceRows > maxDistance
   const isCorrectPB = correctCount > maxCorrect
 
+  useGSAP(
+    () => {
+      if (transitionStatus === 'entered') {
+        gsap.fromTo(
+          ref.current,
+          { opacity: 0, y: 24 },
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+        )
+      }
+      if (transitionStatus === 'exiting') {
+        gsap.to(ref.current, { opacity: 0, y: 24, duration: 0.2 })
+      }
+    },
+    { scope: ref, dependencies: [transitionStatus] },
+  )
+
   const renderBlock = ({
     icon: Icon,
     content,
@@ -66,7 +81,7 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2">
+      className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2 opacity-0">
       {renderBlock({
         icon: GaugeIcon,
         content: <span className="text-2xl font-extrabold">{difficultyLabel}</span>,
