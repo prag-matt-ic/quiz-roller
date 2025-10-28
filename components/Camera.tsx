@@ -37,9 +37,9 @@ export const CAMERA_CONFIG: Record<
   },
   [Stage.INTRO]: TERRAIN_CONFIG,
   [Stage.QUESTION]: {
-    position: { x: 0, y: 12, z: 5 },
+    position: { x: 0, y: 11, z: 5 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1,
+    zoom: 1.2,
   },
   [Stage.TERRAIN]: TERRAIN_CONFIG,
   [Stage.GAME_OVER]: {
