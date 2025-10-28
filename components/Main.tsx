@@ -7,14 +7,9 @@ import { GameProvider } from './GameProvider'
 import { PerformanceProvider } from './PerformanceProvider'
 import { SoundProvider } from './SoundProvider'
 import UI from './ui/UI'
+import LoadingOverlay from './loading/LoadingOverlay'
 
-const Game = dynamic(() => import('./Game'), {
-  loading: () => (
-    <div className="absolute inset-0 flex animate-pulse items-center justify-center text-white/30">
-      <p className="text-lg tracking-wide">Loading Game...</p>
-    </div>
-  ),
-})
+const Game = dynamic(() => import('./Game'))
 
 type Props = {
   isMobile: boolean
@@ -23,6 +18,8 @@ type Props = {
 const Main: FC<Props> = ({ isMobile }) => {
   return (
     <main className="h-lvh w-full overflow-hidden">
+      {/* Render loader outside providers so it appears immediately */}
+      <LoadingOverlay />
       <SoundProvider>
         <PerformanceProvider isMobile={isMobile}>
           <GameProvider>
