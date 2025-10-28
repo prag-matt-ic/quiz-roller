@@ -220,7 +220,11 @@ const createGameStore = (playSoundFX: PlaySoundFX) => {
         setPlayerInput(input) {
           set({ playerInput: input })
         },
-        setPlayerColourIndex: (playerColourIndex) => set({ playerColourIndex }),
+        setPlayerColourIndex: (playerColourIndex) => {
+          if (playerColourIndex === get().playerColourIndex) return
+          set({ playerColourIndex })
+          playSoundFX(SoundFX.CHANGE_COLOUR)
+        },
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 

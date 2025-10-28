@@ -14,6 +14,8 @@ export enum SoundFX {
   CORRECT_ANSWER = 'CORRECT_ANSWER',
   INCORRECT_ANSWER = 'WRONG_ANSWER',
   GAME_OVER = 'GAME_OVER',
+  OPEN_INFO = 'OPEN_INFO',
+  CHANGE_COLOUR = 'CHANGE_COLOUR',
 }
 
 const SOUND_FILES: Record<SoundFX, string> = {
@@ -21,6 +23,8 @@ const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND]: '/audio/background.aac',
   [SoundFX.CORRECT_ANSWER]: '/audio/correct.aac',
   [SoundFX.INCORRECT_ANSWER]: '/audio/incorrect.aac',
+  [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
+  [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
@@ -97,7 +101,7 @@ const createSoundStore = () => {
       const { playSoundFX, stopAllSounds } = get()
       set({ isMuted })
       if (!isMuted) {
-        // Start background music when unmuting
+        // Play background music when unmuting
         playSoundFX(SoundFX.BACKGROUND, true)
       } else {
         stopAllSounds()
