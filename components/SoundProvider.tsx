@@ -46,31 +46,84 @@ const SoundContext = createContext<SoundStore>(undefined!)
 
 const createSoundStore = () => {
   let audioContext: AudioContext | null = null
-  let master: GainNode | null = null
-  let buffers: Buffers = {}
-  let ready: Promise<void> | null = null
-  const activeSources: Set<AudioBufferSourceNode> = new Set()
-  const sourceGainNodes = new Map<AudioBufferSourceNode, GainNode>()
-  const FADE_OUT_SECONDS = 0.3
+  let masterGain: GainNode | null = null
+  let audioBuffers: Buffers = {}
+  let initialisationPromise: Promise<void> | null = null
+  const activeSources = new Set<AudioBufferSourceNode>()
+  const gainNodesBySource = new Map<AudioBufferSourceNode, GainNode>()
+  const DEFAULT_MASTER_GAIN = 0.5
+  const DEFAULT_SOURCE_GAIN = 1
+  const STOP_FX_FADE_SECONDS = 0.3
+
+  const safelyDisconnect = (node: AudioNode | null | undefined) => {
+    if (!node) return
+    try {
+      node.disconnect()
+    } catch {}
+  }
+
+  const cleanupSource = (source: AudioBufferSourceNode) => {
+    const gainNode = gainNodesBySource.get(source)
+    gainNodesBySource.delete(source)
+    activeSources.delete(source)
+    source.onended = null
+    safelyDisconnect(source)
+    safelyDisconnect(gainNode)
+  }
+
+  const registerSource = (source: AudioBufferSourceNode, gainNode: GainNode) => {
+    activeSources.add(source)
+    gainNodesBySource.set(source, gainNode)
+    source.onended = () => {
+      cleanupSource(source)
+    }
+  }
+
+  const fadeOutSource = (source: AudioBufferSourceNode, duration: number) => {
+    if (!audioContext) return
+    const now = audioContext.currentTime
+    const gainNode = gainNodesBySource.get(source)
+    if (gainNode) {
+      gainNode.gain.cancelScheduledValues(now)
+      const currentValue = gainNode.gain.value
+      gainNode.gain.setValueAtTime(currentValue, now)
+      gainNode.gain.linearRampToValueAtTime(0, now + duration)
+    }
+    try {
+      source.stop(now + duration)
+    } catch (error) {
+      console.error('[SoundProvider] Failed to stop sound source', source, error)
+    }
+  }
+
+  const stopSourceImmediately = (source: AudioBufferSourceNode) => {
+    try {
+      source.stop()
+    } catch (error) {
+      console.error('[SoundProvider] Failed to stop sound source', source, error)
+    } finally {
+      cleanupSource(source)
+    }
+  }
 
   async function ensureContext() {
     if (!audioContext) {
       audioContext = new (window.AudioContext ||
         (window as unknown as { webkitAudioContext?: typeof AudioContext })
           .webkitAudioContext)()
-      master = audioContext.createGain()
-      master.connect(audioContext.destination)
-      master.gain.value = 0.5
+      masterGain = audioContext.createGain()
+      masterGain.connect(audioContext.destination)
+      masterGain.gain.value = DEFAULT_MASTER_GAIN
     }
     if (audioContext.state === 'suspended') {
       await audioContext.resume()
     }
-    return { audioContext, master }
+    return { audioContext, masterGain }
   }
 
   async function loadAllSounds(): Promise<void> {
     const { audioContext } = await ensureContext()
-    const entries: [SoundFX, AudioBuffer][] = []
+    const loadedBuffers: [SoundFX, AudioBuffer][] = []
 
     const loadSound = async (fx: SoundFX, url: string) => {
       try {
@@ -78,7 +131,7 @@ const createSoundStore = () => {
         if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
         const arrayBuffer = await response.arrayBuffer()
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-        entries.push([fx as SoundFX, audioBuffer])
+        loadedBuffers.push([fx as SoundFX, audioBuffer])
       } catch (event) {
         console.error('[SoundProvider] Failed to load', fx, url, event)
       }
@@ -88,7 +141,7 @@ const createSoundStore = () => {
       Object.entries(SOUND_FILES).map(([fx, url]) => loadSound(fx as SoundFX, url)),
     )
 
-    buffers = Object.fromEntries(entries)
+    audioBuffers = Object.fromEntries(loadedBuffers)
   }
 
   return createStore<SoundState>()((set, get) => ({
@@ -96,15 +149,16 @@ const createSoundStore = () => {
     isMuted: true,
 
     initialise: async () => {
-      if (!ready) ready = loadAllSounds().finally(() => set({ isLoading: false }))
-      await ready
+      if (!initialisationPromise) {
+        initialisationPromise = loadAllSounds().finally(() => set({ isLoading: false }))
+      }
+      await initialisationPromise
     },
 
     setIsMuted: (isMuted: boolean) => {
       const { playSoundFX, stopAllSounds } = get()
       set({ isMuted })
       if (!isMuted) {
-        // Play background music when unmuting
         playSoundFX(SoundFX.BACKGROUND, true)
       } else {
         stopAllSounds()
@@ -112,77 +166,47 @@ const createSoundStore = () => {
     },
 
     stopAllSounds: () => {
-      const entries = Array.from(sourceGainNodes.entries())
-      entries.forEach(([src, gainNode]) => {
-        try {
-          src.stop()
-        } catch (error) {
-          console.error('[SoundProvider] Failed to stop sound source', src, error)
+      const sources = Array.from(activeSources)
+      sources.forEach((source) => {
+        const gainNode = gainNodesBySource.get(source)
+        if (gainNode && audioContext) {
+          const now = audioContext.currentTime
+          gainNode.gain.cancelScheduledValues(now)
         }
-        try {
-          src.disconnect()
-        } catch {}
-        try {
-          gainNode.disconnect()
-        } catch {}
-        activeSources.delete(src)
-        sourceGainNodes.delete(src)
+        stopSourceImmediately(source)
       })
-      activeSources.forEach((src) => {
-        if (sourceGainNodes.has(src)) return
-        try {
-          src.stop()
-        } catch (error) {
-          console.error('[SoundProvider] Failed to stop sound source', src, error)
-        }
-        try {
-          src.disconnect()
-        } catch {}
-      })
-      sourceGainNodes.clear()
+      gainNodesBySource.clear()
       activeSources.clear()
     },
 
     playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
       const { isMuted } = get()
 
-      const run = async () => {
-        await ensureContext() // ensure resumed after a gesture (or later)
-        if (!buffers[fx]) {
-          // try to lazy-load if not loaded yet
+      const startPlayback = async () => {
+        await ensureContext()
+        if (!audioBuffers[fx]) {
           await get().initialise()
         }
-        const audioBuffer = buffers[fx]
+        const audioBuffer = audioBuffers[fx]
         if (!audioBuffer) {
           console.error(`[SoundProvider] Missing buffer for ${fx} after init`)
           return
         }
-        const src = audioContext!.createBufferSource()
-        src.buffer = audioBuffer
-        src.loop = loop
+        const bufferSource = audioContext!.createBufferSource()
+        bufferSource.buffer = audioBuffer
+        bufferSource.loop = loop
         const gainNode = audioContext!.createGain()
-        gainNode.gain.value = 1
-        src.connect(gainNode)
-        gainNode.connect(master!)
-        activeSources.add(src)
-        sourceGainNodes.set(src, gainNode)
-        src.onended = () => {
-          activeSources.delete(src)
-          sourceGainNodes.delete(src)
-          try {
-            src.disconnect()
-          } catch {}
-          try {
-            gainNode.disconnect()
-          } catch {}
-        }
-        src.start(0)
+        gainNode.gain.value = DEFAULT_SOURCE_GAIN
+        bufferSource.connect(gainNode)
+        gainNode.connect(masterGain!)
+        registerSource(bufferSource, gainNode)
+        bufferSource.start(0)
       }
 
       if (isMuted) return
 
       try {
-        await run()
+        await startPlayback()
       } catch (err) {
         console.warn(`[SoundProvider] Failed to play ${fx}`, err)
       }
@@ -190,23 +214,10 @@ const createSoundStore = () => {
 
     stopSoundFX: (fx: SoundFX) => {
       if (!audioContext) return
-      const now = audioContext.currentTime
-      activeSources.forEach((src) => {
-        if (!src.buffer) return
-        if (buffers[fx] !== src.buffer) return
-        const gainNode = sourceGainNodes.get(src)
-        try {
-          if (gainNode) {
-            gainNode.gain.cancelScheduledValues(now)
-            const currentValue = gainNode.gain.value
-            gainNode.gain.setValueAtTime(currentValue, now)
-            gainNode.gain.linearRampToValueAtTime(0, now + FADE_OUT_SECONDS)
-          }
-          src.stop(now + FADE_OUT_SECONDS)
-          activeSources.delete(src)
-        } catch (error) {
-          console.error('[SoundProvider] Failed to stop sound source', src, error)
-        }
+      activeSources.forEach((source) => {
+        if (!source.buffer) return
+        if (audioBuffers[fx] !== source.buffer) return
+        fadeOutSource(source, STOP_FX_FADE_SECONDS)
       })
     },
   }))
