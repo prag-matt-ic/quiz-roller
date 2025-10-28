@@ -37,6 +37,7 @@ type SoundState = {
   setIsMuted: (isMuted: boolean) => void
   initialise: () => Promise<void>
   playSoundFX: PlaySoundFX
+  stopSoundFX: (fx: SoundFX) => void
   stopAllSounds: () => void
 }
 
@@ -155,6 +156,20 @@ const createSoundStore = () => {
       } catch (err) {
         console.warn(`[SoundProvider] Failed to play ${fx}`, err)
       }
+    },
+
+    stopSoundFX: (fx: SoundFX) => {
+      activeSources.forEach((src) => {
+        if (!src.buffer) return
+        if (buffers[fx] !== src.buffer) return
+        try {
+          src.stop()
+          src.disconnect()
+          activeSources.delete(src)
+        } catch (error) {
+          console.error('[SoundProvider] Failed to stop sound source', src, error)
+        }
+      })
     },
   }))
 }

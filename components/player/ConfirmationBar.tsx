@@ -12,9 +12,10 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 export const PLAYER_RADIUS = 0.5
 
 const ConfirmationBar: FC = () => {
+  const confirmingColourIndex = useGameStore((s) => s.confirmingColourIndex)
   const confirmingTopic = useGameStore((s) => s.confirmingTopic)
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
 
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
@@ -59,6 +60,8 @@ const ConfirmationBar: FC = () => {
     mode: 'oklch',
   })
 
+  const showBar = !!confirmingAnswer || !!confirmingTopic || confirmingColourIndex !== null
+
   return (
     <Html
       sprite={true}
@@ -69,7 +72,7 @@ const ConfirmationBar: FC = () => {
       position={[PLAYER_RADIUS, PLAYER_RADIUS * 6, PLAYER_RADIUS]}
       className="relative select-none">
       <Transition
-        in={!!confirmingAnswer || !!confirmingTopic}
+        in={showBar}
         timeout={{ enter: 0, exit: 240 }}
         onEnter={onEnter}
         onExit={onExit}

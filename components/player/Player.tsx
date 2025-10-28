@@ -10,7 +10,7 @@ import {
   RigidBody,
 } from '@react-three/rapier'
 import { type FC, useEffect, useRef } from 'react'
-import { type Object3D, Vector3 } from 'three'
+import { Mesh, type Object3D, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
 import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
@@ -36,18 +36,18 @@ const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
 
+  const setConfirmingColourIndex = useGameStore((s) => s.setConfirmingColourIndex)
   const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
-  const setPlayerColourIndex = useGameStore((s) => s.setPlayerColourIndex)
+
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
-  const sphereMeshRef = useRef<Object3D>(null)
-  const playerShaderRef = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
+  const sphereMeshRef = useRef<Mesh>(null)
 
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
@@ -60,9 +60,6 @@ const Player: FC = () => {
   // Reusable position objects (avoid per-frame allocations)
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-
-  // Shader time accumulator
-  const shaderTime = useRef(0)
 
   useEffect(() => {
     if (resetPlayerTick === 0) return
@@ -87,14 +84,9 @@ const Player: FC = () => {
       !bodyRef.current ||
       !controllerRef.current ||
       !ballColliderRef.current ||
-      !sphereMeshRef.current ||
-      !playerShaderRef.current
+      !sphereMeshRef.current
     )
       return
-
-    // Update shader animation time
-    shaderTime.current += deltaTime
-    playerShaderRef.current.uTime = shaderTime.current
 
     // Get player input and normalize direction
     const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
@@ -167,8 +159,9 @@ const Player: FC = () => {
       return
     }
 
-    if (otherUserData.type === 'marble-colour') {
-      setPlayerColourIndex(otherUserData.colourIndex)
+    if (otherUserData.type === 'colour') {
+      if (stage !== Stage.HOME) return
+      setConfirmingColourIndex(otherUserData.colourIndex)
       return
     }
 
@@ -191,6 +184,11 @@ const Player: FC = () => {
       setConfirmingAnswer(null)
       return
     }
+
+    if (otherUserData.type === 'colour') {
+      setConfirmingColourIndex(null)
+      return
+    }
   }
 
   const userData: PlayerUserData = { type: 'player' }
@@ -205,7 +203,7 @@ const Player: FC = () => {
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
-      <Marble ref={sphereMeshRef} playerShaderRef={playerShaderRef} />
+      <Marble ref={sphereMeshRef} />
       <ConfirmationBar />
     </RigidBody>
   )
