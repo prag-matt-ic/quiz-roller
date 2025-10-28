@@ -99,7 +99,6 @@ const Platform: FC = () => {
   const rowsData = useRef<RowData[]>([])
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
-  const hasCompletedIntro = useRef(false)
 
   // Question Elements
   const questionElements = useRef<QuestionElementsHandle | null>(null)
@@ -180,7 +179,6 @@ const Platform: FC = () => {
       xByBodyIndex.current = []
       yByBodyIndex.current = []
       isRowRaised.current = []
-      hasCompletedIntro.current = false
       currentScrollPosition.current = 0
 
       insertHomeRows()
@@ -258,10 +256,6 @@ const Platform: FC = () => {
         insertQuestionRows()
       }
 
-      if (currentRowData.type === 'intro' && currentRowData.isSectionEnd) {
-        hasCompletedIntro.current = true
-      }
-
       const newRowData = rowsData.current[nextRowDataIndex.current]
       activeRowsData.current[rowIndex] = newRowData
       nextRowDataIndex.current++
@@ -281,9 +275,7 @@ const Platform: FC = () => {
         instancedTilesRef.current.answerNumberAttribute.needsUpdate = true
       }
 
-      if (hasCompletedIntro.current) {
-        incrementDistanceRows(1)
-      }
+      incrementDistanceRows(1)
     }
 
     if (wrapsToApply > 0) {
