@@ -340,21 +340,23 @@ const HomeElements: FC<Props> = ({ ref }) => {
               tomorrow&apos;s digital experiences.
               <br />
               {/* MISSION.... */}
-              How far will you roll?
+              <br />
+              <span className="font-extrabold">How far can you roll?</span>
             </p>
           </Card>
 
           <Card className="col-span-1" playerColourIndex={playerColourIndex}>
-            <p className="paragraph-sm">Confirm a topic by rolling over the tile.</p>
+            [Image]
+            <p className="paragraph-sm">Confirm a topic by rolling over the tile. </p>
           </Card>
           <Card className="col-span-1" playerColourIndex={playerColourIndex}>
             <p className="paragraph-sm">
-              Each correct answer unlocks fragments of the future web.
+              [Image] Each correct answer unlocks fragments of the future web.
             </p>
           </Card>
           <Card className="col-span-1" playerColourIndex={playerColourIndex}>
             <p className="paragraph-sm">
-              Questions will challenge your knowledge and increase in difficulty.
+              [Image] Questions will challenge your knowledge and increase in difficulty.
             </p>
           </Card>
         </>

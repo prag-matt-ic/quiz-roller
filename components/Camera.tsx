@@ -15,6 +15,12 @@ const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
 const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
 const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
+const TERRAIN_CONFIG = {
+  position: { x: 0, y: 6, z: 7 },
+  target: { x: 0, y: 0, z: 0 },
+  zoom: 0.8,
+}
+
 // Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
   Stage,
@@ -29,21 +35,13 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 1.0,
   },
-  [Stage.INTRO]: {
-    position: { x: 0, y: 2, z: 8 },
-    target: { x: 0, y: 0, z: 0 },
-    zoom: 1.25,
-  },
+  [Stage.INTRO]: TERRAIN_CONFIG,
   [Stage.QUESTION]: {
     position: { x: 0, y: 12, z: 5 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1,
   },
-  [Stage.TERRAIN]: {
-    position: { x: 0, y: 6, z: 7 },
-    target: { x: 0, y: 0, z: 0 },
-    zoom: 0.8,
-  },
+  [Stage.TERRAIN]: TERRAIN_CONFIG,
   [Stage.GAME_OVER]: {
     position: { x: 16, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
