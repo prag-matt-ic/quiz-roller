@@ -21,10 +21,10 @@ import { Vector3, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 
-import { COLOUR_RANGES, createPaletteGradient } from '../palette'
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
 
@@ -66,8 +66,8 @@ export const InfoZone: FC<Props> = ({
   Icon,
   children,
 }) => {
-  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
+  const playSoundFX = useSoundStore((s) => s.playSoundFX)
 
   const [showInfo, setShowInfo] = useState(false)
   const iconContainer = useRef<HTMLDivElement>(null)
@@ -117,6 +117,7 @@ export const InfoZone: FC<Props> = ({
   })
 
   const onInfoEnter = contextSafe(() => {
+    playSoundFX(SoundFX.OPEN_INFO)
     gsap.fromTo(
       '.card',
       { opacity: 0, scale: 0.8 },
@@ -147,17 +148,6 @@ export const InfoZone: FC<Props> = ({
   const aspect = width / height
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
-
-  // Generate gradient colors based on selected colour band
-  const range = COLOUR_RANGES[playerColourIndex]
-  const rgbGradient = createPaletteGradient(range.min, range.max, {
-    mode: 'rgb',
-    angle: 50,
-  })
-  const oklchGradient = createPaletteGradient(range.min, range.max, {
-    mode: 'oklch',
-    angle: 50,
-  })
 
   return (
     <>
@@ -200,8 +190,6 @@ export const InfoZone: FC<Props> = ({
           className="relative select-none">
           <Transition
             in={!showInfo}
-            mountOnEnter={true}
-            unmountOnExit={true}
             timeout={{ enter: 0, exit: 300 }}
             onEnter={onIconEnter}
             onExit={onIconExit}
@@ -209,12 +197,8 @@ export const InfoZone: FC<Props> = ({
             {() => (
               <div
                 ref={iconContainer}
-                className="flex items-center justify-center overflow-hidden rounded-full border border-black p-2.5"
-                style={{
-                  background: rgbGradient,
-                  backgroundImage: oklchGradient,
-                }}>
-                <Icon strokeWidth={1.5} className="size-13" />
+                className="flex items-center justify-center overflow-hidden rounded-full bg-black p-3">
+                <Icon strokeWidth={1.75} className="size-13" />
               </div>
             )}
           </Transition>
