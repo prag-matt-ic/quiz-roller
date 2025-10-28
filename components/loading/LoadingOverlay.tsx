@@ -10,7 +10,11 @@ type Props = {
   fadeDurationMs?: number // fade-out duration
 }
 
-const LoadingOverlay: FC<Props> = ({ className, minVisibleMs = 900, fadeDurationMs = 400 }) => {
+const LoadingOverlay: FC<Props> = ({
+  className,
+  minVisibleMs = 1000,
+  fadeDurationMs = 400,
+}) => {
   const { active } = useProgress()
 
   const [hasMinTime, setHasMinTime] = useState(minVisibleMs === 0)
@@ -20,8 +24,15 @@ const LoadingOverlay: FC<Props> = ({ className, minVisibleMs = 900, fadeDuration
   // Ensure we never "flash" the overlay for ultra-fast loads
   useEffect(() => {
     if (hasMinTime || minVisibleMs <= 0) return
-    const t = window.setTimeout(() => setHasMinTime(true), minVisibleMs)
-    return () => window.clearTimeout(t)
+    console.warn('[LoadingOverlay] scheduling minVisible timer', { minVisibleMs })
+    const t = window.setTimeout(() => {
+      console.warn('[LoadingOverlay] minVisible timer elapsed')
+      setHasMinTime(true)
+    }, minVisibleMs)
+    return () => {
+      console.warn('[LoadingOverlay] clearing minVisible timer')
+      window.clearTimeout(t)
+    }
   }, [hasMinTime, minVisibleMs])
 
   // Consider ready when loaders are idle and min visible time has elapsed
@@ -30,21 +41,34 @@ const LoadingOverlay: FC<Props> = ({ className, minVisibleMs = 900, fadeDuration
     return !active && hasMinTime
   }, [active, hasMinTime])
 
+  useEffect(() => {
+    console.warn('[LoadingOverlay] isReady updated', { isReady, active, hasMinTime })
+  }, [isReady, active, hasMinTime])
+
   // Trigger fade-out once ready, then unmount after the transition
   const hideTimer = useRef<number | null>(null)
   useEffect(() => {
     if (!isMounted || isFading) return
     if (!isReady) return
-
+    console.warn('[LoadingOverlay] triggering fade-out', { fadeDurationMs })
     setIsFading(true)
     hideTimer.current = window.setTimeout(() => {
+      console.warn('[LoadingOverlay] fade-out complete; unmounting overlay')
       setIsMounted(false)
     }, fadeDurationMs)
 
     return () => {
-      if (hideTimer.current !== null) window.clearTimeout(hideTimer.current)
+      if (hideTimer.current !== null) {
+        console.warn('[LoadingOverlay] clearing hide timer')
+        window.clearTimeout(hideTimer.current)
+      }
     }
   }, [fadeDurationMs, isFading, isMounted, isReady])
+
+  useEffect(() => {
+    console.warn('[LoadingOverlay] mount')
+    return () => console.warn('[LoadingOverlay] unmount')
+  }, [])
 
   if (!isMounted) return null
 

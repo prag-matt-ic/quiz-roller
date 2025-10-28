@@ -1,0 +1,7 @@
+# Block all crawlers for dev
+User-agent: *
+Disallow: /dev
+ 
+# Allow all crawlers
+User-agent: *
+Allow: /
