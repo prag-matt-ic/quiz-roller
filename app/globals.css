@@ -2,6 +2,92 @@
 
 :root {
   --background: #000;
+  /* Palette generated: 10 evenly spaced samples from components/palette.ts */
+  --palette-0: #a7e758;
+  --palette-1: #ecff31;
+  --palette-2: #fedb14;
+  --palette-3: #d58d03;
+  --palette-4: #833801;
+  --palette-5: #32050f;
+  --palette-6: #030b2a;
+  --palette-7: #0f4850;
+  --palette-8: #509e7b;
+  --palette-9: #a7e7a7;
+  /* Gradients sampled from the same palette ranges (8 stops each).
+     Range 0: [0.0, 0.5] (low)
+     Range 1: [0.25,0.75] (mid)
+     Range 2: [0.5,1.0] (high)
+  */
+  --palette-range-0: linear-gradient(
+    90deg,
+    #a7e758 0%,
+    #d8fd3e 14.29%,
+    #f7fa27 28.57%,
+    #ffe015 42.86%,
+    #edb108 57.14%,
+    #c57a01 71.43%,
+    #904300 85.71%,
+    #581806 100%
+  );
+
+  --palette-range-1: linear-gradient(
+    90deg,
+    #f9ca0e 0%,
+    #dc9704 14.29%,
+    #ad5d00 28.57%,
+    #742c03 42.86%,
+    #3e0a0b 57.14%,
+    #15001a 71.43%,
+    #010f2e 85.71%,
+    #063546 100%
+  );
+
+  --palette-range-2: linear-gradient(
+    90deg,
+    #581806 0%,
+    #270212 14.29%,
+    #080523 28.57%,
+    #011f3a 42.86%,
+    #124e52 57.14%,
+    #3a7a6f 71.43%,
+    #6fbb74 85.71%,
+    #a7e7a7 100%
+  );
+
+  /* OKLCH gradients (perceptually uniform blending) */
+  --palette-range-0-oklch: linear-gradient(
+    90deg,
+    oklch(85.576% 0.184 129.981) 0%,
+    oklch(93.569% 0.206 120.507) 14.29%,
+    oklch(95.26% 0.202 110.754) 28.57%,
+    oklch(90.354% 0.185 98.86) 42.86%,
+    oklch(79.57% 0.162 84.073) 57.14%,
+    oklch(64.522% 0.142 67.254) 71.43%,
+    oklch(47.533% 0.124 51.06) 85.71%,
+    oklch(31.308% 0.098 35.981) 100%
+  );
+  --palette-range-1-oklch: linear-gradient(
+    90deg,
+    oklch(85.615% 0.173 91.829) 0%,
+    oklch(72.448% 0.152 75.776) 14.29%,
+    oklch(56.105% 0.133 58.903) 28.57%,
+    oklch(39.152% 0.112 43.734) 42.86%,
+    oklch(24.331% 0.08 24.326) 57.14%,
+    oklch(14.27% 0.067 320.727) 71.43%,
+    oklch(17.928% 0.066 259.95) 85.71%,
+    oklch(30.676% 0.056 228.451) 100%
+  );
+  --palette-range-2-oklch: linear-gradient(
+    90deg,
+    oklch(31.308% 0.098 35.981) 0%,
+    oklch(18.296% 0.068 358.042) 14.29%,
+    oklch(14.643% 0.063 281.924) 28.57%,
+    oklch(23.509% 0.062 247.46) 42.86%,
+    oklch(38.763% 0.059 203.859) 57.14%,
+    oklch(56.28% 0.084 170.747) 71.43%,
+    oklch(73.136% 0.106 155.069) 85.71%,
+    oklch(86.768% 0.108 144.572) 100%
+  );
 }
 
 @theme inline {

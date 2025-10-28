@@ -302,8 +302,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
           <Card className="col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
-              If you&apos;re interested in sponsoring further development of this project, or
-              want to discuss working together on a new project, email:{' '}
+              Interested in sponsoring development or exploring a bespoke learning experience?
+              Let&apos;s chat:{' '}
               <a
                 href="mailto:pragmattic.ltd@gmail.com"
                 className="underline underline-offset-2">
