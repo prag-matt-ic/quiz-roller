@@ -1,4 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
+import { FlagIcon, InfoIcon } from 'lucide-react'
 import React, { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
 import { type RefObject } from 'react'
 import { Group, Mesh } from 'three'
@@ -25,7 +26,7 @@ import {
   TILE_SIZE,
 } from '@/utils/tiles'
 
-import { HOME_INFO_ZONES } from './HomeInfo'
+import { Card, Credit } from './HomeInfo'
 import Logo from './Logo'
 
 const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
@@ -38,6 +39,8 @@ const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
     topic: Topic.ARTIFICIAL_INTELLIGENCE,
   },
 ] as const
+
+const headingClasses = 'text-xl lg:text-2xl font-bold text-black'
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
@@ -65,7 +68,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
   ).current
 
   const infoZoneRefs = useRef(
-    Array.from({ length: HOME_INFO_ZONES.length }, () => createRef<RapierRigidBody>()),
+    Array.from({ length: 2 }, () => createRef<RapierRigidBody>()),
   ).current
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
@@ -246,6 +249,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
     }
   }, [moveElements, positionElements])
 
+  const playerColourIndex = useGameStore((s) => s.playerColourIndex)
+
   return (
     <>
       {topicAnswerRefs.map((topicRef, index) => (
@@ -273,18 +278,87 @@ const HomeElements: FC<Props> = ({ ref }) => {
 
       <ColourPicker options={COLOUR_TILE_OPTIONS} optionRefs={colourPickerOptions} />
 
-      {HOME_INFO_ZONES.map((infoZoneConfig, index) => (
-        <InfoZone
-          key={`info-zone-${index}`}
-          ref={infoZoneRefs[index]}
-          position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-          width={INFO_ZONE_WIDTH}
-          height={INFO_ZONE_HEIGHT}
-          infoContainerClassName={infoZoneConfig.containerClassName}
-          Icon={infoZoneConfig.Icon}>
-          {infoZoneConfig.children}
-        </InfoZone>
-      ))}
+      <InfoZone
+        key="info-zone-1"
+        ref={infoZoneRefs[0]}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={INFO_ZONE_WIDTH}
+        height={INFO_ZONE_HEIGHT}
+        infoContainerClassName="grid w-168 grid-cols-5 gap-4"
+        Icon={InfoIcon}>
+        <>
+          <Card className="col-span-5" playerColourIndex={playerColourIndex}>
+            <h2 className={headingClasses}>About</h2>
+            <p className="paragraph max-w-lg">
+              Quizroller is a proof of concept game developed to showcase the potential of 3D
+              web experiences for educational purposes.
+              <br />
+              <br />
+              We believe that the future of learning should be as fun and engaging as playing a
+              game!
+            </p>
+          </Card>
+
+          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
+            <h2 className={headingClasses}>Partnerships</h2>
+            <p className="paragraph-sm">
+              If you&apos;re interested in sponsoring further development of this project, or
+              want to discuss working together on a new project, email:{' '}
+              <a
+                href="mailto:pragmattic.ltd@gmail.com"
+                className="underline underline-offset-2">
+                pragmattic.ltd@gmail.com
+              </a>
+            </p>
+          </Card>
+
+          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+            <h2 className={headingClasses}>Credits</h2>
+            <Credit
+              role="Lead Developer"
+              name="Matthew Frawley"
+              url="https://github.com/prag-matt-ic"
+            />
+            <Credit role="Support" name="Theo Walton" url="https://github.com/Void-vlk" />
+          </Card>
+        </>
+      </InfoZone>
+
+      <InfoZone
+        key="info-zone-2"
+        ref={infoZoneRefs[1]}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={INFO_ZONE_WIDTH}
+        height={INFO_ZONE_HEIGHT}
+        infoContainerClassName="grid w-168 grid-cols-3 gap-4"
+        Icon={FlagIcon}>
+        <>
+          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
+            <h2 className="text-xl font-bold text-black">Your Mission</h2>
+            <p className="paragraph">
+              As the Innovation Orb, your goal is to master critical skills for building
+              tomorrow&apos;s digital experiences.
+              <br />
+              {/* MISSION.... */}
+              How far will you roll?
+            </p>
+          </Card>
+
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+            <p className="paragraph-sm">Confirm a topic by rolling over the tile.</p>
+          </Card>
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+            <p className="paragraph-sm">
+              Each correct answer unlocks fragments of the future web.
+            </p>
+          </Card>
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+            <p className="paragraph-sm">
+              Questions will challenge your knowledge and increase in difficulty.
+            </p>
+          </Card>
+        </>
+      </InfoZone>
     </>
   )
 }
