@@ -15,7 +15,6 @@ type KeyProps = {
 const Key: FC<KeyProps> = ({ Icon, ariaLabel, isActive }) => {
   return (
     <div
-      role="img"
       aria-label={ariaLabel}
       className={twJoin(
         'flex h-10 w-12 items-center justify-center rounded-lg border border-black/50 bg-black/40 text-white',
