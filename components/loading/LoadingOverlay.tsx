@@ -80,7 +80,7 @@ const LoadingOverlay: FC<Props> = ({
       className={twJoin(
         'fixed inset-0 z-5000 flex items-center justify-center bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
         'transition-opacity duration-400 ease-out',
-        isFading ? 'opacity-0' : 'opacity-100',
+        isFading ? 'pointer-events-none opacity-0' : 'opacity-100',
         className,
       )}>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
