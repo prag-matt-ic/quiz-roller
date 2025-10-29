@@ -272,6 +272,8 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         setConfirmingTopic: (topicData: TopicUserData | null) => {
           const { stage, topic, confirmingTopic } = get()
 
+          if (stage !== Stage.HOME || topic !== null) return
+
           if (topicData?.topic === confirmingTopic?.topic) return // No change
           confirmationTween?.kill()
 
@@ -279,8 +281,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             cancelConfirmation(set)
             return
           }
-
-          if (stage !== Stage.HOME || topic !== null) return
 
           set({
             confirmingTopic: topicData,
@@ -353,7 +353,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             questions: [firstQuestion],
             currentQuestionIndex: 0,
             currentQuestion: firstQuestion,
-            confirmingAnswer: null,
+            confirmingTopic: null,
           })
 
           goToStage(Stage.INTRO)

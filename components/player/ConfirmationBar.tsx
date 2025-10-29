@@ -65,11 +65,8 @@ const ConfirmationBar: FC = () => {
   return (
     <Html
       sprite={true}
-      zIndexRange={[1000, 0]}
-      distanceFactor={5}
-      transform={true}
       pointerEvents="none"
-      position={[PLAYER_RADIUS, PLAYER_RADIUS * 6, PLAYER_RADIUS]}
+      position={[-PLAYER_RADIUS, PLAYER_RADIUS * 4, PLAYER_RADIUS]}
       className="relative select-none">
       <Transition
         in={showBar}
@@ -79,7 +76,7 @@ const ConfirmationBar: FC = () => {
         nodeRef={confirmingContainer}>
         <div
           ref={confirmingContainer}
-          className="relative h-5 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
+          className="relative h-6 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
           <div
             id="progress-bar"
             className="absolute h-full w-full -translate-x-full rounded-full"
