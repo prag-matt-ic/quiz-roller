@@ -31,7 +31,7 @@ const Key: FC<KeyProps> = ({ Icon, ariaLabel, isActive }) => {
 const Controls: FC = () => {
   const playerInput = useGameStore((s) => s.playerInput)
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-4 z-1000 space-y-3">
+    <aside className="pointer-events-none fixed right-4 bottom-4 z-100 space-y-3">
       <div className="grid w-fit grid-cols-3 gap-1">
         <div />
         <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up} />
