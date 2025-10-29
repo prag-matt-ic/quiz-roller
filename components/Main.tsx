@@ -1,9 +1,13 @@
 'use client'
-import dynamic from 'next/dynamic'
+
 import { type FC } from 'react'
 
-import LoadingOverlay from './loading/LoadingOverlay'
-const GameApp = dynamic(() => import('./GameApp'), { ssr: false })
+import PerformanceDebug from './debug/PerformanceDebug'
+import Game from './Game'
+import { GameProvider } from './GameProvider'
+import { PerformanceProvider } from './PerformanceProvider'
+import { SoundProvider } from './SoundProvider'
+import UI from './ui/UI'
 
 type Props = {
   isMobile: boolean
@@ -11,10 +15,15 @@ type Props = {
 
 const Main: FC<Props> = ({ isMobile }) => {
   return (
-    <main className="h-lvh w-full overflow-hidden">
-      <LoadingOverlay />
-      <GameApp isMobile={isMobile} />
-    </main>
+    <SoundProvider>
+      <PerformanceProvider isMobile={isMobile}>
+        <GameProvider>
+          <Game />
+          <UI isMobile={isMobile} />
+          {process.env.NODE_ENV === 'development' && <PerformanceDebug />}
+        </GameProvider>
+      </PerformanceProvider>
+    </SoundProvider>
   )
 }
 

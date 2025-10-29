@@ -22,8 +22,8 @@ const UI: FC<Props> = () => {
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
 
-  const isPlaying = hasSelectedTopic && (stage === Stage.QUESTION || stage === Stage.TERRAIN)
   const isGameOver = stage === Stage.GAME_OVER
+  const isPlaying = hasSelectedTopic && !isGameOver
 
   const switchKey = `${isPlaying}-${isGameOver}`
 

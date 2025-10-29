@@ -6,18 +6,19 @@ import { twJoin } from 'tailwind-merge'
 
 const LoadingOverlay: FC = () => {
   const { active, progress } = useProgress()
-  const [isFading, setIsFading] = useState(false)
+
   const [isMounted, setIsMounted] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
 
   const isReady = !active && progress >= 100
 
   useEffect(() => {
-    if (!isMounted || isFading || !isReady) return
-    setIsFading(true)
-  }, [isFading, isMounted, isReady])
+    if (!isMounted || isExiting || !isReady) return
+    setIsExiting(true)
+  }, [isExiting, isMounted, isReady])
 
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
-    if (!isFading) return
+    if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setIsMounted(false)
   }
@@ -34,7 +35,7 @@ const LoadingOverlay: FC = () => {
       className={twJoin(
         'fixed inset-0 z-5000 flex items-center justify-center bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
         'transition-opacity delay-500 duration-500 ease-out motion-reduce:duration-0',
-        isFading ? 'opacity-0' : 'opacity-100',
+        isExiting ? 'opacity-0' : 'opacity-100',
       )}>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
       <div className="relative size-20" aria-label="Loading">
