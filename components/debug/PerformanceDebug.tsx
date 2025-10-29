@@ -57,7 +57,7 @@ const PerformanceDebug: FC = () => {
   }
 
   return (
-    <div className="fixed right-3 bottom-3 z-1000 max-w-64 space-y-3 rounded-md bg-black p-3 font-mono text-xs text-white shadow-lg backdrop-blur">
+    <div className="fixed bottom-1 left-1 z-1000 max-w-64 space-y-3 rounded-md bg-black p-3 font-mono text-xs text-white shadow-lg backdrop-blur">
       <SelectRow
         id="performance-debug-sim-fps"
         label="Sim FPS"

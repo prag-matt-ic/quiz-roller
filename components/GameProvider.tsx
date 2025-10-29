@@ -34,7 +34,7 @@ export enum Stage {
 // - [ ] Update UX/UI questions
 // - [ ] Add AI content
 // - [ ] Add Mobile/touch controls
-// - [ ] Design “about” content
+// - [ ] Design Story/Mission content
 // TODO:
 // - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 

@@ -32,7 +32,7 @@ const Key: FC<KeyProps> = ({ Icon, ariaLabel, isActive }) => {
 const Controls: FC = () => {
   const playerInput = useGameStore((s) => s.playerInput)
   return (
-    <aside className="pointer-events-none fixed bottom-4 left-4 z-1000 space-y-3">
+    <aside className="pointer-events-none fixed right-4 bottom-4 z-1000 space-y-3">
       <div className="grid w-fit grid-cols-3 gap-1">
         <div />
         <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up} />
@@ -46,23 +46,3 @@ const Controls: FC = () => {
 }
 
 export default Controls
-
-// <div className="flex items-center rounded-full border border-white/10 bg-white/5 p-1">
-//         <button
-//           type="button"
-//           aria-pressed={true}
-//           className={twJoin(
-//             'rounded-full bg-white/20 px-3 py-1 text-xs font-semibold tracking-wide text-white uppercase shadow-lg shadow-white/10',
-//           )}>
-//           Keyboard
-//         </button>
-//         <button
-//           type="button"
-//           disabled={true}
-//           aria-disabled={true}
-//           className={twJoin(
-//             'rounded-full px-3 py-1 text-xs font-semibold tracking-wide text-white/40 uppercase',
-//           )}>
-//           Touch
-//         </button>
-//       </div>
