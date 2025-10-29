@@ -52,12 +52,12 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
       if (transitionStatus === 'entered') {
         gsap.fromTo(
           ref.current,
-          { opacity: 0, y: 24 },
+          { opacity: 0, y: 56 },
           { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
         )
       }
       if (transitionStatus === 'exiting') {
-        gsap.to(ref.current, { opacity: 0, y: 24, duration: 0.2 })
+        gsap.to(ref.current, { opacity: 0, y: 56, duration: 0.2 })
       }
     },
     { scope: ref, dependencies: [transitionStatus] },
@@ -71,8 +71,8 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
     content: ReactNode
   }): ReactNode => {
     return (
-      <div className="relative flex items-center gap-4 rounded-xl bg-black/70 px-4 py-2">
-        <Icon className="size-7 text-white" strokeWidth={1.5} />
+      <div className="relative flex w-fit items-center gap-2 rounded-xl border border-black bg-black/60 px-3 py-1 sm:gap-3 sm:px-4 sm:py-2">
+        <Icon className="size-5 text-white sm:size-7" strokeWidth={1.5} />
         {content}
       </div>
     )
@@ -81,15 +81,19 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center gap-2 opacity-0">
+      className="pointer-events-none fixed inset-x-4 bottom-4 flex flex-col justify-center gap-1 opacity-0 sm:flex-row sm:gap-2">
       {renderBlock({
         icon: GaugeIcon,
-        content: <span className="text-2xl font-extrabold">{difficultyLabel}</span>,
+        content: <span className="text-lg font-extrabold sm:text-2xl">{difficultyLabel}</span>,
       })}
       {renderBlock({
         icon: GemIcon,
         content: (
-          <span className={twJoin('text-4xl font-extrabold', isCorrectPB && 'text-amber-300')}>
+          <span
+            className={twJoin(
+              'text-lg font-extrabold sm:text-2xl',
+              isCorrectPB && 'text-amber-300',
+            )}>
             {correctCount}
           </span>
         ),
@@ -97,7 +101,11 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
       {renderBlock({
         icon: FootprintsIcon,
         content: (
-          <span className={twJoin('text-4xl font-extrabold', isDistancePB && 'text-amber-300')}>
+          <span
+            className={twJoin(
+              'text-lg font-extrabold sm:text-2xl',
+              isDistancePB && 'text-amber-300',
+            )}>
             {distanceRows}
           </span>
         ),

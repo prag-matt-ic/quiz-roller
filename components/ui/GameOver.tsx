@@ -92,7 +92,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="relative flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
+      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>

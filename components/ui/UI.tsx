@@ -11,7 +11,6 @@ import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
 
 gsap.registerPlugin(useGSAP)
-// gsap.ticker.fps(60) // Cap GSAP animations at 60fps
 
 type Props = {
   isMobile: boolean
@@ -46,8 +45,8 @@ const UI: FC<Props> = () => {
           }}
         </Transition>
       </SwitchTransition>
+      {!isGameOver && <Controls />}
       <AudioToggle />
-      <Controls />
     </>
   )
 }
