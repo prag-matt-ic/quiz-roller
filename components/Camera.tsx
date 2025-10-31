@@ -2,7 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import React, { type FC, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 import { MathUtils } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -55,10 +55,8 @@ const Camera: FC = () => {
   const { playerPosition } = usePlayerPosition()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
-  // Update camera position when stage changes
   useEffect(() => {
     if (!cameraControls.current) return
-
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
 
     if (stage !== Stage.GAME_OVER) return // Position handled in useFrame below
@@ -78,7 +76,6 @@ const Camera: FC = () => {
   useFrame(() => {
     if (!cameraControls.current) return
     if (stage === Stage.GAME_OVER) return
-
     const lookAt = !!cameraLookAtPosition ? cameraLookAtPosition : playerPosition.current
 
     cameraControls.current.setLookAt(

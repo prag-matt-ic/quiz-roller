@@ -87,15 +87,15 @@ const Player: FC = () => {
     )
       return
 
-    // Get player input and normalize direction
-    const inputDirectionX = (input.current.right ? 1 : 0) - (input.current.left ? 1 : 0)
-    const inputDirectionZ = (input.current.down ? 1 : 0) - (input.current.up ? 1 : 0)
-    const normalizedDirection = normalizeInputDirection(inputDirectionX, inputDirectionZ)
+    // Resolve player input into a clamped direction vector
+    const inputDirectionX = input.current.right - input.current.left
+    const inputDirectionZ = input.current.down - input.current.up
+    const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ)
 
     // Calculate desired movement including gravity
     const movement = calculateDesiredMovement(
-      normalizedDirection.x,
-      normalizedDirection.z,
+      resolvedDirection.x,
+      resolvedDirection.z,
       deltaTime,
     )
 
@@ -211,24 +211,32 @@ const Player: FC = () => {
 export default Player
 
 // Helper functions for player movement calculation
-function normalizeInputDirection(inputX: number, inputZ: number): { x: number; z: number } {
+function resolveInputDirection(inputX: number, inputZ: number): { x: number; z: number } {
   const magnitude = Math.hypot(inputX, inputZ)
-  if (magnitude === 0) return { x: 0, z: 0 }
+  if (magnitude === 0) {
+    return { x: 0, z: 0 }
+  }
+
+  if (magnitude <= 1) {
+    return { x: inputX, z: inputZ }
+  }
+
+  const inverseMagnitude = 1 / magnitude
   return {
-    x: inputX / magnitude,
-    z: inputZ / magnitude,
+    x: inputX * inverseMagnitude,
+    z: inputZ * inverseMagnitude,
   }
 }
 
 function calculateDesiredMovement(
-  normalizedDirectionX: number,
-  normalizedDirectionZ: number,
+  directionX: number,
+  directionZ: number,
   deltaTime: number,
 ): { x: number; y: number; z: number } {
   return {
-    x: normalizedDirectionX * PLAYER_MOVE_UNITS * deltaTime,
+    x: directionX * PLAYER_MOVE_UNITS * deltaTime,
     y: GRAVITY_ACCELERATION * deltaTime,
-    z: normalizedDirectionZ * PLAYER_MOVE_UNITS * deltaTime,
+    z: directionZ * PLAYER_MOVE_UNITS * deltaTime,
   }
 }
 

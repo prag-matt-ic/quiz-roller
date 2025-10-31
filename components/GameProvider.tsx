@@ -33,16 +33,14 @@ export enum Stage {
 
 // - [ ] Update UX/UI questions
 // - [ ] Add AI content
-// - [ ] Add Mobile/touch controls
 // - [ ] Design Story/Mission content
-// TODO:
-// - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
+// - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
-  up: boolean
-  down: boolean
-  left: boolean
-  right: boolean
+  up: number
+  down: number
+  left: number
+  right: number
 }
 
 type GameState = {
@@ -142,10 +140,10 @@ const INITIAL_STATE: Pick<
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   topic: null,
   playerInput: {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
+    up: 0,
+    down: 0,
+    left: 0,
+    right: 0,
   },
   confirmingTopic: null,
   currentDifficulty: 1,
@@ -616,67 +614,6 @@ export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
   const store = useRef<GameStore>(createGameStore(playSoundFX, stopSoundFX))
-  const input = useRef(store.current.getState().playerInput)
-
-  useEffect(() => {
-    const setPlayerInput = store.current.getState().setPlayerInput
-
-    const updateInput = (key: keyof PlayerInput, value: boolean) => {
-      if (input.current[key] === value) return
-      const nextInput = { ...input.current, [key]: value }
-      input.current = nextInput
-      setPlayerInput(nextInput)
-    }
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-          updateInput('up', true)
-          break
-        case 'ArrowDown':
-        case 'KeyS':
-          updateInput('down', true)
-          break
-        case 'ArrowLeft':
-        case 'KeyA':
-          updateInput('left', true)
-          break
-        case 'ArrowRight':
-        case 'KeyD':
-          updateInput('right', true)
-          break
-      }
-    }
-
-    const onKeyUp = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-          updateInput('up', false)
-          break
-        case 'ArrowDown':
-        case 'KeyS':
-          updateInput('down', false)
-          break
-        case 'ArrowLeft':
-        case 'KeyA':
-          updateInput('left', false)
-          break
-        case 'ArrowRight':
-        case 'KeyD':
-          updateInput('right', false)
-          break
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
-    }
-  }, [])
 
   return <GameContext value={store.current}>{children}</GameContext>
 }

@@ -1,6 +1,5 @@
-import { ArrowUpIcon } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { FC, PointerEvent as ReactPointerEvent, RefObject } from 'react'
+import type { FC, PropsWithChildren, PointerEvent as ReactPointerEvent } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 const BASE_TRANSFORM = 'translate(-50%, 50%)'
@@ -8,7 +7,7 @@ const POINTER_MOVE_OPTIONS: AddEventListenerOptions = { passive: false }
 type NativePointerEvent = globalThis.PointerEvent
 
 const DEFAULT_OPTIONS = {
-  maxRange: 100,
+  maxRange: 60,
   level: 10,
   radius: 50,
   joystickRadius: 30,
@@ -16,7 +15,7 @@ const DEFAULT_OPTIONS = {
   y: '2rem',
 } as const
 
-export interface JoystickOnMove {
+export type OnJoystickMove = {
   x: number
   y: number
   leveledX: number
@@ -25,34 +24,23 @@ export interface JoystickOnMove {
   distance: number
 }
 
-export interface UseJoystickOptions {
+type UseJoystickOptions = {
   maxRange?: number
   level?: number
   radius?: number
   x?: string
   y?: string
-  onMove?: (coordinates: JoystickOnMove) => void
+  onMove?: (coordinates: OnJoystickMove) => void
 }
 
-export interface JoystickProps extends UseJoystickOptions {
+export type JoystickProps = UseJoystickOptions & {
   className?: string
   controllerClassName?: string
   joystickClassName?: string
   joystickRadius?: number
 }
 
-export interface UseJoystickResult {
-  containerRef: RefObject<HTMLDivElement | null>
-  controllerRef: RefObject<HTMLDivElement | null>
-  joystickRef: RefObject<HTMLDivElement | null>
-  rightOffset: string
-  bottomOffset: string
-  isGrabbing: boolean
-  handlePointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
-  coordinatesRef: RefObject<JoystickOnMove>
-}
-
-const createInitialCoordinates = (): JoystickOnMove => ({
+const createInitialCoordinates = (): OnJoystickMove => ({
   x: 0,
   y: 0,
   leveledX: 0,
@@ -73,11 +61,11 @@ export const useJoystick = ({
   x = DEFAULT_OPTIONS.x,
   y = DEFAULT_OPTIONS.y,
   onMove,
-}: UseJoystickOptions = {}): UseJoystickResult => {
+}: UseJoystickOptions = {}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const controllerRef = useRef<HTMLDivElement>(null)
   const joystickRef = useRef<HTMLDivElement>(null)
-  const coordinatesRef = useRef<JoystickOnMove>(createInitialCoordinates())
+  const coordinatesRef = useRef<OnJoystickMove>(createInitialCoordinates())
   const pointerIdRef = useRef<number | null>(null)
   const centerRef = useRef({ x: 0, y: 0 })
   const centerReadyRef = useRef(false)
@@ -87,6 +75,7 @@ export const useJoystick = ({
   const [isGrabbing, setIsGrabbing] = useState(false)
 
   const onMoveRef = useRef(onMove)
+
   useEffect(() => {
     onMoveRef.current = onMove
   }, [onMove])
@@ -264,7 +253,8 @@ export const useJoystick = ({
   }
 }
 
-const Joystick: FC<JoystickProps> = ({
+const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
+  children,
   className,
   controllerClassName,
   joystickClassName,
@@ -293,13 +283,9 @@ const Joystick: FC<JoystickProps> = ({
     onMove,
   })
 
-  const containerClasses = twMerge('fixed select-none', className)
-
-  const controllerClasses = twMerge('relative rounded-full bg-black/40', controllerClassName)
-
   const joystickClasses = twMerge(
     twJoin(
-      'absolute left-1/2 bottom-1/2 rounded-full bg-white border border-black shadow-md',
+      'absolute left-1/2 bottom-1/2 rounded-full bg-white shadow-lg shadow-black/30',
       'transition-transform duration-100 ease-out',
       'touch-none select-none',
       isGrabbing ? 'cursor-grabbing' : 'cursor-grab',
@@ -311,12 +297,12 @@ const Joystick: FC<JoystickProps> = ({
     <div
       ref={containerRef}
       style={{ right: rightOffset, bottom: bottomOffset }}
-      className={containerClasses}
+      className={twMerge('fixed select-none', className)}
       role="presentation"
       aria-hidden="true">
       <div
         ref={controllerRef}
-        className={controllerClasses}
+        className={twMerge('relative rounded-full bg-black/10', controllerClassName)}
         style={{ width: radius * 2, height: radius * 2 }}>
         <div
           ref={joystickRef}
@@ -326,7 +312,7 @@ const Joystick: FC<JoystickProps> = ({
             height: joystickRadius * 2,
           }}
           onPointerDown={handlePointerDown}>
-          <ArrowUpIcon className="size-4 shrink-0 text-black" />
+          {children}
         </div>
       </div>
     </div>

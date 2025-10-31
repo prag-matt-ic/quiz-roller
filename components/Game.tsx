@@ -41,7 +41,7 @@ const Game: FC = () => {
 
   return (
     <Canvas
-      className="!fixed !inset-0 !h-lvh w-full"
+      className="fixed! inset-0! h-lvh! w-full"
       onContextMenu={(e) => e.preventDefault()}
       dpr={dpr}
       camera={{
