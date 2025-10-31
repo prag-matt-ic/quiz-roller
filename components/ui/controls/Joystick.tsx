@@ -1,6 +1,6 @@
 import { ArrowUpIcon } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { FC, PointerEvent as ReactPointerEvent, RefObject } from 'react'
+import type { FC, PropsWithChildren, PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 const BASE_TRANSFORM = 'translate(-50%, 50%)'
@@ -8,8 +8,8 @@ const POINTER_MOVE_OPTIONS: AddEventListenerOptions = { passive: false }
 type NativePointerEvent = globalThis.PointerEvent
 
 const DEFAULT_OPTIONS = {
-  maxRange: 100,
-  level: 10,
+  maxRange: 60,
+  level: 1,
   radius: 50,
   joystickRadius: 30,
   x: '2rem',
@@ -264,7 +264,8 @@ export const useJoystick = ({
   }
 }
 
-const Joystick: FC<JoystickProps> = ({
+const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
+  children,
   className,
   controllerClassName,
   joystickClassName,
@@ -295,11 +296,11 @@ const Joystick: FC<JoystickProps> = ({
 
   const containerClasses = twMerge('fixed select-none', className)
 
-  const controllerClasses = twMerge('relative rounded-full bg-black/40', controllerClassName)
+  const controllerClasses = twMerge('relative rounded-full bg-black/20', controllerClassName)
 
   const joystickClasses = twMerge(
     twJoin(
-      'absolute left-1/2 bottom-1/2 rounded-full bg-white border border-black shadow-md',
+      'absolute left-1/2 bottom-1/2 rounded-full bg-white border border-black shadow-lg shadow-black/40',
       'transition-transform duration-100 ease-out',
       'touch-none select-none',
       isGrabbing ? 'cursor-grabbing' : 'cursor-grab',
@@ -326,7 +327,7 @@ const Joystick: FC<JoystickProps> = ({
             height: joystickRadius * 2,
           }}
           onPointerDown={handlePointerDown}>
-          <ArrowUpIcon className="size-4 shrink-0 text-black" />
+          {children}
         </div>
       </div>
     </div>

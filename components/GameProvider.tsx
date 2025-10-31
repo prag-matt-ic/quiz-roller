@@ -616,67 +616,6 @@ export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
   const store = useRef<GameStore>(createGameStore(playSoundFX, stopSoundFX))
-  const input = useRef(store.current.getState().playerInput)
-
-  useEffect(() => {
-    const setPlayerInput = store.current.getState().setPlayerInput
-
-    const updateInput = (key: keyof PlayerInput, value: boolean) => {
-      if (input.current[key] === value) return
-      const nextInput = { ...input.current, [key]: value }
-      input.current = nextInput
-      setPlayerInput(nextInput)
-    }
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-          updateInput('up', true)
-          break
-        case 'ArrowDown':
-        case 'KeyS':
-          updateInput('down', true)
-          break
-        case 'ArrowLeft':
-        case 'KeyA':
-          updateInput('left', true)
-          break
-        case 'ArrowRight':
-        case 'KeyD':
-          updateInput('right', true)
-          break
-      }
-    }
-
-    const onKeyUp = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case 'ArrowUp':
-        case 'KeyW':
-          updateInput('up', false)
-          break
-        case 'ArrowDown':
-        case 'KeyS':
-          updateInput('down', false)
-          break
-        case 'ArrowLeft':
-        case 'KeyA':
-          updateInput('left', false)
-          break
-        case 'ArrowRight':
-        case 'KeyD':
-          updateInput('right', false)
-          break
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
-    }
-  }, [])
 
   return <GameContext value={store.current}>{children}</GameContext>
 }
