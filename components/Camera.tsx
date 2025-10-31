@@ -60,6 +60,7 @@ const Camera: FC = () => {
     if (!cameraControls.current) return
 
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
+
     if (stage !== Stage.GAME_OVER) return // Position handled in useFrame below
 
     const { position, target } = CAMERA_CONFIG[stage]

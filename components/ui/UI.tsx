@@ -16,7 +16,7 @@ type Props = {
   isMobile: boolean
 }
 
-const UI: FC<Props> = () => {
+const UI: FC<Props> = ({ isMobile }) => {
   const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
   const hasSelectedTopic = useGameStore((s) => !!s.topic)
@@ -45,7 +45,7 @@ const UI: FC<Props> = () => {
           }}
         </Transition>
       </SwitchTransition>
-      {!isGameOver && <Controls />}
+      {!isGameOver && <Controls isMobile={isMobile} />}
       <AudioToggle />
     </>
   )

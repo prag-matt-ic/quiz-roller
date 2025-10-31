@@ -1,7 +1,7 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
-import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
+import { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, Points, Vector3 } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -36,10 +36,15 @@ type Props = {
   width: number
   height: number
   wasConfirmed: boolean
-  wasCorrect: boolean
+  shouldAttract: boolean
 }
 
-const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect = false }) => {
+const Particles: FC<Props> = ({
+  width,
+  height,
+  wasConfirmed = false,
+  shouldAttract = false,
+}) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.answerTile.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
   const goToStage = useGameStore((s) => s.goToStage)
@@ -97,7 +102,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
     refreshSeeds()
 
     materialRef.current.uBurstProgress = 0
-    materialRef.current.uShouldAttract = wasCorrect ? 1 : 0
+    materialRef.current.uShouldAttract = shouldAttract ? 1 : 0
 
     progressTween.current?.kill()
     progress.current.value = 0
@@ -113,7 +118,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
         goToStage(Stage.TERRAIN)
       },
     })
-  }, [goToStage, refreshSeeds, wasConfirmed, wasCorrect])
+  }, [goToStage, refreshSeeds, wasConfirmed, shouldAttract])
 
   useEffect(() => {
     return () => {

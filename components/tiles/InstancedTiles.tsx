@@ -22,7 +22,7 @@ import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 import tileFadeFragment from './tile.frag'
 import tileFadeVertex from './tile.vert'
 
-// Shader material for fade-in/out
+// Shader material for fade-in/out and player proximity effects
 type TileShaderUniforms = {
   uEntryStartZ: number
   uEntryEndZ: number

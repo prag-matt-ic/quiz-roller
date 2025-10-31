@@ -5,6 +5,7 @@ import type { FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import Joystick from './controls/Joystick'
 
 type KeyProps = {
   isActive: boolean
@@ -28,19 +29,33 @@ const Key: FC<KeyProps> = ({ Icon, ariaLabel, isActive }) => {
   )
 }
 
-const Controls: FC = () => {
+const Keys: FC = () => {
   const playerInput = useGameStore((s) => s.playerInput)
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-4 z-100 space-y-3">
-      <div className="grid w-fit grid-cols-3 gap-1">
-        <div />
-        <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up} />
-        <div />
-        <Key ariaLabel="Left" Icon={ArrowLeft} isActive={playerInput.left} />
-        <Key ariaLabel="Backward" Icon={ArrowDown} isActive={playerInput.down} />
-        <Key ariaLabel="Right" Icon={ArrowRight} isActive={playerInput.right} />
-      </div>
-    </aside>
+    <div className="grid w-fit grid-cols-3 gap-1">
+      <div />
+      <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up} />
+      <div />
+      <Key ariaLabel="Left" Icon={ArrowLeft} isActive={playerInput.left} />
+      <Key ariaLabel="Backward" Icon={ArrowDown} isActive={playerInput.down} />
+      <Key ariaLabel="Right" Icon={ArrowRight} isActive={playerInput.right} />
+    </div>
+  )
+}
+
+type Props = {
+  isMobile: boolean
+}
+
+const Controls: FC<Props> = ({ isMobile }) => {
+  const onJoystickMove = () => {}
+  return (
+    <>
+      <aside className="pointer-events-auto fixed right-4 bottom-4 z-1000 space-y-3">
+        <Keys />
+      </aside>
+      {/* <Joystick className="right-6 bottom-6" onMove={onJoystickMove} /> */}
+    </>
   )
 }
 

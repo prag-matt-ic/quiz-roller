@@ -62,7 +62,7 @@ const FloatingTiles: FC = () => {
   const renderer = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
 
-  const isDisabled = count === 0 // TODO: Kill the GPGPU process entirely.
+  const isDisabled = count === 0 // TODO: Kill the GPGPU process entirely if it's disabled.
 
   // Target instance count, rounded up to a perfect square to avoid wasted compute texels
   const textureSize = useMemo(() => Math.ceil(Math.sqrt(count)), [count])

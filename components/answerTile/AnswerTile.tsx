@@ -143,7 +143,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
         width={ANSWER_TILE_WIDTH}
         height={ANSWER_TILE_HEIGHT}
         wasConfirmed={wasConfirmed}
-        wasCorrect={wasCorrect}
+        shouldAttract={wasCorrect}
       />
     </RigidBody>
   )
