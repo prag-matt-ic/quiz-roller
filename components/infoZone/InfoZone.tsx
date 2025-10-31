@@ -198,7 +198,7 @@ export const InfoZone: FC<Props> = ({
               <div
                 ref={iconContainer}
                 className="flex items-center justify-center overflow-hidden rounded-full bg-black p-3">
-                <Icon strokeWidth={1.75} className="size-13" />
+                <Icon strokeWidth={1.75} className="size-10 sm:size-13" />
               </div>
             )}
           </Transition>
