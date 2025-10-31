@@ -284,12 +284,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-168 grid-cols-5 gap-4"
+        infoContainerClassName="grid w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
         <>
-          <Card className="col-span-5" playerColourIndex={playerColourIndex}>
+          <Card className="md:col-span-5" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>About</h2>
-            <p className="paragraph max-w-lg">
+            <p className="paragraph-sm max-w-lg">
               Quizroller is a proof of concept game developed to showcase the potential of 3D
               web experiences for educational purposes.
               <br />
@@ -299,7 +299,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
             </p>
           </Card>
 
-          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
+          <Card className="md:col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
               Interested in sponsoring development or exploring a bespoke learning experience?
@@ -312,7 +312,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
             </p>
           </Card>
 
-          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+          <Card className="md:col-span-2" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Credits</h2>
             <Credit
               role="Lead Developer"

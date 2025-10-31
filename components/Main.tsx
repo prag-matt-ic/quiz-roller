@@ -20,7 +20,7 @@ const Main: FC<Props> = ({ isMobile }) => {
         <GameProvider>
           <Game />
           <UI isMobile={isMobile} />
-          {process.env.NODE_ENV === 'development' && <PerformanceDebug />}
+          {/* {process.env.NODE_ENV === 'development' && <PerformanceDebug />} */}
         </GameProvider>
       </PerformanceProvider>
     </SoundProvider>

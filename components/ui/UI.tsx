@@ -6,7 +6,7 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import AudioToggle from '@/components/ui/AudioToggle'
-import Controls from '@/components/ui/Controls'
+import Controls from '@/components/ui/controls/Controls'
 import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
 

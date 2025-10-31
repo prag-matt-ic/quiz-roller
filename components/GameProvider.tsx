@@ -33,16 +33,14 @@ export enum Stage {
 
 // - [ ] Update UX/UI questions
 // - [ ] Add AI content
-// - [ ] Add Mobile/touch controls
 // - [ ] Design Story/Mission content
-// TODO:
-// - TW: Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
+// - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
-  up: boolean
-  down: boolean
-  left: boolean
-  right: boolean
+  up: number
+  down: number
+  left: number
+  right: number
 }
 
 type GameState = {
@@ -142,10 +140,10 @@ const INITIAL_STATE: Pick<
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   topic: null,
   playerInput: {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
+    up: 0,
+    down: 0,
+    left: 0,
+    right: 0,
   },
   confirmingTopic: null,
   currentDifficulty: 1,

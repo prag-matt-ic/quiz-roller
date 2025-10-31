@@ -1,11 +1,11 @@
 'use client'
 
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Move, type LucideIcon } from 'lucide-react'
-import { useEffect, useRef, type FC } from 'react'
+import { useCallback, useEffect, useRef, type FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { PlayerInput, useGameStore } from '@/components/GameProvider'
-import Joystick, { JoystickOnMove } from './controls/Joystick'
+import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick'
 
 type KeyProps = {
   isActive: boolean
@@ -33,33 +33,43 @@ const Keys: FC = () => {
   const playerInput = useGameStore((s) => s.playerInput)
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 
-  const input = useRef(playerInput)
+  const input = useRef<PlayerInput>(playerInput)
 
   useEffect(() => {
-    const updateInput = (key: keyof PlayerInput, value: boolean) => {
+    const updateInput = (key: keyof PlayerInput, value: number) => {
       if (input.current[key] === value) return
       const nextInput = { ...input.current, [key]: value }
       input.current = nextInput
       setPlayerInput(nextInput)
     }
 
+    const handleKeyDown = (key: keyof PlayerInput) => {
+      if (input.current[key] === 1) return
+      updateInput(key, 1)
+    }
+
+    const handleKeyUp = (key: keyof PlayerInput) => {
+      if (input.current[key] === 0) return
+      updateInput(key, 0)
+    }
+
     const onKeyDown = (e: KeyboardEvent) => {
       switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
-          updateInput('up', true)
+          handleKeyDown('up')
           break
         case 'ArrowDown':
         case 'KeyS':
-          updateInput('down', true)
+          handleKeyDown('down')
           break
         case 'ArrowLeft':
         case 'KeyA':
-          updateInput('left', true)
+          handleKeyDown('left')
           break
         case 'ArrowRight':
         case 'KeyD':
-          updateInput('right', true)
+          handleKeyDown('right')
           break
       }
     }
@@ -68,19 +78,19 @@ const Keys: FC = () => {
       switch (e.code) {
         case 'ArrowUp':
         case 'KeyW':
-          updateInput('up', false)
+          handleKeyUp('up')
           break
         case 'ArrowDown':
         case 'KeyS':
-          updateInput('down', false)
+          handleKeyUp('down')
           break
         case 'ArrowLeft':
         case 'KeyA':
-          updateInput('left', false)
+          handleKeyUp('left')
           break
         case 'ArrowRight':
         case 'KeyD':
-          updateInput('right', false)
+          handleKeyUp('right')
           break
       }
     }
@@ -96,11 +106,11 @@ const Keys: FC = () => {
   return (
     <aside className="pointer-events-none fixed right-4 bottom-4 z-1000 grid w-fit grid-cols-3 gap-1">
       <div />
-      <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up} />
+      <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up > 0} />
       <div />
-      <Key ariaLabel="Left" Icon={ArrowLeft} isActive={playerInput.left} />
-      <Key ariaLabel="Backward" Icon={ArrowDown} isActive={playerInput.down} />
-      <Key ariaLabel="Right" Icon={ArrowRight} isActive={playerInput.right} />
+      <Key ariaLabel="Left" Icon={ArrowLeft} isActive={playerInput.left > 0} />
+      <Key ariaLabel="Backward" Icon={ArrowDown} isActive={playerInput.down > 0} />
+      <Key ariaLabel="Right" Icon={ArrowRight} isActive={playerInput.right > 0} />
     </aside>
   )
 }
@@ -110,30 +120,32 @@ type Props = {
 }
 
 const Controls: FC<Props> = ({ isMobile }) => {
-  const playerInput = useGameStore((s) => s.playerInput)
-  const setPlayerInput = useGameStore((s) => s.setPlayerInput)
-
-  const input = useRef<PlayerInput>(playerInput)
-
-  const onJoystickMove = (e: JoystickOnMove) => {
-    console.log(e)
-    setPlayerInput({
-      up: e.leveledY === 1,
-      down: e.leveledY === -1,
-      left: e.leveledX === -1,
-      right: e.leveledX === 1,
-    })
-  }
-  return (
-    <>
-      {/* <Keys /> */}
-      <Joystick className="right-6 bottom-6" onMove={onJoystickMove}>
-        <div className="flex size-full items-center justify-center text-black">
-          <Move />
-        </div>
-      </Joystick>
-    </>
-  )
+  if (isMobile) return <Stick />
+  return <Keys />
 }
 
+const Stick: FC = () => {
+  const setPlayerInput = useGameStore((s) => s.setPlayerInput)
+  const JOYSTICK_LEVELS = 10
+
+  const onJoystickMove = useCallback(
+    (e: OnJoystickMove) => {
+      setPlayerInput({
+        up: e.leveledY > 0 ? Math.min(e.leveledY / JOYSTICK_LEVELS, 1) : 0,
+        down: e.leveledY < 0 ? Math.min(-e.leveledY / JOYSTICK_LEVELS, 1) : 0,
+        left: e.leveledX < 0 ? Math.min(-e.leveledX / JOYSTICK_LEVELS, 1) : 0,
+        right: e.leveledX > 0 ? Math.min(e.leveledX / JOYSTICK_LEVELS, 1) : 0,
+      })
+    },
+    [setPlayerInput],
+  )
+
+  return (
+    <Joystick level={JOYSTICK_LEVELS} className="right-6 bottom-6" onMove={onJoystickMove}>
+      <div className="flex size-full items-center justify-center text-black">
+        <Move size={24} strokeWidth={1.5} />
+      </div>
+    </Joystick>
+  )
+}
 export default Controls
