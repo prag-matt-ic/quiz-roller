@@ -45,17 +45,17 @@ export function generateQuestionSectionRowData(): RowData[] {
   )
 
   // Text appears first, then answers further down the section
-  const questionTextCenterRow = 5.5
+  const questionTextCenterRow = 7.5
   const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
 
   // Two-tile layout positioned after the text
-  const tilesCenterRow = 10.5
+  const tilesCenterRow = 12.5
   const tilesTriggerRow = Math.ceil(tilesCenterRow)
   const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
 
   // Carve non-tile areas in rows that contain the answer tile rectangles
-  const leftStartCol = 1
+  const leftStartCol = 0
   const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
   const rightStartCol = 9
   const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
@@ -72,7 +72,7 @@ export function generateQuestionSectionRowData(): RowData[] {
     }
   }
 
-  const leftCenterCol = 1 + (ANSWER_TILE_COLS - 1) / 2
+  const leftCenterCol = 0 + (ANSWER_TILE_COLS - 1) / 2
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
 
   const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)

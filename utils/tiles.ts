@@ -2,7 +2,7 @@
 export const TILE_SIZE = 1
 export const TILE_THICKNESS = 0.16
 
-export const ANSWER_TILE_COLS = 6
+export const ANSWER_TILE_COLS = 7
 export const ANSWER_TILE_ROWS = 4
 export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
 export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE

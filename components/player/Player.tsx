@@ -32,16 +32,15 @@ const UP_DIRECTION = new Vector3(0, 1, 0)
 const EPSILON = 1e-6 // Small value to prevent division by zero
 
 const Player: FC = () => {
-  const { terrainSpeed } = useTerrainSpeed()
   const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
-
   const setConfirmingColourIndex = useGameStore((s) => s.setConfirmingColourIndex)
   const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
 
+  const { terrainSpeed } = useTerrainSpeed()
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
