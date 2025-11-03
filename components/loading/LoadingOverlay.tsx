@@ -33,10 +33,11 @@ const LoadingOverlay: FC = () => {
       aria-live="polite"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 flex items-center justify-center bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
+        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-6 bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
         'transition-opacity delay-500 duration-500 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
+      <h1 className="heading-md -mt-6 text-white">Quizroller</h1>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
       <div className="relative size-20" aria-label="Loading">
         <div
