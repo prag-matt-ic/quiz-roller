@@ -73,6 +73,16 @@ const Camera: FC = () => {
     )
   }, [stage, playerPosition])
 
+  useEffect(() => {
+    // Zoom in when there is a specific look at position
+    if (!cameraControls.current) return
+    if (!!cameraLookAtPosition) {
+      cameraControls.current.zoomTo(1.75, true)
+    } else {
+      cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
+    }
+  }, [cameraLookAtPosition])
+
   useFrame(() => {
     if (!cameraControls.current) return
     if (stage === Stage.GAME_OVER) return

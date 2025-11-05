@@ -1,7 +1,13 @@
 import { RapierRigidBody } from '@react-three/rapier'
 import { FlagIcon, InfoIcon } from 'lucide-react'
-import React, { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
-import { type RefObject } from 'react'
+import {
+  createRef,
+  type FC,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  type RefObject,
+} from 'react'
 import { Group, Mesh } from 'three'
 
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
