@@ -284,14 +284,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        infoContainerClassName="grid w-160 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
         <>
           <Card className="md:col-span-5" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>About</h2>
             <p className="paragraph-sm max-w-lg">
-              Quizroller is a proof of concept game developed to showcase the potential of 3D
-              web experiences for educational purposes.
+              Quizroller is a proof of concept developed to showcase the potential of 3D web
+              experiences for educational purposes.
               <br />
               <br />
               We believe that the future of learning should be as fun and engaging as playing a
@@ -330,12 +330,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-168 grid-cols-3 gap-4"
+        infoContainerClassName="grid w-140 grid-cols-4 gap-4"
         Icon={FlagIcon}>
         <>
-          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
+          <Card className="col-span-4" playerColourIndex={playerColourIndex}>
             <h2 className="text-xl font-bold text-black">Your Mission</h2>
-            <p className="paragraph">
+            <p className="paragraph font-semibold">
               As the Innovation Orb, your goal is to master critical skills for building
               tomorrow&apos;s digital experiences.
               <br />
@@ -345,18 +345,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
             </p>
           </Card>
 
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
-            [Image]
-            <p className="paragraph-sm">Confirm a topic by rolling over the tile. </p>
-          </Card>
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
-            <p className="paragraph-sm">
-              [Image] Each correct answer unlocks fragments of the future web.
+          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+            <p className="paragraph-sm font-semibold">
+              Each correct answer unlocks fragments of the future web.
             </p>
           </Card>
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
-            <p className="paragraph-sm">
-              [Image] Questions will challenge your knowledge and increase in difficulty.
+          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+            <p className="paragraph-sm font-semibold">
+              Questions will challenge your knowledge and increase in difficulty.
             </p>
           </Card>
         </>

@@ -25,7 +25,7 @@ export const Card: FC<CardProps> = ({ playerColourIndex = 1, className, children
         }}
       />
       <div
-        className="relative flex h-full flex-col gap-2.5 bg-linear-160 from-white from-30% to-white/80 p-4 text-black sm:p-8"
+        className="relative flex h-full flex-col gap-2.5 bg-linear-160 from-white from-30% to-white/80 p-4 text-black sm:p-7"
         style={{
           boxShadow: 'inset -6px -6px white',
         }}>
