@@ -31,7 +31,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       <SwitchTransition>
         <Transition
           key={switchKey}
-          timeout={{ enter: 0, exit: 600 }}
+          timeout={{ enter: 0, exit: 500 }}
           nodeRef={wrapper}
           appear={true}>
           {(transitionStatus) => {

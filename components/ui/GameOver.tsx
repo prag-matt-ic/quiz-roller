@@ -43,7 +43,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   useGSAP(
     () => {
       if (transitionStatus === 'entered') {
-        const timeline = gsap.timeline({ delay: 0.1 }).to(ref.current, { opacity: 1 }).fromTo(
+        gsap.timeline({ delay: 0.1 }).to(ref.current, { opacity: 1 }).fromTo(
           `.${FADE_IN_CLASS}`,
           {
             opacity: 0,
@@ -57,21 +57,6 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
             stagger: 0.08,
           },
         )
-        if (isNewPB) {
-          timeline.fromTo(
-            `#${BADGE_ID}`,
-            {
-              opacity: 0,
-              scale: 1.12,
-            },
-            {
-              opacity: 1,
-              scale: 1,
-              duration: 0.6,
-              ease: 'back.out(1.7)',
-            },
-          )
-        }
       }
       if (transitionStatus === 'exiting') {
         gsap.to(ref.current, {
@@ -94,29 +79,29 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/80 px-8 opacity-0">
+      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/50 opacity-0 sm:gap-6">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>
       {/* New record banner */}
       {isNewPB && (
-        <h3
-          id={BADGE_ID}
+        <p
           className={twJoin(
-            'heading-md flex items-center justify-center gap-2 rounded-full',
-            'bg-amber-500/20 px-4 py-2 text-center font-semibold text-white capitalize',
-            'ring-1 ring-amber-400/40',
+            'paragraph-lg flex items-center justify-center gap-2 rounded-full',
+            'bg-(--palette-3)/15 px-5 py-3 text-center font-semibold text-white',
+            'ring-1 ring-(--palette-3)',
+            FADE_IN_CLASS,
           )}>
           <AwardIcon /> You&apos;ve set a new record!
-        </h3>
+        </p>
       )}
       {/* Results card */}
       {hasPlayedGame && (
-        <div className={`${FADE_IN_CLASS} space-y-8 opacity-0`}>
+        <>
           {/* Topic - spans all three columns */}
           <Card
             playerColourIndex={playerColourIndex}
-            className="col-span-3 mx-auto mb-4 w-fit text-center">
+            className={twJoin('col-span-3 mx-auto w-fit text-center opacity-0', FADE_IN_CLASS)}>
             <span className="text-sm font-semibold tracking-wide text-black/60 uppercase">
               Topic
             </span>
@@ -133,14 +118,10 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
               distance: prevPB.distance,
             }}
           />
-        </div>
+        </>
       )}
-      <div className="mt-4 flex flex-col gap-4 sm:flex-row">
-        <Button
-          variant="primary"
-          color="dark"
-          className={`${FADE_IN_CLASS} opacity-0`}
-          onClick={onRollAgainClick}>
+      <div className={twJoin('mt-4 flex flex-col gap-4 opacity-0 sm:flex-row', FADE_IN_CLASS)}>
+        <Button variant="primary" color="dark" onClick={onRollAgainClick}>
           Roll Again
           <PlayIcon className="size-6" strokeWidth={1.5} />
         </Button>
@@ -205,7 +186,8 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
   return (
     <Card
       playerColourIndex={playerColourIndex}
-      childrenClassName="grid w-fit grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-4 md:gap-x-8">
+      className={twJoin('opacity-0', FADE_IN_CLASS)}
+      childrenClassName="grid w-fit grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-4 md:gap-x-8 ">
       {/* Column headers */}
       <div></div> {/* Empty cell for label column */}
       <h3 className="heading-sm text-black">This Run</h3>
