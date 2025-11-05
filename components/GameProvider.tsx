@@ -11,13 +11,7 @@ import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import {
-  type AnswerUserData,
-  type Question,
-  type RunStats,
-  Topic,
-  TopicUserData,
-} from '@/model/schema'
+import { type AnswerUserData, type Question, type RunStats, type StartUserData } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
 
 import { PLAYER_RADIUS } from './player/ConfirmationBar'
@@ -68,11 +62,11 @@ type GameState = {
   distanceRows: number
   incrementDistanceRows: (delta: number) => void
 
-  // Topic selection
-  topic: Topic | null
-  confirmingTopic: TopicUserData | null
-  setConfirmingTopic: (data: TopicUserData | null) => void
-  onTopicConfirmed: () => void
+  // Start confirmation
+  hasStarted: boolean
+  confirmingStart: StartUserData | null
+  setConfirmingStart: (data: StartUserData | null) => void
+  onStartConfirmed: () => void
 
   // Questions
   currentDifficulty: number
@@ -85,7 +79,7 @@ type GameState = {
   confirmedAnswers: AnswerUserData[]
 
   currentRunStats: RunStats | null
-  previousRuns: Record<Topic, RunStats[]>
+  previousRuns: RunStats[]
 
   onOutOfBounds: () => void
 
@@ -119,8 +113,8 @@ const INITIAL_STATE: Pick<
   | 'confirmationProgress'
   | 'playerInput'
   | 'playerWorldPosition'
-  | 'topic'
-  | 'confirmingTopic'
+  | 'hasStarted'
+  | 'confirmingStart'
   | 'confirmingColourIndex'
   | 'questions'
   | 'currentDifficulty'
@@ -138,14 +132,14 @@ const INITIAL_STATE: Pick<
   terrainSpeed: 0,
   confirmationProgress: 0,
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
-  topic: null,
+  hasStarted: false,
   playerInput: {
     up: 0,
     down: 0,
     left: 0,
     right: 0,
   },
-  confirmingTopic: null,
+  confirmingStart: null,
   currentDifficulty: 1,
   questions: [],
   currentQuestion: null,
@@ -157,10 +151,7 @@ const INITIAL_STATE: Pick<
   confirmingColourIndex: null,
   currentRunStats: null,
   cameraLookAtPosition: null,
-  previousRuns: {
-    [Topic.UX_UI_DESIGN]: [],
-    [Topic.ARTIFICIAL_INTELLIGENCE]: [],
-  },
+  previousRuns: [],
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -196,7 +187,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
   function cancelConfirmation(set: StoreApi<GameState>['setState']) {
     set({
-      confirmingTopic: null,
+      confirmingStart: null,
       confirmingAnswer: null,
       confirmingColourIndex: null,
     })
@@ -250,7 +241,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
           set({
             confirmingColourIndex: newColourIndex,
-            confirmingTopic: null,
+            confirmingStart: null,
             confirmingAnswer: null,
             confirmationProgress: 0,
           })
@@ -267,29 +258,29 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           startConfirmation(set, onConfirmed, CONFIRMING_COLOUR_DURATION_S)
         },
 
-        setConfirmingTopic: (topicData: TopicUserData | null) => {
-          const { stage, topic, confirmingTopic } = get()
+        setConfirmingStart: (startData: StartUserData | null) => {
+          const { stage, hasStarted, confirmingStart } = get()
 
-          if (stage !== Stage.HOME || topic !== null) return
+          if (stage !== Stage.HOME || hasStarted) return
 
-          if (topicData?.topic === confirmingTopic?.topic) return // No change
+          if (!!startData && !!confirmingStart) return // No change
           confirmationTween?.kill()
 
-          if (topicData === null) {
+          if (startData === null) {
             cancelConfirmation(set)
             return
           }
 
           set({
-            confirmingTopic: topicData,
+            confirmingStart: startData,
             confirmingAnswer: null,
             confirmingColourIndex: null,
             confirmationProgress: 0,
           })
 
           const onConfirmed = () => {
-            if (get().confirmingTopic?.topic === topicData.topic) {
-              get().onTopicConfirmed()
+            if (!!get().confirmingStart) {
+              get().onStartConfirmed()
             }
           }
 
@@ -314,7 +305,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
           set({
             confirmingAnswer: answer,
-            confirmingTopic: null,
+            confirmingStart: null,
             confirmingColourIndex: null,
             confirmationProgress: 0,
           })
@@ -326,32 +317,31 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           startConfirmation(set, onConfirmed)
         },
 
-        onTopicConfirmed: () => {
-          const { confirmingTopic, goToStage } = get()
+        onStartConfirmed: () => {
+          const { confirmingStart, goToStage } = get()
 
-          if (!confirmingTopic) {
-            console.error('No topic selected to confirm')
+          if (!confirmingStart) {
+            console.error('No start tile selected to confirm')
             return
           }
 
           const firstQuestion = getNextQuestion({
-            topic: confirmingTopic.topic,
             currentDifficulty: 1,
             askedIds: new Set(),
           })
 
           if (!firstQuestion) {
-            console.error('No questions available for topic:', confirmingTopic.topic)
-            set({ confirmingTopic: null, confirmationProgress: 0 })
+            console.error('No questions available to start the game')
+            set({ confirmingStart: null, confirmationProgress: 0 })
             return
           }
 
           set({
-            topic: confirmingTopic.topic,
+            hasStarted: true,
             questions: [firstQuestion],
             currentQuestionIndex: 0,
             currentQuestion: firstQuestion,
-            confirmingTopic: null,
+            confirmingStart: null,
           })
 
           goToStage(Stage.INTRO)
@@ -516,13 +506,12 @@ function handleQuestionStage({
   const questions = get().questions
   const askedIds = new Set<string>(questions.map((q) => q.id))
   const newQuestion = getNextQuestion({
-    topic: get().topic!,
     currentDifficulty: get().currentDifficulty,
     askedIds,
   })
 
   if (!newQuestion) {
-    console.error('No more questions available for topic:', get().topic)
+    console.error('No more questions available')
     return
   }
 
@@ -566,7 +555,7 @@ function handleGameOverStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  const { topic, confirmedAnswers, distanceRows } = get()
+  const { confirmedAnswers, distanceRows, hasStarted } = get()
 
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
@@ -578,8 +567,8 @@ function handleGameOverStage({
     },
   })
 
-  if (!topic) {
-    console.warn('[GAME_OVER] No topic set. Skipping PB compute.')
+  if (!hasStarted) {
+    console.warn('[GAME_OVER] Run was never started. Skipping PB compute.')
     set({
       stage: Stage.GAME_OVER,
       currentRunStats: null,
@@ -589,21 +578,17 @@ function handleGameOverStage({
 
   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
   const run: RunStats = {
-    topic,
     correctAnswers: totalCorrect,
     distance: distanceRows,
     date: new Date(),
   }
 
   set((s) => {
-    const existingRuns = s.previousRuns[topic] ?? []
     return {
       stage: Stage.GAME_OVER,
       currentRunStats: run,
-      previousRuns: {
-        ...s.previousRuns,
-        [topic]: [...existingRuns, run],
-      },
+      hasStarted: false,
+      previousRuns: [...s.previousRuns, run],
     }
   })
 }

@@ -35,7 +35,7 @@ const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setConfirmingColourIndex = useGameStore((s) => s.setConfirmingColourIndex)
-  const setConfirmingTopic = useGameStore((s) => s.setConfirmingTopic)
+  const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
@@ -146,9 +146,9 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
-    if (otherUserData.type === 'topic') {
+    if (otherUserData.type === 'start') {
       if (stage !== Stage.HOME) return
-      setConfirmingTopic(otherUserData)
+      setConfirmingStart(otherUserData)
       return
     }
 
@@ -174,8 +174,8 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
-    if (otherUserData.type === 'topic') {
-      setConfirmingTopic(null)
+    if (otherUserData.type === 'start') {
+      setConfirmingStart(null)
       return
     }
 

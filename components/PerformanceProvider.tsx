@@ -68,16 +68,15 @@ const PERFORMANCE_STORAGE_KEY = 'quizroller-performance'
 
 const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>) => {
   const initialQualityMode = initialState.isMobile ? SceneQuality.LOW : SceneQuality.HIGH
-  const initialSimFPS: RapierSimFPS = initialState.isMobile ? 30 : 0
 
-  logPerformanceDebug('creating store', { ...initialState, initialQualityMode, initialSimFPS })
+  logPerformanceDebug('creating store', { ...initialState, initialQualityMode })
 
   return createStore<PerformanceState>()(
     persist(
       (set, get) => ({
         isMobile: initialState.isMobile,
         maxDPR: undefined,
-        simFps: initialSimFPS,
+        simFps: 0,
         sceneQuality: initialQualityMode,
         sceneConfig: SCENE_CONFIGS[initialQualityMode],
         isReady: false,

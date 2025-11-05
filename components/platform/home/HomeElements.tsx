@@ -1,5 +1,11 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { FlagIcon, GemIcon, InfoIcon, TrendingUpIcon } from 'lucide-react'
+import {
+  BadgeQuestionMarkIcon,
+  FlagIcon,
+  GemIcon,
+  InfoIcon,
+  TrendingUpIcon,
+} from 'lucide-react'
 import {
   createRef,
   type FC,
@@ -8,20 +14,17 @@ import {
   useRef,
   type RefObject,
 } from 'react'
-import { Group, Mesh } from 'three'
+import { Group } from 'three'
 
 import { AnswerTile } from '@/components/answerTile/AnswerTile'
 import ColourPicker from '@/components/colourPicker/ColourPicker'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { Text } from '@/components/Text'
-import { Topic, type TopicUserData } from '@/model/schema'
+import { type StartUserData } from '@/model/schema'
 import {
   COLOUR_TILE_OPTIONS,
   INFO_ZONE_HEIGHT,
   INFO_ZONE_WIDTH,
-  TEXT_HEIGHT,
-  TEXT_WIDTH,
 } from '@/utils/platform/homeSection'
 import {
   HIDE_POSITION_Y,
@@ -35,16 +38,9 @@ import {
 import { Card, Credit } from './HomeInfo'
 import Logo from './Logo'
 
-const TOPIC_USER_DATA: [TopicUserData, TopicUserData] = [
-  {
-    type: 'topic',
-    topic: Topic.UX_UI_DESIGN,
-  },
-  {
-    type: 'topic',
-    topic: Topic.ARTIFICIAL_INTELLIGENCE,
-  },
-] as const
+const START_TILE_USER_DATA: StartUserData = {
+  type: 'start',
+}
 
 const headingClasses = 'text-xl lg:text-2xl font-bold text-black'
 
@@ -58,14 +54,10 @@ type Props = {
 }
 
 const HomeElements: FC<Props> = ({ ref }) => {
-  const confirmingTopic = useGameStore((s) => s.confirmingTopic)
-  const isConfirmingDesign = confirmingTopic?.topic === Topic.UX_UI_DESIGN
-  const isConfirmingAI = confirmingTopic?.topic === Topic.ARTIFICIAL_INTELLIGENCE
+  const confirmingStart = useGameStore((s) => s.confirmingStart)
+  const isConfirmingStart = Boolean(confirmingStart)
 
-  const topicText = useRef<Mesh | null>(null)
-  const topicAnswerRefs = useRef(
-    Array.from({ length: TOPIC_USER_DATA.length }, () => createRef<RapierRigidBody>()),
-  ).current
+  const startTile = useRef<RapierRigidBody | null>(null)
 
   const logo = useRef<Group>(null)
 
@@ -88,33 +80,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
         if (row.type !== 'home') return
         const rowZ = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
 
-        const answerPositions = row.answerTilePositions
-        if (!!answerPositions) {
-          for (
-            let index = 0;
-            index < answerPositions.length && index < topicAnswerRefs.length;
-            index++
-          ) {
-            const position = answerPositions[index]
-            if (!position) continue
-
-            const answerRef = topicAnswerRefs[index]
-            if (!answerRef.current) continue
-
-            translation.current.x = position[0]
-            translation.current.y = position[1]
-            translation.current.z = position[2] + rowZ
-            answerRef.current.setTranslation(translation.current, true)
-          }
-        }
-
-        const textPosition = row.questionTextPosition
-        if (!!textPosition && !!topicText.current) {
-          topicText.current.position.set(
-            textPosition[0],
-            textPosition[1],
-            textPosition[2] + rowZ,
-          )
+        const answerPosition = row.answerTilePositions?.[0]
+        if (!!answerPosition && !!startTile.current) {
+          translation.current.x = answerPosition[0]
+          translation.current.y = answerPosition[1]
+          translation.current.z = answerPosition[2] + rowZ
+          startTile.current.setTranslation(translation.current, true)
         }
 
         const logoPosition = row.logoPosition
@@ -159,7 +130,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
         }
       })
     },
-    [colourPickerOptions, infoZoneRefs, topicAnswerRefs],
+    [colourPickerOptions, infoZoneRefs],
   )
 
   const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
@@ -168,10 +139,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
     (zStep: number) => {
       if (skipFutureMoves.current) return
 
-      for (const topicAnswerRef of topicAnswerRefs) {
-        if (!topicAnswerRef.current) continue
-
-        const currentTranslation = topicAnswerRef.current.translation()
+      if (!!startTile.current) {
+        const currentTranslation = startTile.current.translation()
         const nextZ = currentTranslation.z + zStep
         translation.current.x = currentTranslation.x
         translation.current.y = currentTranslation.y
@@ -179,22 +148,11 @@ const HomeElements: FC<Props> = ({ ref }) => {
         if (nextZ > maxZ) {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
-          topicAnswerRef.current.setTranslation(translation.current, false)
+          startTile.current.setTranslation(translation.current, false)
           skipFutureMoves.current = true
-          continue
-        }
-
-        translation.current.z = nextZ
-        topicAnswerRef.current.setTranslation(translation.current, true)
-      }
-
-      if (!!topicText.current) {
-        const nextZ = topicText.current.position.z + zStep
-        if (nextZ > maxZ) {
-          topicText.current.position.z = HIDE_POSITION_Z
-          topicText.current.position.y = HIDE_POSITION_Y
         } else {
-          topicText.current.position.z = nextZ
+          translation.current.z = nextZ
+          startTile.current.setTranslation(translation.current, true)
         }
       }
 
@@ -245,7 +203,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
         infoZoneRef.current.setTranslation(translation.current, true)
       }
     },
-    [colourPickerOptions, infoZoneRefs, maxZ, topicAnswerRefs],
+    [colourPickerOptions, infoZoneRefs, maxZ],
   )
 
   useImperativeHandle(ref, () => {
@@ -259,25 +217,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
 
   return (
     <>
-      {topicAnswerRefs.map((topicRef, index) => (
-        <AnswerTile
-          key={`topic-answer-${index}`}
-          ref={topicRef}
-          position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-          text={index === 0 ? Topic.UX_UI_DESIGN : Topic.ARTIFICIAL_INTELLIGENCE}
-          userData={TOPIC_USER_DATA[index]}
-          isConfirming={index === 0 ? isConfirmingDesign : isConfirmingAI}
-          wasConfirmed={false}
-          wasCorrect={false}
-        />
-      ))}
-
-      <Text
-        ref={topicText}
-        text="Roll over a topic to begin"
+      <AnswerTile
+        ref={startTile}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        width={TEXT_WIDTH}
-        height={TEXT_HEIGHT}
+        text="Roll over to start"
+        userData={START_TILE_USER_DATA}
+        isConfirming={isConfirmingStart}
+        wasConfirmed={false}
+        wasCorrect={false}
       />
 
       <Logo ref={logo} />
@@ -290,7 +237,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-160 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        infoContainerClassName="grid w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
         <>
           <Card className="md:col-span-5" playerColourIndex={playerColourIndex}>
@@ -300,15 +247,16 @@ const HomeElements: FC<Props> = ({ ref }) => {
               experiences for educational purposes.
               <br />
               <br />
-              We believe that the future of learning should be as fun and engaging as playing a
-              game!
+              We believe that learning should be as fun and engaging as playing a game!
             </p>
           </Card>
 
           <Card className="md:col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
-              Interested in sponsoring development or exploring a bespoke learning experience?
+              Interested in launching your own bespoke learning experience?
+              <br />
+              <br />
               Let&apos;s chat:{' '}
               <a
                 href="mailto:pragmattic.ltd@gmail.com"
@@ -336,10 +284,10 @@ const HomeElements: FC<Props> = ({ ref }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-140 grid-cols-4 gap-4"
+        infoContainerClassName="grid w-160 grid-cols-3 gap-4"
         Icon={FlagIcon}>
         <>
-          <Card className="col-span-4" playerColourIndex={playerColourIndex}>
+          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className="text-xl font-bold text-black">Your Mission</h2>
             <p className="paragraph font-semibold">
               As the Innovation Orb, your mission is to master critical skills for building
@@ -350,16 +298,23 @@ const HomeElements: FC<Props> = ({ ref }) => {
             </p>
           </Card>
 
-          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
-            <GemIcon className="mb-1 size-5 sm:size-7" strokeWidth={1.5} />
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+            <BadgeQuestionMarkIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">
-              Each correct answer unlocks fragments of the future web.
+              Test your knowledge on UX/UI and Artificial Intelligence
             </p>
           </Card>
-          <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+            <GemIcon className="mb-1 size-5 sm:size-7" strokeWidth={1.5} />
+            <p className="paragraph-sm font-semibold">
+              Each correct answer unlocks fragments of the future web!
+            </p>
+          </Card>
+          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
             <TrendingUpIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">
-              Questions will challenge your knowledge and increase in difficulty.
+              Questions increase in difficulty the further you roll
             </p>
           </Card>
         </>

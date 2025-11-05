@@ -7,8 +7,8 @@ export const AnswerSchema = z.object({
 
 export const QuestionSchema = z.object({
   id: z.string(),
-  difficulty: z.number().min(0).max(5),
-  text: z.string().min(1),
+  difficulty: z.number().min(1).max(5),
+  text: z.string().min(10),
   subtopic: z.string().min(1).optional(),
   answers: z.array(AnswerSchema).length(2),
   sourceUrl: z.url().optional(),
@@ -18,8 +18,7 @@ export const QuestionSchema = z.object({
 export type Answer = z.infer<typeof AnswerSchema>
 export type Question = z.infer<typeof QuestionSchema>
 
-export type TopicQuestionBank = Record<number, Question[]>
-export type ContentLibrary = Record<Topic, TopicQuestionBank>
+export type QuestionBank = Question[]
 
 export type PlayerUserData = {
   type: 'player'
@@ -32,9 +31,8 @@ export type AnswerUserData = {
   answerNumber: number
 }
 
-export type TopicUserData = {
-  type: 'topic'
-  topic: Topic
+export type StartUserData = {
+  type: 'start'
 }
 
 export type OutOfBoundsUserData = {
@@ -48,37 +46,17 @@ export type ColourTileUserData = {
 
 export type InfoZoneUserData = {
   type: 'info'
-  // Other values
 }
 
 export type RigidBodyUserData =
   | PlayerUserData
-  | TopicUserData
+  | StartUserData
   | AnswerUserData
   | OutOfBoundsUserData
   | ColourTileUserData
   | InfoZoneUserData
 
-export enum Topic {
-  UX_UI_DESIGN = 'UX/UI Design',
-  ARTIFICIAL_INTELLIGENCE = 'Artificial Intelligence',
-  // PSYCHOLOGY = 'Psychology',
-  // ENGLISH = 'English',
-}
-
-export const topicQuestion: Question = {
-  id: 'topic',
-  subtopic: '-',
-  difficulty: 0,
-  text: 'Confirm a topic by rolling over the tile',
-  answers: Object.values(Topic).map((topic) => ({
-    text: topic,
-    isCorrect: true,
-  })),
-}
-
 export type RunStats = {
-  topic: Topic
   correctAnswers: number
   distance: number
   date: Date

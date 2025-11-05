@@ -7,7 +7,7 @@ import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import { type RunStats, type Topic } from '@/model/schema'
+import { type RunStats } from '@/model/schema'
 
 import Button from './Button'
 import { GradientText } from './GradientText'
@@ -22,20 +22,16 @@ type Props = {
 }
 
 const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
-  const topic = useGameStore((s) => s.topic)
   const currentRun = useGameStore((s) => s.currentRunStats)
   const previousRuns = useGameStore((s) => s.previousRuns)
   const resetGame = useGameStore((s) => s.resetGame)
   const playerColourIndex = useGameStore((s) => s.colourIndex)
 
-  const hasPlayedGame = topic !== null
-
-  const runsForTopic: RunStats[] =
-    !!topic && previousRuns ? (previousRuns[topic as Topic] ?? []) : []
+  const hasPlayedGame = currentRun !== null || previousRuns.length > 0
 
   const historyExcludingCurrent = currentRun
-    ? runsForTopic.filter((r) => r.date !== currentRun.date)
-    : runsForTopic
+    ? previousRuns.filter((r) => r.date !== currentRun.date)
+    : previousRuns
 
   const prevPB = calculatePersonalBest(historyExcludingCurrent)
   const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
@@ -97,28 +93,16 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
       )}
       {/* Results card */}
       {hasPlayedGame && (
-        <>
-          {/* Topic - spans all three columns */}
-          <Card
-            playerColourIndex={playerColourIndex}
-            className={twJoin('col-span-3 mx-auto w-fit text-center opacity-0', FADE_IN_CLASS)}>
-            <span className="text-sm font-semibold tracking-wide text-black/60 uppercase">
-              Topic
-            </span>
-            <p className="mt-1 text-xl font-medium md:text-2xl">{topic}</p>
-          </Card>
-
-          <ComparisonStats
-            currentRun={{
-              correctAnswers: currentRun?.correctAnswers ?? 0,
-              distance: currentRun?.distance ?? 0,
-            }}
-            personalBest={{
-              correctAnswers: prevPB.correctAnswers,
-              distance: prevPB.distance,
-            }}
-          />
-        </>
+        <ComparisonStats
+          currentRun={{
+            correctAnswers: currentRun?.correctAnswers ?? 0,
+            distance: currentRun?.distance ?? 0,
+          }}
+          personalBest={{
+            correctAnswers: prevPB.correctAnswers,
+            distance: prevPB.distance,
+          }}
+        />
       )}
       <div className={twJoin('mt-4 flex flex-col gap-4 opacity-0 sm:flex-row', FADE_IN_CLASS)}>
         <Button variant="primary" color="dark" onClick={onRollAgainClick}>

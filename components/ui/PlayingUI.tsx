@@ -17,7 +17,6 @@ type Props = {
 const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
   const distanceRows = useGameStore((s) => s.distanceRows)
-  const topic = useGameStore((s) => s.topic)
   const previousRuns = useGameStore((s) => s.previousRuns)
 
   const correctCount = Math.max(
@@ -29,16 +28,13 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
     maxDistance: number
     maxCorrect: number
   }>(() => {
-    if (!topic) return { maxDistance: 0, maxCorrect: 0 }
-
-    const runs = previousRuns[topic] ?? []
-    if (!runs.length) return { maxDistance: 0, maxCorrect: 0 }
+    if (!previousRuns.length) return { maxDistance: 0, maxCorrect: 0 }
 
     return {
-      maxDistance: Math.max(...runs.map((r) => r.distance)),
-      maxCorrect: Math.max(...runs.map((r) => r.correctAnswers)),
+      maxDistance: Math.max(...previousRuns.map((r) => r.distance)),
+      maxCorrect: Math.max(...previousRuns.map((r) => r.correctAnswers)),
     }
-  }, [topic, previousRuns])
+  }, [previousRuns])
 
   const isDistancePB = distanceRows > maxDistance
   const isCorrectPB = correctCount > maxCorrect

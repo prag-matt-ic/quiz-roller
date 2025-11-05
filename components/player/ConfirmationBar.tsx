@@ -13,7 +13,7 @@ export const PLAYER_RADIUS = 0.5
 
 const ConfirmationBar: FC = () => {
   const confirmingColourIndex = useGameStore((s) => s.confirmingColourIndex)
-  const confirmingTopic = useGameStore((s) => s.confirmingTopic)
+  const confirmingStart = useGameStore((s) => s.confirmingStart)
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
   const playerColourIndex = useGameStore((s) => s.colourIndex)
 
@@ -60,7 +60,7 @@ const ConfirmationBar: FC = () => {
     mode: 'oklch',
   })
 
-  const showBar = !!confirmingAnswer || !!confirmingTopic || confirmingColourIndex !== null
+  const showBar = !!confirmingAnswer || !!confirmingStart || confirmingColourIndex !== null
 
   return (
     <Html

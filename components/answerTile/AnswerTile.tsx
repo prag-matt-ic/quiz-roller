@@ -12,7 +12,7 @@ import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import { TRANSPARENT_TEXTURE, useTextCanvas } from '@/hooks/useTextCanvas'
-import { type AnswerUserData, type TopicUserData } from '@/model/schema'
+import { type AnswerUserData, type StartUserData } from '@/model/schema'
 import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/tiles'
 
 import answerTileFragment from './answerTile.frag'
@@ -54,7 +54,7 @@ type BaseProps = {
 
 export type AnswerTileProps = BaseProps & {
   text: string
-  userData: AnswerUserData | TopicUserData | undefined
+  userData: AnswerUserData | StartUserData | undefined
   isConfirming: boolean
   wasConfirmed: boolean
   wasCorrect: boolean
@@ -62,7 +62,7 @@ export type AnswerTileProps = BaseProps & {
 
 const labelColour = getPaletteHex(0.5)
 
-// Generic answer tile component which can be used for the Topic question
+// Generic tile component which can be used for the start confirmation or answers
 export const AnswerTile: FC<AnswerTileProps> = ({
   ref,
   position,

@@ -19,10 +19,10 @@ type Props = {
 const UI: FC<Props> = ({ isMobile }) => {
   const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
-  const hasSelectedTopic = useGameStore((s) => !!s.topic)
+  const hasStarted = useGameStore((s) => s.hasStarted)
 
   const isGameOver = stage === Stage.GAME_OVER
-  const isPlaying = hasSelectedTopic && !isGameOver
+  const isPlaying = hasStarted && !isGameOver
 
   const switchKey = `${isPlaying}-${isGameOver}`
 
