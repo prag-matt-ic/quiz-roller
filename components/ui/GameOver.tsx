@@ -11,6 +11,7 @@ import { type RunStats, type Topic } from '@/model/schema'
 
 import Button from './Button'
 import { GradientText } from './GradientText'
+import Card from './Card'
 
 const FADE_IN_CLASS = 'game-over-fade-in'
 const BADGE_ID = 'record-badge'
@@ -25,6 +26,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const currentRun = useGameStore((s) => s.currentRunStats)
   const previousRuns = useGameStore((s) => s.previousRuns)
   const resetGame = useGameStore((s) => s.resetGame)
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
 
   const hasPlayedGame = topic !== null
 
@@ -112,12 +114,15 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
       {hasPlayedGame && (
         <div className={`${FADE_IN_CLASS} space-y-8 opacity-0`}>
           {/* Topic - spans all three columns */}
-          <div className="col-span-3 mx-auto mb-4 w-fit rounded-2xl bg-black/40 p-6 text-center">
-            <span className="text-sm font-semibold tracking-widest text-white/60 uppercase">
+          <Card
+            playerColourIndex={playerColourIndex}
+            className="col-span-3 mx-auto mb-4 w-fit text-center">
+            <span className="text-sm font-semibold tracking-wide text-black/60 uppercase">
               Topic
             </span>
             <p className="mt-1 text-xl font-medium md:text-2xl">{topic}</p>
-          </div>
+          </Card>
+
           <ComparisonStats
             currentRun={{
               correctAnswers: currentRun?.correctAnswers ?? 0,
@@ -193,51 +198,54 @@ type ComparisonStatsProps = {
 }
 
 const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest }) => {
+  const playerColourIndex = useGameStore((s) => s.colourIndex)
   const isCorrectAnswersNewPB = currentRun.correctAnswers > personalBest.correctAnswers
   const isDistanceNewPB = currentRun.distance > personalBest.distance
 
   return (
-    <section className="grid w-fit grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-4 rounded-2xl bg-black/40 p-6 md:gap-x-8">
+    <Card
+      playerColourIndex={playerColourIndex}
+      childrenClassName="grid w-fit grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-4 md:gap-x-8">
       {/* Column headers */}
       <div></div> {/* Empty cell for label column */}
-      <h3 className="heading-sm text-white">This Run</h3>
-      <h3 className="heading-sm text-white/50">Personal Best</h3>
+      <h3 className="heading-sm text-black">This Run</h3>
+      <h3 className="heading-sm text-black">Personal Best</h3>
       {/* Correct answers row */}
-      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
+      <div className="flex items-center text-sm font-semibold tracking-wide text-black/80 uppercase">
         Correct Answers
       </div>
       <p
         className={twJoin(
           'text-3xl font-bold md:text-4xl',
-          isCorrectAnswersNewPB && 'text-amber-400',
+          isCorrectAnswersNewPB && 'text-amber-600',
         )}>
         {currentRun.correctAnswers}
       </p>
       <p
         className={twJoin(
           'text-3xl font-bold md:text-4xl',
-          !isCorrectAnswersNewPB && 'text-amber-400',
+          !isCorrectAnswersNewPB && 'text-amber-600',
         )}>
         {personalBest.correctAnswers}
       </p>
       {/* Distance row */}
-      <div className="flex items-center text-sm font-semibold tracking-widest text-white/60 uppercase">
+      <div className="flex items-center text-sm font-semibold tracking-wide text-black/80 uppercase">
         Distance Travelled
       </div>
       <p
         className={twJoin(
           'text-3xl font-bold md:text-4xl',
-          isDistanceNewPB && 'text-amber-400',
+          isDistanceNewPB && 'text-amber-600',
         )}>
         {currentRun.distance}
       </p>
       <p
         className={twJoin(
           'text-3xl font-bold md:text-4xl',
-          !isDistanceNewPB && 'text-amber-400',
+          !isDistanceNewPB && 'text-amber-600',
         )}>
         {personalBest.distance}
       </p>
-    </section>
+    </Card>
   )
 }
