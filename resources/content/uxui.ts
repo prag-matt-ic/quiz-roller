@@ -78,11 +78,9 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
       citation:
         'The same article notes three types of user interfaces: graphical user interfaces (where users interact with visual representations), interfaces controlled through voice (used by smart assistants), and interactive interfaces utilizing gestures (e.g., VR games):contentReference[oaicite:3]{index=3}.',
     },
-  ],
-  2: [
     {
       id: 'ux_ui_q2',
-      difficulty: 2,
+      difficulty: 1,
       text: 'Which of Jakob Nielsen’s usability heuristics urges designers to use words, phrases and concepts familiar to users and follow real‑world conventions?',
       subtopic: 'Usability heuristics',
       answers: [
@@ -101,7 +99,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p2',
-      difficulty: 2,
+      difficulty: 1,
       text: 'Why is consistency across UI elements and interactions important?',
       subtopic: 'Consistency',
       answers: [
@@ -120,7 +118,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_w3',
-      difficulty: 2,
+      difficulty: 1,
       text: 'In the design thinking framework EDIPT mentioned on Wikipedia, what do the letters E‑D‑I‑P‑T stand for?',
       subtopic: 'Design thinking & working practices',
       answers: [
@@ -138,10 +136,10 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
         'The Wikipedia article notes that David M. Kelley’s design thinking framework EDIPT stands for empathize, define, ideate, prototype and test; it is a non‑linear process where designers may iterate between stages:contentReference[oaicite:6]{index=6}.',
     },
   ],
-  3: [
+  2: [
     {
       id: 'ux_ui_q3',
-      difficulty: 3,
+      difficulty: 2,
       text: 'According to Hick’s law, what happens to the decision time when the number of choices presented to a user increases?',
       subtopic: 'UX laws',
       answers: [
@@ -160,7 +158,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p3',
-      difficulty: 3,
+      difficulty: 2,
       text: 'How can visual hierarchy guide a user’s attention in a user interface?',
       subtopic: 'Visual hierarchy',
       answers: [
@@ -179,7 +177,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_w4',
-      difficulty: 3,
+      difficulty: 2,
       text: 'What is the purpose of usability testing in user interface design?',
       subtopic: 'Usability testing',
       answers: [
@@ -198,7 +196,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_w5',
-      difficulty: 3,
+      difficulty: 2,
       text: 'Which of the following is a documented benefit of improving usability in a product?',
       subtopic: 'Benefits',
       answers: [
@@ -215,11 +213,9 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
       citation:
         'The benefits section of the usability article lists higher revenues through increased sales, increased user efficiency and satisfaction, reduced development costs and reduced support costs:contentReference[oaicite:10]{index=10}.',
     },
-  ],
-  4: [
     {
       id: 'ux_ui_q4',
-      difficulty: 4,
+      difficulty: 2,
       text: 'Fitts’s law is often used in interaction design to predict how quickly a user can click or tap on a target. Which two factors does Fitts’s law say primarily determine the time needed to reach a target?',
       subtopic: 'UX laws',
       answers: [
@@ -238,7 +234,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p4',
-      difficulty: 4,
+      difficulty: 2,
       text: 'What does the balance principle involve in UI design?',
       subtopic: 'Balance & composition',
       answers: [
@@ -257,10 +253,10 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
         'The Medium article notes that balance ensures UI elements are evenly distributed to create stability and harmony; symmetrical balance arranges elements evenly around a central axis, whereas asymmetrical balance uses contrast, scale and positioning to create a dynamic but still balanced experience:contentReference[oaicite:12]{index=12}.',
     },
   ],
-  5: [
+  3: [
     {
       id: 'ux_ui_q5',
-      difficulty: 5,
+      difficulty: 3,
       text: 'In error prevention, what distinguishes a slip from a mistake according to Nielsen’s usability heuristics?',
       subtopic: 'Error types',
       answers: [
@@ -279,7 +275,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p5',
-      difficulty: 5,
+      difficulty: 3,
       text: 'How does contrast contribute to UI design and accessibility?',
       subtopic: 'Contrast & accessibility',
       answers: [
@@ -297,11 +293,9 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
       citation:
         'The same Medium article explains that contrast is the difference between UI elements (colour, size or shape); high contrast makes elements stand out and is essential for accessible designs because it helps users quickly identify important elements and improves readability:contentReference[oaicite:14]{index=14}.',
     },
-  ],
-  6: [
     {
       id: 'ux_ui_q6',
-      difficulty: 6,
+      difficulty: 3,
       text: 'What does Miller’s law imply about human working memory, and how should UX designers structure information to accommodate this limitation?',
       subtopic: 'Cognitive load',
       answers: [
@@ -320,7 +314,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p6',
-      difficulty: 6,
+      difficulty: 3,
       text: 'Why is designing for responsiveness and adaptability important in modern UI design?',
       subtopic: 'Responsiveness',
       answers: [
@@ -338,10 +332,10 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
         'Lyssna states that users switch between devices all day and therefore designers must create responsive interfaces that work seamlessly across mobile phones, tablets and desktops, adapting layouts and interactions accordingly:contentReference[oaicite:16]{index=16}.',
     },
   ],
-  7: [
+  4: [
     {
       id: 'ux_ui_q7',
-      difficulty: 7,
+      difficulty: 4,
       text: 'What did researchers Masaaki Kurosu and Kaori Kashimura discover about the relationship between aesthetics and perceived usability in their 1995 study?',
       subtopic: 'Aesthetic–usability effect',
       answers: [
@@ -360,7 +354,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p7',
-      difficulty: 7,
+      difficulty: 4,
       text: 'What is the role of white (negative) space in user interface design?',
       subtopic: 'White space',
       answers: [
@@ -378,11 +372,9 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
       citation:
         'GeeksforGeeks notes that negative or white space is the spacing between screen elements; effective use of white space allows text and images to breathe, reducing clutter and preventing content from appearing flooded or overwhelming:contentReference[oaicite:18]{index=18}.',
     },
-  ],
-  8: [
     {
       id: 'ux_ui_q8',
-      difficulty: 8,
+      difficulty: 4,
       text: 'How does the peak–end rule influence the way users remember an experience, and what design strategy follows from this principle?',
       subtopic: 'Cognitive bias',
       answers: [
@@ -401,7 +393,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p8',
-      difficulty: 8,
+      difficulty: 4,
       text: 'In the context of UI design, what does alignment refer to and why is it important for user experience?',
       subtopic: 'Alignment & hierarchy',
       answers: [
@@ -420,10 +412,10 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
         'The UXPin article explains that alignment involves arranging elements relative to each other or a common baseline to create order, harmony and visual appeal; mastering alignment guides the user’s eye through content, improves readability and fosters familiarity across interfaces:contentReference[oaicite:20]{index=20}:contentReference[oaicite:21]{index=21}.',
     },
   ],
-  9: [
+  5: [
     {
       id: 'ux_ui_q9',
-      difficulty: 9,
+      difficulty: 5,
       text: 'Why do operating systems often place menus or frequently used icons at the edges or corners of the screen in mouse‑driven interfaces, according to Fitts’s law?',
       subtopic: 'Advanced Fitts’s law',
       answers: [
@@ -442,7 +434,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p9',
-      difficulty: 9,
+      difficulty: 5,
       text: 'How does the principle of proximity help users understand relationships between elements in a UI?',
       subtopic: 'Proximity',
       answers: [
@@ -460,11 +452,9 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
       citation:
         'GeeksforGeeks states that the proximity principle groups related elements by placing them close together and separates unrelated items with spacing, enabling users to visually combine or separate information:contentReference[oaicite:23]{index=23}.',
     },
-  ],
-  10: [
     {
       id: 'ux_ui_q10',
-      difficulty: 10,
+      difficulty: 5,
       text: 'What does the Doherty threshold suggest about system response times, and how should designers manage processes that exceed this threshold?',
       subtopic: 'Performance & feedback',
       answers: [
@@ -483,7 +473,7 @@ export const UX_UI_CONTENT: ContentLibrary[Topic.UX_UI_DESIGN] = {
     },
     {
       id: 'ui_p10',
-      difficulty: 10,
+      difficulty: 5,
       text: 'According to visual design principles, how do warm and cool colours interact with different background shades to influence user attention?',
       subtopic: 'Colour psychology',
       answers: [

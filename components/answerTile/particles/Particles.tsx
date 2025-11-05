@@ -68,12 +68,14 @@ const Particles: FC<Props> = ({
   const seedAttribute = useRef<BufferAttribute>(null)
 
   const refreshSeeds = useCallback(() => {
+    if (!seedAttribute.current) {
+      console.error('Seed attribute not initialized')
+      return
+    }
     for (let i = 0; i < particleCount; i++) {
       seeds[i] = Math.random()
     }
-    if (seedAttribute.current) {
-      seedAttribute.current.needsUpdate = true
-    }
+    seedAttribute.current.needsUpdate = true
   }, [particleCount, seeds])
 
   useEffect(() => {
@@ -99,18 +101,18 @@ const Particles: FC<Props> = ({
   useEffect(() => {
     if (!wasConfirmed || !materialRef.current) return
 
+    progressTween.current?.kill()
+    progress.current.value = 0
+    isActive.current = true
+
     refreshSeeds()
 
     materialRef.current.uBurstProgress = 0
     materialRef.current.uShouldAttract = shouldAttract ? 1 : 0
 
-    progressTween.current?.kill()
-    progress.current.value = 0
-    isActive.current = true
-
     progressTween.current = gsap.to(progress.current, {
       value: 1,
-      duration: 1.2,
+      duration: 1.3,
       ease: 'power2.out',
       onComplete: () => {
         materialRef.current!.uBurstProgress = 0

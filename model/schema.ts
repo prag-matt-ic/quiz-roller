@@ -7,7 +7,7 @@ export const AnswerSchema = z.object({
 
 export const QuestionSchema = z.object({
   id: z.string(),
-  difficulty: z.number().min(0).max(10),
+  difficulty: z.number().min(0).max(5),
   text: z.string().min(1),
   subtopic: z.string().min(1).optional(),
   answers: z.array(AnswerSchema).length(2),

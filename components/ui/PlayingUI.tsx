@@ -1,14 +1,13 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { FootprintsIcon, GaugeIcon, GemIcon, type LucideIcon } from 'lucide-react'
+import { FootprintsIcon, GemIcon, type LucideIcon } from 'lucide-react'
 import type { FC, ReactNode, RefObject } from 'react'
 import { useMemo } from 'react'
 import type { TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import { getDifficultyLabel } from '@/model/difficulty'
 
 type Props = {
   transitionStatus: TransitionStatus
@@ -17,7 +16,6 @@ type Props = {
 
 const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
-  const difficulty = useGameStore((s) => s.currentDifficulty)
   const distanceRows = useGameStore((s) => s.distanceRows)
   const topic = useGameStore((s) => s.topic)
   const previousRuns = useGameStore((s) => s.previousRuns)
@@ -26,8 +24,6 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
     0,
     confirmedAnswers.reduce((acc, a) => acc + (a.answer.isCorrect ? 1 : 0), 0),
   )
-
-  const difficultyLabel = getDifficultyLabel(difficulty)
 
   const { maxDistance, maxCorrect } = useMemo<{
     maxDistance: number
@@ -71,7 +67,7 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
     content: ReactNode
   }): ReactNode => {
     return (
-      <div className="relative flex w-fit items-center gap-2 rounded-xl border border-black bg-black/60 px-3 py-1 sm:gap-3 sm:px-4 sm:py-2">
+      <div className="relative flex w-fit items-center gap-2 rounded-xl bg-black/80 px-3 py-1 sm:gap-3 sm:px-4 sm:py-2">
         <Icon className="size-5 text-white sm:size-7" strokeWidth={1.5} />
         {content}
       </div>
@@ -81,18 +77,14 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="pointer-events-none fixed inset-x-4 bottom-4 flex flex-col justify-center gap-1 opacity-0 sm:flex-row sm:gap-2">
-      {renderBlock({
-        icon: GaugeIcon,
-        content: <span className="text-lg font-extrabold sm:text-2xl">{difficultyLabel}</span>,
-      })}
+      className="pointer-events-none fixed bottom-4 left-4 flex flex-col justify-center gap-1 opacity-0 sm:flex-row sm:gap-2">
       {renderBlock({
         icon: GemIcon,
         content: (
           <span
             className={twJoin(
               'text-lg font-extrabold sm:text-2xl',
-              isCorrectPB && 'text-amber-300',
+              isCorrectPB && 'text-amber-200',
             )}>
             {correctCount}
           </span>
@@ -104,7 +96,7 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
           <span
             className={twJoin(
               'text-lg font-extrabold sm:text-2xl',
-              isDistancePB && 'text-amber-300',
+              isDistancePB && 'text-amber-200',
             )}>
             {distanceRows}
           </span>

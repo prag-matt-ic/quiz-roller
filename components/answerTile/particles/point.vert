@@ -17,7 +17,7 @@ const float TWO_PI = 6.28318530718;
 const float EPSILON = 0.0001;
 const vec3 NOISE_WEIGHTS = vec3(0.18, 0.35, 0.18);
 
-float easeOutCubic(float t) {
+float easeOutCubic(in float t) {
     float inverted = 1.0 - t;
     return 1.0 - inverted * inverted * inverted;
 }
@@ -33,7 +33,7 @@ void main() {
     vec4 hashedSeed = fract(seed * vec4(17.0, 27.0, 15.0, 13.0));
     float lateralAngle = hashedSeed.x * TWO_PI;
     float lateralStrength = mix(0.2, 0.8, hashedSeed.y);
-    float upwardStrength = mix(2.5, 6.0, hashedSeed.z);
+    float upwardStrength = mix(4.0, 8.4, hashedSeed.z);
     vec3 burstVector = vec3(
         cos(lateralAngle) * lateralStrength,
         upwardStrength,
@@ -55,8 +55,8 @@ void main() {
     float verticalBase = mix(spawnPosition.y, uPlayerPosition.y, easedProgress);
     attractionPosition.y = verticalBase;
 
-    float arcHeight = mix(3.0, 6.5, hashedSeed.w);
-    float heightProfile = pow(progress, 0.35) * oneMinusProgress;
+    float arcHeight = mix(4.0, 8.0, hashedSeed.w);
+    float heightProfile = pow(progress, 0.4) * oneMinusProgress;
     attractionPosition.y += arcHeight * heightProfile;
 
     vec3 attractionNoise = baseNoise * NOISE_WEIGHTS * easedInverse;
@@ -70,7 +70,7 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float baseSize = mix(8.0, 20.0, seed);
+    float baseSize = mix(12.0, 24.0, seed);
     float sizeFade = 1.0 - easedProgress * 0.4;
     gl_PointSize = baseSize * sizeFade * uDpr;
 

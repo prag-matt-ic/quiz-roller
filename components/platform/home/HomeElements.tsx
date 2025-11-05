@@ -1,5 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { FlagIcon, InfoIcon } from 'lucide-react'
+import { FlagIcon, GemIcon, InfoIcon, TrendingUpIcon } from 'lucide-react'
 import {
   createRef,
   type FC,
@@ -342,21 +342,22 @@ const HomeElements: FC<Props> = ({ ref }) => {
           <Card className="col-span-4" playerColourIndex={playerColourIndex}>
             <h2 className="text-xl font-bold text-black">Your Mission</h2>
             <p className="paragraph font-semibold">
-              As the Innovation Orb, your goal is to master critical skills for building
+              As the Innovation Orb, your mission is to master critical skills for building
               tomorrow&apos;s digital experiences.
               <br />
-              {/* MISSION.... */}
               <br />
-              <span className="font-extrabold">How far can you roll?</span>
+              <span className="font-extrabold italic">How far can you roll?</span>
             </p>
           </Card>
 
           <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+            <GemIcon className="mb-1 size-5 sm:size-7" strokeWidth={1.5} />
             <p className="paragraph-sm font-semibold">
               Each correct answer unlocks fragments of the future web.
             </p>
           </Card>
           <Card className="col-span-2" playerColourIndex={playerColourIndex}>
+            <TrendingUpIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">
               Questions will challenge your knowledge and increase in difficulty.
             </p>

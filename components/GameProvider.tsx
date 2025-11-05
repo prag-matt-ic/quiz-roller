@@ -98,7 +98,7 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-const MAX_DIFFICULTY = 10
+const MAX_DIFFICULTY = 5
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_COLOUR_DURATION_S = 1.5
 const INTRO_SPEED_DURATION = 1.2

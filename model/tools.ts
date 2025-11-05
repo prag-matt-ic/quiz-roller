@@ -22,8 +22,8 @@ export const generateQuestion = tool({
     difficulty: z
       .number()
       .min(1)
-      .max(10)
-      .describe('The difficulty level of the question, from 1 (easy) to 10 (hard)'),
+      .max(5)
+      .describe('The difficulty level of the question, from 1 (easy) to 5 (expert)'),
   }),
   outputSchema: QuestionSchema,
   execute: async ({ topic, difficulty }, { messages }) => {
@@ -44,16 +44,18 @@ export const generateQuestion = tool({
     }
 
     const getDifficultyDescription = (level: number) => {
-      if (level <= 3) return 'very easy, basic knowledge'
-      if (level <= 6) return 'moderate difficulty, intermediate knowledge'
-      if (level <= 8) return 'challenging, advanced knowledge'
-      return 'very difficult, expert level knowledge'
+      const clamped = Math.max(1, Math.min(5, Math.floor(level)))
+      if (clamped === 1) return 'very easy, foundational knowledge'
+      if (clamped === 2) return 'moderate difficulty, intermediate knowledge'
+      if (clamped === 3) return 'challenging, applied knowledge'
+      if (clamped === 4) return 'difficult, expert-level insight'
+      return 'very difficult, mastery-level analysis'
     }
 
     console.warn(`Generating question on topic "${topic}" with difficulty ${difficulty}`)
 
     let prompt = `Generate a multiple choice question about the following topic: ${topic}.
-    The difficulty should be ${getDifficultyDescription(difficulty)} (level ${difficulty}/10).
+    The difficulty should be ${getDifficultyDescription(difficulty)} (level ${difficulty}/5).
     Provide two possible answers, one correct and one incorrect.
     Adjust the complexity, vocabulary, and depth of knowledge required based on the difficulty level.`
 
