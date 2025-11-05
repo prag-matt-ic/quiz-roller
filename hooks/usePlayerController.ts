@@ -4,7 +4,7 @@ import { KinematicCharacterController } from '@dimforge/rapier3d-compat'
 import { useRapier } from '@react-three/rapier'
 import { useLayoutEffect, useRef } from 'react'
 
-import { PLAYER_RADIUS } from '../components/player/ConfirmationBar'
+import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import usePlayerInput from './usePlayerInput'
 
 function usePlayerController() {
@@ -39,6 +39,13 @@ function usePlayerController() {
     }
 
     setupController()
+
+    return () => {
+      if (!!controllerRef.current) {
+        world.removeCharacterController(controllerRef.current)
+        controllerRef.current = null
+      }
+    }
   }, [world])
 
   return { controllerRef, input }

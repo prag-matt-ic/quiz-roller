@@ -20,7 +20,7 @@ import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
 
-import { Marble, MarbleShaderMaterial, type MarbleShaderUniforms } from './marble/Marble'
+import { Marble } from './marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -83,7 +83,8 @@ const Player: FC = () => {
       !bodyRef.current ||
       !controllerRef.current ||
       !ballColliderRef.current ||
-      !sphereMeshRef.current
+      !sphereMeshRef.current ||
+      !controllerRef.current
     )
       return
 

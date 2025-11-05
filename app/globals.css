@@ -156,6 +156,3 @@ h6 {
     @apply text-xs lg:text-sm;
   }
 }
-
-@layer components {
-}

@@ -109,7 +109,7 @@ export function writeTextToCanvas(
   }
   setFont()
 
-  const LINE_HEIGHT_MULTIPLIER = 1.25
+  const LINE_HEIGHT_MULTIPLIER = 1.5
 
   // Get wrapped lines and calculate total height
   let lines = getLines(context, text, maxTextWidth)

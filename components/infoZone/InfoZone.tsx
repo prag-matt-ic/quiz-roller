@@ -171,7 +171,7 @@ export const InfoZone: FC<Props> = ({
           onIntersectionEnter={onIntersectionEnter}
           onIntersectionExit={onIntersectionExit}
         />
-        <mesh position={[0, 0, 0]}>
+        <mesh position={[0, 0, 0.03]} renderOrder={2}>
           <planeGeometry args={[width, height]} />
           <InfoZoneShaderMaterial
             transparent={true}
@@ -185,9 +185,11 @@ export const InfoZone: FC<Props> = ({
         <Html
           sprite={true}
           center={true}
+          renderOrder={2}
+          occlude={false}
           pointerEvents="none"
           position={iconPositionOffset}
-          className="relative select-none">
+          className="relative z-10 select-none">
           <Transition
             in={!showInfo}
             timeout={{ enter: 0, exit: 300 }}
@@ -214,9 +216,11 @@ export const InfoZone: FC<Props> = ({
         <Html
           sprite={true}
           center={true}
+          renderOrder={2}
+          occlude={false}
           pointerEvents="none"
           position={infoPositionOffset}
-          className="relative select-none">
+          className="relative z-100 select-none">
           <Transition
             in={showInfo}
             mountOnEnter={true}

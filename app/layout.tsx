@@ -18,7 +18,8 @@ const nunitoSans = Nunito_Sans({
 
 export const metadata: Metadata = {
   title: 'Quizroller',
-  description: 'How far can you roll?',
+  description:
+    'A 3D quiz game built using React Three Fiber and Rapier physics. How far can you roll?',
   appleWebApp: {
     title: 'Quizroller',
   },

@@ -26,6 +26,8 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const switchKey = `${isPlaying}-${isGameOver}`
 
+  console.log(`[UI] Rendering UI - isPlaying: ${isPlaying}, isGameOver: ${isGameOver}`)
+
   return (
     <>
       <SwitchTransition>

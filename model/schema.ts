@@ -7,7 +7,7 @@ export const AnswerSchema = z.object({
 
 export const QuestionSchema = z.object({
   id: z.string(),
-  difficulty: z.number().min(1).max(5),
+  difficulty: z.number().min(1).max(3),
   text: z.string().min(10),
   subtopic: z.string().min(1).optional(),
   answers: z.array(AnswerSchema).length(2),
@@ -17,8 +17,6 @@ export const QuestionSchema = z.object({
 
 export type Answer = z.infer<typeof AnswerSchema>
 export type Question = z.infer<typeof QuestionSchema>
-
-export type QuestionBank = Question[]
 
 export type PlayerUserData = {
   type: 'player'

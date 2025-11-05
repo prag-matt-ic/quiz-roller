@@ -25,9 +25,8 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const currentRun = useGameStore((s) => s.currentRunStats)
   const previousRuns = useGameStore((s) => s.previousRuns)
   const resetGame = useGameStore((s) => s.resetGame)
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
 
-  const hasPlayedGame = currentRun !== null || previousRuns.length > 0
+  const hasPlayedGame = currentRun !== null
 
   const historyExcludingCurrent = currentRun
     ? previousRuns.filter((r) => r.date !== currentRun.date)

@@ -1,8 +1,12 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   devIndicators: false,
+  reactCompiler: true,
+  experimental: {
+    cssChunking: true,
+  },
   // Configure Turbopack to recognize and transform GLSL shader files
   // when running `next dev --turbopack` or `next build --turbopack`.
   // This mirrors the webpack rule below but uses Turbopack's loader API.

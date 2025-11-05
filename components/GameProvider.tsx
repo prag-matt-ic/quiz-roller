@@ -1,17 +1,15 @@
 import gsap from 'gsap'
-import {
-  createContext,
-  type FC,
-  type PropsWithChildren,
-  useContext,
-  useEffect,
-  useRef,
-} from 'react'
+import { createContext, type FC, type PropsWithChildren, useContext, useRef } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { type AnswerUserData, type Question, type RunStats, type StartUserData } from '@/model/schema'
+import {
+  type AnswerUserData,
+  type Question,
+  type RunStats,
+  type StartUserData,
+} from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
 
 import { PLAYER_RADIUS } from './player/ConfirmationBar'
@@ -25,9 +23,6 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
-// - [ ] Update UX/UI questions
-// - [ ] Add AI content
-// - [ ] Design Story/Mission content
 // - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
@@ -92,7 +87,7 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-const MAX_DIFFICULTY = 5
+const MAX_DIFFICULTY = 3
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_COLOUR_DURATION_S = 1.5
 const INTRO_SPEED_DURATION = 1.2
@@ -348,7 +343,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
 
         onAnswerConfirmed: async () => {
-          const { currentDifficulty, confirmingAnswer } = get()
+          const { confirmingAnswer } = get()
 
           if (!confirmingAnswer) {
             console.error('No answer selected to confirm')
@@ -363,7 +358,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             return
           }
 
-          handleCorrectAnswer({ currentDifficulty, confirmingAnswer, set })
+          handleCorrectAnswer({ confirmingAnswer, set })
           playSoundFX(SoundFX.CORRECT_ANSWER)
         },
 
@@ -451,20 +446,25 @@ function handleIncorrectAnswer({
 
 function handleCorrectAnswer({
   set,
-  currentDifficulty,
   confirmingAnswer,
 }: {
-  currentDifficulty: number
   confirmingAnswer: AnswerUserData
   set: StoreApi<GameState>['setState']
 }) {
-  const newDifficulty = Math.min(currentDifficulty + 1, MAX_DIFFICULTY)
-  set((s) => ({
-    confirmationProgress: 0,
-    currentDifficulty: newDifficulty,
-    confirmingAnswer: null,
-    confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
-  }))
+  set((s) => {
+    const newConfirmedAnswers = [...s.confirmedAnswers, confirmingAnswer]
+    const totalCorrect = newConfirmedAnswers.filter((a) => a.answer.isCorrect).length
+
+    // Increment difficulty every 2 correct answers
+    const newDifficulty = Math.min(Math.floor(totalCorrect / 2) + 1, MAX_DIFFICULTY)
+
+    return {
+      confirmationProgress: 0,
+      currentDifficulty: newDifficulty,
+      confirmingAnswer: null,
+      confirmedAnswers: newConfirmedAnswers,
+    }
+  })
 }
 
 // Helper functions for goToStage
@@ -555,7 +555,7 @@ function handleGameOverStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  const { confirmedAnswers, distanceRows, hasStarted } = get()
+  const { confirmedAnswers, distanceRows } = get()
 
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
@@ -567,14 +567,16 @@ function handleGameOverStage({
     },
   })
 
-  if (!hasStarted) {
-    console.warn('[GAME_OVER] Run was never started. Skipping PB compute.')
-    set({
-      stage: Stage.GAME_OVER,
-      currentRunStats: null,
-    })
-    return
-  }
+  // if (!hasStarted) {
+  //   console.warn('[GAME_OVER] Run was never started. Skipping PB compute.')
+  //   set({
+  //     stage: Stage.GAME_OVER,
+  //     currentRunStats: null,
+  //   })
+  //   return
+  // }
+
+  console.log('[GAME_OVER] Computing run stats...')
 
   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
   const run: RunStats = {
@@ -582,6 +584,8 @@ function handleGameOverStage({
     distance: distanceRows,
     date: new Date(),
   }
+
+  console.log('[GAME_OVER] Run stats computed:', run)
 
   set((s) => {
     return {

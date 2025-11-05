@@ -45,7 +45,7 @@ const LoadingOverlay: FC = () => {
           aria-hidden="true"
         />
         <div
-          className="absolute inset-0 animate-spin rounded-full border-4 border-white/70 border-t-transparent motion-reduce:animate-none"
+          className="absolute inset-0 animate-spin rounded-full border-4 border-white/60 border-t-transparent motion-reduce:animate-none"
           aria-hidden="true"
         />
       </div>

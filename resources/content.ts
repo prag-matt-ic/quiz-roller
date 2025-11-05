@@ -1,4 +1,4 @@
-import { type Question, type QuestionBank } from '@/model/schema'
+import { type Question } from '@/model/schema'
 import { QUESTIONS } from '@/resources/questions'
 
 export const pickRandom = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)]
@@ -34,10 +34,10 @@ export function getNextQuestion({
   askedIds: Set<string>
 }): Question | undefined {
   const sortedDifficultyLevels = Array.from(
-    new Set(QUESTION_BANK.map((question) => question.difficulty)),
+    new Set(QUESTIONS.map((question) => question.difficulty)),
   ).sort((a, b) => a - b)
 
-  let availableQuestions = QUESTION_BANK.filter(
+  let availableQuestions = QUESTIONS.filter(
     (question) => question.difficulty === currentDifficulty,
   )
 
@@ -49,7 +49,7 @@ export function getNextQuestion({
 
     availableQuestions =
       fallbackDifficulty !== undefined
-        ? QUESTION_BANK.filter((question) => question.difficulty === fallbackDifficulty)
+        ? QUESTIONS.filter((question) => question.difficulty === fallbackDifficulty)
         : []
   }
 
@@ -69,6 +69,3 @@ export function getNextQuestion({
     answers: shuffledAnswers,
   }
 }
-
-// Difficulty keys start at 1. Add more as needed.
-export const QUESTION_BANK: QuestionBank = QUESTIONS

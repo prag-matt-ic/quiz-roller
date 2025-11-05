@@ -39,7 +39,7 @@ export const Text: FC<Props> = ({
 
   return (
     <Suspense fallback={null}>
-      <mesh ref={ref} position={position} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh ref={ref} position={position} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial
           map={canvasState?.texture ?? TRANSPARENT_TEXTURE}

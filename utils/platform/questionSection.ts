@@ -22,7 +22,7 @@ export const OBSTACLE_BUFFER_SECTIONS = 10
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const QUESTION_SECTION_ROWS = 16
-export const QUESTION_TEXT_WIDTH = 10 * TILE_SIZE
+export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
 export const QUESTION_TEXT_ROWS = 6
 export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
 

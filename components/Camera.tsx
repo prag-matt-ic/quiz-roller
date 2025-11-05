@@ -18,7 +18,7 @@ const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 const TERRAIN_CONFIG = {
   position: { x: 0, y: 6, z: 7 },
   target: { x: 0, y: 0, z: 0 },
-  zoom: 0.8,
+  zoom: 1.0,
 }
 
 // Unified camera configuration per stage
@@ -39,11 +39,11 @@ export const CAMERA_CONFIG: Record<
   [Stage.QUESTION]: {
     position: { x: 0, y: 11, z: 5 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.2,
+    zoom: 1.0,
   },
   [Stage.TERRAIN]: TERRAIN_CONFIG,
   [Stage.GAME_OVER]: {
-    position: { x: 16, y: 12, z: 8 },
+    position: { x: 12, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
@@ -72,16 +72,6 @@ const Camera: FC = () => {
       true,
     )
   }, [stage, playerPosition])
-
-  useEffect(() => {
-    // Zoom in when there is a specific look at position
-    if (!cameraControls.current) return
-    if (!!cameraLookAtPosition) {
-      cameraControls.current.zoomTo(1.75, true)
-    } else {
-      cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
-    }
-  }, [cameraLookAtPosition])
 
   useFrame(() => {
     if (!cameraControls.current) return
