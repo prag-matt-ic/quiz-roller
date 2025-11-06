@@ -1,3 +1,4 @@
+'use client'
 import gsap from 'gsap'
 import { createContext, type FC, type PropsWithChildren, useContext, useRef } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -79,6 +80,7 @@ type GameState = {
   onOutOfBounds: () => void
 
   resetGame: () => void
+  resetPlayer: () => void
   resetPlatformTick: number
   resetPlayerTick: number
   goToStage: (stage: Stage) => void
@@ -380,14 +382,18 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }))
         },
 
+        resetPlayer: () => {
+          set((s) => ({
+            playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
+            resetPlayerTick: s.resetPlayerTick + 1,
+          }))
+        },
+
         onOutOfBounds: () => {
-          const { stage, goToStage } = get()
+          const { stage, resetPlayer, goToStage } = get()
           console.warn('Player went out of bounds!', { stage })
           if (stage === Stage.HOME) {
-            set((s) => ({
-              playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
-              resetPlayerTick: s.resetPlayerTick + 1,
-            }))
+            resetPlayer()
           } else {
             console.warn('Transitioning to GAME_OVER stage due to out-of-bounds')
             goToStage(Stage.GAME_OVER)

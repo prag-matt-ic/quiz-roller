@@ -1,21 +1,30 @@
 'use client'
 
 import { useProgress } from '@react-three/drei'
-import { type FC, type TransitionEvent, useEffect, useState } from 'react'
+import { type FC, type TransitionEvent, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
+import { useSoundStore } from '@/components/SoundProvider'
+import { Check, PlayIcon, VolumeOffIcon } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { useGameStore } from '@/components/GameProvider'
+
+const Button = dynamic(() => import('@/components/ui/Button'))
 
 const LoadingOverlay: FC = () => {
   const { active, progress } = useProgress()
-
   const [isMounted, setIsMounted] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
 
+  const setIsMuted = useSoundStore((s) => s.setIsMuted)
+  const resetPlayer = useGameStore((s) => s.resetPlayer)
+
   const isReady = !active && progress >= 100
 
-  useEffect(() => {
-    if (!isMounted || isExiting || !isReady) return
+  const onStartClick = (isMuted: boolean) => {
+    setIsMuted(isMuted)
     setIsExiting(true)
-  }, [isExiting, isMounted, isReady])
+    resetPlayer()
+  }
 
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (!isExiting) return
@@ -33,21 +42,45 @@ const LoadingOverlay: FC = () => {
       aria-live="polite"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-6 bg-radial from-[#041A2A] from-20% to-[#0B0A19]',
-        'transition-opacity delay-500 duration-500 ease-out motion-reduce:duration-0',
+        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-3 place-items-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% py-[30vh]',
+        'transition-opacity delay-50 duration-400 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
-      <h1 className="heading-md -mt-6 text-white">Quizroller</h1>
+      <h1 className="heading-lg text-white">Quizroller</h1>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
-      <div className="relative size-20" aria-label="Loading">
+      <div className="relative flex size-20 items-center justify-center" aria-label="Loading">
         <div
-          className="absolute inset-0 animate-pulse rounded-full bg-linear-0 from-[#dc9704] to-[#f9ca0e] motion-reduce:animate-none"
+          className={twJoin(
+            'absolute inset-0 animate-pulse rounded-full bg-linear-0 from-[#dc9704] to-[#f9ca0e] motion-reduce:animate-none',
+          )}
           aria-hidden="true"
         />
         <div
-          className="absolute inset-0 animate-spin rounded-full border-4 border-white/60 border-t-transparent motion-reduce:animate-none"
+          className={twJoin(
+            'absolute inset-0 animate-spin rounded-full border-4 border-white/60 border-t-transparent transition-opacity duration-150 motion-reduce:animate-none',
+            isReady ? 'opacity-0' : 'opacity-100',
+          )}
           aria-hidden="true"
         />
+        <Check
+          size={40}
+          strokeWidth={2.5}
+          className={twJoin(
+            'relative transition-opacity',
+            isReady ? 'opacity-100' : 'opacity-0',
+          )}
+        />
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button onClick={() => onStartClick(false)} variant="primary" disabled={!isReady}>
+          <PlayIcon className="size-6" strokeWidth={1.5} />
+          Start experience
+        </Button>
+        <Button variant="secondary" onClick={() => onStartClick(true)} disabled={!isReady}>
+          <VolumeOffIcon className="size-5" />
+          Start muted
+        </Button>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const baseStyles =
-  'flex w-fit cursor-pointer uppercase items-center justify-center gap-3 rounded-full px-8 py-3 text-lg font-[600] backdrop-blur-sm'
+  'flex w-fit cursor-pointer uppercase items-center disabled:cursor-not-allowed justify-center gap-3 rounded-full px-8 py-3 text-lg font-[600] backdrop-blur-sm'
 
 const colorStyles = {
   light: {
