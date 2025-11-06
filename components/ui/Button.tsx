@@ -8,21 +8,21 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   className?: string
 }
 
-const baseStyles =
-  'flex w-fit cursor-pointer uppercase items-center disabled:cursor-not-allowed justify-center gap-3 rounded-full px-8 py-3 text-lg font-[600] backdrop-blur-sm'
+const BASE_CLASSES =
+  'flex w-fit cursor-pointer uppercase items-center disabled:cursor-not-allowed justify-center gap-3 rounded-full px-8 py-3 text-lg font-[600]'
 
-const colorStyles = {
+const COLOUR_CLASSES = {
   light: {
     primary:
-      'border border-white/20 bg-linear-90 from-white/5 to-white/15 text-white shadow-xl shadow-white/5 backdrop-blur-sm hover:from-white/10 hover:to-white/20',
+      'border border-white/20 bg-linear-90 from-white/5 to-white/15 text-white shadow-xl shadow-white/5 hover:from-white/10 hover:to-white/20',
     secondary:
-      'border border-white/5 bg-white/3 text-white/70 backdrop-blur-sm hover:bg-white/8 hover:text-white',
+      'border border-white/5 bg-white/3 text-white/70 hover:bg-white/8 hover:text-white',
   },
   dark: {
     primary:
-      'border border-black/20 bg-linear-90 from-black/70 to-black/30 text-white shadow-xl shadow-black/20 backdrop-blur-sm hover:from-black/70 hover:to-black/40',
+      'border border-black/20 bg-linear-90 from-black/70 to-black/30 text-white shadow-xl shadow-black/20 hover:from-black/70 hover:to-black/40',
     secondary:
-      'border border-black/20 bg-black/30 text-white/80 backdrop-blur-sm hover:bg-black/40 hover:text-white',
+      'border border-black/20 bg-black/30 text-white/80 hover:bg-black/40 hover:text-white',
   },
 }
 
@@ -34,7 +34,9 @@ const Button: FC<ButtonProps> = ({
   ...props
 }) => {
   return (
-    <button className={twMerge(baseStyles, colorStyles[color][variant], className)} {...props}>
+    <button
+      className={twMerge(BASE_CLASSES, COLOUR_CLASSES[color][variant], className)}
+      {...props}>
       {children}
     </button>
   )

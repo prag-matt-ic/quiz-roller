@@ -57,7 +57,7 @@ const LoadingOverlay: FC = () => {
         />
         <div
           className={twJoin(
-            'absolute inset-0 animate-spin rounded-full border-4 border-white/60 border-t-transparent transition-opacity duration-150 motion-reduce:animate-none',
+            'absolute inset-0 animate-spin rounded-full border-4 border-white border-t-transparent transition-opacity duration-150 motion-reduce:animate-none',
             isReady ? 'opacity-0' : 'opacity-100',
           )}
           aria-hidden="true"
