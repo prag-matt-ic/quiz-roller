@@ -254,14 +254,13 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           <Card className="md:col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
-              Interested in launching your own bespoke learning experience?
+              Interested in launching your own bespoke interactive learning experience?
               <br />
               <br />
-              Let&apos;s chat:{' '}
               <a
                 href="mailto:pragmattic.ltd@gmail.com"
                 className="underline underline-offset-2">
-                pragmattic.ltd@gmail.com
+                Let&apos;s chat!
               </a>
             </p>
           </Card>
@@ -300,9 +299,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
           <Card className="col-span-1" playerColourIndex={playerColourIndex}>
             <BadgeQuestionMarkIcon className="mb-1 size-5 sm:size-7" />
-            <p className="paragraph-sm font-semibold">
-              Test your knowledge on UX/UI and Artificial Intelligence
-            </p>
+            <p className="paragraph-sm font-semibold">Test your knowledge on UX/UI and AI</p>
           </Card>
 
           <Card className="col-span-1" playerColourIndex={playerColourIndex}>
