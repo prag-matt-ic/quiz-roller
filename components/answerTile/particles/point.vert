@@ -1,16 +1,22 @@
 // Answer Tile Particle Point Vertex Shader
 #pragma glslify: noise3d = require('glsl-noise/simplex/3d')
 
+precision mediump float;
+
 uniform float uBurstProgress; // 0.0 to 1.0
 uniform vec3 uPlayerPosition;
 uniform float uDpr;
-uniform float uShouldAttract; // 0.0 or 1.0
+uniform float uWasCorrect; // 0.0 or 1.0
 
 attribute vec3 spawnPosition;
 attribute float seed;
+attribute vec3 correctColour;
+attribute vec3 wrongColour;
 
 varying mediump float vProgress;
 varying mediump float vSeed;
+varying mediump vec3 vCorrectColour;
+varying mediump vec3 vWrongColour;
 
 const float PI = 3.14159265359;
 const float TWO_PI = 6.28318530718;
@@ -63,7 +69,7 @@ void main() {
     attractionNoise.y *= 0.6;
     attractionPosition += attractionNoise;
 
-    float attractStrength = clamp(uShouldAttract, 0.0, 1.0);
+    float attractStrength = clamp(uWasCorrect, 0.0, 1.0);
     vec3 finalPosition = mix(burstPosition, attractionPosition, attractStrength);
 
     vec4 modelPosition = modelMatrix * vec4(finalPosition, 1.0);
@@ -76,4 +82,6 @@ void main() {
 
     vProgress = progress;
     vSeed = seed;
+    vCorrectColour = correctColour;
+    vWrongColour = wrongColour;
 }

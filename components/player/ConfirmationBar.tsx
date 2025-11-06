@@ -92,3 +92,9 @@ const ConfirmationBar: FC = () => {
 }
 
 export default ConfirmationBar
+
+//  const label: ReactNode = isCorrectAnswer ? (
+//           <CheckIcon strokeWidth={3} size={36} />
+//         ) : isIncorrectAnswer ? (
+//           <XIcon strokeWidth={3} size={36} />
+//         ) : (

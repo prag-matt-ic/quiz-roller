@@ -1,10 +1,12 @@
 // Answer Point Fragment Shader
-#pragma glslify: getColourFromPalette = require(../../palette.glsl)
-
 precision mediump float;
 
 varying mediump float vProgress;
 varying mediump float vSeed;
+varying mediump vec3 vCorrectColour;
+varying mediump vec3 vWrongColour;
+
+uniform float uWasCorrect;
 
 void main() {
     vec2 centeredCoord = gl_PointCoord - vec2(0.5);
@@ -17,7 +19,8 @@ void main() {
     float circleMask = 1.0 - step(0.5, distanceFromCenter);
     opacity *= circleMask;
 
-    vec3 colour = getColourFromPalette(fract(vSeed * 7.0));
+    float colourMix = clamp(uWasCorrect, 0.0, 1.0);
+    vec3 colour = mix(vWrongColour, vCorrectColour, colourMix);
 
     float opacityMultiplier = 1.0 - vSeed * 0.5;
     opacity *= opacityMultiplier;
