@@ -18,9 +18,8 @@ import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/tiles'
 import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
 
-const ANSWER_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
-const CANVAS_WIDTH = ANSWER_TILE_WIDTH * 128
-const CANVAS_HEIGHT = ANSWER_TILE_HEIGHT * 128
+const DEFAULT_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
+const TEXT_CANVAS_SCALE = 128
 
 type AnswerTileShaderUniforms = {
   uConfirmingProgress: number
@@ -34,7 +33,7 @@ type AnswerTileShaderUniforms = {
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
   uConfirmingProgress: 0,
   uIsConfirming: 0,
-  uTileAspect: ANSWER_TILE_ASPECT,
+  uTileAspect: DEFAULT_TILE_ASPECT,
   uTime: 0,
   uTextTexture: null,
   uPlayerColourIndex: 1,
@@ -48,8 +47,10 @@ const AnswerTileShader = shaderMaterial(
 const AnswerTileShaderMaterial = extend(AnswerTileShader)
 
 type BaseProps = {
-  ref?: RefObject<RapierRigidBody | null>
+  ref: RefObject<RapierRigidBody | null>
   position: Vector3Tuple
+  width?: number
+  height?: number
 }
 
 export type AnswerTileProps = BaseProps & {
@@ -71,6 +72,8 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   userData,
   wasConfirmed,
   wasCorrect,
+  width = ANSWER_TILE_WIDTH,
+  height = ANSWER_TILE_HEIGHT,
 }) => {
   const playerColourIndex = useGameStore((s) => s.colourIndex)
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
@@ -94,9 +97,13 @@ export const AnswerTile: FC<AnswerTileProps> = ({
     shader.current.uTime = clock.elapsedTime
   })
 
+  const tileAspect = width / height
+  const canvasWidth = width * TEXT_CANVAS_SCALE
+  const canvasHeight = height * TEXT_CANVAS_SCALE
+
   const canvasState = useTextCanvas(text, {
-    width: CANVAS_WIDTH,
-    height: CANVAS_HEIGHT,
+    width: canvasWidth,
+    height: canvasHeight,
     color: labelColour,
     fontSize: 48,
   })
@@ -114,14 +121,14 @@ export const AnswerTile: FC<AnswerTileProps> = ({
       colliders={false}
       userData={userData}>
       <CuboidCollider
-        args={[ANSWER_TILE_WIDTH / 2, ANSWER_TILE_HEIGHT / 2, PLAYER_RADIUS * 2]}
+        args={[width / 2, height / 2, PLAYER_RADIUS * 2]}
         sensor={true}
         mass={0}
         friction={0}
       />
       {/* Single mesh: shader renders border + samples text texture */}
       <mesh position={[0, 0, 0.03]} renderOrder={2}>
-        <planeGeometry args={[ANSWER_TILE_WIDTH, ANSWER_TILE_HEIGHT]} />
+        <planeGeometry args={[width, height]} />
         <AnswerTileShaderMaterial
           key={AnswerTileShader.key}
           ref={shader}
@@ -132,6 +139,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
           uIsConfirming={0}
           uTextTexture={canvasState?.texture ?? TRANSPARENT_TEXTURE}
           uPlayerColourIndex={playerColourIndex}
+          uTileAspect={tileAspect}
           polygonOffset={true}
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-1}
@@ -139,8 +147,8 @@ export const AnswerTile: FC<AnswerTileProps> = ({
       </mesh>
       {/* Particles burst when this answer is confirmed */}
       <Particles
-        width={ANSWER_TILE_WIDTH}
-        height={ANSWER_TILE_HEIGHT}
+        width={width}
+        height={height}
         wasConfirmed={wasConfirmed}
         shouldAttract={wasCorrect}
       />

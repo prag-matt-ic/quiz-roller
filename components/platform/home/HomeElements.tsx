@@ -24,6 +24,8 @@ import { InfoZone } from '@/components/infoZone/InfoZone'
 import { type StartUserData } from '@/model/schema'
 import {
   COLOUR_TILE_OPTIONS,
+  HOME_ANSWER_TILE_HEIGHT,
+  HOME_ANSWER_TILE_WIDTH,
   INFO_ZONE_HEIGHT,
   INFO_ZONE_WIDTH,
 } from '@/utils/platform/homeSection'
@@ -222,6 +224,8 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         text="Roll over to start"
         userData={START_TILE_USER_DATA}
+        width={HOME_ANSWER_TILE_WIDTH}
+        height={HOME_ANSWER_TILE_HEIGHT}
         isConfirming={isConfirmingStart}
         wasConfirmed={false}
         wasCorrect={false}

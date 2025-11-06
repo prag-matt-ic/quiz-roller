@@ -4,8 +4,6 @@ import type { ColourTileOption } from '@/components/colourPicker/ColourPicker'
 import { COLOUR_RANGES } from '@/components/palette'
 import { type ColourTileUserData } from '@/model/schema'
 import {
-  ANSWER_TILE_COLS,
-  ANSWER_TILE_ROWS,
   colToX,
   COLUMNS,
   ON_TILE_Y,
@@ -27,12 +25,17 @@ const COLOUR_PICKER_RELATIVE_Z =
   (COLOUR_PICKER_TRIGGER_ROW - COLOUR_PICKER_CENTER_ROW) * TILE_SIZE
 
 // Answer tiles positions
-const ANSWER_TILE_START_COL = Math.floor((COLUMNS - ANSWER_TILE_COLS) / 2)
-const ANSWER_TILE_END_COL = ANSWER_TILE_START_COL + ANSWER_TILE_COLS - 1
-const ANSWER_TILE_START_ROW = 11
-const ANSWER_TILE_END_ROW = ANSWER_TILE_START_ROW + ANSWER_TILE_ROWS - 1
-const ANSWER_TILE_CENTER_ROW = ANSWER_TILE_START_ROW + (ANSWER_TILE_ROWS - 1) / 2
-const ANSWER_TILE_CENTER_COL = ANSWER_TILE_START_COL + (ANSWER_TILE_COLS - 1) / 2
+const HOME_ANSWER_TILE_COLS = 6
+const HOME_ANSWER_TILE_ROWS = 3
+export const HOME_ANSWER_TILE_WIDTH = HOME_ANSWER_TILE_COLS * TILE_SIZE
+export const HOME_ANSWER_TILE_HEIGHT = HOME_ANSWER_TILE_ROWS * TILE_SIZE
+
+const ANSWER_TILE_START_COL = Math.floor((COLUMNS - HOME_ANSWER_TILE_COLS) / 2)
+const ANSWER_TILE_END_COL = ANSWER_TILE_START_COL + HOME_ANSWER_TILE_COLS - 1
+const ANSWER_TILE_START_ROW = 12
+const ANSWER_TILE_END_ROW = ANSWER_TILE_START_ROW + HOME_ANSWER_TILE_ROWS - 1
+const ANSWER_TILE_CENTER_ROW = ANSWER_TILE_START_ROW + (HOME_ANSWER_TILE_ROWS - 1) / 2
+const ANSWER_TILE_CENTER_COL = ANSWER_TILE_START_COL + (HOME_ANSWER_TILE_COLS - 1) / 2
 // Trigger row fires when the leading edge of the row reaches the player, so we place answer
 // bodies on the row whose animation window contains the tile centre.
 const ANSWER_TILE_TRIGGER_ROW = Math.ceil(ANSWER_TILE_CENTER_ROW)
