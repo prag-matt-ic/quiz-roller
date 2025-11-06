@@ -39,11 +39,11 @@ export const CAMERA_CONFIG: Record<
   [Stage.QUESTION]: {
     position: { x: 0, y: 11, z: 5 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.0,
+    zoom: 1.1,
   },
   [Stage.TERRAIN]: TERRAIN_CONFIG,
   [Stage.GAME_OVER]: {
-    position: { x: 12, y: 12, z: 8 },
+    position: { x: 6, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },

@@ -73,7 +73,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/50 opacity-0 sm:gap-6">
+      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/70 opacity-0 sm:gap-6">
       <h2 className={`${FADE_IN_CLASS} heading-xl tracking-wide opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>
@@ -82,7 +82,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
         <p
           className={twJoin(
             'paragraph-lg flex items-center justify-center gap-2 rounded-full',
-            'bg-(--palette-3)/15 px-5 py-3 text-center font-semibold text-white',
+            'bg-(--palette-3)/25 px-5 py-3 text-center font-semibold text-white backdrop-blur-md',
             'ring-1 ring-(--palette-3)',
             FADE_IN_CLASS,
           )}>

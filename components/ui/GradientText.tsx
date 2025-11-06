@@ -10,7 +10,7 @@ export const GradientText: FC<Props> = ({ children, className, spanClassName }) 
   return (
     <div
       className={twMerge(
-        'pointer-events-none relative isolate inline size-fit max-w-4xl bg-linear-50/oklch from-white to-(--palette-3) to-120% bg-clip-text text-center',
+        'pointer-events-none relative isolate inline size-fit max-w-4xl bg-linear-70/oklch from-white to-(--palette-3) to-140% bg-clip-text text-center',
         className,
       )}>
       <span

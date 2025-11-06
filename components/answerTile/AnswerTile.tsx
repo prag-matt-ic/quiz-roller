@@ -60,7 +60,7 @@ export type AnswerTileProps = BaseProps & {
   wasCorrect: boolean
 }
 
-const labelColour = getPaletteHex(0.5)
+const labelColour = getPaletteHex(0.6)
 
 // Generic tile component which can be used for the start confirmation or answers
 export const AnswerTile: FC<AnswerTileProps> = ({
@@ -98,7 +98,6 @@ export const AnswerTile: FC<AnswerTileProps> = ({
     width: CANVAS_WIDTH,
     height: CANVAS_HEIGHT,
     color: labelColour,
-    fontWeight: 400,
     fontSize: 48,
   })
 
