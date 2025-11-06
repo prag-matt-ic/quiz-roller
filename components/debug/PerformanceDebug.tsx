@@ -57,8 +57,8 @@ const PerformanceDebug: FC = () => {
   }
 
   return (
-    <div className="fixed bottom-1 left-1 z-1000 max-w-64 space-y-3 rounded-md bg-black p-3 font-mono text-xs text-white shadow-lg backdrop-blur">
-      <SelectRow
+    <div className="fixed top-10 left-1 z-1000 max-w-56 space-y-2 rounded-md bg-black p-2 font-mono text-xs text-white">
+      {/* <SelectRow
         id="performance-debug-sim-fps"
         label="Sim FPS"
         value={simFps.toString()}
@@ -68,10 +68,10 @@ const PerformanceDebug: FC = () => {
             {option.label}
           </option>
         ))}
-      </SelectRow>
+      </SelectRow> */}
       <SelectRow
         id="performance-debug-scene-quality"
-        label="Scene Quality"
+        label="Quality"
         value={sceneQuality}
         onChange={handleQualityChange}>
         {Object.values(SceneQuality).map((quality) => (
@@ -96,7 +96,7 @@ const PerformanceDebug: FC = () => {
       <button
         onClick={resetGame}
         className={twJoin(
-          'w-full rounded bg-red-600 px-2 py-1 text-xs font-semibold text-white',
+          'w-full rounded bg-red-700 px-2 py-1 text-xs font-semibold text-white',
         )}>
         Reset Game
       </button>

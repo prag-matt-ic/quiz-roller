@@ -17,13 +17,18 @@ import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage, useGameStore } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
+import { is } from 'zod/locales'
 
 gsap.registerPlugin(useGSAP)
 
 // Start at the intro sweep position to avoid a jump before animation
 const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
 
-const Game: FC = () => {
+type Props = {
+  isDebug: boolean
+}
+
+const Game: FC<Props> = ({ isDebug }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
@@ -72,7 +77,7 @@ const Game: FC = () => {
         <ambientLight intensity={1.0} />
         {/* <OrbitControls /> */}
         <Camera />
-        <Stats />
+        {isDebug && <Stats />}
         <Suspense>
           <Physics debug={false} timeStep={physicsTimeStep}>
             <Level />

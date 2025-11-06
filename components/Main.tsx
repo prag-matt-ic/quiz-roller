@@ -11,16 +11,17 @@ import UI from './ui/UI'
 
 type Props = {
   isMobile: boolean
+  isDebug: boolean
 }
 
-const Main: FC<Props> = ({ isMobile }) => {
+const Main: FC<Props> = ({ isMobile, isDebug }) => {
   return (
     <SoundProvider>
       <PerformanceProvider isMobile={isMobile}>
         <GameProvider>
-          <Game />
+          <Game isDebug={isDebug} />
           <UI isMobile={isMobile} />
-          {/* {process.env.NODE_ENV === 'development' && <PerformanceDebug />} */}
+          {isDebug && <PerformanceDebug />}
         </GameProvider>
       </PerformanceProvider>
     </SoundProvider>
