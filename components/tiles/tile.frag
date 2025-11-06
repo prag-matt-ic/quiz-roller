@@ -14,11 +14,11 @@ varying mediump float vAnswerNumber;
 varying mediump float vFadeOut;
 
 // Constants
-const float ANSWER_MIX = 0.1;
+const float ANSWER_MIX = 0.125;
 const float NON_ANSWER_MIX = 0.25;
 const float DARKEN_FACTOR = 0.7;
 const float UP_THRESHOLD = 0.5;
-const float HIGHLIGHT_MIX = 0.95;
+const float HIGHLIGHT_MIX = 0.7;
 
 void main() {
   // Early discard for fully transparent tiles

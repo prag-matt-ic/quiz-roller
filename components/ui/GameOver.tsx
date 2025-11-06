@@ -14,7 +14,6 @@ import { GradientText } from './GradientText'
 import Card from './Card'
 
 const FADE_IN_CLASS = 'game-over-fade-in'
-const BADGE_ID = 'record-badge'
 
 type Props = {
   transitionStatus: TransitionStatus
@@ -22,7 +21,7 @@ type Props = {
 }
 
 const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
-  const currentRun = useGameStore((s) => s.currentRunStats)
+  const currentRun = useGameStore((s) => s.currentRun)
   const previousRuns = useGameStore((s) => s.previousRuns)
   const resetGame = useGameStore((s) => s.resetGame)
 
@@ -35,8 +34,19 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const prevPB = calculatePersonalBest(historyExcludingCurrent)
   const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
 
+  console.log('[GameOver] State:', {
+    transitionStatus,
+    hasPlayedGame,
+    currentRun,
+    previousRunsCount: previousRuns.length,
+    historyExcludingCurrentCount: historyExcludingCurrent.length,
+    prevPB,
+    isNewPB,
+  })
+
   useGSAP(
     () => {
+      console.log('[GameOver] GSAP animation triggered:', { transitionStatus, isNewPB })
       if (transitionStatus === 'entered') {
         gsap.timeline({ delay: 0.1 }).to(ref.current, { opacity: 1 }).fromTo(
           `.${FADE_IN_CLASS}`,
@@ -68,6 +78,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   )
 
   const onRollAgainClick = () => {
+    console.log('[GameOver] Roll Again clicked - resetting game')
     resetGame()
   }
 
@@ -121,7 +132,7 @@ type PersonalBest = {
 }
 
 function calculatePersonalBest(runs: RunStats[]): PersonalBest {
-  return runs.reduce<PersonalBest>(
+  const result = runs.reduce<PersonalBest>(
     (best, run) => {
       if (
         run.correctAnswers > best.correctAnswers ||
@@ -133,6 +144,8 @@ function calculatePersonalBest(runs: RunStats[]): PersonalBest {
     },
     { correctAnswers: 0, distance: 0 },
   )
+  console.log('[GameOver] calculatePersonalBest:', { runsCount: runs.length, result })
+  return result
 }
 
 function checkIsNewPersonalBest(
@@ -140,14 +153,22 @@ function checkIsNewPersonalBest(
   personalBest: PersonalBest,
 ): boolean {
   if (!currentRun) {
+    console.log('[GameOver] checkIsNewPersonalBest: No current run')
     return false
   }
 
-  return (
+  const isNewPB =
     currentRun.correctAnswers > personalBest.correctAnswers ||
     (currentRun.correctAnswers === personalBest.correctAnswers &&
       currentRun.distance > personalBest.distance)
-  )
+
+  console.log('[GameOver] checkIsNewPersonalBest:', {
+    currentRun,
+    personalBest,
+    isNewPB,
+  })
+
+  return isNewPB
 }
 
 type ComparisonStatsProps = {

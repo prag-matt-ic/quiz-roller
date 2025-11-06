@@ -13,6 +13,7 @@ import {
   useImperativeHandle,
   useRef,
   type RefObject,
+  useEffect,
 } from 'react'
 import { Group } from 'three'
 
@@ -46,14 +47,14 @@ const headingClasses = 'text-xl lg:text-2xl font-bold text-black'
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
-  positionElements: (rowData: RowData[]) => void
 }
 
 type Props = {
   ref: RefObject<HomeElementsHandle | null>
+  rowsData: RefObject<RowData[]>
 }
 
-const HomeElements: FC<Props> = ({ ref }) => {
+const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   const confirmingStart = useGameStore((s) => s.confirmingStart)
   const isConfirmingStart = Boolean(confirmingStart)
 
@@ -70,11 +71,12 @@ const HomeElements: FC<Props> = ({ ref }) => {
   ).current
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const skipFutureMoves = useRef(false)
+  const ignoreMoves = useRef(false)
+  const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
 
-  const positionElements = useCallback(
-    (rowData: RowData[]) => {
-      skipFutureMoves.current = false
+  useEffect(() => {
+    const positionElements = (rowData: RowData[]) => {
+      ignoreMoves.current = false
 
       rowData.forEach((row, rowIndex) => {
         if (row.type !== 'home') return
@@ -129,15 +131,14 @@ const HomeElements: FC<Props> = ({ ref }) => {
           optionRef.current.setTranslation(translation.current, true)
         }
       })
-    },
-    [colourPickerOptions, infoZoneRefs],
-  )
+    }
 
-  const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
+    positionElements(rowsData.current)
+  }, [])
 
   const moveElements = useCallback(
     (zStep: number) => {
-      if (skipFutureMoves.current) return
+      if (ignoreMoves.current) return
 
       if (!!startTile.current) {
         const currentTranslation = startTile.current.translation()
@@ -149,7 +150,7 @@ const HomeElements: FC<Props> = ({ ref }) => {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
           startTile.current.setTranslation(translation.current, false)
-          skipFutureMoves.current = true
+          ignoreMoves.current = true
         } else {
           translation.current.z = nextZ
           startTile.current.setTranslation(translation.current, true)
@@ -209,9 +210,8 @@ const HomeElements: FC<Props> = ({ ref }) => {
   useImperativeHandle(ref, () => {
     return {
       moveElements,
-      positionElements,
     }
-  }, [moveElements, positionElements])
+  }, [moveElements])
 
   const playerColourIndex = useGameStore((s) => s.colourIndex)
 

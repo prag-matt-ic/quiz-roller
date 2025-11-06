@@ -23,24 +23,17 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const isGameOver = stage === Stage.GAME_OVER
   const isPlaying = hasStarted && !isGameOver
-
   const switchKey = `${isPlaying}-${isGameOver}`
-
-  console.log(`[UI] Rendering UI - isPlaying: ${isPlaying}, isGameOver: ${isGameOver}`)
 
   return (
     <>
       <SwitchTransition>
-        <Transition
-          key={switchKey}
-          timeout={{ enter: 0, exit: 500 }}
-          nodeRef={wrapper}
-          appear={true}>
+        <Transition key={switchKey} timeout={{ enter: 0, exit: 500 }} nodeRef={wrapper}>
           {(transitionStatus) => {
             if (isPlaying)
               return <PlayingUI ref={wrapper} transitionStatus={transitionStatus} />
 
-            if (stage === Stage.GAME_OVER)
+            if (isGameOver)
               return <GameOverUI ref={wrapper} transitionStatus={transitionStatus} />
 
             return <div ref={wrapper} className="hidden" />

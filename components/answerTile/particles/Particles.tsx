@@ -141,7 +141,12 @@ const Particles: FC<Props> = ({
   })
 
   return (
-    <points ref={points} dispose={null} frustumCulled={false} rotation={[Math.PI / 2, 0, 0]}>
+    <points
+      ref={points}
+      dispose={null}
+      frustumCulled={false}
+      rotation={[Math.PI / 2, 0, 0]}
+      renderOrder={2}>
       <bufferGeometry attach="geometry">
         <bufferAttribute
           attach="attributes-position"

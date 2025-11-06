@@ -232,13 +232,6 @@ const Platform: FC = () => {
   }, [resetPlatformTick])
 
   useEffect(() => {
-    if (!tileInstances.length) return
-    if (!homeElements.current) return
-    // Position home elements after initial tiles are set up or when the platform resets
-    homeElements.current.positionElements(rowsData.current)
-  }, [resetPlatformTick, tileInstances.length])
-
-  useEffect(() => {
     if (stage === Stage.TERRAIN) {
       resetQuestionSectionDeceleration()
     }
@@ -438,7 +431,7 @@ const Platform: FC = () => {
       />
 
       {/* Home Elements */}
-      <HomeElements ref={homeElements} key={`${resetPlatformTick}-home`} />
+      <HomeElements ref={homeElements} rowsData={rowsData} key={`${resetPlatformTick}-home`} />
 
       {/* Question Elements */}
       <QuestionElements ref={questionElements} key={`${resetPlatformTick}-question`} />

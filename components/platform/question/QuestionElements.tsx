@@ -1,5 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import React, { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
+import { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
 import { type RefObject } from 'react'
 import { Mesh } from 'three'
 

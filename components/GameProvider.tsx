@@ -73,7 +73,7 @@ type GameState = {
   onAnswerConfirmed: () => void
   confirmedAnswers: AnswerUserData[]
 
-  currentRunStats: RunStats | null
+  currentRun: RunStats | null
   previousRuns: RunStats[]
 
   onOutOfBounds: () => void
@@ -119,7 +119,7 @@ const INITIAL_STATE: Pick<
   | 'confirmedAnswers'
   | 'distanceRows'
   | 'colourIndex'
-  | 'currentRunStats'
+  | 'currentRun'
   | 'previousRuns'
   | 'cameraLookAtPosition'
 > = {
@@ -144,7 +144,7 @@ const INITIAL_STATE: Pick<
   distanceRows: 0,
   colourIndex: 1,
   confirmingColourIndex: null,
-  currentRunStats: null,
+  currentRun: null,
   cameraLookAtPosition: null,
   previousRuns: [],
 }
@@ -382,17 +382,20 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         onOutOfBounds: () => {
           const { stage, goToStage } = get()
+          console.warn('Player went out of bounds!', { stage })
           if (stage === Stage.HOME) {
             set((s) => ({
               playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
               resetPlayerTick: s.resetPlayerTick + 1,
             }))
           } else {
+            console.warn('Transitioning to GAME_OVER stage due to out-of-bounds')
             goToStage(Stage.GAME_OVER)
           }
         },
 
         goToStage: (newStage: Stage) => {
+          console.log('[GameStore] goToStage called:', { newStage, currentStage: get().stage })
           if (newStage === Stage.INTRO) {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
@@ -422,6 +425,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           previousRuns: s.previousRuns,
           playerColourIndex: s.colourIndex,
         }),
+        version: 1,
       },
     ),
   )
@@ -555,7 +559,13 @@ function handleGameOverStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  const { confirmedAnswers, distanceRows } = get()
+  const { hasStarted, confirmedAnswers, distanceRows } = get()
+
+  console.log('[GAME_OVER] Transitioning to GAME_OVER stage...', {
+    hasStarted,
+    confirmedAnswersCount: confirmedAnswers.length,
+    distanceRows,
+  })
 
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
@@ -585,16 +595,14 @@ function handleGameOverStage({
     date: new Date(),
   }
 
-  console.log('[GAME_OVER] Run stats computed:', run)
+  console.log('[GAME_OVER] Run stats computed:', { run })
 
-  set((s) => {
-    return {
-      stage: Stage.GAME_OVER,
-      currentRunStats: run,
-      hasStarted: false,
-      previousRuns: [...s.previousRuns, run],
-    }
-  })
+  set((s) => ({
+    stage: Stage.GAME_OVER,
+    currentRun: run,
+    hasStarted: false,
+    previousRuns: [...s.previousRuns, run],
+  }))
 }
 
 type Props = PropsWithChildren
