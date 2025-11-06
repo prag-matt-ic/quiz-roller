@@ -13,18 +13,21 @@ export enum SoundFX {
   BACKGROUND = 'BACKGROUND',
   CORRECT_ANSWER = 'CORRECT_ANSWER',
   INCORRECT_ANSWER = 'WRONG_ANSWER',
-  GAME_OVER = 'GAME_OVER',
+  // GAME_OVER = 'GAME_OVER',
+  OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
   OPEN_INFO = 'OPEN_INFO',
   CHANGE_COLOUR = 'CHANGE_COLOUR',
 }
 
 const SOUND_FILES: Record<SoundFX, string> = {
-  [SoundFX.GAME_OVER]: '/audio/background.aac',
   [SoundFX.BACKGROUND]: '/audio/background.aac',
+
   [SoundFX.CORRECT_ANSWER]: '/audio/correct.aac',
   [SoundFX.INCORRECT_ANSWER]: '/audio/incorrect.aac',
+
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
+  [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>

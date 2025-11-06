@@ -34,19 +34,8 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const prevPB = calculatePersonalBest(historyExcludingCurrent)
   const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
 
-  console.log('[GameOver] State:', {
-    transitionStatus,
-    hasPlayedGame,
-    currentRun,
-    previousRunsCount: previousRuns.length,
-    historyExcludingCurrentCount: historyExcludingCurrent.length,
-    prevPB,
-    isNewPB,
-  })
-
   useGSAP(
     () => {
-      console.log('[GameOver] GSAP animation triggered:', { transitionStatus, isNewPB })
       if (transitionStatus === 'entered') {
         gsap.timeline({ delay: 0.1 }).to(ref.current, { opacity: 1 }).fromTo(
           `.${FADE_IN_CLASS}`,
@@ -78,7 +67,6 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   )
 
   const onRollAgainClick = () => {
-    console.log('[GameOver] Roll Again clicked - resetting game')
     resetGame()
   }
 

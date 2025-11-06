@@ -391,17 +391,15 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         onOutOfBounds: () => {
           const { stage, resetPlayer, goToStage } = get()
-          console.warn('Player went out of bounds!', { stage })
+          playSoundFX(SoundFX.OUT_OF_BOUNDS)
           if (stage === Stage.HOME) {
             resetPlayer()
           } else {
-            console.warn('Transitioning to GAME_OVER stage due to out-of-bounds')
             goToStage(Stage.GAME_OVER)
           }
         },
 
         goToStage: (newStage: Stage) => {
-          console.log('[GameStore] goToStage called:', { newStage, currentStage: get().stage })
           if (newStage === Stage.INTRO) {
             handleIntroStage({ set, get, speedTween, speedTweenTarget })
             return
@@ -446,7 +444,6 @@ function handleIncorrectAnswer({
   set: StoreApi<GameState>['setState']
   confirmingAnswer: AnswerUserData
 }) {
-  console.warn('Wrong answer chosen! Game over.')
   set((s) => ({
     confirmationProgress: 0,
     confirmingAnswer: null,
@@ -565,13 +562,7 @@ function handleGameOverStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  const { hasStarted, confirmedAnswers, distanceRows } = get()
-
-  console.log('[GAME_OVER] Transitioning to GAME_OVER stage...', {
-    hasStarted,
-    confirmedAnswersCount: confirmedAnswers.length,
-    distanceRows,
-  })
+  const { confirmedAnswers, distanceRows } = get()
 
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
@@ -591,8 +582,6 @@ function handleGameOverStage({
   //   })
   //   return
   // }
-
-  console.log('[GAME_OVER] Computing run stats...')
 
   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
   const run: RunStats = {
