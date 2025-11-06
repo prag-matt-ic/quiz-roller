@@ -19,7 +19,7 @@ const Logo: FC<Props> = ({ ref }) => {
   return (
     <group ref={ref} position={[0, -40, -40]}>
       <Suspense>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
           <planeGeometry args={[WIDTH, HEIGHT]} />
           <meshBasicMaterial map={texture} transparent={true} />
         </mesh>
