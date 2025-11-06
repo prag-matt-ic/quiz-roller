@@ -1,29 +1,22 @@
-// Answer Point Fragment Shader
+// Answer Point Fragment Shader (optimized)
 precision mediump float;
 
 varying mediump float vProgress;
-varying mediump float vSeed;
-varying mediump vec3 vCorrectColour;
-varying mediump vec3 vWrongColour;
-
-uniform float uWasCorrect;
+varying mediump float vOpacityFactor;
+varying lowp vec3 vColor;
 
 void main() {
-    vec2 centeredCoord = gl_PointCoord - vec2(0.5);
-    float distanceFromCenter = length(centeredCoord);
+    // Circular point mask without sqrt
+    vec2 c = gl_PointCoord - vec2(0.5);
+    float r2 = dot(c, c);
+    float circleMask = 1.0 - step(0.25, r2); // 0.5^2
 
-    float fadeIn = smoothstep(0.0, 0.1, vProgress);
-    float fadeOut = 1.0 - smoothstep(0.8, 1.0, vProgress);
-    float opacity = fadeIn * fadeOut;
-
-    float circleMask = 1.0 - step(0.5, distanceFromCenter);
+    // Temporal fade in/out
+    float opacity = smoothstep(0.0, 0.1, vProgress) * (1.0 - smoothstep(0.8, 1.0, vProgress));
     opacity *= circleMask;
 
-    float colourMix = clamp(uWasCorrect, 0.0, 1.0);
-    vec3 colour = mix(vWrongColour, vCorrectColour, colourMix);
+    // Per-particle variation
+    opacity *= vOpacityFactor;
 
-    float opacityMultiplier = 1.0 - vSeed * 0.5;
-    opacity *= opacityMultiplier;
-
-    gl_FragColor = vec4(colour, opacity);
+    gl_FragColor = vec4(vColor, opacity);
 }
