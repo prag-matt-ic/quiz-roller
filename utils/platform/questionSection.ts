@@ -16,8 +16,8 @@ import {
 export const OBSTACLE_SECTION_ROWS = 64
 
 // Terrain scrolling and animation constants
-export const DECEL_EASE_POWER = 6
-export const DECEL_START_OFFSET_ROWS = 6
+export const DECEL_EASE_POWER = 0.8
+export const DECEL_START_OFFSET_ROWS = 4
 export const OBSTACLE_BUFFER_SECTIONS = 10
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
@@ -45,7 +45,7 @@ export function generateQuestionSectionRowData(): RowData[] {
   )
 
   // Text appears first, then answers further down the section
-  const questionTextCenterRow = 7.5
+  const questionTextCenterRow = 8.5
   const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
 
