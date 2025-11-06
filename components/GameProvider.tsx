@@ -435,8 +435,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
   )
 }
 
-// Helper functions for onAnswerConfirmed
-
 function handleIncorrectAnswer({
   set,
   confirmingAnswer,

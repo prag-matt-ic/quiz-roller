@@ -46,7 +46,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
           {
             opacity: 1,
             scale: 1,
-            duration: 0.5,
+            duration: 0.4,
             ease: 'power1.out',
             stagger: 0.08,
           },
@@ -190,15 +190,15 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       </div>
       <p
         className={twJoin(
-          'text-3xl font-bold md:text-4xl',
-          isCorrectAnswersNewPB && 'text-amber-600',
+          'text-2xl font-bold md:text-3xl',
+          isCorrectAnswersNewPB && 'text-(--palette-3)',
         )}>
         {currentRun.correctAnswers}
       </p>
       <p
         className={twJoin(
-          'text-3xl font-bold md:text-4xl',
-          !isCorrectAnswersNewPB && 'text-amber-600',
+          'text-2xl font-bold md:text-3xl',
+          !isCorrectAnswersNewPB && 'text-(--palette-3)',
         )}>
         {personalBest.correctAnswers}
       </p>
@@ -208,15 +208,15 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       </div>
       <p
         className={twJoin(
-          'text-3xl font-bold md:text-4xl',
-          isDistanceNewPB && 'text-amber-600',
+          'text-2xl font-bold md:text-3xl',
+          isDistanceNewPB && 'text-(--palette-3)',
         )}>
         {currentRun.distance}
       </p>
       <p
         className={twJoin(
-          'text-3xl font-bold md:text-4xl',
-          !isDistanceNewPB && 'text-amber-600',
+          'text-2xl font-bold md:text-3xl',
+          !isDistanceNewPB && 'text-(--palette-3)',
         )}>
         {personalBest.distance}
       </p>
