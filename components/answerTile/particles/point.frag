@@ -12,7 +12,7 @@ void main() {
     float circleMask = 1.0 - step(0.25, r2); // 0.5^2
 
     // Temporal fade in/out
-    float opacity = smoothstep(0.0, 0.1, vProgress) * (1.0 - smoothstep(0.8, 1.0, vProgress));
+    float opacity = smoothstep(0.0, 0.1, vProgress) * (1.0 - smoothstep(0.7, 1.0, vProgress));
     opacity *= circleMask;
 
     // Per-particle variation

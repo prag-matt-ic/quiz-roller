@@ -10,6 +10,7 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
+// import { useControls } from 'leva'
 
 const CORRECT_COLOUR_HEX = [
   '#a7e758',
@@ -178,6 +179,28 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
       },
     })
   }, [goToStage, refreshSeeds, wasConfirmed, wasCorrect])
+
+  // useControls({
+  //   wasCorrect: {
+  //     value: false,
+  //     onChange: (v) => {
+  //       if (materialRef.current) {
+  //         materialRef.current.uWasCorrect = v ? 1 : 0
+  //       }
+  //     },
+  //   },
+  //   progress: {
+  //     value: 0,
+  //     min: 0,
+  //     max: 1,
+  //     step: 0.01,
+  //     onChange: (v) => {
+  //       if (materialRef.current) {
+  //         materialRef.current.uBurstProgress = v
+  //       }
+  //     },
+  //   },
+  // })
 
   useEffect(() => {
     return () => {

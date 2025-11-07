@@ -19,7 +19,7 @@ varying lowp vec3 vColor;
 
 const float TWO_PI = 6.28318530718;
 const float EPSILON = 0.0001;
-const vec3 NOISE_WEIGHTS = vec3(0.18, 0.35, 0.18);
+const vec3 NOISE_WEIGHTS = vec3(0.8, 0.3, 0.4);
 
 float easeOutCubic(in float t) {
     float inverted = 1.0 - t;
@@ -54,7 +54,7 @@ void main() {
     float t06 = progress * 0.6;
     float t03 = progress * 0.3;
     float noiseX = noise3d(vec3(noisePhase, t06, 0.0));
-    float noiseY = noise3d(vec3(noisePhase, t03, 2.4));
+    float noiseY = fract(seed * 23.0); //noise3d(vec3(noisePhase, t03, 2.4));
     float noiseZ = noise3d(vec3(noisePhase, t06, 3.0));
     vec3 baseNoise = vec3(noiseX, noiseY, noiseZ);
     vec3 burstNoise = baseNoise * NOISE_WEIGHTS * oneMinusProgress;
@@ -67,7 +67,7 @@ void main() {
     float verticalBase = mix(spawnPosition.y, uPlayerPosition.y, easedProgress);
     attractionPosition.y = verticalBase;
 
-    float arcHeight = mix(4.0, 8.0, hashedSeed.w);
+    float arcHeight = mix(5.0, 9.0, hashedSeed.w);
     float heightProfile = pow(progress, 0.4) * oneMinusProgress;
     attractionPosition.y += arcHeight * heightProfile;
 
@@ -75,7 +75,7 @@ void main() {
     attractionNoise.y *= 0.6;
     attractionPosition += attractionNoise;
 
-    float attractStrength = clamp(uWasCorrect, 0.0, 1.0);
+    float attractStrength = clamp(uWasCorrect, 0.0, step(0.3, seed)); // 70% chance to attract if correct
     vec3 finalPosition = mix(burstPosition, attractionPosition, attractStrength);
 
     // Standard transform
@@ -84,8 +84,8 @@ void main() {
     gl_Position = projectionMatrix * viewPosition;
 
     // Point size with subtle shrink during motion
-    float baseSize = mix(12.0, 24.0, seed);
-    float sizeFade = 1.0 - easedProgress * 0.4;
+    float baseSize = mix(12.0, 24.0, fract(seed * 17.0));
+    float sizeFade = 1.0 - easedProgress * 0.3;
     gl_PointSize = baseSize * sizeFade * uDpr;
 
     // Varyings
