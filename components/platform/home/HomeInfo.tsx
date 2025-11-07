@@ -13,7 +13,7 @@ type CreditProps = {
 
 export const Credit: FC<CreditProps> = ({ role, name, url }) => {
   return (
-    <div className="py-1">
+    <div className="py-0.5 sm:py-1">
       <span className="mb-1 block text-xs leading-none text-black/70 uppercase">{role}</span>
       {!!url ? (
         <a

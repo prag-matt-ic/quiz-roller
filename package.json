@@ -2,6 +2,7 @@
   "name": "quiz-roller",
   "version": "0.1.0",
   "private": true,
+  "author": "Matthew Frawley aka pragmattic",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
