@@ -241,7 +241,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
         <>
           <Card className="md:col-span-5" playerColourIndex={playerColourIndex}>
@@ -287,10 +287,10 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-160 grid-cols-3 gap-4"
+        infoContainerClassName="grid w-[328px] sm:w-160 grid-rows-auto sm:grid-cols-3 gap-3 sm:gap-4"
         Icon={FlagIcon}>
         <>
-          <Card className="col-span-3" playerColourIndex={playerColourIndex}>
+          <Card className="sm:col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className="text-xl font-bold text-black">Your Mission</h2>
             <p className="paragraph font-semibold">
               As the Innovation Orb, your mission is to master critical skills for building
@@ -301,18 +301,27 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
             </p>
           </Card>
 
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+          <Card
+            className="col-span-1"
+            childrenClassName="flex-row sm:flex-col"
+            playerColourIndex={playerColourIndex}>
             <BadgeQuestionMarkIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">Test your knowledge on UX/UI and AI</p>
           </Card>
 
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+          <Card
+            className="col-span-1"
+            childrenClassName="flex-row sm:flex-col"
+            playerColourIndex={playerColourIndex}>
             <GemIcon className="mb-1 size-5 sm:size-7" strokeWidth={1.5} />
             <p className="paragraph-sm font-semibold">
               Each correct answer unlocks fragments of the future web!
             </p>
           </Card>
-          <Card className="col-span-1" playerColourIndex={playerColourIndex}>
+          <Card
+            className="col-span-1"
+            childrenClassName="flex-row sm:flex-col"
+            playerColourIndex={playerColourIndex}>
             <TrendingUpIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">
               Questions increase in difficulty the further you roll

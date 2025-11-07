@@ -141,7 +141,7 @@ const Stick: FC = () => {
   )
 
   return (
-    <Joystick level={JOYSTICK_LEVELS} className="right-6 bottom-6" onMove={onJoystickMove}>
+    <Joystick level={JOYSTICK_LEVELS} className="right-8 bottom-8" onMove={onJoystickMove}>
       <div className="flex size-full items-center justify-center text-black">
         <Move size={24} strokeWidth={1.5} />
       </div>

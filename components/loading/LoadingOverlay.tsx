@@ -42,7 +42,7 @@ const LoadingOverlay: FC = () => {
       aria-live="polite"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-3 place-items-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% py-[30vh]',
+        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-3 place-items-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% py-24 sm:py-[30vh]',
         'transition-opacity delay-50 duration-400 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
@@ -72,7 +72,7 @@ const LoadingOverlay: FC = () => {
         />
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col items-center gap-3 sm:flex-row">
         <Button onClick={() => onStartClick(false)} variant="primary" disabled={!isReady}>
           <PlayIcon className="size-6" strokeWidth={1.5} />
           Start experience

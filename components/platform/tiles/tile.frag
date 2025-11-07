@@ -2,7 +2,7 @@ precision mediump float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: noise2d = require('glsl-noise/simplex/2d')
-#pragma glslify: getColourFromPalette = require(../palette.glsl)
+#pragma glslify: getColourFromPalette = require(../../palette.glsl)
 
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
@@ -23,13 +23,20 @@ const float DARKEN_FACTOR = 0.6;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.7;
 
-void main() {
-  // Early discard for fully transparent tiles
-  if (vAlpha <= 0.001 || vFadeOut <= 0.001) discard;
+#define FORCE_OPAQUE_DEBUG 1
 
+void main() {
   // Determine if this instance is an answer tile (branch-free)
   mediump float hasAnswer = step(0.5, vAnswerNumber);
   mediump float alpha = vAlpha;
+
+#if FORCE_OPAQUE_DEBUG
+  // Safari debugging: keep tiles visible by forcing alpha to 1.0.
+  alpha = 1.0;
+#else
+  // Early discard for fully transparent tiles
+  if (alpha <= 0.001 || vFadeOut <= 0.001) discard;
+#endif
 
   // Compute background color with scrolling noise
   highp vec3 bgNoisePos = vWorldPos * 0.1;
@@ -63,5 +70,10 @@ void main() {
   background *= shade;
 
   // Apply final fade-out
+#if FORCE_OPAQUE_DEBUG
+  // Original: gl_FragColor = vec4(background, alpha * vFadeOut);
+  gl_FragColor = vec4(background, 1.0);
+#else
   gl_FragColor = vec4(background, alpha * vFadeOut);
+#endif
 }

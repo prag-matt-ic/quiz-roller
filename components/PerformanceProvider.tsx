@@ -71,78 +71,61 @@ type PerformanceStore = StoreApi<PerformanceState>
 const PerformanceContext = createContext<PerformanceStore>(undefined!)
 
 const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>) => {
-  const initialQualityMode = initialState.isMobile ? SceneQuality.LOW : SceneQuality.HIGH
+  const initialQualityMode = initialState.isMobile ? SceneQuality.MEDIUM : SceneQuality.HIGH
 
   logPerformanceDebug('creating store', { ...initialState, initialQualityMode })
 
-  return createStore<PerformanceState>()(
-    persist(
-      (set, get) => ({
-        isMobile: initialState.isMobile,
-        maxDPR: undefined,
-        simFps: 0,
-        sceneQuality: initialQualityMode,
-        sceneConfig: SCENE_CONFIGS[initialQualityMode],
-        isReady: false,
-        hasBeenManuallySet: false,
-        setSimFps: (fps: RapierSimFPS) => {
-          const previous = get().simFps
-          logPerformanceDebug('simFps updated', { previous, next: fps })
-          set({ simFps: fps })
-        },
-        setSceneQuality: (quality: SceneQuality) => {
-          if (quality === get().sceneQuality) return
-          set({
-            sceneQuality: quality,
-            sceneConfig: SCENE_CONFIGS[quality],
-            hasBeenManuallySet: true,
-          })
-        },
-        setMaxDpr: (value: number | undefined) => {
-          const previous = get().maxDPR
-          logPerformanceDebug('maxDPR override updated', { previous, next: value })
-          set({
-            maxDPR: value,
-          })
-        },
-        onPerformanceChange: (up: boolean) => {
-          const { sceneQuality, hasBeenManuallySet } = get()
-          if (hasBeenManuallySet) return
+  return createStore<PerformanceState>((set, get) => ({
+    isMobile: initialState.isMobile,
+    maxDPR: undefined,
+    simFps: 0,
+    sceneQuality: initialQualityMode,
+    sceneConfig: SCENE_CONFIGS[initialQualityMode],
+    isReady: false,
+    hasBeenManuallySet: false,
+    setSimFps: (fps: RapierSimFPS) => {
+      const previous = get().simFps
+      logPerformanceDebug('simFps updated', { previous, next: fps })
+      set({ simFps: fps })
+    },
+    setSceneQuality: (quality: SceneQuality) => {
+      if (quality === get().sceneQuality) return
+      set({
+        sceneQuality: quality,
+        sceneConfig: SCENE_CONFIGS[quality],
+        hasBeenManuallySet: true,
+      })
+    },
+    setMaxDpr: (value: number | undefined) => {
+      const previous = get().maxDPR
+      logPerformanceDebug('maxDPR override updated', { previous, next: value })
+      set({
+        maxDPR: value,
+      })
+    },
+    onPerformanceChange: (up: boolean) => {
+      const { sceneQuality, hasBeenManuallySet } = get()
+      if (hasBeenManuallySet) return
 
-          const order = Object.values(SceneQuality).reverse() // [Low, Medium, High]
-          const currentIndex = order.indexOf(sceneQuality)
-          const nextIndex = Math.min(
-            order.length - 1,
-            Math.max(0, currentIndex + (up ? 1 : -1)),
-          )
-          const nextMode = order[nextIndex]
-          if (nextMode === sceneQuality) return
+      const order = Object.values(SceneQuality).reverse() // [Low, Medium, High]
+      const currentIndex = order.indexOf(sceneQuality)
+      const nextIndex = Math.min(order.length - 1, Math.max(0, currentIndex + (up ? 1 : -1)))
+      const nextMode = order[nextIndex]
+      if (nextMode === sceneQuality) return
 
-          logPerformanceDebug('sceneQuality auto adjusted', {
-            direction: up ? 'up' : 'down',
-            previous: sceneQuality,
-            next: nextMode,
-          })
+      logPerformanceDebug('sceneQuality auto adjusted', {
+        direction: up ? 'up' : 'down',
+        previous: sceneQuality,
+        next: nextMode,
+      })
 
-          set({
-            isReady: true,
-            sceneQuality: nextMode,
-            sceneConfig: SCENE_CONFIGS[nextMode],
-          })
-        },
-      }),
-      {
-        name: 'quizroller-performance',
-        partialize: (state) => ({
-          qualityMode: state.sceneQuality,
-          sceneQuality: state.sceneQuality,
-        }),
-        onRehydrateStorage: () => (state) => {
-          logPerformanceDebug('hydrated store from storage', state)
-        },
-      },
-    ),
-  )
+      set({
+        isReady: true,
+        sceneQuality: nextMode,
+        sceneConfig: SCENE_CONFIGS[nextMode],
+      })
+    },
+  }))
 }
 
 type Props = PropsWithChildren<{

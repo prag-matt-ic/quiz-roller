@@ -136,7 +136,7 @@ export const InfoZone: FC<Props> = ({
     gsap.to(infoContainer.current, {
       opacity: 0,
       scale: 0.8,
-      duration: 0.3,
+      duration: 0.28,
       ease: 'expoScale(0.8,1.0,power1.out)',
     })
   })
@@ -196,13 +196,11 @@ export const InfoZone: FC<Props> = ({
             onEnter={onIconEnter}
             onExit={onIconExit}
             nodeRef={iconContainer}>
-            {() => (
-              <div
-                ref={iconContainer}
-                className="flex items-center justify-center overflow-hidden rounded-full bg-black p-3">
-                <Icon strokeWidth={1.75} className="size-10 sm:size-13" />
-              </div>
-            )}
+            <div
+              ref={iconContainer}
+              className="flex items-center justify-center overflow-hidden rounded-full bg-black p-2 sm:p-3">
+              <Icon strokeWidth={1.75} className="size-9 sm:size-13" />
+            </div>
           </Transition>
         </Html>
 
@@ -225,20 +223,18 @@ export const InfoZone: FC<Props> = ({
             in={showInfo}
             mountOnEnter={true}
             unmountOnExit={true}
-            timeout={{ enter: 0, exit: 350 }}
+            timeout={{ enter: 0, exit: 300 }}
             onEnter={onInfoEnter}
             onExit={onInfoExit}
             nodeRef={infoContainer}>
-            {() => (
-              <div
-                ref={infoContainer}
-                className={twMerge(
-                  'relative size-fit max-h-[calc(100svh-40px)] max-w-[calc(100vw-40px)]',
-                  infoContainerClassName,
-                )}>
-                {children}
-              </div>
-            )}
+            <div
+              ref={infoContainer}
+              className={twMerge(
+                'relative size-fit max-w-[calc(100vw-56px)]',
+                infoContainerClassName,
+              )}>
+              {children}
+            </div>
           </Transition>
         </Html>
       </RigidBody>

@@ -19,8 +19,8 @@ import {
 } from '@/utils/platform/questionSection'
 import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
-import tileFadeFragment from './tile.frag'
-import tileFadeVertex from './tile.vert'
+import fragmentShader from './tile.frag'
+import vertexShader from './tile.vert'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 // Shader material for fade-in/out and player proximity effects
@@ -46,8 +46,8 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
 
 const CustomTileShaderMaterial = shaderMaterial(
   INITIAL_TILE_UNIFORMS,
-  tileFadeVertex,
-  tileFadeFragment,
+  vertexShader,
+  fragmentShader,
 )
 const TileShaderMaterial = extend(CustomTileShaderMaterial)
 

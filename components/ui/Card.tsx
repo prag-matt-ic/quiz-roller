@@ -22,7 +22,7 @@ const Card: FC<CardProps> = ({
   })
 
   return (
-    <div className={twMerge('card relative origin-bottom', className)}>
+    <div className={twMerge('card relative h-fit origin-bottom', className)}>
       <div
         className="absolute -top-1.5 -left-1.5 size-full opacity-50"
         style={{

@@ -8,7 +8,7 @@ import HomeElements, { type HomeElementsHandle } from '@/components/platform/hom
 import QuestionElements, {
   type QuestionElementsHandle,
 } from '@/components/platform/question/QuestionElements'
-import { PlatformTiles, type InstancedTilesHandle } from '@/components/tiles/PlatformTiles'
+import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { TERRAIN_SPEED_UNITS } from '@/resources/game'
