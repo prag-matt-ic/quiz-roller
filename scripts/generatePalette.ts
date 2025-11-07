@@ -19,9 +19,9 @@ type PaletteConfig = {
 }
 
 const DEFAULT_PALETTE_CONFIG: PaletteConfig = {
-  bright: { num: 7, variance: 0.08 },
-  cool: { num: 2, variance: 0.05 },
-  neutral: { num: 1, variance: 0.02 },
+  bright: { num: 7, variance: 0.02 },
+  cool: { num: 2, variance: 0.03 },
+  neutral: { num: 1, variance: 0.03 },
 }
 
 const HEX_COLOR_PATTERN = /^#?([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i

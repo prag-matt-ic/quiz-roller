@@ -10,23 +10,22 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
-// import { useControls } from 'leva'
 
 const CORRECT_COLOUR_HEX = [
-  '#a7e758',
-  '#edff4c',
-  '#10e548',
-  '#a2d92a',
-  '#3bf44f',
-  '#00ff82',
-  '#ccf941',
-  '#a2dd00',
-  '#f1ffdc',
-  '#f3fbea',
-  '#8dac77',
+  '#509e7b',
+  '#00ea89',
+  '#00f394',
+  '#00ffa8',
+  '#00f68b',
+  '#00ffac',
+  '#00f299',
+  '#35ffb7',
+  '#d0fceb',
+  '#dfeee7',
+  '#267152',
 ] as const
 
-const WRONG_COLOUR_HEX = [
+const INCORRECT_COLOUR_HEX = [
   '#d58d03',
   '#ffe738',
   '#fff500',
@@ -118,10 +117,10 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
     for (let i = 0; i < particleCount; i++) {
       const colourOffset = i * 3
       const correctColourIndex = Math.floor(Math.random() * CORRECT_COLOUR_HEX.length)
-      const wrongColourIndex = Math.floor(Math.random() * WRONG_COLOUR_HEX.length)
+      const wrongColourIndex = Math.floor(Math.random() * INCORRECT_COLOUR_HEX.length)
 
       correctColour.set(CORRECT_COLOUR_HEX[correctColourIndex])
-      wrongColour.set(WRONG_COLOUR_HEX[wrongColourIndex])
+      wrongColour.set(INCORRECT_COLOUR_HEX[wrongColourIndex])
 
       correctColours[colourOffset] = correctColour.r
       correctColours[colourOffset + 1] = correctColour.g
@@ -163,7 +162,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
     progress.current.value = 0
     isActive.current = true
 
-    refreshSeeds()
+    // refreshSeeds()
 
     materialRef.current.uBurstProgress = 0
     materialRef.current.uWasCorrect = wasCorrect ? 1 : 0

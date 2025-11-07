@@ -14,10 +14,9 @@ import Player from '@/components/player/Player'
 
 import Camera, { CAMERA_CONFIG } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
-import { Stage, useGameStore } from './GameProvider'
+import { Stage } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
-import { is } from 'zod/locales'
 
 gsap.registerPlugin(useGSAP)
 

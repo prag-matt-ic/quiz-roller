@@ -70,8 +70,6 @@ type PerformanceStore = StoreApi<PerformanceState>
 
 const PerformanceContext = createContext<PerformanceStore>(undefined!)
 
-const PERFORMANCE_STORAGE_KEY = 'quizroller-performance'
-
 const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>) => {
   const initialQualityMode = initialState.isMobile ? SceneQuality.LOW : SceneQuality.HIGH
 
@@ -134,12 +132,14 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
         },
       }),
       {
-        name: PERFORMANCE_STORAGE_KEY,
+        name: 'quizroller-performance',
         partialize: (state) => ({
           qualityMode: state.sceneQuality,
           sceneQuality: state.sceneQuality,
         }),
-        onRehydrateStorage: () => (state) => {},
+        onRehydrateStorage: () => (state) => {
+          logPerformanceDebug('hydrated store from storage', state)
+        },
       },
     ),
   )

@@ -47,6 +47,7 @@ type GameState = {
   setConfirmingColourIndex: (index: number | null) => void
 
   confirmationProgress: number // [0, 1]
+  confirmationResult: null | 'correct' | 'incorrect' // Set when confirmation completes and then clear
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -124,6 +125,7 @@ const INITIAL_STATE: Pick<
   | 'currentRun'
   | 'previousRuns'
   | 'cameraLookAtPosition'
+  | 'confirmationResult'
 > = {
   stage: Stage.HOME,
   terrainSpeed: 0,
@@ -149,6 +151,7 @@ const INITIAL_STATE: Pick<
   currentRun: null,
   cameraLookAtPosition: null,
   previousRuns: [],
+  confirmationResult: null,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -354,14 +357,13 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
           confirmationTween?.kill()
 
-          if (!confirmingAnswer.answer.isCorrect) {
+          if (confirmingAnswer.answer.isCorrect) {
+            handleCorrectAnswer({ confirmingAnswer, set })
+            playSoundFX(SoundFX.CORRECT_ANSWER)
+          } else {
             handleIncorrectAnswer({ confirmingAnswer, set })
             playSoundFX(SoundFX.INCORRECT_ANSWER)
-            return
           }
-
-          handleCorrectAnswer({ confirmingAnswer, set })
-          playSoundFX(SoundFX.CORRECT_ANSWER)
         },
 
         resetPlatformTick: 0,
@@ -443,9 +445,9 @@ function handleIncorrectAnswer({
   confirmingAnswer: AnswerUserData
 }) {
   set((s) => ({
-    confirmationProgress: 0,
     confirmingAnswer: null,
     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
+    confirmationResult: 'incorrect',
   }))
 }
 
@@ -464,10 +466,10 @@ function handleCorrectAnswer({
     const newDifficulty = Math.min(Math.floor(totalCorrect / 2) + 1, MAX_DIFFICULTY)
 
     return {
-      confirmationProgress: 0,
       currentDifficulty: newDifficulty,
       confirmingAnswer: null,
       confirmedAnswers: newConfirmedAnswers,
+      confirmationResult: 'correct',
     }
   })
 }
@@ -522,6 +524,7 @@ function handleQuestionStage({
 
   set({
     stage: Stage.QUESTION,
+    confirmationProgress: 0,
     currentQuestionIndex: newQuestionIndex,
     currentQuestion: newQuestion,
     questions: [...questions, newQuestion],
@@ -537,7 +540,7 @@ function handleTerrainStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  set({ stage: Stage.TERRAIN })
+  set({ stage: Stage.TERRAIN, confirmationResult: null }) // Clears confirmation result when leaving question stage
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
     duration: TERRAIN_SPEED_DURATION,
