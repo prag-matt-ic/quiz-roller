@@ -23,7 +23,7 @@ const float DARKEN_FACTOR = 0.6;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.7;
 
-#define FORCE_OPAQUE_DEBUG 1
+#define FORCE_OPAQUE_DEBUG 0
 
 void main() {
   // Determine if this instance is an answer tile (branch-free)

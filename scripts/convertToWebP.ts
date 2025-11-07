@@ -38,8 +38,8 @@ import sharp from 'sharp'
 // CONFIGURATION - Adjust these as needed
 // ============================================
 const QUALITY = 92 // WebP quality (1-100, 100 = maximum quality)
-const MAX_WIDTH = 2500 // Maximum width in pixels
-const MAX_HEIGHT = 2500 // Maximum height in pixels
+const MAX_WIDTH = 1024 // Maximum width in pixels
+const MAX_HEIGHT = 1024 // Maximum height in pixels
 const SUPPORTED_FORMATS = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.webp', '.avif']
 const OVERWRITE_ORIGINALS = false // Set to true to replace original files
 const BYTES_PER_KILOBYTE = 1024

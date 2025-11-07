@@ -116,7 +116,10 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
       sensor={false}
       colliders="cuboid"
       friction={0.0}>
-      <instancedMesh args={[undefined, undefined, instances.length]} count={instances.length}>
+      <instancedMesh
+        args={[undefined, undefined, instances.length]}
+        frustumCulled={false}
+        count={instances.length}>
         <boxGeometry args={[TILE_SIZE, TILE_THICKNESS, TILE_SIZE, 1, 1, 1]}>
           <instancedBufferAttribute
             ref={instanceVisibilityBufferAttribute}

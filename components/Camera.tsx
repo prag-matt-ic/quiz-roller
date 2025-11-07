@@ -3,17 +3,11 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { type FC, useEffect, useRef } from 'react'
-import { MathUtils } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
-
-const MIN_POLAR_ANGLE = MathUtils.degToRad(20)
-const MAX_POLAR_ANGLE = MathUtils.degToRad(60)
-const MIN_AZIMUTH_ANGLE = MathUtils.degToRad(-15)
-const MAX_AZIMUTH_ANGLE = MathUtils.degToRad(15)
 
 const TERRAIN_CONFIG = {
   position: { x: 0, y: 6, z: 7 },
@@ -92,14 +86,6 @@ const Camera: FC = () => {
   return (
     <CameraControls
       ref={cameraControls}
-      minPolarAngle={MIN_POLAR_ANGLE}
-      maxPolarAngle={MAX_POLAR_ANGLE}
-      minAzimuthAngle={MIN_AZIMUTH_ANGLE}
-      maxAzimuthAngle={MAX_AZIMUTH_ANGLE}
-      minDistance={3}
-      maxDistance={11}
-      minZoom={1}
-      maxZoom={3}
       makeDefault={true}
       mouseButtons={{
         left: ACTION.NONE,
