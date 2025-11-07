@@ -22,6 +22,7 @@ varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vAnswerNumber;
 varying mediump float vFadeOut;
+varying mediump vec2 vUv;
 
 const float PLAYER_IMPACT_RADIUS = 1.75; // world units
 
@@ -71,6 +72,8 @@ void main() {
 
   // Pass answer number to fragment shader
   vAnswerNumber = answerNumber;
+
+  vUv = uv;
 
   gl_Position = projectionMatrix * viewMatrix * worldPos;
 }

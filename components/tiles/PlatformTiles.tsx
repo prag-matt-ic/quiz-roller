@@ -5,7 +5,7 @@ import {
   type InstancedRigidBodyProps,
   type RapierRigidBody,
 } from '@react-three/rapier'
-import { useImperativeHandle, useRef } from 'react'
+import { FC, useImperativeHandle, useRef } from 'react'
 import { type InstancedBufferAttribute, Vector3 } from 'three'
 
 import { PLAYER_INITIAL_POSITION_VEC3 } from '@/components/GameProvider'
@@ -21,6 +21,7 @@ import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 import tileFadeFragment from './tile.frag'
 import tileFadeVertex from './tile.vert'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 // Shader material for fade-in/out and player proximity effects
 type TileShaderUniforms = {
@@ -30,6 +31,7 @@ type TileShaderUniforms = {
   uScrollZ: number
   uExitStartZ: number
   uExitEndZ: number
+  uAddDetailNoise: number
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
@@ -39,6 +41,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uEntryEndZ: QUESTIONS_ENTRY_END_Z,
   uExitStartZ: QUESTIONS_EXIT_START_Z,
   uExitEndZ: QUESTIONS_EXIT_END_Z,
+  uAddDetailNoise: 1,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(
@@ -64,14 +67,15 @@ type InstancedTilesProps = {
   initialUniforms?: Partial<TileShaderUniforms>
 }
 
-export function InstancedTiles({
+export const PlatformTiles: FC<InstancedTilesProps> = ({
   instances,
   instanceVisibility,
   instanceSeed,
   instanceAnswerNumber,
   initialUniforms,
   ref,
-}: InstancedTilesProps) {
+}) => {
+  const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
@@ -132,6 +136,7 @@ export function InstancedTiles({
           transparent={true}
           {...INITIAL_TILE_UNIFORMS}
           {...initialUniforms}
+          uAddDetailNoise={Number(addDetailNoise)}
         />
       </instancedMesh>
     </InstancedRigidBodies>

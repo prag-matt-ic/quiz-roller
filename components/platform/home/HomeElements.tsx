@@ -246,7 +246,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         <>
           <Card className="md:col-span-5" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>About</h2>
-            <p className="paragraph-sm max-w-lg">
+            <p className="paragraph-sm max-w-md">
               Quizroller is a proof of concept developed to showcase the potential of 3D web
               experiences for educational purposes.
               <br />

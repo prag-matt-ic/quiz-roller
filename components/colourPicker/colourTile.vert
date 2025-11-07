@@ -1,4 +1,4 @@
-varying vec2 vUv;
+varying mediump vec2 vUv;
 
 void main() {
   vUv = uv;

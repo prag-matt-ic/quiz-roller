@@ -1,4 +1,5 @@
-precision mediump float; // Lowered for general math
+precision mediump float;
+precision lowp int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require('../palette.glsl')
@@ -8,55 +9,55 @@ uniform float uTime;
 uniform lowp int uColourIndex;
 uniform lowp float uIsActive;
 
-varying vec2 vUv;
+varying mediump vec2 vUv;
 
 const float NOISE_SCALE = 1.4;
+const float DETAIL_NOISE_SCALE = NOISE_SCALE * 320.0;
+const float DETAIL_NOISE_WEIGHT = 0.25;
 const float ACTIVE_NOISE_TIME_SPEED = 0.8;
 const float INACTIVE_NOISE_TIME_SPEED = 0.12;
+const float NOISE_TIME_DELTA = ACTIVE_NOISE_TIME_SPEED - INACTIVE_NOISE_TIME_SPEED;
 const float BORDER_THICKNESS = 0.05;
-
-float sdCircle(in vec2 p, in float r) {
-  return length(p) - r;
-}
+const float OUTER_RADIUS = 0.5;
+const float INV_OUTER_RADIUS = 2.0;
+const float INNER_RADIUS = OUTER_RADIUS - BORDER_THICKNESS;
+const float VIGNETTE_START = 0.35;
+const float VIGNETTE_INTENSITY = 0.3;
 
 void main() {
   vec2 centeredUv = vUv - 0.5;
-  const float OUTER_RADIUS = 0.5;
   float radialLength = length(centeredUv);
-  float radial = radialLength / OUTER_RADIUS;
 
-  float outerDistance = radialLength - OUTER_RADIUS;
-  if (outerDistance > 0.0) {
+  if (radialLength > OUTER_RADIUS) {
     discard;
   }
 
+  float radial = radialLength * INV_OUTER_RADIUS;
   float activeMix = clamp(uIsActive, 0.0, 1.0);
-  float timeSpeed = mix(INACTIVE_NOISE_TIME_SPEED, ACTIVE_NOISE_TIME_SPEED, activeMix);
+  float timeFactor = uTime * (INACTIVE_NOISE_TIME_SPEED + NOISE_TIME_DELTA * activeMix);
 
-  float primaryNoise = noise(vec3(vUv * NOISE_SCALE, uTime * timeSpeed));
-  float detailNoise = noise(
-    vec3(centeredUv * (NOISE_SCALE * 320.0), uTime)
-  );
-  float noiseValue = mix(primaryNoise, detailNoise, 0.25) * 0.5 + 0.5;
+  vec2 scaledUv = vUv * NOISE_SCALE;
+  float primaryNoise = noise(vec3(scaledUv, timeFactor));
+  float detailNoise = noise(vec3(centeredUv * DETAIL_NOISE_SCALE, uTime));
+  float noiseValue = primaryNoise + (detailNoise - primaryNoise) * DETAIL_NOISE_WEIGHT;
+  float normalizedNoise = noiseValue * 0.5 + 0.5;
 
   // Colour from palette
   float minValue;
   float maxValue;
   paletteRange(uColourIndex, minValue, maxValue);
   
-  float paletteT = mix(minValue, maxValue, noiseValue);
+  float paletteT = minValue + (maxValue - minValue) * normalizedNoise;
   lowp vec3 baseColour = getColourFromPalette(paletteT); // Use lowp for color
 
   // Vignette shading
-  float edgeVignette = smoothstep(0.35, 1.0, radial);
-  lowp vec3 shadedColour = mix(baseColour, vec3(0.0), edgeVignette * 0.3);
-  lowp vec3 finalColour = shadedColour;
+  float vignetteStrength = smoothstep(VIGNETTE_START, 1.0, radial) * VIGNETTE_INTENSITY;
+  lowp vec3 finalColour = baseColour * (1.0 - vignetteStrength);
 
   // Border
-  float innerRadius = max(OUTER_RADIUS - BORDER_THICKNESS, 0.0);
-  float innerDistance = radialLength - innerRadius; // Hoisted sdCircle
-  float innerAntiAliasing = fwidth(innerDistance);
-  float borderMask = smoothstep(innerRadius, innerRadius + innerAntiAliasing, radialLength);
+  float borderDistance = radialLength - INNER_RADIUS;
+  float borderAntiAliasing = fwidth(borderDistance);
+  float borderMask = smoothstep(0.0, borderAntiAliasing, borderDistance);
 
   finalColour = mix(finalColour, vec3(1.0), borderMask * activeMix);
 

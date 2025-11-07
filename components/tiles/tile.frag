@@ -1,8 +1,10 @@
 precision mediump float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
+#pragma glslify: noise2d = require('glsl-noise/simplex/2d')
 #pragma glslify: getColourFromPalette = require(../palette.glsl)
 
+uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
 
 varying mediump float vAlpha;
@@ -12,11 +14,12 @@ varying mediump float vSeed;
 varying mediump float vPlayerHighlight;
 varying mediump float vAnswerNumber;
 varying mediump float vFadeOut;
+varying mediump vec2 vUv;
 
 // Constants
 const float ANSWER_MIX = 0.125;
 const float NON_ANSWER_MIX = 0.25;
-const float DARKEN_FACTOR = 0.7;
+const float DARKEN_FACTOR = 0.6;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.7;
 
@@ -35,6 +38,13 @@ void main() {
   float bgNoise = noise(bgNoisePos);
   float bgInput = bgNoise * 0.5 + 0.5; // Map from [-1,1] to [0,1]
   vec3 bgColour = getColourFromPalette(bgInput);
+
+
+  // Apply detail noise when quality setting is high.
+  if (uAddDetailNoise > 0.5) {
+    mediump float detailNoise = noise2d(vUv * 48.0) * 0.5 + 0.5;
+    bgColour -= detailNoise * 0.2;
+  }
 
   // Mix with white based on tile type
   mediump float mixAmount = mix(NON_ANSWER_MIX, ANSWER_MIX, hasAnswer);

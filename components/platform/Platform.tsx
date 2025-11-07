@@ -8,7 +8,7 @@ import HomeElements, { type HomeElementsHandle } from '@/components/platform/hom
 import QuestionElements, {
   type QuestionElementsHandle,
 } from '@/components/platform/question/QuestionElements'
-import { InstancedTiles, type InstancedTilesHandle } from '@/components/tiles/InstancedTiles'
+import { PlatformTiles, type InstancedTilesHandle } from '@/components/tiles/PlatformTiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { TERRAIN_SPEED_UNITS } from '@/resources/game'
@@ -422,7 +422,7 @@ const Platform: FC = () => {
 
   return (
     <group>
-      <InstancedTiles
+      <PlatformTiles
         ref={instancedTilesRef}
         instances={tileInstances}
         instanceVisibility={instanceVisibility.current!}

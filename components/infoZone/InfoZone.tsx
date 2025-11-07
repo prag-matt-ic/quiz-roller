@@ -171,7 +171,7 @@ export const InfoZone: FC<Props> = ({
           onIntersectionEnter={onIntersectionEnter}
           onIntersectionExit={onIntersectionExit}
         />
-        <mesh position={[0, 0, 0.03]} renderOrder={2}>
+        <mesh position={[0, 0, 0.01]} renderOrder={2}>
           <planeGeometry args={[width, height]} />
           <InfoZoneShaderMaterial
             transparent={true}

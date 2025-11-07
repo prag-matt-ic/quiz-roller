@@ -127,7 +127,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
         friction={0}
       />
       {/* Single mesh: shader renders border + samples text texture */}
-      <mesh position={[0, 0, 0.03]} renderOrder={2}>
+      <mesh position={[0, 0, 0.01]} renderOrder={2}>
         <planeGeometry args={[width, height]} />
         <AnswerTileShaderMaterial
           key={AnswerTileShader.key}

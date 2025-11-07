@@ -21,6 +21,9 @@ export type SceneConfig = {
   floatingTiles: {
     instanceCount: number
   }
+  platformTiles: {
+    addDetailNoise: boolean
+  }
 }
 
 const logPerformanceDebug = (...payload: unknown[]) => {
@@ -33,16 +36,19 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     answerTile: { particleCount: 81 },
     player: { segments: 64, isFlat: false },
     floatingTiles: { instanceCount: Math.pow(2, 8) },
+    platformTiles: { addDetailNoise: true },
   },
   [SceneQuality.MEDIUM]: {
     player: { segments: 40, isFlat: false },
     answerTile: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(2, 6) },
+    platformTiles: { addDetailNoise: true },
   },
   [SceneQuality.LOW]: {
     answerTile: { particleCount: 36 },
     player: { segments: 24, isFlat: true },
     floatingTiles: { instanceCount: 0 },
+    platformTiles: { addDetailNoise: false },
   },
 }
 
