@@ -66,7 +66,9 @@ const ConfirmationBar: FC = () => {
     <Html
       sprite={true}
       pointerEvents="none"
-      position={[-PLAYER_RADIUS, PLAYER_RADIUS * 4, PLAYER_RADIUS]}
+      position={[0, PLAYER_RADIUS * 4, PLAYER_RADIUS]}
+      center={true}
+      renderOrder={2}
       className="relative select-none">
       <Transition
         in={showBar}

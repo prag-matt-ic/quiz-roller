@@ -188,10 +188,13 @@ export const QuestionAnswerTile: FC<QuestionAnswerTileProps> = ({ index, ...rest
     return confirmingAnswer.answerNumber === index + 1
   }, [confirmingAnswer, currentQuestion, index])
 
-  const { wasConfirmed, wasCorrect } = useMemo(() => {
+  const { wasConfirmed, wasCorrect } = useMemo<{
+    wasConfirmed: boolean
+    wasCorrect: boolean
+  }>(() => {
     const confirmedEntry = confirmedAnswers.find((a) => a.answer.text === text)
-    const wasConfirmed = Boolean(confirmedEntry)
-    const wasCorrect = Boolean(confirmedEntry?.answer.isCorrect)
+    const wasConfirmed = !!confirmedEntry
+    const wasCorrect = !!confirmedEntry?.answer.isCorrect
     return { wasConfirmed, wasCorrect }
   }, [confirmedAnswers, text])
 
