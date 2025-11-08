@@ -52,7 +52,7 @@ const Player: FC = () => {
   const frameDisplacement = useRef(new Vector3())
   const playerVelocity = useRef(new Vector3())
   const terrainVelocity = useRef(new Vector3())
-  const relativeVelocity = useRef(new Vector3())
+  const terrainDisplacement = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
 
@@ -113,10 +113,19 @@ const Player: FC = () => {
 
     const correctedMovement = controllerRef.current.computedMovement()
     const currentPosition = bodyRef.current.translation()
+
+    calculateTerrainVelocity(terrainSpeed.current, terrainVelocity.current)
+
+    // Terrain conveyor only moves along +Z/-Z, zero out lateral components to avoid drift
+    terrainDisplacement.current.copy(terrainVelocity.current).multiplyScalar(deltaTime)
+    terrainDisplacement.current.x = 0
+    terrainDisplacement.current.y = 0
+
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
     nextPosition.current.y = currentPosition.y + correctedMovement.y
-    nextPosition.current.z = currentPosition.z + correctedMovement.z
+    nextPosition.current.z =
+      currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
     // Update global player position in store (immutable update)
@@ -126,17 +135,12 @@ const Player: FC = () => {
     frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
 
     calculatePlayerVelocity(frameDisplacement.current, deltaTime, playerVelocity.current)
-    calculateTerrainVelocity(terrainSpeed.current, terrainVelocity.current)
-    calculateRelativeVelocity(
-      playerVelocity.current,
-      terrainVelocity.current,
-      relativeVelocity.current,
-    )
+    playerVelocity.current.y = 0
 
     // Apply rolling physics to sphere mesh
     applyRollingPhysics({
       sphereMesh: sphereMeshRef.current,
-      relativeVelocity: relativeVelocity.current,
+      velocity: playerVelocity.current,
       deltaTime,
       worldScale: worldScale.current,
       rollAxis: rollAxis.current,
@@ -258,24 +262,15 @@ function calculateTerrainVelocity(
   targetVelocity.set(0, 0, -terrainSpeedUnits)
 }
 
-function calculateRelativeVelocity(
-  playerVelocity: Vector3,
-  terrainVelocity: Vector3,
-  targetVelocity: Vector3,
-): void {
-  targetVelocity.copy(playerVelocity).add(terrainVelocity)
-  targetVelocity.y = 0 // Constrain to surface plane (assumes flat ground)
-}
-
 function applyRollingPhysics({
   sphereMesh,
-  relativeVelocity,
+  velocity,
   deltaTime,
   worldScale,
   rollAxis,
 }: {
   sphereMesh: Object3D
-  relativeVelocity: Vector3
+  velocity: Vector3
   deltaTime: number
   worldScale: Vector3
   rollAxis: Vector3
@@ -283,12 +278,12 @@ function applyRollingPhysics({
   sphereMesh.getWorldScale(worldScale)
   // Assume uniform scale for a sphere
   const effectiveRadius = PLAYER_RADIUS * worldScale.x
-  const speed = relativeVelocity.length()
+  const speed = velocity.length()
 
   if (speed <= EPSILON || effectiveRadius <= EPSILON) return
   // Rolling without slipping: ω = (n × v) / R
   // Axis given by right-hand rule (surface normal × velocity)
-  rollAxis.copy(UP_DIRECTION).cross(relativeVelocity).normalize()
+  rollAxis.copy(UP_DIRECTION).cross(velocity).normalize()
 
   // Calculate rotation angle: θ = |v| * Δt / R
   const rotationAngle = (speed * deltaTime) / effectiveRadius

@@ -102,10 +102,10 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
           }}
         />
       )}
-      <div className={twJoin('mt-4 flex flex-col gap-4 opacity-0 sm:flex-row', FADE_IN_CLASS)}>
+      <div className={twJoin('mt-4 opacity-0', FADE_IN_CLASS)}>
         <Button variant="primary" color="dark" onClick={onRollAgainClick}>
           Roll Again
-          <PlayIcon className="size-6" strokeWidth={1.5} />
+          <PlayIcon className="size-8" strokeWidth={1.5} />
         </Button>
       </div>
     </section>
