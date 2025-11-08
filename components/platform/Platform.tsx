@@ -317,7 +317,7 @@ const Platform: FC = () => {
     if (rowZ >= QUESTIONS_EXIT_START_Z && rowZ < QUESTIONS_EXIT_END_Z) {
       const tOut =
         (rowZ - QUESTIONS_EXIT_START_Z) / (QUESTIONS_EXIT_END_Z - QUESTIONS_EXIT_START_Z)
-      return ENTRY_Y_OFFSET * tOut
+      return -ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
     return 0

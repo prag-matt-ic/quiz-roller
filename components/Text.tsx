@@ -5,6 +5,7 @@ import { FC, type RefObject, Suspense } from 'react'
 import { Mesh, type Vector3Tuple } from 'three'
 
 import {
+  TEXT_CANVAS_SCALE,
   type TextCanvasOptions,
   TRANSPARENT_TEXTURE,
   useTextCanvas,
@@ -33,11 +34,11 @@ export const Text: FC<Props> = ({
   const dpr = useThree((s) => s.viewport.dpr)
 
   const canvasState = useTextCanvas(text, {
-    width: width * 80 * dpr,
-    height: height * 80 * dpr,
+    width: width * dpr * TEXT_CANVAS_SCALE,
+    height: height * dpr * TEXT_CANVAS_SCALE,
     color: textColour,
     ...textCanvasOptions,
-    fontSize: textCanvasOptions?.fontSize ?? 28 * dpr,
+    fontSize: 18 * dpr,
   })
 
   return (

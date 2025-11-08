@@ -22,6 +22,8 @@ export type TextCanvasOptions = {
   textBaseline?: CanvasTextBaseline
 }
 
+export const TEXT_CANVAS_SCALE = 48
+
 const DEFAULTS: Required<Omit<TextCanvasOptions, 'width' | 'height'>> = {
   color: '#ffffff',
   fontFamily: '"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',

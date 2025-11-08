@@ -16,7 +16,7 @@ import {
 export const OBSTACLE_SECTION_ROWS = 48
 
 // Terrain scrolling and animation constants
-export const DECEL_EASE_POWER = 1.5
+export const DECEL_EASE_POWER = 2.0
 export const DECEL_START_OFFSET_ROWS = 4
 export const OBSTACLE_BUFFER_SECTIONS = 10
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend, useFrame, useThree } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
 import { Texture, type Vector3Tuple } from 'three'
@@ -11,7 +11,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
-import { TRANSPARENT_TEXTURE, useTextCanvas } from '@/hooks/useTextCanvas'
+import { TEXT_CANVAS_SCALE, TRANSPARENT_TEXTURE, useTextCanvas } from '@/hooks/useTextCanvas'
 import { type AnswerUserData, type StartUserData } from '@/model/schema'
 import { ANSWER_TILE_HEIGHT, ANSWER_TILE_WIDTH } from '@/utils/tiles'
 
@@ -19,7 +19,6 @@ import answerTileFragment from './answerTile.frag'
 import answerTileVertex from './answerTile.vert'
 
 const DEFAULT_TILE_ASPECT = ANSWER_TILE_WIDTH / ANSWER_TILE_HEIGHT
-const TEXT_CANVAS_SCALE = 128
 
 type AnswerTileShaderUniforms = {
   uConfirmingProgress: number
@@ -79,6 +78,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
+  const dpr = useThree((s) => s.viewport.dpr)
 
   useFrame(({ clock }) => {
     if (!shader.current) return
@@ -98,14 +98,14 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   })
 
   const tileAspect = width / height
-  const canvasWidth = width * TEXT_CANVAS_SCALE
-  const canvasHeight = height * TEXT_CANVAS_SCALE
+  const canvasWidth = width * dpr * TEXT_CANVAS_SCALE
+  const canvasHeight = height * dpr * TEXT_CANVAS_SCALE
 
   const canvasState = useTextCanvas(text, {
     width: canvasWidth,
     height: canvasHeight,
     color: labelColour,
-    fontSize: 48,
+    fontSize: 18 * dpr,
   })
 
   return (
