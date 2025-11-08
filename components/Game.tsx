@@ -25,9 +25,10 @@ const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
 
 type Props = {
   isDebug: boolean
+  isMobile: boolean
 }
 
-const Game: FC<Props> = ({ isDebug }) => {
+const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
@@ -59,7 +60,7 @@ const Game: FC<Props> = ({ isDebug }) => {
       }}
       gl={{
         alpha: false,
-        antialias: false,
+        antialias: !isMobile,
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 0.24,
       }}>

@@ -15,7 +15,7 @@ type Props = {
 const Main: FC<Props> = ({ isMobile, isDebug }) => {
   return (
     <PerformanceProvider isMobile={isMobile}>
-      <Game isDebug={isDebug} />
+      <Game isDebug={isDebug} isMobile={isMobile} />
       <UI isMobile={isMobile} />
       {isDebug && <PerformanceDebug />}
     </PerformanceProvider>

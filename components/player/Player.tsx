@@ -32,8 +32,6 @@ const UP_DIRECTION = new Vector3(0, 1, 0)
 const EPSILON = 1e-6 // Small value to prevent division by zero
 const PLATFORM_HALF_WIDTH = (COLUMNS * TILE_SIZE) / 2 - 1
 const EDGE_APPROACH_MARGIN = TILE_SIZE * 1.5
-// Row translations already include INITIAL_ROWS_Z_OFFSET, so ENTRY_END_Z/EXIT_START_Z reflect
-// the world-space boundaries where tiles finish raising and begin lowering.
 const ROW_RAISE_BACK_BOUNDARY_Z = ENTRY_END_Z
 const ROW_RAISE_FRONT_BOUNDARY_Z = EXIT_START_Z
 

@@ -195,15 +195,17 @@ const Platform: FC = () => {
       instanceSeed.current = new Float32Array(totalInstances)
       instanceAnswerNumber.current = new Float32Array(totalInstances)
 
+      let nextRowZ = INITIAL_ROWS_Z_OFFSET
+
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
         activeRowsData.current[rowIndex] = rowData
-        baseZByRow.current[rowIndex] = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
+        baseZByRow.current[rowIndex] = nextRowZ
         wrapCountByRow.current[rowIndex] = 0
 
         for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
           const x = colToX(columnIndex)
-          const z = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
+          const z = nextRowZ
           const y = rowData.heights[columnIndex]
           const bodyIndex = rowIndex * COLUMNS + columnIndex
           xByBodyIndex.current[bodyIndex] = x
@@ -219,6 +221,8 @@ const Platform: FC = () => {
             userData: { type: 'terrain', rowIndex, colIndex: columnIndex },
           })
         }
+
+        nextRowZ -= TILE_SIZE
       }
 
       setTileInstances(instances)
@@ -314,7 +318,7 @@ const Platform: FC = () => {
     // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
     if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
       const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
-      return -ENTRY_Y_OFFSET * tOut
+      return ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
     return 0
