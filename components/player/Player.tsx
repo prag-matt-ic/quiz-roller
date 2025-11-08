@@ -135,10 +135,6 @@ const Player: FC = () => {
     // console.log('Player Position:', nextPosition.current)
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
-    // Update global player position in store (immutable update)
-    setPlayerPosition(nextPosition.current)
-    const edgeIntensity = calculateEdgeIntensity(nextPosition.current)
-    setEdgeWarningIntensity(edgeIntensity)
 
     // Calculate physics for rolling animation
     frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
@@ -154,6 +150,11 @@ const Player: FC = () => {
       worldScale: worldScale.current,
       rollAxis: rollAxis.current,
     })
+
+    // Update global player position in store (immutable update)
+    setPlayerPosition(nextPosition.current)
+    const edgeIntensity = calculateEdgeIntensity(nextPosition.current)
+    setEdgeWarningIntensity(edgeIntensity)
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
