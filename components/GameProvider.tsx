@@ -27,6 +27,15 @@ export enum Stage {
 const EDGE_INTENSITY_LOG_RESOLUTION = 100
 const EDGE_INTENSITY_LOG_EPSILON = 1e-3
 
+export type EdgeWarningIntensities = {
+  left: number
+  right: number
+  near: number
+  far: number
+}
+
+const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
+
 // - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
@@ -54,8 +63,8 @@ type GameState = {
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
-  edgeWarningIntensity: number // [0, 1] (0 = safe, 1 = at edge)
-  setEdgeWarningIntensity: (intensity: number) => void
+  edgeWarningIntensities: EdgeWarningIntensities
+  setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
 
   cameraLookAtPosition: Vector3 | null // Used if you want to look at something other than the player
   setCameraLookAtPosition: (pos: Vector3 | null) => void
@@ -131,7 +140,7 @@ const INITIAL_STATE: Pick<
   | 'previousRuns'
   | 'cameraLookAtPosition'
   | 'confirmationResult'
-  | 'edgeWarningIntensity'
+  | 'edgeWarningIntensities'
 > = {
   stage: Stage.HOME,
   terrainSpeed: 0,
@@ -158,7 +167,12 @@ const INITIAL_STATE: Pick<
   cameraLookAtPosition: null,
   previousRuns: [],
   confirmationResult: null,
-  edgeWarningIntensity: 0,
+  edgeWarningIntensities: {
+    left: 0,
+    right: 0,
+    near: 0,
+    far: 0,
+  },
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -225,9 +239,14 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
           }))
         },
-        setEdgeWarningIntensity: (intensity) => {
+        setEdgeWarningIntensities: (intensities) => {
           set({
-            edgeWarningIntensity: Math.min(1, Math.max(0, intensity)),
+            edgeWarningIntensities: {
+              left: clampEdgeWarningValue(intensities.left),
+              right: clampEdgeWarningValue(intensities.right),
+              near: clampEdgeWarningValue(intensities.near),
+              far: clampEdgeWarningValue(intensities.far),
+            },
           })
         },
         setCameraLookAtPosition: (cameraLookAtPosition) => {

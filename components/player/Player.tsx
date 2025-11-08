@@ -12,7 +12,12 @@ import {
 import { type FC, useEffect, useRef } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import {
+  EdgeWarningIntensities,
+  PLAYER_INITIAL_POSITION,
+  Stage,
+  useGameStore,
+} from '@/components/GameProvider'
 import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
@@ -34,6 +39,12 @@ const PLATFORM_HALF_WIDTH = (COLUMNS * TILE_SIZE) / 2 - 1
 const EDGE_APPROACH_MARGIN = TILE_SIZE * 1.5
 const ROW_RAISE_BACK_BOUNDARY_Z = ENTRY_END_Z
 const ROW_RAISE_FRONT_BOUNDARY_Z = EXIT_START_Z
+const edgeWarningScratch: EdgeWarningIntensities = {
+  left: 0,
+  right: 0,
+  near: 0,
+  far: 0,
+}
 
 const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -42,7 +53,7 @@ const Player: FC = () => {
   const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
-  const setEdgeWarningIntensity = useGameStore((s) => s.setEdgeWarningIntensity)
+  const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
 
   const { terrainSpeed } = useTerrainSpeed()
@@ -153,8 +164,8 @@ const Player: FC = () => {
 
     // Update global player position in store (immutable update)
     setPlayerPosition(nextPosition.current)
-    const edgeIntensity = calculateEdgeIntensity(nextPosition.current)
-    setEdgeWarningIntensity(edgeIntensity)
+    const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
+    setEdgeWarningIntensities(edgeWarnings)
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
@@ -301,38 +312,29 @@ function applyRollingPhysics({
   sphereMesh.quaternion.normalize()
 }
 
-function calculateEdgeIntensity(position: { x: number; z: number }): number {
-  const xIntensity = calculateSymmetricBoundaryIntensity(
+function calculateEdgeWarningIntensities(position: { x: number; z: number }): EdgeWarningIntensities {
+  edgeWarningScratch.left = calculateUpperBoundaryIntensity(
+    -position.x,
+    PLATFORM_HALF_WIDTH,
+    EDGE_APPROACH_MARGIN,
+  )
+  edgeWarningScratch.right = calculateUpperBoundaryIntensity(
     position.x,
     PLATFORM_HALF_WIDTH,
     EDGE_APPROACH_MARGIN,
   )
-  const zForwardIntensity = calculateUpperBoundaryIntensity(
+  edgeWarningScratch.near = calculateUpperBoundaryIntensity(
     position.z,
     ROW_RAISE_FRONT_BOUNDARY_Z,
     EDGE_APPROACH_MARGIN,
   )
-  const zBackwardIntensity = calculateLowerBoundaryIntensity(
+  edgeWarningScratch.far = calculateLowerBoundaryIntensity(
     position.z,
     ROW_RAISE_BACK_BOUNDARY_Z,
     EDGE_APPROACH_MARGIN,
   )
-  return Math.max(xIntensity, zForwardIntensity, zBackwardIntensity)
-}
 
-function calculateSymmetricBoundaryIntensity(
-  value: number,
-  limit: number,
-  margin: number,
-): number {
-  const absValue = Math.abs(value)
-  if (margin <= 0) return absValue >= limit ? 1 : 0
-
-  const distanceToBoundary = limit - absValue
-  if (distanceToBoundary >= margin) return 0
-  if (distanceToBoundary <= 0) return 1
-
-  return 1 - distanceToBoundary / margin
+  return edgeWarningScratch
 }
 
 function calculateUpperBoundaryIntensity(

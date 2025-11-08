@@ -2,37 +2,67 @@
 
 import { useEffect, useRef, type FC } from 'react'
 
-import { useGameStoreAPI } from '@/components/GameProvider'
+import { EdgeWarningIntensities, useGameStoreAPI } from '@/components/GameProvider'
 
 const EdgeWarningOverlay: FC = () => {
-  const overlay = useRef<HTMLDivElement>(null)
+  const leftOverlay = useRef<HTMLDivElement>(null)
+  const rightOverlay = useRef<HTMLDivElement>(null)
+  const nearOverlay = useRef<HTMLDivElement>(null)
+  const farOverlay = useRef<HTMLDivElement>(null)
   const gameStore = useGameStoreAPI()
 
   useEffect(() => {
-    const node = overlay.current
-    if (!node) return
-
-    const setOpacity = (intensity: number) => {
-      node.style.opacity = intensity.toString()
+    const nodes = {
+      left: leftOverlay.current,
+      right: rightOverlay.current,
+      near: nearOverlay.current,
+      far: farOverlay.current,
     }
 
+    const { left, right, near, far } = nodes
+    if (!left || !right || !near || !far) return
+
+    const applyOpacities = (values: EdgeWarningIntensities) => {
+      left.style.opacity = values.left.toString()
+      right.style.opacity = values.right.toString()
+      near.style.opacity = values.near.toString()
+      far.style.opacity = values.far.toString()
+    }
+
+    applyOpacities(gameStore.getState().edgeWarningIntensities)
+
     const unsubscribe = gameStore.subscribe((state, prevState) => {
-      if (state.edgeWarningIntensity === prevState.edgeWarningIntensity) return
-      setOpacity(state.edgeWarningIntensity)
+      if (
+        JSON.stringify(state.edgeWarningIntensities) ===
+        JSON.stringify(prevState.edgeWarningIntensities)
+      )
+        return
+      applyOpacities(state.edgeWarningIntensities)
     })
 
     return unsubscribe
-  }, [])
+  }, [gameStore])
 
   return (
-    <div
-      ref={overlay}
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-200 border-10 border-(--palette-4) bg-[radial-gradient(circle_at_center,transparent_60%,#833801_96%)] opacity-0"
-    />
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-200">
+      <div
+        ref={leftOverlay}
+        className="absolute inset-y-0 left-0 w-[20%] bg-[linear-gradient(90deg,var(--palette-4)_0%,transparent_100%)] opacity-0"
+      />
+      <div
+        ref={rightOverlay}
+        className="absolute inset-y-0 right-0 w-[20%] bg-[linear-gradient(270deg,var(--palette-4)_0%,transparent_100%)] opacity-0"
+      />
+      <div
+        ref={nearOverlay}
+        className="absolute inset-x-0 bottom-0 h-[20%] bg-[linear-gradient(0deg,var(--palette-4)_0%,transparent_100%)] opacity-0"
+      />
+      <div
+        ref={farOverlay}
+        className="absolute inset-x-0 top-0 h-[20%] bg-[linear-gradient(180deg,var(--palette-4)_0%,transparent_100%)] opacity-0"
+      />
+    </div>
   )
 }
 
 export default EdgeWarningOverlay
-
-// bg-[radial-gradient(circle_at_center,transparent_50%,#83380166_70%,#833801_90%)]
