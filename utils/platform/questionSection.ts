@@ -30,7 +30,7 @@ export const ANSWER_TILE_COUNT = 2
 
 // Fixed entry window values for row raising animation
 export const QUESTIONS_ENTRY_END_Z =
-  MAX_Z - QUESTION_SECTION_ROWS * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
+  MAX_Z - (QUESTION_SECTION_ROWS + 4) * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
 export const QUESTIONS_ENTRY_START_Z =
   QUESTIONS_ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
 // Exit window values for row lowering (pre-wrap)
