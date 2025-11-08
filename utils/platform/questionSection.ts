@@ -13,17 +13,17 @@ import {
   UNSAFE_HEIGHT,
 } from '@/utils/tiles'
 
-export const OBSTACLE_SECTION_ROWS = 64
+export const OBSTACLE_SECTION_ROWS = 48
 
 // Terrain scrolling and animation constants
-export const DECEL_EASE_POWER = 0.8
+export const DECEL_EASE_POWER = 1.5
 export const DECEL_START_OFFSET_ROWS = 4
 export const OBSTACLE_BUFFER_SECTIONS = 10
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const QUESTION_SECTION_ROWS = 16
+export const QUESTION_SECTION_ROWS = 12
 export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
-export const QUESTION_TEXT_ROWS = 6
+export const QUESTION_TEXT_ROWS = 4
 export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
 
 export const ANSWER_TILE_COUNT = 2
@@ -45,12 +45,12 @@ export function generateQuestionSectionRowData(): RowData[] {
   )
 
   // Text appears first, then answers further down the section
-  const questionTextCenterRow = 8.5
+  const questionTextCenterRow = 3.5
   const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
 
   // Two-tile layout positioned after the text
-  const tilesCenterRow = 12.5
+  const tilesCenterRow = questionTextCenterRow + QUESTION_TEXT_ROWS
   const tilesTriggerRow = Math.ceil(tilesCenterRow)
   const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
 
