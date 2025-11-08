@@ -28,7 +28,7 @@ const EdgeWarningOverlay: FC = () => {
     <div
       ref={overlay}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-200 bg-[radial-gradient(circle_at_center,transparent_50%,#83380166_70%,#833801_96%)] opacity-0"
+      className="pointer-events-none fixed inset-0 z-200 bg-[radial-gradient(circle_at_center,transparent_50%,#83380166_70%,#833801_90%)] opacity-0"
     />
   )
 }
