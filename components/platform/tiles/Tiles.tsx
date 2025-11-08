@@ -12,12 +12,13 @@ import { PLAYER_INITIAL_POSITION_VEC3 } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
-  QUESTIONS_ENTRY_END_Z,
-  QUESTIONS_ENTRY_START_Z,
-  QUESTIONS_EXIT_END_Z,
-  QUESTIONS_EXIT_START_Z,
-} from '@/utils/platform/questionSection'
-import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
+  TILE_SIZE,
+  TILE_THICKNESS,
+  ENTRY_END_Z,
+  ENTRY_START_Z,
+  EXIT_END_Z,
+  EXIT_START_Z,
+} from '@/utils/tiles'
 
 import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
@@ -37,10 +38,10 @@ type TileShaderUniforms = {
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uPlayerWorldPos: PLAYER_INITIAL_POSITION_VEC3,
   uScrollZ: 0,
-  uEntryStartZ: QUESTIONS_ENTRY_START_Z,
-  uEntryEndZ: QUESTIONS_ENTRY_END_Z,
-  uExitStartZ: QUESTIONS_EXIT_START_Z,
-  uExitEndZ: QUESTIONS_EXIT_END_Z,
+  uEntryStartZ: ENTRY_START_Z,
+  uEntryEndZ: ENTRY_END_Z,
+  uExitStartZ: EXIT_START_Z,
+  uExitEndZ: EXIT_END_Z,
   uAddDetailNoise: 1,
 }
 

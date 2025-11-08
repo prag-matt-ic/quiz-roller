@@ -3,9 +3,6 @@ import {
   ANSWER_TILE_ROWS,
   colToX,
   COLUMNS,
-  ENTRY_RAISE_DURATION_ROWS,
-  EXIT_LOWER_DURATION_ROWS,
-  MAX_Z,
   ON_TILE_Y,
   RowData,
   SAFE_HEIGHT,
@@ -27,16 +24,6 @@ export const QUESTION_TEXT_ROWS = 4
 export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
 
 export const ANSWER_TILE_COUNT = 2
-
-// Fixed entry window values for row raising animation
-export const QUESTIONS_ENTRY_END_Z =
-  MAX_Z - (QUESTION_SECTION_ROWS + 4) * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
-export const QUESTIONS_ENTRY_START_Z =
-  QUESTIONS_ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
-// Exit window values for row lowering (pre-wrap)
-export const QUESTIONS_EXIT_END_Z = MAX_Z
-export const QUESTIONS_EXIT_START_Z =
-  QUESTIONS_EXIT_END_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
 
 export function generateQuestionSectionRowData(): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows

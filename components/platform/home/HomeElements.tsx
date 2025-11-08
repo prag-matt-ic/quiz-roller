@@ -222,7 +222,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
       <AnswerTile
         ref={startTile}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        text="Wait here to start"
+        text="Roll here to start"
         userData={START_TILE_USER_DATA}
         width={HOME_ANSWER_TILE_WIDTH}
         height={HOME_ANSWER_TILE_HEIGHT}

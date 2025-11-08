@@ -19,8 +19,8 @@ import usePlayerController from '@/hooks/usePlayerController'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
-
-import { Marble } from './marble/Marble'
+import { COLUMNS, ENTRY_END_Z, EXIT_START_Z, TILE_SIZE } from '@/utils/tiles'
+import { Marble } from '@/components/player/marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -30,6 +30,12 @@ import { Marble } from './marble/Marble'
 const GRAVITY_ACCELERATION = -9.81 // m/s²
 const UP_DIRECTION = new Vector3(0, 1, 0)
 const EPSILON = 1e-6 // Small value to prevent division by zero
+const PLATFORM_HALF_WIDTH = (COLUMNS * TILE_SIZE) / 2 - 1
+const EDGE_APPROACH_MARGIN = TILE_SIZE * 1.5
+// Row translations already include INITIAL_ROWS_Z_OFFSET, so ENTRY_END_Z/EXIT_START_Z reflect
+// the world-space boundaries where tiles finish raising and begin lowering.
+const ROW_RAISE_BACK_BOUNDARY_Z = ENTRY_END_Z
+const ROW_RAISE_FRONT_BOUNDARY_Z = EXIT_START_Z
 
 const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -38,6 +44,7 @@ const Player: FC = () => {
   const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
+  const setEdgeWarningIntensity = useGameStore((s) => s.setEdgeWarningIntensity)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
 
   const { terrainSpeed } = useTerrainSpeed()
@@ -127,9 +134,13 @@ const Player: FC = () => {
     nextPosition.current.z =
       currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
 
+    // console.log('Player Position:', nextPosition.current)
+
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
     // Update global player position in store (immutable update)
     setPlayerPosition(nextPosition.current)
+    const edgeIntensity = calculateEdgeIntensity(nextPosition.current)
+    setEdgeWarningIntensity(edgeIntensity)
 
     // Calculate physics for rolling animation
     frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
@@ -289,4 +300,66 @@ function applyRollingPhysics({
   const rotationAngle = (speed * deltaTime) / effectiveRadius
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
+}
+
+function calculateEdgeIntensity(position: { x: number; z: number }): number {
+  const xIntensity = calculateSymmetricBoundaryIntensity(
+    position.x,
+    PLATFORM_HALF_WIDTH,
+    EDGE_APPROACH_MARGIN,
+  )
+  const zForwardIntensity = calculateUpperBoundaryIntensity(
+    position.z,
+    ROW_RAISE_FRONT_BOUNDARY_Z,
+    EDGE_APPROACH_MARGIN,
+  )
+  const zBackwardIntensity = calculateLowerBoundaryIntensity(
+    position.z,
+    ROW_RAISE_BACK_BOUNDARY_Z,
+    EDGE_APPROACH_MARGIN,
+  )
+  return Math.max(xIntensity, zForwardIntensity, zBackwardIntensity)
+}
+
+function calculateSymmetricBoundaryIntensity(
+  value: number,
+  limit: number,
+  margin: number,
+): number {
+  const absValue = Math.abs(value)
+  if (margin <= 0) return absValue >= limit ? 1 : 0
+
+  const distanceToBoundary = limit - absValue
+  if (distanceToBoundary >= margin) return 0
+  if (distanceToBoundary <= 0) return 1
+
+  return 1 - distanceToBoundary / margin
+}
+
+function calculateUpperBoundaryIntensity(
+  value: number,
+  boundary: number,
+  margin: number,
+): number {
+  if (value >= boundary) return 1
+  if (margin <= 0) return 0
+
+  const distance = boundary - value
+  if (distance >= margin) return 0
+
+  return 1 - distance / margin
+}
+
+function calculateLowerBoundaryIntensity(
+  value: number,
+  boundary: number,
+  margin: number,
+): number {
+  if (value <= boundary) return 1
+  if (margin <= 0) return 0
+
+  const distance = value - boundary
+  if (distance >= margin) return 0
+
+  return 1 - distance / margin
 }

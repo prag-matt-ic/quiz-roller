@@ -7,6 +7,7 @@ import { useSoundStore } from '@/components/SoundProvider'
 import { Check, PlayIcon, VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/components/GameProvider'
+import { is } from 'zod/locales'
 
 const Button = dynamic(() => import('@/components/ui/Button'))
 
@@ -72,13 +73,17 @@ const LoadingOverlay: FC = () => {
         />
       </div>
 
-      <div className="flex flex-col items-center gap-3 sm:flex-row">
+      <div
+        className={twJoin(
+          'flex flex-col items-center gap-4 sm:flex-row',
+          !isReady && 'opacity-20',
+        )}>
         <Button onClick={() => onStartClick(false)} variant="primary" disabled={!isReady}>
           <PlayIcon className="size-6" strokeWidth={1.5} />
           Start experience
         </Button>
         <Button variant="secondary" onClick={() => onStartClick(true)} disabled={!isReady}>
-          <VolumeOffIcon className="size-5" />
+          <VolumeOffIcon className="size-6" />
           Start muted
         </Button>
       </div>

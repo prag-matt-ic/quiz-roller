@@ -24,6 +24,9 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
+const EDGE_INTENSITY_LOG_RESOLUTION = 100
+const EDGE_INTENSITY_LOG_EPSILON = 1e-3
+
 // - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
@@ -51,6 +54,8 @@ type GameState = {
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
+  edgeWarningIntensity: number // [0, 1] (0 = safe, 1 = at edge)
+  setEdgeWarningIntensity: (intensity: number) => void
 
   cameraLookAtPosition: Vector3 | null // Used if you want to look at something other than the player
   setCameraLookAtPosition: (pos: Vector3 | null) => void
@@ -126,6 +131,7 @@ const INITIAL_STATE: Pick<
   | 'previousRuns'
   | 'cameraLookAtPosition'
   | 'confirmationResult'
+  | 'edgeWarningIntensity'
 > = {
   stage: Stage.HOME,
   terrainSpeed: 0,
@@ -152,6 +158,7 @@ const INITIAL_STATE: Pick<
   cameraLookAtPosition: null,
   previousRuns: [],
   confirmationResult: null,
+  edgeWarningIntensity: 0,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -210,18 +217,24 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
     persist(
       (set, get) => ({
         ...INITIAL_STATE,
+        setPlayerInput(input) {
+          set({ playerInput: input })
+        },
         setPlayerPosition: (position) => {
           set((s) => ({
             playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
           }))
         },
+        setEdgeWarningIntensity: (intensity) => {
+          set({
+            edgeWarningIntensity: Math.min(1, Math.max(0, intensity)),
+          })
+        },
         setCameraLookAtPosition: (cameraLookAtPosition) => {
           set({ cameraLookAtPosition })
         },
         setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
-        setPlayerInput(input) {
-          set({ playerInput: input })
-        },
+
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 

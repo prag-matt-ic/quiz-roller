@@ -86,7 +86,7 @@ const ConfirmationBar: FC = () => {
               return (
                 <div
                   ref={confirmingContainer}
-                  className="relative h-6 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
+                  className="relative h-4 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
                   <div
                     id="progress-bar"
                     className="absolute h-full w-full -translate-x-full rounded-full"

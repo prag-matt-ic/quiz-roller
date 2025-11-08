@@ -22,22 +22,21 @@ import {
   OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
   QUESTION_SECTION_ROWS,
-  QUESTIONS_ENTRY_END_Z,
-  QUESTIONS_ENTRY_START_Z,
-  QUESTIONS_EXIT_END_Z,
-  QUESTIONS_EXIT_START_Z,
 } from '@/utils/platform/questionSection'
 import {
   colToX,
   COLUMNS,
   ENTRY_Y_OFFSET,
   INITIAL_ROWS_Z_OFFSET,
-  // INITIAL_ROWS_Z_OFFSET,
+  ENTRY_END_Z,
   MAX_Z,
   RowData,
-  ROWS_VISIBLE,
+  ROWS_RENDERED,
   SAFE_HEIGHT,
   TILE_SIZE,
+  ENTRY_START_Z,
+  EXIT_START_Z,
+  EXIT_END_Z,
 } from '@/utils/tiles'
 
 const EPSILON = {
@@ -191,12 +190,12 @@ const Platform: FC = () => {
       insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
-      const totalInstances = ROWS_VISIBLE * COLUMNS
+      const totalInstances = ROWS_RENDERED * COLUMNS
       instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
       instanceAnswerNumber.current = new Float32Array(totalInstances)
 
-      for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
+      for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
         const rowData = rowsData.current[rowIndex]
         activeRowsData.current[rowIndex] = rowData
         baseZByRow.current[rowIndex] = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
@@ -224,7 +223,7 @@ const Platform: FC = () => {
 
       setTileInstances(instances)
       hasInitialized.current = true
-      nextRowDataIndex.current = ROWS_VISIBLE
+      nextRowDataIndex.current = ROWS_RENDERED
     }
 
     setupInitialRowsAndInstances()
@@ -307,16 +306,14 @@ const Platform: FC = () => {
 
   function computeLiftLowerOffset(rowZ: number): number {
     // Entry lift: raise from -ENTRY_Y_OFFSET up to 0 across the entry window
-    if (rowZ < QUESTIONS_ENTRY_START_Z) return -ENTRY_Y_OFFSET
-    if (rowZ < QUESTIONS_ENTRY_END_Z) {
-      const tIn =
-        (rowZ - QUESTIONS_ENTRY_START_Z) / (QUESTIONS_ENTRY_END_Z - QUESTIONS_ENTRY_START_Z)
+    if (rowZ < ENTRY_START_Z) return -ENTRY_Y_OFFSET
+    if (rowZ < ENTRY_END_Z) {
+      const tIn = (rowZ - ENTRY_START_Z) / (ENTRY_END_Z - ENTRY_START_Z)
       return -ENTRY_Y_OFFSET * (1 - tIn)
     }
     // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
-    if (rowZ >= QUESTIONS_EXIT_START_Z && rowZ < QUESTIONS_EXIT_END_Z) {
-      const tOut =
-        (rowZ - QUESTIONS_EXIT_START_Z) / (QUESTIONS_EXIT_END_Z - QUESTIONS_EXIT_START_Z)
+    if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
+      const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
       return -ENTRY_Y_OFFSET * tOut
     }
     // Otherwise, tiles are flat at y=0
@@ -364,9 +361,9 @@ const Platform: FC = () => {
 
   function updateTiles() {
     if (!instancedTilesRef.current?.rigidBodies) return
-    const cycleDistance = ROWS_VISIBLE * TILE_SIZE
+    const cycleDistance = ROWS_RENDERED * TILE_SIZE
 
-    for (let rowIndex = 0; rowIndex < ROWS_VISIBLE; rowIndex++) {
+    for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
       let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
       let wraps = 0
 
@@ -385,7 +382,7 @@ const Platform: FC = () => {
       updateRowPositions(rowIndex, rowZ, yOffset)
 
       const wasRaised = isRowRaised.current[rowIndex] === true
-      const isRaised = rowZ >= QUESTIONS_ENTRY_END_Z
+      const isRaised = rowZ >= ENTRY_END_Z
 
       if (!wasRaised && isRaised) {
         handleRowRaised(rowIndex, rowZ)
