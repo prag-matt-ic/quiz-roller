@@ -10,7 +10,7 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 ## Tech Stack 💻
 
-- **Next.js**
+- **Next.js** _as the web framework_
 - **React Three Fiber** _for 3D rendering_
 - **Rapier** _for physics simulation and collision events_
 - **WebGL** _for custom materials and effects_
@@ -117,7 +117,7 @@ It supports textured and flat modes depending on the quality mode.
 
 ![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.jpg?raw=true)
 
-The main `Platform` is formed from a group of instanced rigid bodies (grid of rows × columns) that endlessly wrap forward.
+The main `Platform` is a grid of instanced rigid bodies that endlessly wrap forward.
 
 ### Row Recycling ♻️
 
