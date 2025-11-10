@@ -251,14 +251,15 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
               experiences for educational purposes.
               <br />
               <br />
-              We believe that learning should be as fun and engaging as playing a game!
+              It's built using React Three Fiber, Rapier physics and WebGL for immersive
+              graphics.
             </p>
           </Card>
 
           <Card className="w-full md:col-span-3" playerColourIndex={playerColourIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
-              Interested in launching your own bespoke interactive learning experience?
+              Interested in launching your own immersive learning experience?
               <br />
               <br />
               <a

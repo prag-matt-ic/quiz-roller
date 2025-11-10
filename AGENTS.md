@@ -59,10 +59,6 @@ Examples:
 
 ## Zustand best practices
 
-Zustand is used for global state in this project. To keep components fast and predictable:
-
-Split stores by concern.
-
 Use selectors – when consuming state in a component, call the hook with a selector (useStore((state) => state.someValue)) so that the component re‑renders only when that slice changes.
 
 Never retrieve the entire store in a component.

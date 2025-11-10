@@ -12,9 +12,8 @@ import {
   type StartUserData,
 } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
-
-import { PLAYER_RADIUS } from './player/ConfirmationBar'
-import { type PlaySoundFX, SoundFX, useSoundStore } from './SoundProvider'
+import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
 
 export enum Stage {
   HOME = 'home',
@@ -24,9 +23,6 @@ export enum Stage {
   GAME_OVER = 'game_over',
 }
 
-const EDGE_INTENSITY_LOG_RESOLUTION = 100
-const EDGE_INTENSITY_LOG_EPSILON = 1e-3
-
 export type EdgeWarningIntensities = {
   left: number
   right: number
@@ -35,8 +31,6 @@ export type EdgeWarningIntensities = {
 }
 
 const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
-
-// - [ ] Add a "share my run" button on game over screen which generates a URL with topic, distance and correct answers in the query params - this should then be used in the metadata image generation.
 
 export type PlayerInput = {
   up: number

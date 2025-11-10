@@ -1,13 +1,14 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { AwardIcon, PlayIcon } from 'lucide-react'
-import { type FC, type RefObject } from 'react'
+import { AwardIcon, PlayIcon, Share2Icon } from 'lucide-react'
+import { type FC, type RefObject, useCallback } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { type RunStats } from '@/model/schema'
+import useWebShare from '@/hooks/useWebShare'
 
 import Button from './Button'
 import { GradientText } from './GradientText'
@@ -25,6 +26,8 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   const previousRuns = useGameStore((s) => s.previousRuns)
   const resetGame = useGameStore((s) => s.resetGame)
 
+  const { handleShare, isShareSupported, isSharing } = useWebShare()
+
   const hasPlayedGame = currentRun !== null
 
   const historyExcludingCurrent = currentRun
@@ -33,6 +36,18 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
 
   const prevPB = calculatePersonalBest(historyExcludingCurrent)
   const isNewPB = checkIsNewPersonalBest(currentRun, prevPB)
+
+  const onShareClick = useCallback(() => {
+    if (!currentRun || typeof window === 'undefined') return
+    const shareUrl = new URL(window.location.href).toString()
+
+    const shareData: ShareData = {
+      title: 'Play Quizroller!',
+      text: `I just answered ${currentRun.correctAnswers} questions correctly and travelled ${currentRun.distance} meters!`,
+      url: shareUrl,
+    }
+    handleShare(shareData)
+  }, [currentRun, handleShare])
 
   useGSAP(
     () => {
@@ -73,7 +88,7 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/70 opacity-0 sm:gap-6">
+      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/80 opacity-0 sm:gap-6">
       <h2 className={`${FADE_IN_CLASS} heading-lg opacity-0`}>
         <GradientText>Game Over</GradientText>
       </h2>
@@ -102,8 +117,18 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
           }}
         />
       )}
-      <div className={twJoin('mt-4 opacity-0', FADE_IN_CLASS)}>
-        <Button variant="primary" color="dark" onClick={onRollAgainClick}>
+      <div
+        className={twJoin(
+          'mt-4 flex flex-col items-center gap-3 opacity-0 sm:flex-row',
+          FADE_IN_CLASS,
+        )}>
+        {isShareSupported && !!currentRun && (
+          <Button variant="secondary" color="dark" onClick={onShareClick} disabled={isSharing}>
+            Share my run
+            <Share2Icon className="size-6" strokeWidth={1.5} />
+          </Button>
+        )}
+        <Button variant="primary" color="dark" onClick={onRollAgainClick} disabled={isSharing}>
           Roll Again
           <PlayIcon className="size-8" strokeWidth={1.5} />
         </Button>
