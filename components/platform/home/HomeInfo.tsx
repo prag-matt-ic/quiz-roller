@@ -1,10 +1,6 @@
 import { ArrowUpRight } from 'lucide-react'
 import type { FC } from 'react'
 
-import Card from '@/components/ui/Card'
-
-export { Card }
-
 type CreditProps = {
   role: string
   name: string

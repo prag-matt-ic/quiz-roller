@@ -38,8 +38,9 @@ import {
   TILE_SIZE,
 } from '@/utils/tiles'
 
-import { Card, Credit } from './HomeInfo'
+import { Credit } from './HomeInfo'
 import Logo from './Logo'
+import Card from '@/components/ui/Card'
 
 const START_TILE_USER_DATA: StartUserData = {
   type: 'start',
