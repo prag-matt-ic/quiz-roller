@@ -9,19 +9,19 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 ## Tech Stack
 
 - **Next.js**
-- **React Three Fiber** for 3D rendering
-- **Rapier** for physics simulation and collision events
-- **WebGL** for custom materials and effects
-- **Zustand** for state management
-- **GSAP** for animations
-- **Tailwind** for UI styling
+- **React Three Fiber** _for 3D rendering_
+- **Rapier** _for physics simulation and collision events_
+- **WebGL** _for custom materials and effects_
+- **Zustand** _for state management_
+- **GSAP** _for animations_
+- **Tailwind** _for UI styling_
 
 ## Colour Palette
 
 ![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
 
 Colours are driven by a [cosine gradient palette](https://iquilezles.org/articles/palettes/).
-In theory, the entire theme of the app could be changed by adjusting the 4 gradient input vectors.
+In theory, the entire theme of the app can be changed by adjusting the 4 gradient input vectors.
 
 There are helpers in GLSL and TypeScript to retrieve colours using an input value of 0-1.
 
