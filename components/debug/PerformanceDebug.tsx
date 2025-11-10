@@ -15,12 +15,12 @@ type Option<T> = {
   value: T
 }
 
-const SIM_FPS_OPTIONS: Option<RapierSimFPS>[] = [
-  { label: 'Adaptive', value: 0 },
-  { label: '30 fps', value: 30 },
-  { label: '60 fps', value: 60 },
-  { label: '120 fps', value: 120 },
-]
+// const SIM_FPS_OPTIONS: Option<RapierSimFPS>[] = [
+//   { label: 'Adaptive', value: 0 },
+//   { label: '30 fps', value: 30 },
+//   { label: '60 fps', value: 60 },
+//   { label: '120 fps', value: 120 },
+// ]
 
 const DPR_OPTIONS: Option<number | undefined>[] = [
   { label: 'Native', value: undefined },
@@ -29,21 +29,21 @@ const DPR_OPTIONS: Option<number | undefined>[] = [
   { label: '1.0', value: 1 },
   { label: '1.5', value: 1.5 },
   { label: '2.0', value: 2 },
-]
+] as const
 
 const PerformanceDebug: FC = () => {
-  const simFps = usePerformanceStore((s) => s.simFps)
-  const setSimFps = usePerformanceStore((s) => s.setSimFps)
+  // const simFps = usePerformanceStore((s) => s.simFps)
+  // const setSimFps = usePerformanceStore((s) => s.setSimFps)
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
   const resetGame = useGameStore((s) => s.resetGame)
 
-  const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    event.target.blur()
-    setSimFps(Number(event.target.value) as RapierSimFPS)
-  }
+  // const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
+  //   event.target.blur()
+  //   setSimFps(Number(event.target.value) as RapierSimFPS)
+  // }
 
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()

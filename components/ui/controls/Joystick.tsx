@@ -248,8 +248,8 @@ export const useJoystick = ({
     rightOffset: x,
     bottomOffset: y,
     isGrabbing,
-    handlePointerDown,
     coordinatesRef,
+    handlePointerDown,
   }
 }
 

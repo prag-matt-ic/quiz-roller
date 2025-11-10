@@ -1,5 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { createRef, type FC, useCallback, useImperativeHandle, useRef } from 'react'
+import { createRef, type FC, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { type RefObject } from 'react'
 import { Mesh } from 'three'
 
@@ -32,9 +32,9 @@ const QuestionElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
   const questionText = useRef<Mesh>(null)
-  const questionAnswerRefs = useRef(
+  const [questionAnswerRefs, _] = useState(
     Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
-  ).current
+  )
 
   const questionIsOutOfView = useRef<boolean>(false)
   const answersAreOutOfView = useRef<boolean>(false)

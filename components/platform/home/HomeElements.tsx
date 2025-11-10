@@ -14,6 +14,7 @@ import {
   useRef,
   type RefObject,
   useEffect,
+  useState,
 } from 'react'
 import { Group } from 'three'
 
@@ -40,6 +41,7 @@ import {
 
 import { Credit } from './HomeInfo'
 import Logo from './Logo'
+
 import Card from '@/components/ui/Card'
 
 const START_TILE_USER_DATA: StartUserData = {
@@ -65,13 +67,11 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
   const logo = useRef<Group>(null)
 
-  const colourPickerOptions = useRef(
+  const [colourPickerOptions] = useState(
     COLOUR_TILE_OPTIONS.map(() => createRef<RapierRigidBody>()),
-  ).current
+  )
 
-  const infoZoneRefs = useRef(
-    Array.from({ length: 2 }, () => createRef<RapierRigidBody>()),
-  ).current
+  const [infoZoneRefs] = useState(Array.from({ length: 2 }, () => createRef<RapierRigidBody>()))
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const isOutOfView = useRef(false)
@@ -137,7 +137,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
     }
 
     positionElements(rowsData.current)
-  }, [])
+  }, [colourPickerOptions, infoZoneRefs, rowsData])
 
   const moveElements = useCallback(
     (zStep: number) => {
@@ -257,7 +257,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
               experiences for educational purposes.
               <br />
               <br />
-              It's built using React Three Fiber, Rapier physics and WebGL for immersive
+              It&apos;s built using React Three Fiber, Rapier physics and WebGL for immersive
               graphics.
             </p>
           </Card>
@@ -290,6 +290,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
       <InfoZone
         key="info-zone-2"
+        // eslint-disable-next-line react-hooks/refs
         ref={infoZoneRefs[1]}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}

@@ -1,26 +1,17 @@
-import { FlatCompat } from '@eslint/eslintrc'
+import { defineConfig, globalIgnores } from 'eslint/config'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTs from 'eslint-config-next/typescript'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import prettier from 'eslint-config-prettier/flat'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  prettier,
   {
-    plugins: {
-      'simple-import-sort': simpleImportSort,
-    },
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
+    plugins: { 'simple-import-sort': simpleImportSort },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
-      'simple-import-sort/imports': 'warn',
-      'simple-import-sort/exports': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': [
         'warn',
@@ -30,6 +21,14 @@ const eslintConfig = [
       ],
     },
   },
-]
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+  ]),
+])
 
 export default eslintConfig
