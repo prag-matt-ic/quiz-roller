@@ -9,12 +9,6 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
 
-const TERRAIN_CONFIG = {
-  position: { x: 0, y: 6, z: 7 },
-  target: { x: 0, y: 0, z: 0 },
-  zoom: 1.0,
-}
-
 // Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
   Stage,
@@ -29,13 +23,16 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
-  [Stage.INTRO]: TERRAIN_CONFIG,
   [Stage.QUESTION]: {
     position: { x: 0, y: 11, z: 5 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1.1,
   },
-  [Stage.TERRAIN]: TERRAIN_CONFIG,
+  [Stage.TERRAIN]: {
+    position: { x: 0, y: 6, z: 7 },
+    target: { x: 0, y: 0, z: 0 },
+    zoom: 1.0,
+  },
   [Stage.GAME_OVER]: {
     position: { x: 6, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },

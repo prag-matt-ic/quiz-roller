@@ -10,6 +10,7 @@ import {
   UNSAFE_HEIGHT,
 } from '@/utils/tiles'
 
+export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
 
 // Terrain scrolling and animation constants

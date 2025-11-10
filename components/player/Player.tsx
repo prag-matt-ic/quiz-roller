@@ -13,12 +13,12 @@ import { type FC, useEffect, useRef } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
 import {
-  EdgeWarningIntensities,
+  type EdgeWarningIntensities,
   PLAYER_INITIAL_POSITION,
   Stage,
   useGameStore,
 } from '@/components/GameProvider'
-import ConfirmationBar, { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
@@ -229,7 +229,7 @@ const Player: FC = () => {
       onIntersectionExit={onIntersectionExit}>
       <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
       <Marble ref={sphereMeshRef} />
-      <ConfirmationBar />
+      <PlayerHUD />
     </RigidBody>
   )
 }
@@ -312,7 +312,10 @@ function applyRollingPhysics({
   sphereMesh.quaternion.normalize()
 }
 
-function calculateEdgeWarningIntensities(position: { x: number; z: number }): EdgeWarningIntensities {
+function calculateEdgeWarningIntensities(position: {
+  x: number
+  z: number
+}): EdgeWarningIntensities {
   edgeWarningScratch.left = calculateUpperBoundaryIntensity(
     -position.x,
     PLATFORM_HALF_WIDTH,

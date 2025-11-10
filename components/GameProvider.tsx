@@ -12,12 +12,11 @@ import {
   type StartUserData,
 } from '@/model/schema'
 import { getNextQuestion } from '@/resources/content'
-import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
 
 export enum Stage {
   HOME = 'home',
-  INTRO = 'intro',
   QUESTION = 'question',
   TERRAIN = 'terrain',
   GAME_OVER = 'game_over',
@@ -53,7 +52,7 @@ type GameState = {
   setConfirmingColourIndex: (index: number | null) => void
 
   confirmationProgress: number // [0, 1]
-  confirmationResult: null | 'correct' | 'incorrect' // Set when confirmation completes and then clear
+  hudIndicator: null | 'correct' | 'incorrect' | 'move' // Set when confirmation completes and then clear
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -101,7 +100,6 @@ const GameContext = createContext<GameStore>(undefined!)
 const MAX_DIFFICULTY = 3
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_COLOUR_DURATION_S = 1.5
-const INTRO_SPEED_DURATION = 1.2
 const TERRAIN_SPEED_DURATION = 2.4
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 2] // Used when re-spawning to home
@@ -133,7 +131,7 @@ const INITIAL_STATE: Pick<
   | 'currentRun'
   | 'previousRuns'
   | 'cameraLookAtPosition'
-  | 'confirmationResult'
+  | 'hudIndicator'
   | 'edgeWarningIntensities'
 > = {
   stage: Stage.HOME,
@@ -160,7 +158,7 @@ const INITIAL_STATE: Pick<
   currentRun: null,
   cameraLookAtPosition: null,
   previousRuns: [],
-  confirmationResult: null,
+  hudIndicator: null,
   edgeWarningIntensities: {
     left: 0,
     right: 0,
@@ -370,7 +368,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             confirmingStart: null,
           })
 
-          goToStage(Stage.INTRO)
+          goToStage(Stage.TERRAIN)
         },
 
         onAnswerConfirmed: async () => {
@@ -428,11 +426,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
 
         goToStage: (newStage: Stage) => {
-          if (newStage === Stage.INTRO) {
-            handleIntroStage({ set, get, speedTween, speedTweenTarget })
-            return
-          }
-
           if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
 
           if (newStage === Stage.QUESTION) {
@@ -473,7 +466,7 @@ function handleIncorrectAnswer({
   set((s) => ({
     confirmingAnswer: null,
     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
-    confirmationResult: 'incorrect',
+    hudIndicator: 'incorrect',
   }))
 }
 
@@ -495,36 +488,12 @@ function handleCorrectAnswer({
       currentDifficulty: newDifficulty,
       confirmingAnswer: null,
       confirmedAnswers: newConfirmedAnswers,
-      confirmationResult: 'correct',
+      hudIndicator: 'correct',
     }
   })
 }
 
 // Helper functions for goToStage
-
-function handleIntroStage({
-  set,
-  get,
-  speedTween,
-  speedTweenTarget,
-}: {
-  set: StoreApi<GameState>['setState']
-  get: StoreApi<GameState>['getState']
-  speedTween: GSAPTween | null
-  speedTweenTarget: { value: number }
-}) {
-  set({ stage: Stage.INTRO })
-  speedTween?.kill()
-  speedTweenTarget.value = get().terrainSpeed
-  gsap.to(speedTweenTarget, {
-    duration: INTRO_SPEED_DURATION,
-    ease: 'power2.out',
-    value: 1.0,
-    onUpdate: () => {
-      set({ terrainSpeed: speedTweenTarget.value })
-    },
-  })
-}
 
 function handleQuestionStage({
   set,
@@ -566,7 +535,7 @@ function handleTerrainStage({
   speedTween: GSAPTween | null
   speedTweenTarget: { value: number }
 }) {
-  set({ stage: Stage.TERRAIN, confirmationResult: null }) // Clears confirmation result when leaving question stage
+  set({ stage: Stage.TERRAIN, hudIndicator: 'move' }) // Updates confirmation result to show prompt to move..
   speedTween?.kill()
   gsap.to(speedTweenTarget, {
     duration: TERRAIN_SPEED_DURATION,
@@ -574,6 +543,9 @@ function handleTerrainStage({
     value: 1.0,
     onUpdate: () => {
       set({ terrainSpeed: speedTweenTarget.value })
+    },
+    onComplete: () => {
+      set({ hudIndicator: null })
     },
   })
 }

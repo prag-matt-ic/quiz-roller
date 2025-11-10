@@ -6,7 +6,7 @@ import { type FC, type RefObject, useRef } from 'react'
 import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
-import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type ColourTileUserData } from '@/model/schema'
 import { COLOUR_TILE_SIZE } from '@/utils/platform/homeSection'
 

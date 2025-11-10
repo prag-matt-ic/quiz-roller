@@ -20,7 +20,7 @@ import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
-import { PLAYER_RADIUS } from '@/components/player/ConfirmationBar'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'

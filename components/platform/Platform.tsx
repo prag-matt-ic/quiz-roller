@@ -13,11 +13,11 @@ import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { TERRAIN_SPEED_UNITS } from '@/resources/game'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
-import { generateIntroSectionRowData } from '@/utils/platform/introSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
   DECEL_EASE_POWER,
   DECEL_START_OFFSET_ROWS,
+  FIRST_OBSTACLE_SECTION_ROWS,
   generateQuestionSectionRowData,
   OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
@@ -120,14 +120,9 @@ const Platform: FC = () => {
     rowsData.current = [...rowsData.current, ...rows]
   }
 
-  function insertIntroRows() {
-    const rows = generateIntroSectionRowData()
-    rowsData.current = [...rowsData.current, ...rows]
-  }
-
-  function getObstacleSectionRows(): RowData[] {
+  function getObstacleSectionRows(rows: number = OBSTACLE_SECTION_ROWS): RowData[] {
     const config: ObstacleGenerationConfig = {
-      rows: OBSTACLE_SECTION_ROWS,
+      rows,
       seed: Math.floor(Math.random() * 1_000_000),
       ...DEFAULT_OBSTACLE_CONFIG,
     }
@@ -137,7 +132,7 @@ const Platform: FC = () => {
       heights: columnHeights,
       type: 'obstacles' as const,
       isSectionStart: rowIndex === 0,
-      isSectionEnd: rowIndex === OBSTACLE_SECTION_ROWS - 1,
+      isSectionEnd: rowIndex === rows - 1,
     }))
   }
 
@@ -159,7 +154,14 @@ const Platform: FC = () => {
     })
   }
 
-  function insertObstacleRows() {
+  function insertObstacleRows(rows?: number) {
+    if (typeof rows === 'number') {
+      const blocks = getObstacleSectionRows(rows)
+      rowsData.current = [...rowsData.current, ...blocks]
+      scheduleObstacleTopUpIfNeeded()
+      return
+    }
+
     const blocks = obstacleSectionBuffer.current.shift() ?? getObstacleSectionRows()
     rowsData.current = [...rowsData.current, ...blocks]
     scheduleObstacleTopUpIfNeeded()
@@ -181,7 +183,7 @@ const Platform: FC = () => {
       currentScrollPosition.current = 0
 
       insertHomeRows()
-      insertIntroRows()
+      insertObstacleRows(FIRST_OBSTACLE_SECTION_ROWS)
       insertQuestionRows()
       insertObstacleRows()
       insertQuestionRows()

@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Overview
 
-## Getting Started
+Quizroller is a proof of concept game developed to showcase the potential of 3D web for learning experiences.
 
-First, run the development server:
+It's pretty simple, you
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**[👉 Have a play](https://quizroller.vercel.app)**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Next.js**
+- **React Three Fiber** for 3D rendering
+- **Rapier** for physics simulation and collision events
+- **WebGL** for custom materials and effects
+- **Zustand** for state management
+- **GSAP** for animations
+- **Tailwind** for UI styling
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## State Management
 
-## Learn More
+Most of the game logic is encapsulated within the `GameProvider`.
+It handles the current stage, question, player positioning and collision/intersection events.
 
-To learn more about Next.js, take a look at the following resources:
+## Player and Movement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The player is a Rapier kinematic sphere with a `BallCollider`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Making it move!
 
-## Deploy on Vercel
+Depending on whether the device is mobile or not, different controls are rendered:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Desktop: WASD/Arrow keys
+- Mobile: a virtual touch joystick
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Movement is applied each frame with gravity keeping the marble planted on raised tiles.
+The rotation animation is derived from the movement velocity and helps make the movement feel natural.
+
+### Marble Shading
+
+xxx
+
+### Collisions and Confirmations
+
+Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, colour tiles, and out‑of‑bounds.
+
+For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice.
+
+When the player enters an info zone, HTML content is animated in.
+
+If the player falls out of bounds, it resets their position or goes to the game over stage.
+
+## Infinite Platform
+
+![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
+
+The main `Platform` is formed from a group of instanced rigid bodies (grid of rows × columns) that endlessly wrap forward.
+
+### Row Recycling
+
+When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it. Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
+
+### Surface Elements
+
+Each stage (Home, Obstacles, Question) has it's own set of elements which are positioned atop the tiles. These elements include the question text, answer tiles and player colour picker.
+
+Their positioning is defined within the row data. When their corresponding row is raised, the element is positioned.
+
+The translation (Z movement) of surface elements is synced with the movement of the underlying tiles.
+
+### Tile Shader
+
+The platform tiles use a custom shader to colour the tiles, fade in/out and highlight near the player.
+
+## Colour Palette
+
+![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
+
+All the colours are driven by a [cosine gradient palette](https://iquilezles.org/articles/palettes/). In theory, the entire theme of the app could be changed by adjusting the 4 gradient input vectors.
+
+There are helpers in GLSL and TypeScript to retrieve colours using an input value of 0-1.
+
+## Floating Background Tiles
+
+![FloatingTiles](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.jpg?raw=true)
+
+Decorative floating tiles add depth and motion around the course. They are rendered as a single instanced mesh and animated entirely on the GPU using `GPUComputationRenderer`.
+
+- One `instancedMesh` draws all tiles.
+- Tiles are placed in a grid formation around the platform, they spawn at a low Y value and float upward, respawning at the bottom once they hit a threshold.
+- The whole effect is disabled at low quality by setting the instance count to zero.
+
+## Closing
+
+[Live Demo](https://magic-floor.vercel.app)
