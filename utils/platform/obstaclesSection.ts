@@ -21,9 +21,6 @@ function stepToward(curr: number, target: number, maxStep: number) {
 /**
  * Generate a batch of obstacle rows that ALWAYS contains a continuous safe corridor.
  * Returns heights[row][col] where blocked -> blockedHeight, open -> openHeight.
- *
- * TODO: Move this generator into its own module (e.g. model/obstacles.ts) and
- * expose a pure function for testability.
  */
 export function generateObstacleHeights(params: ObstacleParams): number[][] {
   const {
