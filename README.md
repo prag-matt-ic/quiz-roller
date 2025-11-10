@@ -6,6 +6,8 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 **[👉 How far can you roll? 👈](https://quizroller.vercel.app)**
 
+![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
+
 ## Tech Stack
 
 - **Next.js**
@@ -113,7 +115,7 @@ It supports textured and flat modes depending on performance settings.
 
 ## Infinite Platform
 
-![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
+![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.jpg?raw=true)
 
 The main `Platform` is formed from a group of instanced rigid bodies (grid of rows × columns) that endlessly wrap forward.
 
