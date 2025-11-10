@@ -2,7 +2,7 @@
 
 Quizroller is a proof of concept game developed to showcase the potential of 3D web for learning experiences.
 
-It's pretty simple, you
+It's pretty simple, you navigate your marble over terrain, answering multiple choice questions as you go.
 
 **[👉 Have a play](https://quizroller.vercel.app)**
 
@@ -16,12 +16,23 @@ It's pretty simple, you
 - **GSAP** for animations
 - **Tailwind** for UI styling
 
+## Colour Palette
+
+![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
+
+All the colours are driven by a [cosine gradient palette](https://iquilezles.org/articles/palettes/).
+In theory, the entire theme of the app could be changed by adjusting the 4 gradient input vectors.
+
+There are helpers in GLSL and TypeScript to retrieve colours using an input value of 0-1.
+
+I also created a "texure generator" which was used to produce the background image.
+
 ## State Management
 
-Most of the game logic is encapsulated within the `GameProvider`.
+Most of the game logic is encapsulated within the `GameProvider` which is a Zustand store initialised into React Context.
 It handles the current stage, question, player positioning and collision/intersection events.
 
-## Player and Movement
+## Player
 
 The player is a Rapier kinematic sphere with a `BallCollider`.
 
@@ -32,22 +43,30 @@ Depending on whether the device is mobile or not, different controls are rendere
 - Desktop: WASD/Arrow keys
 - Mobile: a virtual touch joystick
 
-Movement is applied each frame with gravity keeping the marble planted on raised tiles.
-The rotation animation is derived from the movement velocity and helps make the movement feel natural.
-
-### Marble Shading
-
-xxx
+Movement is applied each frame, with gravity keeping the marble planted on raised tiles.
+The rotation animation is derived from the player velocity and helps the movement feel natural.
 
 ### Collisions and Confirmations
 
 Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, colour tiles, and out‑of‑bounds.
 
-For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice.
+For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice. If the timer completes, the choice is confirmed.
 
 When the player enters an info zone, HTML content is animated in.
 
-If the player falls out of bounds, it resets their position or goes to the game over stage.
+If the player falls out of bounds, it resets their position or goes to the 'game over' stage.
+
+### Colour Config
+
+![Player Colour](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.jpg?raw=true)
+
+The user can change their marble colour by rolling over one of the colour picker tiles.
+
+Colour selection is band‑based (a range between 0 and 1 for sampling the gradient palette) and persisted in the game store.
+
+### Marble Shading
+
+The marble uses a custom GLSL material that the cosine palette and blends colours with animated noise. It supports a lit and a flat mode depending on performance settings.
 
 ## Infinite Platform
 
@@ -57,7 +76,8 @@ The main `Platform` is formed from a group of instanced rigid bodies (grid of ro
 
 ### Row Recycling
 
-When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it. Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
+When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it.
+Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
 
 ### Surface Elements
 
@@ -69,15 +89,23 @@ The translation (Z movement) of surface elements is synced with the movement of 
 
 ### Tile Shader
 
-The platform tiles use a custom shader to colour the tiles, fade in/out and highlight near the player.
+The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and highlight near the player.
 
-## Colour Palette
+## Questions and Answers
 
-![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
+![Question](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.jpg?raw=true)
 
-All the colours are driven by a [cosine gradient palette](https://iquilezles.org/articles/palettes/). In theory, the entire theme of the app could be changed by adjusting the 4 gradient input vectors.
+Questions are chosen to avoids repeats where possible and shuffle the answer positions.
 
-There are helpers in GLSL and TypeScript to retrieve colours using an input value of 0-1.
+Each question has a difficulty rating of 1-3. Every two correct answers, the difficulty increases.
+
+### Answer Selection
+
+![Answer](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
+
+- A HUD indicator briefly shows “correct” or “incorrect”
+- A short particle burst plays, with a correct answer attracting green particles to the player, and an incorrect answer dispersing orange particles.
+- The chosen answer is recorded in `confirmedAnswers`
 
 ## Floating Background Tiles
 

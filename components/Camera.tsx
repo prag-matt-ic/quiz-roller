@@ -9,7 +9,6 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 const { ACTION } = CameraControlsImpl
 
-// Unified camera configuration per stage
 export const CAMERA_CONFIG: Record<
   Stage,
   {
