@@ -70,7 +70,7 @@ const PlayerHUD: FC = () => {
     <Html
       sprite={true}
       pointerEvents="none"
-      position={[0, PLAYER_RADIUS * 3, PLAYER_RADIUS]}
+      position={[0, PLAYER_RADIUS * 4, PLAYER_RADIUS]}
       center={true}
       renderOrder={2}
       className="relative select-none">
@@ -102,7 +102,7 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="overflow-hidden rounded-full bg-white p-2 opacity-0 shadow-lg shadow-black/25">
+                  className="overflow-hidden rounded-xl bg-white p-2 opacity-0 shadow-lg shadow-black/25">
                   {hudIndicator === 'correct' && (
                     <CheckIcon strokeWidth={4} size={48} className="text-(--palette-8)" />
                   )}
@@ -113,7 +113,7 @@ const PlayerHUD: FC = () => {
                     <div className="flex items-center gap-2 pr-2 text-(--palette-7)">
                       <ArrowUpCircleIcon strokeWidth={2} size={32} />
                       <span className="block font-semibold whitespace-nowrap uppercase">
-                        Stay on the platform
+                        Move along the platform
                       </span>
                     </div>
                   )}
