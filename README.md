@@ -213,11 +213,11 @@ _Refactors vertex and fragment shaders to reduce GPU cost and improve readabilit
 
 ### The Biggest Challenge 🏔️
 
-The most challenging aspect of building Quizroller was definitely the platform logic, and in particular the positioning and movement of elements that sit on top of it - because these elements need to line up correctly, appear on time, move in sync and be re-used effectively.
+The most challenging aspect of building Quizroller was definitely the platform logic, and in particular the positioning and movement of elements that sit on top of it - because these elements need to line up correctly, appear on time, move in sync and be recycled efficiently.
 
 The setup for this went through a number of iterations, and a lot of back-and-forth with AI assistants.
 
-I landed on a solution in which the row data is pre-computed, and is the single source of truth for what's currently visible. This is flexible too, as new surface elements can just be added to the `RowData` type:
+I landed on a solution in which the row data is pre-computed, and acts as the single source of truth for what's currently visible. This is flexible too, as new surface elements can just be added to the `RowData` type:
 
 ```ts
 export type RowData = {
