@@ -8,6 +8,7 @@ precision lowp int;
 uniform float uTime;
 uniform lowp int uColourIndex;
 uniform lowp float uIsActive;
+uniform lowp float uUseNoise;
 
 varying mediump vec2 vUv;
 
@@ -34,13 +35,18 @@ void main() {
 
   float radial = radialLength * INV_OUTER_RADIUS;
   float activeMix = clamp(uIsActive, 0.0, 1.0);
-  float timeFactor = uTime * (INACTIVE_NOISE_TIME_SPEED + NOISE_TIME_DELTA * activeMix);
-
-  vec2 scaledUv = vUv * NOISE_SCALE;
-  float primaryNoise = noise(vec3(scaledUv, timeFactor));
-  float detailNoise = noise(vec3(centeredUv * DETAIL_NOISE_SCALE, uTime));
-  float noiseValue = primaryNoise + (detailNoise - primaryNoise) * DETAIL_NOISE_WEIGHT;
-  float normalizedNoise = noiseValue * 0.5 + 0.5;
+  float normalizedNoise;
+  if (uUseNoise > 0.5) {
+    float timeFactor = uTime * (INACTIVE_NOISE_TIME_SPEED + NOISE_TIME_DELTA * activeMix);
+    vec2 scaledUv = vUv * NOISE_SCALE;
+    float primaryNoise = noise(vec3(scaledUv, timeFactor));
+    float detailNoise = noise(vec3(centeredUv * DETAIL_NOISE_SCALE, uTime));
+    float noiseValue = primaryNoise + (detailNoise - primaryNoise) * DETAIL_NOISE_WEIGHT;
+    normalizedNoise = noiseValue * 0.5 + 0.5;
+  } else {
+    // Flat fill: center of the palette range
+    normalizedNoise = 0.5;
+  }
 
   // Colour from palette
   float minValue;

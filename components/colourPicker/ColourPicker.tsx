@@ -6,6 +6,7 @@ import { type FC, type RefObject, useRef } from 'react'
 import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type ColourTileUserData } from '@/model/schema'
 import { COLOUR_TILE_SIZE } from '@/utils/platform/homeSection'
@@ -17,12 +18,14 @@ type ColourTileShaderUniforms = {
   uTime: number
   uColourIndex: number
   uIsActive: number
+  uUseNoise: number
 }
 
 const INITIAL_COLOUR_TILE_UNIFORMS: ColourTileShaderUniforms = {
   uTime: 0,
   uColourIndex: 0,
   uIsActive: 0,
+  uUseNoise: 1,
 }
 
 const ColourTileShader = shaderMaterial(
@@ -43,13 +46,16 @@ type ColourTileProps = {
   option: ColourTileOption
   isActive: boolean
   ref: RefObject<RapierRigidBody | null>
+  isOutOfView: RefObject<boolean>
 }
 
-const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref }) => {
+const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView }) => {
   const shader = useRef<typeof ColourTileShaderMaterial & ColourTileShaderUniforms>(null)
+  const useNoise = usePerformanceStore((s) => s.sceneConfig.colourTile.useNoise)
 
   useFrame(({ clock }) => {
     if (!shader.current) return
+    if (isOutOfView.current || !useNoise) return
     shader.current.uTime = clock.elapsedTime
   })
 
@@ -77,6 +83,7 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref }) => {
           key={ColourTileShader.key}
           uColourIndex={option.index}
           uIsActive={isActive ? 1 : 0}
+          uUseNoise={useNoise ? 1 : 0}
         />
       </mesh>
     </RigidBody>
@@ -86,9 +93,10 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref }) => {
 type ColourPickerProps = {
   options: ColourTileOption[]
   optionRefs: ReadonlyArray<RefObject<RapierRigidBody | null>>
+  isOutOfView: RefObject<boolean>
 }
 
-const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [] }) => {
+const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [], isOutOfView }) => {
   const playerColourIndex = useGameStore((s) => s.colourIndex)
 
   return (
@@ -99,6 +107,7 @@ const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [] }) => {
           key={option.index}
           option={option}
           isActive={option.index === playerColourIndex}
+          isOutOfView={isOutOfView}
         />
       ))}
     </group>

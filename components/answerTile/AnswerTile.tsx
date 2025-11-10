@@ -50,6 +50,7 @@ type BaseProps = {
   position: Vector3Tuple
   width?: number
   height?: number
+  isOutOfView: RefObject<boolean>
 }
 
 export type AnswerTileProps = BaseProps & {
@@ -73,6 +74,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   wasCorrect,
   width = ANSWER_TILE_WIDTH,
   height = ANSWER_TILE_HEIGHT,
+  isOutOfView,
 }) => {
   const playerColourIndex = useGameStore((s) => s.colourIndex)
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
@@ -82,6 +84,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
 
   useFrame(({ clock }) => {
     if (!shader.current) return
+    if (isOutOfView.current) return
     const globalProgress = confirmationProgress.current
 
     if (isConfirming) {

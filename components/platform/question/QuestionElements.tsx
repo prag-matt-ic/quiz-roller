@@ -36,6 +36,9 @@ const QuestionElements: FC<Props> = ({ ref }) => {
     Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
   ).current
 
+  const questionIsOutOfView = useRef<boolean>(false)
+  const answersAreOutOfView = useRef<boolean>(false)
+
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
       if (!row) return
@@ -48,10 +51,12 @@ const QuestionElements: FC<Props> = ({ ref }) => {
           textPosition[1],
           rowZ + textPosition[2],
         )
+        questionIsOutOfView.current = false
       }
 
       const answerPositions = row.answerTilePositions
       if (!answerPositions) return
+      answersAreOutOfView.current = false
 
       for (
         let answerIndex = 0;
@@ -78,13 +83,15 @@ const QuestionElements: FC<Props> = ({ ref }) => {
       if (!questionText.current) return
 
       const isQuestionBehindCamera = questionText.current.position.z > MAX_Z
-      if (isQuestionBehindCamera) {
+      if (isQuestionBehindCamera && !questionIsOutOfView.current) {
         questionText.current.position.z = HIDE_POSITION_Z
         questionText.current.position.y = HIDE_POSITION_Y
+        questionIsOutOfView.current = true
       } else {
         questionText.current.position.z += zStep
       }
 
+      if (answersAreOutOfView.current) return
       for (const answerRef of questionAnswerRefs) {
         if (!answerRef.current) continue
 
@@ -94,6 +101,8 @@ const QuestionElements: FC<Props> = ({ ref }) => {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
           answerRef.current.setTranslation(translation.current, false)
+
+          answersAreOutOfView.current = true
           continue
         }
 
@@ -128,6 +137,7 @@ const QuestionElements: FC<Props> = ({ ref }) => {
           ref={answerRef}
           index={answerIndex}
           position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+          isOutOfView={answersAreOutOfView}
         />
       ))}
     </>

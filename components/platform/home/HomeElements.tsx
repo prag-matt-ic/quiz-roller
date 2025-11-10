@@ -73,12 +73,12 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   ).current
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const ignoreMoves = useRef(false)
+  const isOutOfView = useRef(false)
   const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
 
   useEffect(() => {
     const positionElements = (rowData: RowData[]) => {
-      ignoreMoves.current = false
+      isOutOfView.current = false
 
       rowData.forEach((row, rowIndex) => {
         if (row.type !== 'home') return
@@ -140,7 +140,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
   const moveElements = useCallback(
     (zStep: number) => {
-      if (ignoreMoves.current) return
+      if (isOutOfView.current) return
 
       if (!!startTile.current) {
         const currentTranslation = startTile.current.translation()
@@ -152,7 +152,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           translation.current.y = HIDE_POSITION_Y
           translation.current.z = HIDE_POSITION_Z
           startTile.current.setTranslation(translation.current, false)
-          ignoreMoves.current = true
+          isOutOfView.current = true
         } else {
           translation.current.z = nextZ
           startTile.current.setTranslation(translation.current, true)
@@ -229,11 +229,16 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         isConfirming={isConfirmingStart}
         wasConfirmed={false}
         wasCorrect={false}
+        isOutOfView={isOutOfView}
       />
 
       <Logo ref={logo} />
 
-      <ColourPicker options={COLOUR_TILE_OPTIONS} optionRefs={colourPickerOptions} />
+      <ColourPicker
+        options={COLOUR_TILE_OPTIONS}
+        optionRefs={colourPickerOptions}
+        isOutOfView={isOutOfView}
+      />
 
       <InfoZone
         key="info-zone-1"
