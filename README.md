@@ -189,6 +189,26 @@ Adding `?debug=true` to the URL inserts the Drei Stats component for displaying 
 
 If you manually change quality in debug tools, auto‑adjustments are paused.
 
+## Bonus: AI Prompts 🤖
+
+I used AI to speed up the development of this project _(who isn't these days!?)_.
+
+When it comes to AI-generated code the quality varies - but by giving the LLM specific guidelines to follow (such as documentation and examples) we can dramatically improve the output.
+
+**The right context** is often the difference between the solution working or not - especially when working with new versions of packages that won't be in the training data. Fetching documentation is my go-to method when setting up new projects.
+
+### Reusable Clean Code Prompts
+
+As part of my AI toolkit I've started to refine some reusable prompts.
+These are checklists which a coding assistant can use to review and refactor code for better readability and performance.
+You might find these useful:
+
+**[Clean Code Typescript Prompt](https://github.com/prag-matt-ic/quiz-roller/blob/main/.github/prompts/clean-code.prompt.md)**
+_Uses a Clean Code Checklist to review and refactor Typescript code_
+
+**[Clean GLSL Shader Prompt](https://github.com/prag-matt-ic/quiz-roller/blob/main/.github/prompts/clean-shader.prompt.md)**
+_Refactors vertex and fragment shaders to reduce GPU cost and improve readability_
+
 ## Closing Thoughts
 
 ### The Biggest Challenge 🏔️
@@ -216,7 +236,7 @@ export type RowData = {
 
 Take a look at the [`Platform` Component](https://github.com/prag-matt-ic/quiz-roller/blob/main/components/platform/Platform.tsx) to understand how it all comes together.
 
-### Collaborations
+### Collaborations 🤝
 
 Interested in working together on an immersive learning experience?
 Let's chat!
