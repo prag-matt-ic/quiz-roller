@@ -57,7 +57,7 @@ const PerformanceDebug: FC = () => {
   }
 
   return (
-    <div className="fixed top-10 left-1 z-1000 max-w-56 space-y-2 rounded-md bg-black p-2 font-mono text-xs text-white">
+    <div className="fixed top-0 left-0 z-1000 max-w-56 space-y-2 bg-black p-2 pt-14 font-mono text-xs text-white">
       {/* <SelectRow
         id="performance-debug-sim-fps"
         label="Sim FPS"
@@ -95,9 +95,7 @@ const PerformanceDebug: FC = () => {
       </SelectRow>
       <button
         onClick={resetGame}
-        className={twJoin(
-          'w-full rounded bg-red-700 px-2 py-1 text-xs font-semibold text-white',
-        )}>
+        className="w-full rounded bg-red-800 p-1 text-xs font-semibold text-white">
         Reset Game
       </button>
     </div>

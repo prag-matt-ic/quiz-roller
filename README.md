@@ -6,7 +6,7 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 **[👉 How far can you roll? 👈](https://quizroller.vercel.app)**
 
-![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
+![Game home stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
 
 ## Tech Stack 💻
 
@@ -101,7 +101,7 @@ If the player falls off the edge, they intersect with out-of-bounds and it reset
 
 ### Colour Config 🎨
 
-![Player Colour](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.jpg?raw=true)
+![Player colour selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.jpg?raw=true)
 
 The user can change their marble colour by rolling over one of the colour picker tiles.
 
@@ -111,7 +111,7 @@ Colour selection is band‑based (a range between 0 and 1 for sampling the gradi
 
 The marble uses a custom GLSL material that samples the cosine palette using the player's chosen colour.
 
-It supports textured and flat modes depending on performance settings.
+It supports textured and flat modes depending on the quality mode.
 
 ## Infinite Platform 🏃
 
@@ -121,9 +121,9 @@ The main `Platform` is formed from a group of instanced rigid bodies (grid of ro
 
 ### Row Recycling ♻️
 
-When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it.
+When a row passes behind the camera, it wraps to the back and is assigned new row data. This approach means the camera can stay fixed looking at the player, with the floor moving like a conveyor beneath it.
 
-Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
+Optimal performance is achieved by limiting the number of rendered rows, and using instanced meshes for the repeated tiles.
 
 ### Obstacle Course ⚠️
 
@@ -131,7 +131,7 @@ Between each Question stage there is a procedurally generated pathway of safe ti
 
 ### Surface Elements 🏠
 
-Each stage has it's own set of elements which are positioned atop the tiles. These elements include the question text, answer tiles and player colour picker.
+Each stage has it's own set of elements which are positioned atop the tiles. These elements include the question text, answer tiles, info zones and the player colour picker.
 
 Their positioning is defined within the row data. When their corresponding row is raised, the element is positioned.
 
@@ -143,7 +143,7 @@ The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and
 
 ## Questions and Answers 🤔
 
-![Question](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.jpg?raw=true)
+![Question stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.jpg?raw=true)
 
 Questions are chosen to avoids repeats where possible and shuffle the answer positions.
 
@@ -153,7 +153,7 @@ Question and Answer text is rendered into a Canvas Texture (see `useTextCanvas`)
 
 ### Answer Selection ✅
 
-![Answer](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
+![Answer selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
 
 - A HUD indicator briefly shows correct (✅) or incorrect (❌)
 - A short particle burst plays, with a correct answer attracting green particles to the player, and an incorrect answer dispersing orange particles.
@@ -161,31 +161,31 @@ Question and Answer text is rendered into a Canvas Texture (see `useTextCanvas`)
 
 ## Floating Background Tiles ✨
 
-![FloatingTiles](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.jpg?raw=true)
+![Floating background tiles powered by GPU](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.jpg?raw=true)
 
 Decorative floating tiles add depth and motion around the course. They are rendered as a single instanced mesh and animated entirely on the GPU using `GPUComputationRenderer`.
 
 - Tiles are placed in a grid formation around the platform, they spawn at a low Y value and float upward, respawning at the bottom once they hit a threshold.
 - The whole effect is disabled at low quality by setting the instance count to zero.
 
-## Performance Optimisations 🏎️
+## Performance: Adaptive Quality 🏎️
 
 The site achieves great performance even on mobile.
 
-- My Macbook Pro M4 achieves a consistent 120fps on high quality mode.
+![Stats fps display](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/stats.jpg?raw=true)
+
+- My Macbook Pro M4 gets a consistent 120fps on high quality mode.
 - My iPhone 15 Pro gets a steady 60fps also on high quality mode.
 
-_(I appreciate these are top-of-the-range devices, but lower powered machines also achieve 60fps.)_
-
-### Adaptive Quality 🚙
+_(I appreciate these are top-of-the-range devices, but lower powered machines can also hit >30fps.)_
 
 Visual quality is managed by a small Zustand store `PerformanceProvider`. It exposes a `sceneQuality` mode (High/Medium/Low) and a derived `sceneConfig` which is used across components to scale the detail and reduce GPU work.
 
-The canvas is wrapped in Drei’s `PerformanceMonitor`. It monitors FPS and calls `onIncline`/`onDecline`, which in turn invokes `onPerformanceChange` from the provider to step quality up or down.
+The main scene is wrapped in Drei's `PerformanceMonitor`. It monitors FPS and calls `onIncline`/`onDecline`, which in turn invokes `onPerformanceChange` from the provider to step the quality up or down.
 
 ### Debug Mode 🐞
 
-Adding `?debug=true` to the URL inserts the Drei Stats component for displaying FPS, and exposes manual quality and DPR controls.
+Adding `?debug=true` to the URL inserts the Drei `Stats` component for displaying FPS, and exposes manual quality and DPR controls.
 
 If you manually change quality in debug tools, auto‑adjustments are paused.
 
@@ -195,11 +195,11 @@ I used AI to speed up the development of this project _(who isn't these days!?)_
 
 When it comes to AI-generated code the quality varies - but by giving the LLM specific guidelines to follow (such as documentation and examples) we can dramatically improve the output.
 
-**The right context** is often the difference between the solution working or not - especially when working with new versions of packages that won't be in the training data. Fetching documentation is my go-to method when setting up new projects.
+**The right context** is often the difference between the solution working or not - especially when using new versions of packages that won't be in the training data. Fetching documentation is my go-to method when setting up new projects.
 
 ### Reusable Clean Code Prompts
 
-As part of my AI toolkit I've started to refine some reusable prompts.
+As part of my AI toolkit I've started to refine reusable prompts.
 These are checklists which a coding assistant can use to review and refactor code for better readability and performance.
 You might find these useful:
 
@@ -217,7 +217,7 @@ The most challenging aspect of building Quizroller was definitely the platform l
 
 The setup for this went through a number of iterations, and a lot of back-and-forth with AI assistants.
 
-I landed on a solution in which the row data is pre-computed, and acts as the single source of truth for what's currently visible. This is flexible too, as new surface elements can just be added to the `RowData` type:
+I landed on a solution in which the row data is pre-computed, and acts as the single source of truth for what's currently visible. This is flexible too, as new surface elements can be added to the `RowData` type:
 
 ```ts
 export type RowData = {
@@ -236,12 +236,19 @@ export type RowData = {
 
 Take a look at the [`Platform` Component](https://github.com/prag-matt-ic/quiz-roller/blob/main/components/platform/Platform.tsx) to understand how it all comes together.
 
+## Limitations / Wishlist 👀
+
+- **The question content is all hard-coded.** My original plan was to use AI to generate personalised quizes based on a user-provided URL or revision notes. I have code to do this, but it incurs cost and slows down the initial start.
+- **The terrain/obstacles stage is basic.** I'd love to introduce new challenges such as jumps, wall runs and collectibles.
+
+If you're reading this and want to help develop the concept further, please get in touch.
+
 ### Collaborations 🤝
 
-Interested in working together on an immersive learning experience?
+Interested in working together on a new immersive learning experience?
 Let's chat!
 
----
+### Links
 
 [Demo](https://quizroller.vercel.app)
 
