@@ -35,16 +35,16 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
-    answerTile: { particleCount: 81 },
     player: { segments: 64, isFlat: false },
-    floatingTiles: { instanceCount: Math.pow(8, 2) },
+    answerTile: { particleCount: 81 },
+    floatingTiles: { instanceCount: Math.pow(12, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
   },
   [SceneQuality.MEDIUM]: {
-    player: { segments: 40, isFlat: false },
     answerTile: { particleCount: 64 },
-    floatingTiles: { instanceCount: Math.pow(6, 2) },
+    player: { segments: 40, isFlat: false },
+    floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
   },

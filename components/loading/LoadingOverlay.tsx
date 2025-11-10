@@ -45,7 +45,7 @@ const LoadingOverlay: FC = () => {
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
         'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-3 place-items-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% py-24 sm:py-[25vh]',
-        'transition-opacity delay-50 duration-400 ease-out motion-reduce:duration-0',
+        'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
       <Image
