@@ -8,8 +8,6 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 ![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
 
----
-
 ## Tech Stack 💻
 
 - **Next.js**
@@ -191,8 +189,6 @@ Adding `?debug=true` to the URL inserts the Drei Stats component for displaying 
 
 If you manually change quality in debug tools, auto‑adjustments are paused.
 
----
-
 ## Closing Thoughts
 
 ### The Biggest Challenge 🏔️
@@ -217,6 +213,8 @@ export type RowData = {
   infoZonePositions?: ([number, number, number] | null)[]
 }
 ```
+
+Take a look at the [`Platform` Component](https://github.com/prag-matt-ic/quiz-roller/blob/main/components/platform/Platform.tsx) to understand how it all comes together.
 
 ### Collaborations
 
