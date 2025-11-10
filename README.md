@@ -8,7 +8,9 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 ![Home](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
 
-## Tech Stack
+---
+
+## Tech Stack 💻
 
 - **Next.js**
 - **React Three Fiber** _for 3D rendering_
@@ -18,7 +20,7 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 - **GSAP** _for animations_
 - **Tailwind** _for UI styling_
 
-## Colour Palette
+## Colour Palette 🌈
 
 ![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
 
@@ -35,7 +37,7 @@ Most of the game logic is encapsulated within the `GameProvider` which is a Zust
 
 The Game Store handles the current stage, questions, player positioning and collision/intersection events.
 
-### Fast Value Subscriptions
+### Fast Value Subscriptions 💨
 
 I've avoided setting React State as much as possible to keep the experience snappy.
 
@@ -79,7 +81,7 @@ export function usePlayerPosition(onPlayerPositionChange?: (pos: Vector3) => voi
 
 The player is a Rapier kinematic sphere with a `BallCollider`.
 
-### Making it roll!
+### Making it roll! 🕹️
 
 Depending on whether the device is mobile or not, different controls are rendered:
 
@@ -89,7 +91,7 @@ Depending on whether the device is mobile or not, different controls are rendere
 Movement is applied each frame, with gravity keeping the marble planted on raised tiles.
 The rotation animation is derived from the player velocity and helps the movement feel natural.
 
-### Collisions and Confirmations
+### Collisions and Confirmations ⏳
 
 Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, colour tiles, and out‑of‑bounds.
 
@@ -99,7 +101,7 @@ When the player enters an info zone, HTML content is animated in.
 
 If the player falls off the edge, they intersect with out-of-bounds and it resets their position or transitions to the 'game over' stage.
 
-### Colour Config
+### Colour Config 🎨
 
 ![Player Colour](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.jpg?raw=true)
 
@@ -107,37 +109,41 @@ The user can change their marble colour by rolling over one of the colour picker
 
 Colour selection is band‑based (a range between 0 and 1 for sampling the gradient palette) and is persisted in the game store.
 
-### Marble Shading
+### Marble Shading 🔮
 
 The marble uses a custom GLSL material that samples the cosine palette using the player's chosen colour.
 
 It supports textured and flat modes depending on performance settings.
 
-## Infinite Platform
+## Infinite Platform 🏃
 
 ![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.jpg?raw=true)
 
 The main `Platform` is formed from a group of instanced rigid bodies (grid of rows × columns) that endlessly wrap forward.
 
-### Row Recycling
+### Row Recycling ♻️
 
 When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it.
 
 Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
 
-### Surface Elements
+### Obstacle Course ⚠️
 
-Each stage (Home, Obstacles, Question) has it's own set of elements which are positioned atop the tiles. These elements include the question text, answer tiles and player colour picker.
+Between each Question stage there is a procedurally generated pathway of safe tiles for the user to navigate. This is created using a noise-driven algorithm.
+
+### Surface Elements 🏠
+
+Each stage has it's own set of elements which are positioned atop the tiles. These elements include the question text, answer tiles and player colour picker.
 
 Their positioning is defined within the row data. When their corresponding row is raised, the element is positioned.
 
 The translation (Z movement) of surface elements is synced with the movement of the underlying tiles so they appear fixed to the tiles.
 
-### Tile Shader
+### Tile Shader 🧊
 
 The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and highlight those near the player.
 
-## Questions and Answers
+## Questions and Answers 🤔
 
 ![Question](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.jpg?raw=true)
 
@@ -145,7 +151,9 @@ Questions are chosen to avoids repeats where possible and shuffle the answer pos
 
 Each question has a difficulty rating of 1-3. Every two correct answers, the difficulty increases.
 
-### Answer Selection
+Question and Answer text is rendered into a Canvas Texture (see `useTextCanvas`). The texure approach is performant whilst allowing fine-grained control over the font and line height.
+
+### Answer Selection ✅
 
 ![Answer](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
 
@@ -153,7 +161,7 @@ Each question has a difficulty rating of 1-3. Every two correct answers, the dif
 - A short particle burst plays, with a correct answer attracting green particles to the player, and an incorrect answer dispersing orange particles.
 - The chosen answer is recorded in `confirmedAnswers`
 
-## Floating Background Tiles
+## Floating Background Tiles ✨
 
 ![FloatingTiles](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.jpg?raw=true)
 
@@ -162,7 +170,7 @@ Decorative floating tiles add depth and motion around the course. They are rende
 - Tiles are placed in a grid formation around the platform, they spawn at a low Y value and float upward, respawning at the bottom once they hit a threshold.
 - The whole effect is disabled at low quality by setting the instance count to zero.
 
-## Performance Optimisations
+## Performance Optimisations 🏎️
 
 The site achieves great performance even on mobile.
 
@@ -171,20 +179,52 @@ The site achieves great performance even on mobile.
 
 _(I appreciate these are top-of-the-range devices, but lower powered machines also achieve 60fps.)_
 
-### Adaptive Quality
+### Adaptive Quality 🚙
 
 Visual quality is managed by a small Zustand store `PerformanceProvider`. It exposes a `sceneQuality` mode (High/Medium/Low) and a derived `sceneConfig` which is used across components to scale the detail and reduce GPU work.
 
 The canvas is wrapped in Drei’s `PerformanceMonitor`. It monitors FPS and calls `onIncline`/`onDecline`, which in turn invokes `onPerformanceChange` from the provider to step quality up or down.
 
-### Debug Mode
+### Debug Mode 🐞
 
 Adding `?debug=true` to the URL inserts the Drei Stats component for displaying FPS, and exposes manual quality and DPR controls.
 
 If you manually change quality in debug tools, auto‑adjustments are paused.
 
-## Closing
+---
 
-[Demo Here](https://quizroller.vercel.app)
+## Closing Thoughts
+
+### The Biggest Challenge 🏔️
+
+The most challenging aspect of building Quizroller was definitely the platform logic, and in particular the positioning and movement of elements that sit on top of it - because these elements need to line up correctly, appear on time, move in sync and be re-used effectively.
+
+The setup for this went through a number of iterations, and a lot of back-and-forth with AI assistants.
+
+I landed on a solution in which the row data is pre-computed, and is the single source of truth for what's currently visible. This is flexible too, as new surface elements can just be added to the `RowData` type:
+
+```ts
+export type RowData = {
+  heights: number[] // The height of the tiles within this row
+  type: SectionType
+  isSectionStart: boolean
+  isSectionEnd: boolean
+  questionTextPosition?: [number, number, number]
+  answerTilePositions?: ([number, number, number] | null)[]
+  answerNumber?: number[]
+  logoPosition?: [number, number, number]
+  colourPickerPosition?: [number, number, number]
+  infoZonePositions?: ([number, number, number] | null)[]
+}
+```
+
+### Collaborations
+
+Interested in working together on an immersive learning experience?
+Let's chat!
+
+---
+
+[Demo](https://quizroller.vercel.app)
 
 [Debug Mode](https://quizroller.vercel.app?debug=true)
