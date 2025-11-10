@@ -1,7 +1,7 @@
 import './globals.css'
 
 import { Analytics } from '@vercel/analytics/next'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Cinzel, Nunito_Sans } from 'next/font/google'
 
 const cinzel = Cinzel({
@@ -17,12 +17,28 @@ const nunitoSans = Nunito_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Quizroller',
+  title: {
+    template: '%s | Quizroller',
+    default: 'Quizroller | 3D Quiz Game',
+  },
   description:
     'A 3D quiz game built using React Three Fiber and Rapier physics. How far can you roll?',
   appleWebApp: {
     title: 'Quizroller',
+    statusBarStyle: 'black-translucent',
+    capable: true,
   },
+}
+
+export const viewport: Viewport = {
+  initialScale: 1,
+  width: 'device-width, shrink-to-fit=no',
+  height: 'device-height',
+  minimumScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#030b2a',
+  colorScheme: 'dark',
 }
 
 export default function RootLayout({
