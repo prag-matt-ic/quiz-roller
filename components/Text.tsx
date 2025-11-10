@@ -38,7 +38,7 @@ export const Text: FC<Props> = ({
     height: height * dpr * TEXT_CANVAS_SCALE,
     color: textColour,
     ...textCanvasOptions,
-    fontSize: 18 * dpr,
+    fontSize: 22 * dpr,
   })
 
   return (

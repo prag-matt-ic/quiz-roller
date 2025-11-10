@@ -22,7 +22,7 @@ export type TextCanvasOptions = {
   textBaseline?: CanvasTextBaseline
 }
 
-export const TEXT_CANVAS_SCALE = 48
+export const TEXT_CANVAS_SCALE = 64
 
 const DEFAULTS: Required<Omit<TextCanvasOptions, 'width' | 'height'>> = {
   color: '#ffffff',
@@ -160,6 +160,7 @@ export function useTextCanvas(text: string, options: TextCanvasOptions): CanvasS
   useEffect(() => {
     if (!state) return
     writeTextToCanvas(state.context, text, options)
+    // eslint-disable-next-line react-hooks/immutability
     state.texture.needsUpdate = true
   }, [state, text, options])
 

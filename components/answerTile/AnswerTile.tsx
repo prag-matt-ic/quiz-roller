@@ -108,7 +108,8 @@ export const AnswerTile: FC<AnswerTileProps> = ({
     width: canvasWidth,
     height: canvasHeight,
     color: labelColour,
-    fontSize: 18 * dpr,
+    fontWeight: 600,
+    fontSize: 22 * dpr,
   })
 
   return (

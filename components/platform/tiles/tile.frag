@@ -17,9 +17,9 @@ varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
 // Constants
-const float ANSWER_MIX = 0.125;
-const float NON_ANSWER_MIX = 0.25;
-const float DARKEN_FACTOR = 0.6;
+const float ANSWER_MIX = 0.15;
+const float NON_ANSWER_MIX = 0.3;
+const float DARKEN_FACTOR = 0.66;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.7;
 
