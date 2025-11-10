@@ -50,7 +50,7 @@ The rotation animation is derived from the player velocity and helps the movemen
 
 Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, colour tiles, and out‑of‑bounds.
 
-For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice. If the timer completes, the choice is confirmed.
+For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice. When the timer completes, the choice is confirmed.
 
 When the player enters an info zone, HTML content is animated in.
 
@@ -62,11 +62,13 @@ If the player falls out of bounds, it resets their position or goes to the 'game
 
 The user can change their marble colour by rolling over one of the colour picker tiles.
 
-Colour selection is band‑based (a range between 0 and 1 for sampling the gradient palette) and persisted in the game store.
+Colour selection is band‑based (a range between 0 and 1 for sampling the gradient palette) and is persisted in the game store.
 
 ### Marble Shading
 
-The marble uses a custom GLSL material that the cosine palette and blends colours with animated noise. It supports a lit and a flat mode depending on performance settings.
+The marble uses a custom GLSL material that samples the cosine palette using the player's chosen colour.
+
+It supports textured and flat modes depending on performance settings.
 
 ## Infinite Platform
 
@@ -77,6 +79,7 @@ The main `Platform` is formed from a group of instanced rigid bodies (grid of ro
 ### Row Recycling
 
 When a row passes the camera, it wraps to the back and is assigned new 'row data'. This approach means the camera can look at the player, whilst the floor moves like a conveyor beneath it.
+
 Limiting the number of rendered rows, and using instanced meshes ensure optimal performance.
 
 ### Surface Elements
@@ -85,11 +88,11 @@ Each stage (Home, Obstacles, Question) has it's own set of elements which are po
 
 Their positioning is defined within the row data. When their corresponding row is raised, the element is positioned.
 
-The translation (Z movement) of surface elements is synced with the movement of the underlying tiles.
+The translation (Z movement) of surface elements is synced with the movement of the underlying tiles so they appear fixed to the tiles.
 
 ### Tile Shader
 
-The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and highlight near the player.
+The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and highlight those near the player.
 
 ## Questions and Answers
 
@@ -103,7 +106,7 @@ Each question has a difficulty rating of 1-3. Every two correct answers, the dif
 
 ![Answer](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
 
-- A HUD indicator briefly shows “correct” or “incorrect”
+- A HUD indicator briefly shows correct (✅) or incorrect (❌)
 - A short particle burst plays, with a correct answer attracting green particles to the player, and an incorrect answer dispersing orange particles.
 - The chosen answer is recorded in `confirmedAnswers`
 
