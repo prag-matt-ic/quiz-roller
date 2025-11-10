@@ -70,10 +70,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         bounds={(refreshrate) => (refreshrate > 90 ? [50, 80] : [50, 60])}
         onIncline={() => onPerformanceChange(true)}
         onDecline={() => onPerformanceChange(false)}
-        flipflops={2}
-        onFallback={() => {
-          console.warn('performance fallback triggered')
-        }}>
+        flipflops={2}>
         <ambientLight intensity={1.0} />
         {/* <OrbitControls /> */}
         <Camera />
