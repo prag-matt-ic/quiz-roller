@@ -112,8 +112,8 @@ const PlayerHUD: FC = () => {
                   {hudIndicator === 'move' && (
                     <div className="flex items-center gap-2 pr-2 text-(--palette-7)">
                       <ArrowUpCircleIcon strokeWidth={2} size={32} />
-                      <span className="block font-semibold whitespace-nowrap uppercase">
-                        Move along the platform
+                      <span className="block font-bold whitespace-nowrap uppercase">
+                        Move along
                       </span>
                     </div>
                   )}
