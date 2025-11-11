@@ -116,12 +116,13 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
       const nextMode = order[nextIndex]
 
       if (nextMode === sceneQuality) {
-        const shouldDropDPR = !up && sceneQuality === SceneQuality.LOW && maxDPR === undefined
+        const shouldDropDPR =
+          !up && sceneQuality === SceneQuality.LOW && (maxDPR === undefined || maxDPR > 1)
         if (!shouldDropDPR) return
-        logPerformanceDebug('maxDPR reduced to 1 due to low performance')
-        set({
-          maxDPR: 1,
-        })
+        logPerformanceDebug('maxDPR reduced')
+        set((prev) => ({
+          maxDPR: prev.maxDPR === undefined ? 1.5 : 1,
+        }))
         return
       }
 

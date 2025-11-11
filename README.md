@@ -31,9 +31,9 @@ I've also created a "texure generator" page which was used to produce the backgr
 
 ## State Management
 
-Most of the game logic is encapsulated within the `GameProvider` which is a Zustand store initialised into React Context.
+Most of the game logic is encapsulated within the [`GameProvider`](https://github.com/prag-matt-ic/quiz-roller/blob/main/components/GameProvider.tsx) which is a Zustand store initialised into React Context.
 
-The Game Store handles the current stage, questions, player positioning and collision/intersection events.
+The Game Store handles the current stage, platform speed, questions, player positioning and collision/intersection events.
 
 ### Fast Value Subscriptions 💨
 
@@ -95,9 +95,9 @@ Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, c
 
 For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice. When the timer completes, the choice is confirmed.
 
-When the player enters an info zone, HTML content is animated in.
+When the player enters an info zone, HTML content is animated in using React Transition Group + GSAP.
 
-If the player falls off the edge, they intersect with out-of-bounds and it resets their position or transitions to the 'game over' stage.
+If the player falls off the platform, they intersect with out-of-bounds and it resets their position or transitions to the 'game over' stage.
 
 ### Colour Config 🎨
 
