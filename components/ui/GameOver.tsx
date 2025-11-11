@@ -97,8 +97,8 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
         <p
           className={twJoin(
             'paragraph-lg flex items-center justify-center gap-2 rounded-full',
-            'bg-(--palette-3)/25 px-5 py-3 text-center font-semibold text-white backdrop-blur-md',
-            'ring-1 ring-(--palette-3)',
+            'bg-amber-400/25 px-5 py-3 text-center font-semibold text-white backdrop-blur-md',
+            'ring-1 ring-amber-400',
             FADE_IN_CLASS,
           )}>
           <AwardIcon /> You&apos;ve set a new record!
@@ -189,13 +189,13 @@ type ComparisonStatsProps = {
 }
 
 const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest }) => {
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
   const isCorrectAnswersNewPB = currentRun.correctAnswers > personalBest.correctAnswers
   const isDistanceNewPB = currentRun.distance > personalBest.distance
 
   return (
     <Card
-      playerColourIndex={playerColourIndex}
+      paletteIndex={paletteIndex}
       className={twJoin('opacity-0', FADE_IN_CLASS)}
       childrenClassName="grid w-fit grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-4 md:gap-x-8 ">
       {/* Column headers */}
@@ -209,14 +209,14 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       <p
         className={twJoin(
           'text-2xl font-bold md:text-3xl',
-          isCorrectAnswersNewPB && 'text-(--palette-3)',
+          isCorrectAnswersNewPB && 'text-amber-500',
         )}>
         {currentRun.correctAnswers}
       </p>
       <p
         className={twJoin(
           'text-2xl font-bold md:text-3xl',
-          !isCorrectAnswersNewPB && 'text-(--palette-3)',
+          !isCorrectAnswersNewPB && 'text-amber-500',
         )}>
         {personalBest.correctAnswers}
       </p>
@@ -227,14 +227,14 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       <p
         className={twJoin(
           'text-2xl font-bold md:text-3xl',
-          isDistanceNewPB && 'text-(--palette-3)',
+          isDistanceNewPB && 'text-amber-500',
         )}>
         {currentRun.distance}
       </p>
       <p
         className={twJoin(
           'text-2xl font-bold md:text-3xl',
-          !isDistanceNewPB && 'text-(--palette-3)',
+          !isDistanceNewPB && 'text-amber-500',
         )}>
         {personalBest.distance}
       </p>

@@ -3,7 +3,7 @@
 import { Leva } from 'leva'
 
 import { LEVA_CONTROLS_THEME } from '@/components/textureGenerator/levaTheme'
-import TextureCanvas from '@/components/textureGenerator/TextureCanvas'
+// import TextureCanvas from '@/components/textureGenerator/TextureCanvas'
 
 function TextureGeneratorPage() {
   return (
@@ -16,7 +16,7 @@ function TextureGeneratorPage() {
       {/* Main Content */}
       <div className="relative flex items-center justify-center bg-black">
         <div className="!absolute !aspect-square !h-full max-w-full shrink-0">
-          <TextureCanvas />
+          {/* <TextureCanvas /> */}
         </div>
       </div>
 

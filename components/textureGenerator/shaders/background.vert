@@ -1,5 +1,4 @@
 // Vertex Shader for ScreenQuad
-
 varying vec2 vUv;
 
 void main() {

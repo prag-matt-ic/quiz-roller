@@ -10,7 +10,6 @@ import {
   TRANSPARENT_TEXTURE,
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
-import { getPaletteHex } from './palette'
 
 type Props = {
   ref?: RefObject<Mesh | null>
@@ -21,7 +20,7 @@ type Props = {
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
-const textColour = getPaletteHex(0.6)
+const textColour = '#000000'
 
 export const Text: FC<Props> = ({
   text,

@@ -225,7 +225,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
     }
   }, [moveElements])
 
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
 
   return (
     <>
@@ -261,7 +261,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
         <>
-          <Card className="w-full md:col-span-5" playerColourIndex={playerColourIndex}>
+          <Card className="w-full md:col-span-5" paletteIndex={paletteIndex}>
             <h2 className={headingClasses}>About</h2>
             <p className="paragraph-sm max-w-md">
               Quizroller is a proof of concept developed to showcase the potential of 3D web
@@ -273,7 +273,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
             </p>
           </Card>
 
-          <Card className="w-full md:col-span-3" playerColourIndex={playerColourIndex}>
+          <Card className="w-full md:col-span-3" paletteIndex={paletteIndex}>
             <h2 className={headingClasses}>Partnerships</h2>
             <p className="paragraph-sm">
               Interested in launching your own immersive learning experience?
@@ -287,7 +287,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
             </p>
           </Card>
 
-          <Card className="w-full md:col-span-2" playerColourIndex={playerColourIndex}>
+          <Card className="w-full md:col-span-2" paletteIndex={paletteIndex}>
             <h2 className={headingClasses}>Credits</h2>
             <Credit
               role="Lead Developer"
@@ -309,7 +309,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         infoContainerClassName="grid w-[328px] sm:w-160 grid-rows-auto sm:grid-cols-3 gap-3 sm:gap-4"
         Icon={FlagIcon}>
         <>
-          <Card className="sm:col-span-3" playerColourIndex={playerColourIndex}>
+          <Card className="sm:col-span-3" paletteIndex={paletteIndex}>
             <h2 className="text-xl font-bold text-black">Your Mission</h2>
             <p className="paragraph font-semibold">
               As the Innovation Orb, your mission is to master critical skills for building
@@ -323,7 +323,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           <Card
             className="col-span-1"
             childrenClassName="flex-row sm:flex-col"
-            playerColourIndex={playerColourIndex}>
+            paletteIndex={paletteIndex}>
             <BadgeQuestionMarkIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">Test your knowledge on UX/UI and AI</p>
           </Card>
@@ -331,7 +331,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           <Card
             className="col-span-1"
             childrenClassName="flex-row sm:flex-col"
-            playerColourIndex={playerColourIndex}>
+            paletteIndex={paletteIndex}>
             <GemIcon className="mb-1 size-5 sm:size-7" strokeWidth={1.5} />
             <p className="paragraph-sm font-semibold">
               Each correct answer unlocks fragments of the future web!
@@ -340,7 +340,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           <Card
             className="col-span-1"
             childrenClassName="flex-row sm:flex-col"
-            playerColourIndex={playerColourIndex}>
+            paletteIndex={paletteIndex}>
             <TrendingUpIcon className="mb-1 size-5 sm:size-7" />
             <p className="paragraph-sm font-semibold">
               Questions increase in difficulty the further you roll

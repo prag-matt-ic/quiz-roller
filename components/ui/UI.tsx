@@ -9,7 +9,6 @@ import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
 import GameOverUI from '@/components/ui/GameOver'
 import PlayingUI from '@/components/ui/PlayingUI'
-import EdgeWarningOverlay from '@/components/ui/EdgeWarningOverlay'
 
 gsap.registerPlugin(useGSAP)
 
@@ -28,7 +27,6 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   return (
     <>
-      <EdgeWarningOverlay />
       <SwitchTransition>
         <Transition key={switchKey} timeout={{ enter: 0, exit: 500 }} nodeRef={wrapper}>
           {(transitionStatus) => {

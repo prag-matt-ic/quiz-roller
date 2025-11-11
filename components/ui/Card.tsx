@@ -1,22 +1,16 @@
 import type { FC, PropsWithChildren } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-import { COLOUR_RANGES, createPaletteGradient } from '@/components/palette'
+import { createPaletteGradient } from '@/components/palette'
 
 type CardProps = PropsWithChildren<{
-  playerColourIndex: number
+  paletteIndex: number
   className?: string
   childrenClassName?: string
 }>
 
-const Card: FC<CardProps> = ({
-  playerColourIndex = 1,
-  className,
-  children,
-  childrenClassName,
-}) => {
-  const range = COLOUR_RANGES[playerColourIndex]
-  const oklchGradient = createPaletteGradient(range.min, range.max, {
+const Card: FC<CardProps> = ({ paletteIndex = 1, className, children, childrenClassName }) => {
+  const oklchGradient = createPaletteGradient(paletteIndex, {
     mode: 'oklch',
     angle: 35,
   })

@@ -6,6 +6,7 @@ precision mediump float;
 
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
+uniform int uPaletteIndex;
 
 varying mediump float vAlpha;
 varying highp vec3 vWorldPos;
@@ -17,7 +18,7 @@ varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
 // Constants
-const float ANSWER_MIX = 0.15;
+const float ANSWER_MIX = 0.14;
 const float NON_ANSWER_MIX = 0.3;
 const float DARKEN_FACTOR = 0.66;
 const float UP_THRESHOLD = 0.5;
@@ -37,7 +38,7 @@ void main() {
   bgNoisePos.z -= uScrollZ * 0.1;
   float bgNoise = noise(bgNoisePos);
   float bgInput = bgNoise * 0.5 + 0.5; // Map from [-1,1] to [0,1]
-  vec3 bgColour = getColourFromPalette(bgInput);
+  vec3 bgColour = getColourFromPalette(uPaletteIndex, bgInput);
 
 
   // Apply detail noise when quality setting is high.

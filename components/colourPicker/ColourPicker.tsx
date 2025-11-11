@@ -16,14 +16,14 @@ import colourTileVertex from './colourTile.vert'
 
 type ColourTileShaderUniforms = {
   uTime: number
-  uColourIndex: number
+  uPaletteIndex: number
   uIsActive: number
   uUseNoise: number
 }
 
 const INITIAL_COLOUR_TILE_UNIFORMS: ColourTileShaderUniforms = {
   uTime: 0,
-  uColourIndex: 0,
+  uPaletteIndex: 0,
   uIsActive: 0,
   uUseNoise: 1,
 }
@@ -81,7 +81,7 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView })
         <ColourTileShaderMaterial
           ref={shader}
           key={ColourTileShader.key}
-          uColourIndex={option.index}
+          uPaletteIndex={option.index}
           uIsActive={isActive ? 1 : 0}
           uUseNoise={useNoise ? 1 : 0}
         />
@@ -97,7 +97,7 @@ type ColourPickerProps = {
 }
 
 const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [], isOutOfView }) => {
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
 
   return (
     <group>
@@ -106,7 +106,7 @@ const ColourPicker: FC<ColourPickerProps> = ({ options, optionRefs = [], isOutOf
           ref={optionRefs[option.index]}
           key={option.index}
           option={option}
-          isActive={option.index === playerColourIndex}
+          isActive={option.index === paletteIndex}
           isOutOfView={isOutOfView}
         />
       ))}

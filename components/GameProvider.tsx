@@ -47,9 +47,9 @@ type GameState = {
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 
-  colourIndex: number
-  confirmingColourIndex: number | null
-  setConfirmingColourIndex: (index: number | null) => void
+  paletteIndex: number
+  confirmingPaletteIndex: number | null
+  setConfirmingPaletteIndex: (index: number | null) => void
 
   confirmationProgress: number // [0, 1]
   hudIndicator: null | 'correct' | 'incorrect' | 'move' // Set when confirmation completes and then clear
@@ -99,7 +99,7 @@ const GameContext = createContext<GameStore>(undefined!)
 
 const MAX_DIFFICULTY = 3
 const CONFIRMING_ANSWER_DURATION_S = 2.4
-const CONFIRMING_COLOUR_DURATION_S = 1.5
+const CONFIRMING_PALETTE_DURATION_S = 1.5
 const TERRAIN_SPEED_DURATION = 2.4
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 2] // Used when re-spawning to home
@@ -119,7 +119,7 @@ const INITIAL_STATE: Pick<
   | 'playerWorldPosition'
   | 'hasStarted'
   | 'confirmingStart'
-  | 'confirmingColourIndex'
+  | 'confirmingPaletteIndex'
   | 'questions'
   | 'currentDifficulty'
   | 'currentQuestionIndex'
@@ -127,7 +127,7 @@ const INITIAL_STATE: Pick<
   | 'confirmingAnswer'
   | 'confirmedAnswers'
   | 'distanceRows'
-  | 'colourIndex'
+  | 'paletteIndex'
   | 'currentRun'
   | 'previousRuns'
   | 'cameraLookAtPosition'
@@ -153,8 +153,8 @@ const INITIAL_STATE: Pick<
   confirmingAnswer: null,
   confirmedAnswers: [],
   distanceRows: 0,
-  colourIndex: 1,
-  confirmingColourIndex: null,
+  paletteIndex: 1,
+  confirmingPaletteIndex: null,
   currentRun: null,
   cameraLookAtPosition: null,
   previousRuns: [],
@@ -202,7 +202,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
     set({
       confirmingStart: null,
       confirmingAnswer: null,
-      confirmingColourIndex: null,
+      confirmingPaletteIndex: null,
     })
     confirmationTween = gsap.to(confirmationTweenTarget, {
       duration: 0.3,
@@ -249,13 +249,13 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 
-        setConfirmingColourIndex: (newColourIndex) => {
-          const { colourIndex } = get()
+        setConfirmingPaletteIndex: (newPaletteIndex) => {
+          const { paletteIndex } = get()
 
-          if (newColourIndex === colourIndex) return // Already selected
+          if (newPaletteIndex === paletteIndex) return // Already selected
           confirmationTween?.kill()
 
-          if (newColourIndex === null) {
+          if (newPaletteIndex === null) {
             cancelConfirmation(set)
             stopSoundFX(SoundFX.CHANGE_COLOUR)
             return
@@ -264,22 +264,22 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           playSoundFX(SoundFX.CHANGE_COLOUR)
 
           set({
-            confirmingColourIndex: newColourIndex,
+            confirmingPaletteIndex: newPaletteIndex,
             confirmingStart: null,
             confirmingAnswer: null,
             confirmationProgress: 0,
           })
 
           const onConfirmed = () => {
-            if (get().confirmingColourIndex !== newColourIndex) return
+            if (get().confirmingPaletteIndex !== newPaletteIndex) return
             set({
-              colourIndex: newColourIndex,
-              confirmingColourIndex: null,
+              paletteIndex: newPaletteIndex,
+              confirmingPaletteIndex: null,
               confirmationProgress: 0,
             })
           }
 
-          startConfirmation(set, onConfirmed, CONFIRMING_COLOUR_DURATION_S)
+          startConfirmation(set, onConfirmed, CONFIRMING_PALETTE_DURATION_S)
         },
 
         setConfirmingStart: (startData: StartUserData | null) => {
@@ -298,7 +298,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           set({
             confirmingStart: startData,
             confirmingAnswer: null,
-            confirmingColourIndex: null,
+            confirmingPaletteIndex: null,
             confirmationProgress: 0,
           })
 
@@ -330,14 +330,13 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           set({
             confirmingAnswer: answer,
             confirmingStart: null,
-            confirmingColourIndex: null,
+            confirmingPaletteIndex: null,
             confirmationProgress: 0,
           })
 
           const onConfirmed = () => {
             if (!!get().confirmingAnswer) onAnswerConfirmed()
           }
-
           startConfirmation(set, onConfirmed)
         },
 
@@ -401,7 +400,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           confirmationTweenTarget.value = 0
           set((s) => ({
             ...INITIAL_STATE,
-            colourIndex: s.colourIndex,
+            paletteIndex: s.paletteIndex,
             previousRuns: s.previousRuns,
             resetPlatformTick: s.resetPlatformTick + 1,
             resetPlayerTick: s.resetPlayerTick + 1,
@@ -448,9 +447,9 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         name: 'quizroller',
         partialize: (s) => ({
           previousRuns: s.previousRuns,
-          playerColourIndex: s.colourIndex,
+          paletteIndex: s.paletteIndex,
         }),
-        version: 1,
+        version: 2,
       },
     ),
   )
@@ -572,15 +571,6 @@ function handleGameOverStage({
       set({ terrainSpeed: speedTweenTarget.value })
     },
   })
-
-  // if (!hasStarted) {
-  //   console.warn('[GAME_OVER] Run was never started. Skipping PB compute.')
-  //   set({
-  //     stage: Stage.GAME_OVER,
-  //     currentRunStats: null,
-  //   })
-  //   return
-  // }
 
   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
   const run: RunStats = {

@@ -7,16 +7,16 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 import { ArrowUpCircleIcon, CheckIcon, XIcon } from 'lucide-react'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLOUR_RANGES, createPaletteGradient } from '@/components/palette'
+import { createPaletteGradient } from '@/components/palette'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.5
 
 const PlayerHUD: FC = () => {
-  const confirmingColourIndex = useGameStore((s) => s.confirmingColourIndex)
+  const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
   const confirmingStart = useGameStore((s) => s.confirmingStart)
   const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
 
   const setter = useCallback(
@@ -54,15 +54,14 @@ const PlayerHUD: FC = () => {
   }
 
   // Generate gradient colors based on selected colour band
-  const range = COLOUR_RANGES[playerColourIndex]
-  const rgbGradient = createPaletteGradient(range.min, range.max, {
+  const rgbGradient = createPaletteGradient(paletteIndex, {
     mode: 'rgb',
   })
-  const oklchGradient = createPaletteGradient(range.min, range.max, {
+  const oklchGradient = createPaletteGradient(paletteIndex, {
     mode: 'oklch',
   })
 
-  const showBar = !!confirmingAnswer || !!confirmingStart || confirmingColourIndex !== null
+  const showBar = !!confirmingAnswer || !!confirmingStart || confirmingPaletteIndex !== null
   const showResult = !!hudIndicator
   const switchKey = `${showBar}-${showResult}`
 
@@ -104,13 +103,13 @@ const PlayerHUD: FC = () => {
                   ref={container}
                   className="overflow-hidden rounded-xl bg-white p-2 opacity-0 shadow-lg shadow-black/25">
                   {hudIndicator === 'correct' && (
-                    <CheckIcon strokeWidth={4} size={48} className="text-(--palette-8)" />
+                    <CheckIcon strokeWidth={4} size={48} className="text-green-500" />
                   )}
                   {hudIndicator === 'incorrect' && (
-                    <XIcon strokeWidth={4} size={48} className="text-(--palette-4)" />
+                    <XIcon strokeWidth={4} size={48} className="text-red-600" />
                   )}
                   {hudIndicator === 'move' && (
-                    <div className="flex items-center gap-2 pr-2 text-(--palette-7)">
+                    <div className="flex items-center gap-2 pr-2 text-black">
                       <ArrowUpCircleIcon strokeWidth={2} size={32} />
                       <span className="block font-bold whitespace-nowrap uppercase">
                         Move along

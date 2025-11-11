@@ -9,6 +9,8 @@ export type BackgroundShaderUniforms = {
   uTime: number
   uResolution: Vector2
   uSeed: number
+  uPaletteIndex: number
+  uSampleWeight: number
   // Grainy Noise controls
   uGrainScale: number
   uGrainAmplitude: number
@@ -35,32 +37,36 @@ export const INITIAL_BACKGROUND_UNIFORMS: BackgroundShaderUniforms = {
   uTime: 0,
   uResolution: new Vector2(1024, 1024),
   uSeed: 0,
+  uPaletteIndex: 0,
+  uSampleWeight: 1,
   // Grainy Noise defaults
-  uGrainScale: 256.0,
-  uGrainAmplitude: 1.5,
-  uGrainMix: 0.1,
+  uGrainScale: 100.0,
+  uGrainAmplitude: 0.1,
+  uGrainMix: 0.5,
   // Fractal Noise defaults
-  uFbmScale: 4.0,
-  uFbmOctaves: 4,
-  uFbmLacunarity: 2.0,
-  uFbmGain: 0.5,
-  uFbmMix: 0.3,
+  uFbmScale: 8.5,
+  uFbmOctaves: 6,
+  uFbmLacunarity: 1.7,
+  uFbmGain: 0.6,
+  uFbmMix: 0.28,
   // Vignette defaults
-  uVignetteStrength: 0.6,
-  uVignetteRadius: 0.3,
-  uVignetteSmoothness: 0.6,
+  uVignetteStrength: 0.4,
+  uVignetteRadius: 0.44,
+  uVignetteSmoothness: 0.53,
   // Worley Noise defaults
-  uWorleyScale: 5.0,
-  uWorleyJitter: 1.0,
+  uWorleyScale: 0.5,
+  uWorleyJitter: 0.0,
   uWorleyManhattan: 0, // 0 = Euclidean, 1 = Manhattan distance
-  uWorleyPattern: 2, // F2-F1 (cell borders)
-  uWorleyMix: 0.5,
+  uWorleyPattern: 2, // F2-F1 pattern
+  uWorleyMix: 0.0,
 }
 
-const CustomBackgroundShaderMaterial = shaderMaterial(
+const TextureShaderMaterialImpl = shaderMaterial(
   INITIAL_BACKGROUND_UNIFORMS,
   backgroundVertex,
   backgroundFragment,
 )
 
-export const TextureShaderMaterial = extend(CustomBackgroundShaderMaterial)
+extend({ TextureShaderMaterial: TextureShaderMaterialImpl })
+
+export const TextureShaderMaterial = TextureShaderMaterialImpl

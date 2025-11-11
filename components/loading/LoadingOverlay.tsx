@@ -7,6 +7,7 @@ import { useSoundStore } from '@/components/SoundProvider'
 import { Check, PlayIcon, VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/components/GameProvider'
+import { GradientText } from '../ui/GradientText'
 
 const Button = dynamic(() => import('@/components/ui/Button'))
 
@@ -46,7 +47,9 @@ const LoadingOverlay: FC = () => {
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
-      <h1 className="heading-xl relative text-white">Quizroller</h1>
+      <h1 className="heading-xl relative text-white">
+        <GradientText>Quizroller</GradientText>
+      </h1>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
       <div className="relative flex size-20 items-center justify-center" role="presentation">
         <div

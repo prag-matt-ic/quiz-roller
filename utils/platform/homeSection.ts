@@ -1,7 +1,7 @@
 import { type Vector3Tuple } from 'three'
 
 import type { ColourTileOption } from '@/components/colourPicker/ColourPicker'
-import { COLOUR_RANGES } from '@/components/palette'
+import { PALETTE_COUNT } from '@/components/palette'
 import { type ColourTileUserData } from '@/model/schema'
 import {
   colToX,
@@ -26,7 +26,7 @@ const COLOUR_PICKER_RELATIVE_Z =
 
 // Answer tiles positions
 const HOME_ANSWER_TILE_COLS = 6
-const HOME_ANSWER_TILE_ROWS = 3
+export const HOME_ANSWER_TILE_ROWS = 3
 export const HOME_ANSWER_TILE_WIDTH = HOME_ANSWER_TILE_COLS * TILE_SIZE
 export const HOME_ANSWER_TILE_HEIGHT = HOME_ANSWER_TILE_ROWS * TILE_SIZE
 
@@ -117,19 +117,22 @@ export const COLOUR_TILE_SIZE = TILE_SIZE * 2
 export const COLOUR_TILE_GAP = TILE_SIZE
 // export const COLOUR_TILE_TEXT_RELATIVE_Z = -2
 
-const horizontalCenterOffset = (COLOUR_RANGES.length - 1) / 2
+const horizontalCenterOffset = (PALETTE_COUNT - 1) / 2
 
-export const COLOUR_TILE_OPTIONS: ColourTileOption[] = COLOUR_RANGES.map((_, index) => {
-  const xOffset = (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP)
-  const position: Vector3Tuple = [xOffset, ON_TILE_Y, 0]
-  const userData: ColourTileUserData = {
-    type: 'colour',
-    colourIndex: index,
-  }
-  return {
-    index,
-    position,
-    relativeZ: 0,
-    userData,
-  }
-})
+export const COLOUR_TILE_OPTIONS: ColourTileOption[] = Array.from(
+  { length: PALETTE_COUNT },
+  (_, index) => {
+    const xOffset = (index - horizontalCenterOffset) * (COLOUR_TILE_SIZE + COLOUR_TILE_GAP)
+    const position: Vector3Tuple = [xOffset, ON_TILE_Y, 0]
+    const userData: ColourTileUserData = {
+      type: 'colour',
+      paletteIndex: index,
+    }
+    return {
+      index,
+      position,
+      relativeZ: 0,
+      userData,
+    }
+  },
+)

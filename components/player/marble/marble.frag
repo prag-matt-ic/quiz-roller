@@ -4,11 +4,10 @@ precision mediump int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require(../../palette.glsl)
-#pragma glslify: paletteRange = require(../../paletteRange.glsl)
 
 uniform highp float uTime;
-uniform mediump int uColourIndex; // 0,1,2: selected palette band
-uniform mediump int uConfirmingColourIndex; // -1 when not confirming
+uniform mediump int uPaletteIndex; // 0,1,2: selected palette
+uniform mediump int uConfirmingPaletteIndex; // -1 when not confirming
 uniform mediump float uConfirmingProgress; // [0,1]
 uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
@@ -26,10 +25,8 @@ const float DIFFUSE_STRENGTH = 0.5;
 const float SPECULAR_STRENGTH = 0.4;
 
 // -------- Surface constants --------
-const float NOISE_FREQUENCY = 0.3;
-const float NOISE_TO_RANGE = 0.5;
-const float NOISE_RANGE_OFFSET = 0.5;
-const float REVEAL_SMOOTHNESS = 0.1;
+const float NOISE_FREQUENCY = 0.2;
+const float REVEAL_SMOOTHNESS = 0.12;
 
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping
@@ -53,20 +50,15 @@ vec3 perturbNormal() {
 void main() {
   // Base palette color via 3D noise in object space
   highp vec3 unitLocalPos = normalize(vLocalPos);
-  float noiseValue = noise(unitLocalPos * NOISE_FREQUENCY + uTime * 0.08);
-  noiseValue = noiseValue * NOISE_TO_RANGE + NOISE_RANGE_OFFSET;
+  float noiseValue = noise(unitLocalPos * NOISE_FREQUENCY + uTime * 0.06);
+  noiseValue = noiseValue * 0.5 + 0.5;
 
-  float minValue, maxValue;
-  paletteRange(uColourIndex, minValue, maxValue);
-  float paletteT = mix(minValue, maxValue, noiseValue);
-  vec3 baseColor = getColourFromPalette(paletteT);
+  float paletteT = clamp(noiseValue, 0.0, 1.0);
+  vec3 baseColor = getColourFromPalette(uPaletteIndex, paletteT);
   vec3 marbleColor = baseColor;
 
-  if (uConfirmingColourIndex >= 0 && uConfirmingProgress > 0.0) {
-    float confirmMin, confirmMax;
-    paletteRange(uConfirmingColourIndex, confirmMin, confirmMax);
-    float confirmT = mix(confirmMin, confirmMax, noiseValue);
-    vec3 confirmingColor = getColourFromPalette(confirmT);
+  if (uConfirmingPaletteIndex >= 0 && uConfirmingProgress > 0.0) {
+    vec3 confirmingColor = getColourFromPalette(uConfirmingPaletteIndex, paletteT);
 
     float clampedProgress = clamp(uConfirmingProgress, 0.0, 1.0);
     float height01 = unitLocalPos.y * 0.5 + 0.5;

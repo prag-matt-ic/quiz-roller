@@ -1,12 +1,11 @@
 // AnswerTile fragment shader
 #pragma glslify: getColourFromPalette = require(../palette.glsl)
-#pragma glslify: paletteRange = require(../paletteRange.glsl)
 #pragma glslify: sdBox = require(../sdBox.glsl)
 
 precision mediump float;
 precision mediump int;
 
-uniform mediump int uPlayerColourIndex; // 0,1,2: selected palette band
+uniform mediump int uPlayerPaletteIndex; // 0,1,2: selected palette
 uniform mediump float uConfirmingProgress;
 uniform mediump float uTileAspect; // width / height
 uniform sampler2D uTextTexture;
@@ -33,10 +32,8 @@ void main() {
   float borderMask = smoothstep(0.0, antiAliasing, distanceFromInnerEdge);
 
   float borderColourPosition = sin(vUv.x * BORDER_WAVE_FREQUENCY) * BORDER_WAVE_OFFSET + BORDER_WAVE_OFFSET;
-  float minValue, maxValue;
-  paletteRange(uPlayerColourIndex, minValue, maxValue);
-  float paletteT = mix(minValue, maxValue, borderColourPosition);
-  vec3 borderColour = getColourFromPalette(paletteT);
+  float paletteT = clamp(borderColourPosition, 0.0, 1.0);
+  vec3 borderColour = getColourFromPalette(uPlayerPaletteIndex, paletteT);
   vec4 color = vec4(borderColour, 1.0) * borderMask;
 
   // Sample the text texture and overlay it inside the inner area only

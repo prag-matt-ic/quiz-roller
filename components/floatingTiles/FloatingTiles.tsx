@@ -12,17 +12,20 @@ import {
 import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
+import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 type FloatingTilesUniforms = {
   uMix: number
   uPositionTexture: Texture | null
+  uPaletteIndex: number
 }
 
 const INITIAL_FLOATING_TILE_UNIFORMS: FloatingTilesUniforms = {
   uMix: 0.4,
   uPositionTexture: null,
+  uPaletteIndex: 0,
 }
 
 const CustomFloatingTilesMaterial = shaderMaterial(
@@ -61,6 +64,7 @@ const FloatingTiles: FC = () => {
   const count = usePerformanceStore((s) => s.sceneConfig.floatingTiles.instanceCount)
   const renderer = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
 
   const isDisabled = count === 0
 
@@ -165,6 +169,8 @@ const FloatingTiles: FC = () => {
         positionVariable.current,
       ])
 
+      console.log('FloatingTiles GPUComputationRenderer initialized.')
+
       // Set uniforms for position shader
       const positionUniforms = positionVariable.current.material.uniforms as {
         uDeltaTime: { value: number }
@@ -220,6 +226,11 @@ const FloatingTiles: FC = () => {
   }, [renderer, textureSize, camera.position.z, isDisabled])
 
   // GPU computation - position and alpha computed on GPU
+  useEffect(() => {
+    if (!materialRef.current) return
+    materialRef.current.uPaletteIndex = paletteIndex
+  }, [paletteIndex])
+
   useFrame((_, dt) => {
     if (!meshRef.current) return
     if (!gpuCompute.current) return
@@ -274,7 +285,6 @@ const FloatingTiles: FC = () => {
         key={(CustomFloatingTilesMaterial as unknown as { key: string }).key}
         ref={materialRef}
         uMix={INITIAL_FLOATING_TILE_UNIFORMS.uMix}
-        uPositionTexture={INITIAL_FLOATING_TILE_UNIFORMS.uPositionTexture}
         transparent={true}
         depthWrite={true}
       />

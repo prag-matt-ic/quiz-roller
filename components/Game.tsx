@@ -5,7 +5,7 @@ import { PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense, useLayoutEffect, useState } from 'react'
+import { type FC, Suspense, useEffect, useState } from 'react'
 import * as THREE from 'three'
 
 import Background from '@/components/background/Background'
@@ -36,7 +36,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
   const [dpr, setDpr] = useState(1)
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!!maxDPR) {
       setDpr(Math.min(window.devicePixelRatio ?? 1, maxDPR))
     } else {

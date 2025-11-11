@@ -8,7 +8,7 @@ import {
 import { FC, useImperativeHandle, useRef } from 'react'
 import { type InstancedBufferAttribute, Vector3 } from 'three'
 
-import { PLAYER_INITIAL_POSITION_VEC3 } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
@@ -33,6 +33,7 @@ type TileShaderUniforms = {
   uExitStartZ: number
   uExitEndZ: number
   uAddDetailNoise: number
+  uPaletteIndex: number
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
@@ -43,6 +44,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uExitStartZ: EXIT_START_Z,
   uExitEndZ: EXIT_END_Z,
   uAddDetailNoise: 1,
+  uPaletteIndex: 0,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(
@@ -77,6 +79,7 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
   ref,
 }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
@@ -106,6 +109,7 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
   useGameFrame(() => {
     if (!tileShader.current) return
     tileShader.current.uPlayerWorldPos = playerPosition.current
+    tileShader.current.uPaletteIndex = paletteIndex
   })
 
   return (

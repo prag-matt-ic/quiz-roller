@@ -16,8 +16,8 @@ import useGameFrame from '@/hooks/useGameFrame'
 
 export type MarbleShaderUniforms = {
   uTime: number
-  uColourIndex: number
-  uConfirmingColourIndex: number
+  uPaletteIndex: number
+  uConfirmingPaletteIndex: number
   uConfirmingProgress: number
   uNormalMap: THREE.Texture | null
   uNormalScale: number
@@ -26,8 +26,8 @@ export type MarbleShaderUniforms = {
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uTime: 0,
-  uColourIndex: 1, // Default to middle band
-  uConfirmingColourIndex: -1, // No confirming by default
+  uPaletteIndex: 1, // Default to middle palette
+  uConfirmingPaletteIndex: -1, // No confirming by default
   uConfirmingProgress: 0,
   uNormalMap: null,
   uNormalScale: 0.3,
@@ -42,8 +42,8 @@ type MarbleProps = {
 }
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
-  const confirmingColourIndex = useGameStore((s) => s.confirmingColourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat } = playerConfig
   const normalMap = useTexture(normal.src)
@@ -72,8 +72,8 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           key={MarbleShader.key}
           ref={shader}
           uTime={INITIAL_UNIFORMS.uTime}
-          uColourIndex={playerColourIndex}
-          uConfirmingColourIndex={confirmingColourIndex ?? -1}
+          uPaletteIndex={paletteIndex}
+          uConfirmingPaletteIndex={confirmingPaletteIndex ?? -1}
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}

@@ -49,7 +49,7 @@ const edgeWarningScratch: EdgeWarningIntensities = {
 const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
-  const setConfirmingColourIndex = useGameStore((s) => s.setConfirmingColourIndex)
+  const setConfirmingPaletteIndex = useGameStore((s) => s.setConfirmingPaletteIndex)
   const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
   const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
@@ -184,7 +184,7 @@ const Player: FC = () => {
 
     if (otherUserData.type === 'colour') {
       if (stage !== Stage.HOME) return
-      setConfirmingColourIndex(otherUserData.colourIndex)
+      setConfirmingPaletteIndex(otherUserData.paletteIndex)
       return
     }
 
@@ -209,7 +209,7 @@ const Player: FC = () => {
     }
 
     if (otherUserData.type === 'colour') {
-      setConfirmingColourIndex(null)
+      setConfirmingPaletteIndex(null)
       return
     }
   }

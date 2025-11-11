@@ -8,7 +8,6 @@ import { Texture, type Vector3Tuple } from 'three'
 
 import Particles from '@/components/answerTile/particles/Particles'
 import { useGameStore } from '@/components/GameProvider'
-import { getPaletteHex } from '@/components/palette'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import { TEXT_CANVAS_SCALE, TRANSPARENT_TEXTURE, useTextCanvas } from '@/hooks/useTextCanvas'
@@ -26,7 +25,7 @@ type AnswerTileShaderUniforms = {
   uTileAspect: number
   uTime: number
   uTextTexture: Texture | null
-  uPlayerColourIndex: number
+  uPlayerPaletteIndex: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
@@ -35,7 +34,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: AnswerTileShaderUniforms = {
   uTileAspect: DEFAULT_TILE_ASPECT,
   uTime: 0,
   uTextTexture: null,
-  uPlayerColourIndex: 1,
+  uPlayerPaletteIndex: 1,
 }
 
 const AnswerTileShader = shaderMaterial(
@@ -61,7 +60,7 @@ export type AnswerTileProps = BaseProps & {
   wasCorrect: boolean
 }
 
-const labelColour = getPaletteHex(0.6)
+const labelColour = '#000000'
 
 // Generic tile component which can be used for the start confirmation or answers
 export const AnswerTile: FC<AnswerTileProps> = ({
@@ -76,7 +75,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
   height = ANSWER_TILE_HEIGHT,
   isOutOfView,
 }) => {
-  const playerColourIndex = useGameStore((s) => s.colourIndex)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
   const shader = useRef<typeof AnswerTileShaderMaterial & AnswerTileShaderUniforms>(null)
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
@@ -142,7 +141,7 @@ export const AnswerTile: FC<AnswerTileProps> = ({
           uConfirmingProgress={0}
           uIsConfirming={0}
           uTextTexture={canvasState?.texture ?? TRANSPARENT_TEXTURE}
-          uPlayerColourIndex={playerColourIndex}
+          uPlayerPaletteIndex={paletteIndex}
           uTileAspect={tileAspect}
           polygonOffset={true}
           polygonOffsetFactor={-1}

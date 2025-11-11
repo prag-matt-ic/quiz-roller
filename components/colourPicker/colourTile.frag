@@ -3,10 +3,9 @@ precision lowp int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: getColourFromPalette = require('../palette.glsl')
-#pragma glslify: paletteRange = require('../paletteRange.glsl')
 
 uniform float uTime;
-uniform lowp int uColourIndex;
+uniform lowp int uPaletteIndex;
 uniform lowp float uIsActive;
 uniform lowp float uUseNoise;
 
@@ -49,12 +48,8 @@ void main() {
   }
 
   // Colour from palette
-  float minValue;
-  float maxValue;
-  paletteRange(uColourIndex, minValue, maxValue);
-  
-  float paletteT = minValue + (maxValue - minValue) * normalizedNoise;
-  lowp vec3 baseColour = getColourFromPalette(paletteT); // Use lowp for color
+  float paletteT = clamp(normalizedNoise, 0.0, 1.0);
+  lowp vec3 baseColour = getColourFromPalette(uPaletteIndex, paletteT); // Use lowp for color
 
   // Vignette shading
   float vignetteStrength = smoothstep(VIGNETTE_START, 1.0, radial) * VIGNETTE_INTENSITY;
