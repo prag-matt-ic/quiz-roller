@@ -48,12 +48,11 @@ const LoadingOverlay: FC = () => {
       )}>
       <h1 className="heading-xl relative text-white">Quizroller</h1>
       {/* Spinner with inner gradient circle (using CSS palette gradients) */}
-      <div className="relative flex size-20 items-center justify-center" aria-label="Loading">
+      <div className="relative flex size-20 items-center justify-center" role="presentation">
         <div
           className={twJoin(
             'absolute inset-0 animate-pulse rounded-full bg-linear-0 from-[#dc9704] to-[#f9ca0e] motion-reduce:animate-none',
           )}
-          aria-hidden="true"
         />
         <div
           className={twJoin(
@@ -81,6 +80,7 @@ const LoadingOverlay: FC = () => {
           onClick={() => onStartClick(false)}
           color="light"
           variant="primary"
+          aria-label="Start with audio"
           disabled={!isReady}>
           <PlayIcon className="size-6" strokeWidth={1.5} />
           Start experience
@@ -88,6 +88,7 @@ const LoadingOverlay: FC = () => {
         <Button
           variant="secondary"
           color="light"
+          aria-label="Start muted"
           onClick={() => onStartClick(true)}
           disabled={!isReady}>
           <VolumeOffIcon className="size-6" />

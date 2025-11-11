@@ -10,13 +10,11 @@ import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick
 type KeyProps = {
   isActive: boolean
   Icon: LucideIcon
-  ariaLabel: string
 }
 
-const Key: FC<KeyProps> = ({ Icon, ariaLabel, isActive }) => {
+const Key: FC<KeyProps> = ({ Icon, isActive }) => {
   return (
     <div
-      aria-label={ariaLabel}
       className={twJoin(
         'flex h-10 w-12 items-center justify-center rounded-lg border border-black/50 bg-black/40 text-white',
         isActive && 'bg-black/60',
@@ -106,11 +104,11 @@ const Keys: FC = () => {
   return (
     <aside className="pointer-events-none fixed right-4 bottom-4 z-1000 grid w-fit grid-cols-3 gap-1">
       <div />
-      <Key ariaLabel="Forward" Icon={ArrowUp} isActive={playerInput.up > 0} />
+      <Key Icon={ArrowUp} isActive={playerInput.up > 0} />
       <div />
-      <Key ariaLabel="Left" Icon={ArrowLeft} isActive={playerInput.left > 0} />
-      <Key ariaLabel="Backward" Icon={ArrowDown} isActive={playerInput.down > 0} />
-      <Key ariaLabel="Right" Icon={ArrowRight} isActive={playerInput.right > 0} />
+      <Key Icon={ArrowLeft} isActive={playerInput.left > 0} />
+      <Key Icon={ArrowDown} isActive={playerInput.down > 0} />
+      <Key Icon={ArrowRight} isActive={playerInput.right > 0} />
     </aside>
   )
 }
