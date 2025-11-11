@@ -5,3 +5,5 @@ Disallow: /dev
 # Allow all crawlers
 User-agent: *
 Allow: /
+
+Sitemap: https://quizroller.vercel.app/sitemap.xml
