@@ -101,7 +101,7 @@ const StructuredData: FC = () => {
             name: 'Pragmattic Ltd',
             url: BASE_URL,
             logo: `${BASE_URL}/web-app-manifest-512x512.png`,
-            image: `${BASE_URL}/screenshots/home.jpg`,
+            image: `${BASE_URL}/opengraph-image.jpg`,
             sameAs: ['https://github.com/prag-matt-ic'],
           }),
         }}
