@@ -20,10 +20,8 @@ export enum SoundFX {
 
 const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND]: '/audio/background.aac',
-
   [SoundFX.CORRECT_ANSWER]: '/audio/correct.aac',
   [SoundFX.INCORRECT_ANSWER]: '/audio/incorrect.aac',
-
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
@@ -51,8 +49,10 @@ const createSoundStore = () => {
   let masterGain: GainNode | null = null
   let audioBuffers: Buffers = {}
   let initialisationPromise: Promise<void> | null = null
+
   const activeSources = new Set<AudioBufferSourceNode>()
   const gainNodesBySource = new Map<AudioBufferSourceNode, GainNode>()
+
   const DEFAULT_MASTER_GAIN = 0.5
   const DEFAULT_SOURCE_GAIN = 1
   const STOP_FX_FADE_SECONDS = 0.3
