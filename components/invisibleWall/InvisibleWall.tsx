@@ -20,7 +20,7 @@ const InvisibleWall: FC<Props> = ({ ref, position }) => {
     if (!isTerrainStage) return
     // Hide the wall during terrain stage
     ref.current.setTranslation({ x: 0, y: HIDE_POSITION_Y, z: HIDE_POSITION_Z }, false)
-  }, [isTerrainStage])
+  }, [isTerrainStage, ref])
 
   return (
     <RigidBody
@@ -33,7 +33,7 @@ const InvisibleWall: FC<Props> = ({ ref, position }) => {
       canSleep={true}
       colliders="cuboid"
       rotation={[0, 0, 0]}>
-      <mesh renderOrder={2}>
+      <mesh>
         <planeGeometry args={[WALL_WIDTH, 2]} />
         <meshBasicMaterial depthTest={false} transparent={true} opacity={0} />
       </mesh>

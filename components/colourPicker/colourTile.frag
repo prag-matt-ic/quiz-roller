@@ -18,7 +18,7 @@ const float DETAIL_NOISE_WEIGHT = 0.25;
 const float ACTIVE_NOISE_TIME_SPEED = 0.8;
 const float INACTIVE_NOISE_TIME_SPEED = 0.12;
 const float NOISE_TIME_DELTA = ACTIVE_NOISE_TIME_SPEED - INACTIVE_NOISE_TIME_SPEED;
-const float BORDER_THICKNESS = 0.05;
+const float BORDER_THICKNESS = 0.04;
 const float OUTER_RADIUS = 0.5;
 const float INV_OUTER_RADIUS = 2.0;
 const float INNER_RADIUS = OUTER_RADIUS - BORDER_THICKNESS;
@@ -65,7 +65,8 @@ void main() {
   float borderAntiAliasing = fwidth(borderDistance);
   float borderMask = smoothstep(0.0, borderAntiAliasing, borderDistance);
 
-  finalColour = mix(finalColour, vec3(1.0), borderMask * activeMix);
+  lowp vec3 borderColour = mix(vec3(0.0), vec3(1.0), activeMix);
+  finalColour = mix(finalColour, borderColour, borderMask);
 
   gl_FragColor = vec4(finalColour, 1.0);
 }
