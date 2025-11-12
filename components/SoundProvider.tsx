@@ -5,7 +5,6 @@ import {
   type PropsWithChildren,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
@@ -13,8 +12,7 @@ import { createStore, type StoreApi, useStore } from 'zustand'
 export enum SoundFX {
   BACKGROUND = 'BACKGROUND',
   CORRECT_ANSWER = 'CORRECT_ANSWER',
-  INCORRECT_ANSWER = 'WRONG_ANSWER',
-  // GAME_OVER = 'GAME_OVER',
+  INCORRECT_ANSWER = 'INCORRECT_ANSWER',
   OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
   OPEN_INFO = 'OPEN_INFO',
   CHANGE_COLOUR = 'CHANGE_COLOUR',

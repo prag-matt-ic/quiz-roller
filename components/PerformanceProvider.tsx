@@ -1,11 +1,4 @@
-import {
-  createContext,
-  type FC,
-  type PropsWithChildren,
-  useContext,
-  useRef,
-  useState,
-} from 'react'
+import { createContext, type FC, type PropsWithChildren, useContext, useState } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
 export type RapierSimFPS = 0 | 30 | 60 | 120 // 0 = 'vary'

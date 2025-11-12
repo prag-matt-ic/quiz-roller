@@ -1,13 +1,6 @@
 'use client'
 import gsap from 'gsap'
-import {
-  createContext,
-  type FC,
-  type PropsWithChildren,
-  useContext,
-  useRef,
-  useState,
-} from 'react'
+import { createContext, type FC, type PropsWithChildren, useContext, useState } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
