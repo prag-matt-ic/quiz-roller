@@ -43,6 +43,7 @@ import { Credit } from './HomeInfo'
 import Logo from './Logo'
 
 import Card from '@/components/ui/Card'
+import InvisibleWall from '@/components/invisibleWall/InvisibleWall'
 
 const START_TILE_USER_DATA: StartUserData = {
   type: 'start',
@@ -64,6 +65,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   const isConfirmingStart = Boolean(confirmingStart)
 
   const startTile = useRef<RapierRigidBody | null>(null)
+  const invisibleWall = useRef<RapierRigidBody | null>(null)
 
   const logo = useRef<Group>(null)
 
@@ -91,6 +93,13 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
           translation.current.y = answerPosition[1]
           translation.current.z = answerPosition[2] + rowZ
           startTile.current.setTranslation(translation.current, true)
+        }
+
+        if (!!answerPosition && !!invisibleWall.current) {
+          translation.current.x = answerPosition[0]
+          translation.current.y = 0.6
+          translation.current.z = answerPosition[2] + rowZ - HOME_ANSWER_TILE_HEIGHT / 2
+          invisibleWall.current.setTranslation(translation.current, true)
         }
 
         const logoPosition = row.logoPosition
@@ -232,6 +241,8 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         wasCorrect={false}
         isOutOfView={isOutOfView}
       />
+
+      <InvisibleWall ref={invisibleWall} position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]} />
 
       <Logo ref={logo} />
 
