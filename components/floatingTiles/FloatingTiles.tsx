@@ -169,8 +169,6 @@ const FloatingTiles: FC = () => {
         positionVariable.current,
       ])
 
-      console.log('FloatingTiles GPUComputationRenderer initialized.')
-
       // Set uniforms for position shader
       const positionUniforms = positionVariable.current.material.uniforms as {
         uDeltaTime: { value: number }

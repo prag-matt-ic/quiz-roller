@@ -62,7 +62,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         alpha: false,
         antialias: !isMobile,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.24,
+        toneMappingExposure: 0.2,
       }}>
       <PerformanceMonitor
         // Create an upper/lower FPS band relative to device refresh rate
@@ -77,7 +77,11 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         {isDebug && <Stats />}
         <Suspense>
           <Physics debug={false} timeStep={physicsTimeStep}>
-            <Level />
+            <Background />
+            <FloatingTiles />
+            <OutOfBounds />
+            <Platform />
+            <Player />
           </Physics>
         </Suspense>
       </PerformanceMonitor>
@@ -86,15 +90,3 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 }
 
 export default Game
-
-const Level: FC = () => {
-  return (
-    <>
-      <Background />
-      <FloatingTiles />
-      <OutOfBounds />
-      <Platform />
-      <Player />
-    </>
-  )
-}

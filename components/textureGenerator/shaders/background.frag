@@ -38,7 +38,6 @@ varying vec2 vUv;
 
 void main() {
     vec2 uv = vUv;
-
     // Aspect ratio correction helpers
     float aspect = uResolution.x / uResolution.y;
     vec2 aspectScale = vec2(aspect, 1.0);
