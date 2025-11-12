@@ -88,9 +88,9 @@ const GameOverUI: FC<Props> = ({ transitionStatus, ref }) => {
   return (
     <section
       ref={ref}
-      className="relative z-1000 flex h-svh flex-col items-center justify-center gap-4 bg-black/80 opacity-0 sm:gap-6">
+      className="relative z-1000 flex h-svh w-full flex-col items-center justify-center gap-4 bg-black/80 px-5 opacity-0 sm:gap-6">
       <h2 className={`${FADE_IN_CLASS} heading-lg opacity-0`}>
-        <GradientText>Game Over</GradientText>
+        <GradientText>Roll Over</GradientText>
       </h2>
       {/* New record banner */}
       {isNewPB && (
@@ -157,7 +157,7 @@ function calculatePersonalBest(runs: RunStats[]): PersonalBest {
     },
     { correctAnswers: 0, distance: 0 },
   )
-  console.log('[GameOver] calculatePersonalBest:', { runsCount: runs.length, result })
+
   return result
 }
 
@@ -166,7 +166,6 @@ function checkIsNewPersonalBest(
   personalBest: PersonalBest,
 ): boolean {
   if (!currentRun) {
-    console.log('[GameOver] checkIsNewPersonalBest: No current run')
     return false
   }
 
@@ -174,12 +173,6 @@ function checkIsNewPersonalBest(
     currentRun.correctAnswers > personalBest.correctAnswers ||
     (currentRun.correctAnswers === personalBest.correctAnswers &&
       currentRun.distance > personalBest.distance)
-
-  console.log('[GameOver] checkIsNewPersonalBest:', {
-    currentRun,
-    personalBest,
-    isNewPB,
-  })
 
   return isNewPB
 }
@@ -208,7 +201,7 @@ const ComparisonStats: FC<ComparisonStatsProps> = ({ currentRun, personalBest })
       {/* Column headers */}
       <div></div> {/* Empty cell for label column */}
       <h3 className="heading-sm text-black">This Run</h3>
-      <h3 className="heading-sm text-black">Personal Best</h3>
+      <h3 className="heading-sm text-black">Your Best</h3>
       {/* Correct answers row */}
       <div className="flex items-center text-sm font-semibold tracking-wide text-black/80 uppercase">
         Correct Answers

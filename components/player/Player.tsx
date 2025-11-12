@@ -143,8 +143,6 @@ const Player: FC = () => {
     nextPosition.current.z =
       currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
 
-    // console.log('Player Position:', nextPosition.current)
-
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
     // Calculate physics for rolling animation

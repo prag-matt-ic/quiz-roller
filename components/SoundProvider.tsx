@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
@@ -227,20 +228,20 @@ const createSoundStore = () => {
 }
 
 export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {
-  const soundStore = useRef<SoundStore>(createSoundStore())
+  const [soundStore] = useState<SoundStore>(createSoundStore())
 
   useEffect(() => {
     const initialiseAudio = async () => {
       try {
-        await soundStore.current.getState().initialise()
+        await soundStore.getState().initialise()
       } catch (error) {
         console.error('[SoundProvider] Audio initialisation failed', error)
       }
     }
     initialiseAudio()
-  }, [])
+  }, [soundStore])
 
-  return <SoundContext value={soundStore.current}>{children}</SoundContext>
+  return <SoundContext value={soundStore}>{children}</SoundContext>
 }
 
 export function useSoundStore<T>(selector: (state: SoundState) => T): T {

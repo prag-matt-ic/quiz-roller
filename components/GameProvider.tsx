@@ -1,6 +1,13 @@
 'use client'
 import gsap from 'gsap'
-import { createContext, type FC, type PropsWithChildren, useContext, useRef } from 'react'
+import {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  useContext,
+  useRef,
+  useState,
+} from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -589,8 +596,6 @@ function handleGameOverStage({
     date: new Date(),
   }
 
-  console.log('[GAME_OVER] Run stats computed:', { run })
-
   set((s) => ({
     stage: Stage.GAME_OVER,
     currentRun: run,
@@ -604,9 +609,9 @@ type Props = PropsWithChildren
 export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
-  const store = useRef<GameStore>(createGameStore(playSoundFX, stopSoundFX))
+  const [store] = useState<GameStore>(createGameStore(playSoundFX, stopSoundFX))
 
-  return <GameContext value={store.current}>{children}</GameContext>
+  return <GameContext value={store}>{children}</GameContext>
 }
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {

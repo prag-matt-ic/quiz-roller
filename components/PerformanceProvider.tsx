@@ -1,4 +1,11 @@
-import { createContext, type FC, type PropsWithChildren, useContext, useRef } from 'react'
+import {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  useContext,
+  useRef,
+  useState,
+} from 'react'
 import { createStore, type StoreApi, useStore } from 'zustand'
 
 export type RapierSimFPS = 0 | 30 | 60 | 120 // 0 = 'vary'
@@ -145,8 +152,8 @@ type Props = PropsWithChildren<{
 }>
 
 export const PerformanceProvider: FC<Props> = ({ children, isMobile }) => {
-  const store = useRef<PerformanceStore>(createPerformanceStore({ isMobile }))
-  return <PerformanceContext value={store.current}>{children}</PerformanceContext>
+  const [store] = useState<PerformanceStore>(createPerformanceStore({ isMobile }))
+  return <PerformanceContext value={store}>{children}</PerformanceContext>
 }
 
 export function usePerformanceStore<T>(selector: (state: PerformanceState) => T): T {
