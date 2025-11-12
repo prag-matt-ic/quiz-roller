@@ -5,8 +5,7 @@ import { PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense, useEffect, useState } from 'react'
-import * as THREE from 'three'
+import { type FC, Suspense, useMemo } from 'react'
 
 import Background from '@/components/background/Background'
 import Platform from '@/components/platform/Platform'
@@ -34,14 +33,10 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
 
-  const [dpr, setDpr] = useState(1)
-
-  useEffect(() => {
-    if (!!maxDPR) {
-      setDpr(Math.min(window.devicePixelRatio ?? 1, maxDPR))
-    } else {
-      setDpr(window.devicePixelRatio ?? 1)
-    }
+  const dpr = useMemo<number>(() => {
+    if (typeof window === 'undefined') return 1
+    if (!!maxDPR) return Math.min(window.devicePixelRatio ?? 1, maxDPR)
+    return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
   return (
@@ -61,8 +56,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       gl={{
         alpha: false,
         antialias: !isMobile,
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.2,
+        toneMappingExposure: 0.24,
+        powerPreference: 'high-performance',
       }}>
       <PerformanceMonitor
         // Create an upper/lower FPS band relative to device refresh rate
