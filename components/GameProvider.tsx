@@ -48,8 +48,8 @@ type GameState = {
   setPlayerInput: (input: PlayerInput) => void
 
   paletteIndex: 0 | 1 | 2
-  confirmingPaletteIndex: number | null
-  setConfirmingPaletteIndex: (index: number | null) => void
+  confirmingPaletteIndex: 0 | 1 | 2 | null
+  setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
 
   confirmationProgress: number // [0, 1]
   hudIndicator: null | 'correct' | 'incorrect' | 'move' // Set when confirmation completes and then clear

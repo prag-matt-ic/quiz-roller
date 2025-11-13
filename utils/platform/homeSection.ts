@@ -126,7 +126,7 @@ export const COLOUR_TILE_OPTIONS: ColourTileOption[] = Array.from(
     const position: Vector3Tuple = [xOffset, ON_TILE_Y, 0]
     const userData: ColourTileUserData = {
       type: 'colour',
-      paletteIndex: index,
+      paletteIndex: index as 0 | 1 | 2,
     }
     return {
       index,

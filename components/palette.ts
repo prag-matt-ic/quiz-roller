@@ -27,6 +27,8 @@ const TAU = Math.PI * 2
 
 // Keep these parameters in sync with components/palette.glsl
 
+// TODO: Create enum for PaletteIndexes
+
 const YELLOW_GREEN_PARAMS: PaletteParams = {
   a: [0.5, 0.5, 0.5],
   b: [0.5, 0.5, 0.5],

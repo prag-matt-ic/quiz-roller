@@ -39,7 +39,7 @@ export type OutOfBoundsUserData = {
 
 export type ColourTileUserData = {
   type: 'colour'
-  paletteIndex: number
+  paletteIndex: 0 | 1 | 2
 }
 
 export type InfoZoneUserData = {
