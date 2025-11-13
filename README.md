@@ -108,13 +108,11 @@ When the player enters an info zone, HTML content is animated in using React Tra
 
 If the player falls off the platform, they intersect with out-of-bounds and it resets their position or transitions to the 'game over' stage.
 
-### Colour Config 🎨
+### Palette Switching 🎨
 
 ![Player colour selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.webp?raw=true)
 
-The user can change their marble colour by rolling over one of the colour picker tiles.
-
-Colour selection is band‑based (a range between 0 and 1 for sampling the gradient palette) and is persisted in the game store.
+The user can change the theme by rolling over one of the colour picker tiles, with their selection persisted in the game store.
 
 ### Marble Shading 🔮
 
