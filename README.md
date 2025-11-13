@@ -116,7 +116,7 @@ The user can change the theme by rolling over one of the colour picker tiles, wi
 
 ### Marble Shading 🔮
 
-The marble uses a custom GLSL material that samples the cosine palette using the player's chosen colour.
+The marble uses a custom GLSL material that samples the palette using the chosen colour.
 
 It supports textured and flat modes depending on the quality mode.
 
