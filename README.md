@@ -100,7 +100,7 @@ The rotation animation is derived from the player velocity and helps the movemen
 
 ### Collisions and Confirmations ⏳
 
-Rapier sensors mark interactive surfaces: info zone, start tile, answer tiles, colour tiles, and out‑of‑bounds.
+Rapier sensors mark interactive surfaces: info zones, start tile, answer tiles, colour tiles, and out‑of‑bounds.
 
 For answers, entering a sensor triggers a GSAP‑driven confirmation timer. Exiting before the timer completes cancels the choice. When the timer completes, the choice is confirmed.
 
@@ -245,7 +245,7 @@ Take a look at the [`Platform` Component](https://github.com/prag-matt-ic/quiz-r
 
 ## Limitations / Wishlist 👀
 
-- **The question content is all hard-coded.** My original plan was to use AI to generate personalised quizes based on a user-provided URL or revision notes. I have code to do this, but it incurs cost and slows down the initial start.
+- **The question content is all hard-coded.** My original plan was to use AI to generate personalised quizes based on a user-provided URL or revision notes. I have code to do this, but it incurs cost and slows down the initial start. Maybe in the future!?
 - **The terrain/obstacles stage is basic.** I'd love to introduce new challenges such as jumps, wall runs and collectibles.
 
 If you're reading this and want to help develop the concept further, please get in touch.
