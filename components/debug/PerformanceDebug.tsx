@@ -3,7 +3,7 @@
 import { type ChangeEvent, type FC, type ReactNode } from 'react'
 import { twJoin } from 'tailwind-merge'
 
-import { useGameStore } from '@/components/GameProvider'
+import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import {
   type RapierSimFPS,
   SceneQuality,
@@ -39,6 +39,9 @@ const PerformanceDebug: FC = () => {
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
   const resetGame = useGameStore((s) => s.resetGame)
+
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const gameStoreApi = useGameStoreAPI()
 
   // const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
   //   event.target.blur()
@@ -90,6 +93,20 @@ const PerformanceDebug: FC = () => {
             key={option.label}
             value={option.value === undefined ? 'native' : option.value.toString()}>
             {option.label}
+          </option>
+        ))}
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-palette-index"
+        label="Palette"
+        value={paletteIndex.toString()}
+        onChange={(event) => {
+          event.target.blur()
+          gameStoreApi.setState({ paletteIndex: Number(event.target.value) as 0 | 1 | 2 })
+        }}>
+        {new Array(3).fill(null).map((_, index) => (
+          <option key={index} value={index}>
+            {index}
           </option>
         ))}
       </SelectRow>

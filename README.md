@@ -6,7 +6,7 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 **[👉 How far can you roll? 👈](https://quizroller.vercel.app)**
 
-![Game home stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.jpg?raw=true)
+![Game home stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/home.webp?raw=true)
 
 ## Tech Stack 💻
 
@@ -20,14 +20,23 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 
 ## Colour Palette 🌈
 
-![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.jpg?raw=true)
+![Palette](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/palette.webp?raw=true)
 
 Colours are driven by a [cosine gradient palette](https://iquilezles.org/articles/palettes/).
-In theory, the entire theme of the app can be changed by adjusting the 4 gradient input vectors.
+
+The entire theme of the app can be changed by changing the 4 gradient input vectors!
 
 There are helpers in GLSL and TypeScript to retrieve colours using an input value of 0-1.
 
-I've also created a "texure generator" page which was used to produce the background image.
+### Background Generation
+
+![Background texture controls](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/background.webp?raw=true)
+
+I've created a **background texure generator** which is called upon when the palette changes.
+It renders 1 to 8 frames (depending on performance) as textures for the background.
+_This is an expensive operation due to the fractal noise, but it's only run once when the palette changes._
+
+A background shader smoothly blends between these textures to give subtle movement beneath the platform.
 
 ## State Management
 
@@ -101,7 +110,7 @@ If the player falls off the platform, they intersect with out-of-bounds and it r
 
 ### Colour Config 🎨
 
-![Player colour selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.jpg?raw=true)
+![Player colour selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/player-colour.webp?raw=true)
 
 The user can change their marble colour by rolling over one of the colour picker tiles.
 
@@ -115,7 +124,7 @@ It supports textured and flat modes depending on the quality mode.
 
 ## Infinite Platform 🏃
 
-![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.jpg?raw=true)
+![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.webp?raw=true)
 
 The main `Platform` is a grid of instanced rigid bodies that endlessly wrap forward.
 
@@ -143,7 +152,7 @@ The platform tiles use a custom GLSL shader to colour the tiles, fade in/out and
 
 ## Questions and Answers 🤔
 
-![Question stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.jpg?raw=true)
+![Question stage](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/question.webp?raw=true)
 
 Questions are chosen to avoids repeats where possible and shuffle the answer positions.
 
@@ -153,7 +162,7 @@ Question and Answer text is rendered into a Canvas Texture (see `useTextCanvas`)
 
 ### Answer Selection ✅
 
-![Answer selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.jpg?raw=true)
+![Answer selection](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/answer.webp?raw=true)
 
 - A HUD indicator briefly shows correct (✅) or incorrect (❌)
 - A short particle burst plays, with a correct answer attracting green particles to the player, and an incorrect answer dispersing orange particles.
@@ -161,7 +170,7 @@ Question and Answer text is rendered into a Canvas Texture (see `useTextCanvas`)
 
 ## Floating Background Tiles ✨
 
-![Floating background tiles powered by GPU](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.jpg?raw=true)
+![Floating background tiles powered by GPU](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/floating-tiles.webp?raw=true)
 
 Decorative floating tiles add depth and motion around the course. They are rendered as a single instanced mesh and animated entirely on the GPU using `GPUComputationRenderer`.
 
@@ -172,7 +181,7 @@ Decorative floating tiles add depth and motion around the course. They are rende
 
 The site achieves great performance even on mobile.
 
-![Stats fps display](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/stats.jpg?raw=true)
+![Stats fps display](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/stats.webp?raw=true)
 
 - My Macbook Pro M4 gets a consistent 120fps on high quality mode.
 - My iPhone 15 Pro gets a steady 60fps also on high quality mode.

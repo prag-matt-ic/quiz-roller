@@ -47,7 +47,7 @@ type GameState = {
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 
-  paletteIndex: number
+  paletteIndex: 0 | 1 | 2
   confirmingPaletteIndex: number | null
   setConfirmingPaletteIndex: (index: number | null) => void
 

@@ -52,6 +52,7 @@ export const BackgroundProvider: FC<Props> = ({ children }) => {
   const [store] = useState<BackgroundStore>(createBackgroundStore())
 
   return (
+    // Context.Provider is no longer needed in React 19.
     <BackgroundContext value={store}>
       {children}
       {/* <BackgroundControls /> */}
