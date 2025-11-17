@@ -71,7 +71,11 @@ export function roughenEdges(options: RoughenEdgesOptions): void {
       offset: RIGHT_NOISE_OFFSET,
     })
 
-    const leftIndent = stepToward({ current: prevLeftIndent, target: leftTarget, maxStep: maxDeltaPerRow })
+    const leftIndent = stepToward({
+      current: prevLeftIndent,
+      target: leftTarget,
+      maxStep: maxDeltaPerRow,
+    })
     const rightIndent = stepToward({
       current: prevRightIndent,
       target: rightTarget,
@@ -107,7 +111,13 @@ type SampleIndentParams = {
   offset: number
 }
 
-function sampleIndent({ rowIndex, seed, frequency, maxIndentColumns, offset }: SampleIndentParams): number {
+function sampleIndent({
+  rowIndex,
+  seed,
+  frequency,
+  maxIndentColumns,
+  offset,
+}: SampleIndentParams): number {
   const noiseValue = noise2D(rowIndex * frequency, seed + offset) // [-1, 1]
   const normalized = (noiseValue + 1) * 0.5 // [0, 1]
   return Math.round(normalized * maxIndentColumns)
