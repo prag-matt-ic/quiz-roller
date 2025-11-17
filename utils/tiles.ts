@@ -57,14 +57,14 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
-export type SectionType = 'home' | 'question' | 'obstacles'
+export type SectionType = 'home' | 'info' | 'obstacles'
 
 export type RowData = {
   heights: number[]
   type: SectionType
   isSectionStart: boolean
   isSectionEnd: boolean
-  questionTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
+  infoTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
   // Optional per-index answer tile placements for this trigger row.
   // Use null for indices that should not be placed on this trigger.
   // Example: for a 4-tile layout, top trigger provides [pos, pos, null, null],

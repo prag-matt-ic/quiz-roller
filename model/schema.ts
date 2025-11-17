@@ -15,8 +15,14 @@ export const QuestionSchema = z.object({
   citation: z.string().optional(),
 })
 
+export const InfoSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+})
+
 export type Answer = z.infer<typeof AnswerSchema>
 export type Question = z.infer<typeof QuestionSchema>
+export type Info = z.infer<typeof InfoSchema>
 
 export type PlayerUserData = {
   type: 'player'

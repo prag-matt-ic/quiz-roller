@@ -3,24 +3,31 @@ import { createRef, type FC, useCallback, useImperativeHandle, useRef, useState 
 import { type RefObject } from 'react'
 import { Mesh } from 'three'
 
-import { QuestionAnswerTile } from '@/components/answerTile/AnswerTile'
+import { InfoAnswerTile } from '@/components/answerTile/AnswerTile'
 import { useGameStore } from '@/components/GameProvider'
 import { Text } from '@/components/Text'
 import {
   ANSWER_TILE_COUNT,
-  QUESTION_TEXT_HEIGHT,
-  QUESTION_TEXT_WIDTH,
-} from '@/utils/platform/questionSection'
-import { HIDE_POSITION_Y, HIDE_POSITION_Z, MAX_Z, type RowData } from '@/utils/tiles'
+  INFO_TEXT_HEIGHT,
+  INFO_TEXT_WIDTH,
+} from '@/utils/platform/infoSection'
+import {
+  ANSWER_TILE_HEIGHT,
+  HIDE_POSITION_Y,
+  HIDE_POSITION_Z,
+  MAX_Z,
+  type RowData,
+} from '@/utils/tiles'
+import InvisibleWall from '@/components/invisibleWall/InvisibleWall'
 
-export type QuestionElementsHandle = {
+export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
   positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
   hideElementsIfNeeded: (row: RowData | undefined) => void
 }
 
 type Props = {
-  ref: RefObject<QuestionElementsHandle | null>
+  ref: RefObject<InfoElementsHandle | null>
 }
 
 const INITIAL_QUESTION_POSITION = {
@@ -28,34 +35,30 @@ const INITIAL_QUESTION_POSITION = {
   Z: -999,
 } as const
 
-// TODO: rename InfoElements... for the Info Section..
+
 // TODO: add InfoZone component.
-const QuestionElements: FC<Props> = ({ ref }) => {
-  const currentQuestion = useGameStore((s) => s.currentQuestion)
+const InfoElements: FC<Props> = ({ ref }) => {
+  const currentInfo = useGameStore((s) => s.currentInfo)
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
-  const questionText = useRef<Mesh>(null)
-  const [questionAnswerRefs, _] = useState(
+  const infoText = useRef<Mesh>(null)
+  const [infoAnswerRefs, _] = useState(
     Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
   )
 
-  const questionIsOutOfView = useRef<boolean>(false)
+  const infoIsOutOfView = useRef<boolean>(false)
   const answersAreOutOfView = useRef<boolean>(false)
 
   // Called when the row is raised
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
       if (!row) return
-      if (row.type !== 'question') return
+      if (row.type !== 'info') return
 
-      const textPosition = row.questionTextPosition
-      if (!!textPosition && questionText.current) {
-        questionText.current.position.set(
-          textPosition[0],
-          textPosition[1],
-          rowZ + textPosition[2],
-        )
-        questionIsOutOfView.current = false
+      const textPosition = row.infoTextPosition
+      if (!!textPosition && infoText.current) {
+        infoText.current.position.set(textPosition[0], textPosition[1], rowZ + textPosition[2])
+        infoIsOutOfView.current = false
       }
 
       const answerPositions = row.answerTilePositions
@@ -64,13 +67,13 @@ const QuestionElements: FC<Props> = ({ ref }) => {
 
       for (
         let answerIndex = 0;
-        answerIndex < answerPositions.length && answerIndex < questionAnswerRefs.length;
+        answerIndex < answerPositions.length && answerIndex < infoAnswerRefs.length;
         answerIndex++
       ) {
         const position = answerPositions[answerIndex]
         if (!position) continue
 
-        const answerRef = questionAnswerRefs[answerIndex]
+        const answerRef = infoAnswerRefs[answerIndex]
         if (!answerRef.current) continue
 
         translation.current.x = position[0]
@@ -79,21 +82,21 @@ const QuestionElements: FC<Props> = ({ ref }) => {
         answerRef.current.setTranslation(translation.current, true)
       }
     },
-    [questionAnswerRefs],
+    [infoAnswerRefs],
   )
 
   // Called when the row is lowered
   const hideElementsIfNeeded = useCallback(
     (row: RowData | undefined) => {
       if (!row) return
-      if (row.type !== 'question') return
+      if (row.type !== 'info') return
 
-      if (!!questionText.current) {
-        questionText.current.position.z = HIDE_POSITION_Z
-        questionText.current.position.y = HIDE_POSITION_Y
+      if (!!infoText.current) {
+        infoText.current.position.z = HIDE_POSITION_Z
+        infoText.current.position.y = HIDE_POSITION_Y
       }
 
-      for (const answerRef of questionAnswerRefs) {
+      for (const answerRef of infoAnswerRefs) {
         if (!answerRef.current) continue
         translation.current.x = answerRef.current.translation().x
         translation.current.y = HIDE_POSITION_Y
@@ -101,24 +104,24 @@ const QuestionElements: FC<Props> = ({ ref }) => {
         answerRef.current.setTranslation(translation.current, false)
       }
     },
-    [questionAnswerRefs],
+    [infoAnswerRefs],
   )
 
   const moveElements = useCallback(
     (zStep: number) => {
-      if (!questionText.current) return
+      if (!infoText.current) return
 
-      const isQuestionBehindCamera = questionText.current.position.z > MAX_Z
-      if (isQuestionBehindCamera && !questionIsOutOfView.current) {
-        questionText.current.position.z = HIDE_POSITION_Z
-        questionText.current.position.y = HIDE_POSITION_Y
-        questionIsOutOfView.current = true
+      const isInfoBehindCamera = infoText.current.position.z > MAX_Z
+      if (isInfoBehindCamera && !infoIsOutOfView.current) {
+        infoText.current.position.z = HIDE_POSITION_Z
+        infoText.current.position.y = HIDE_POSITION_Y
+        infoIsOutOfView.current = true
       } else {
-        questionText.current.position.z += zStep
+        infoText.current.position.z += zStep
       }
 
       if (answersAreOutOfView.current) return
-      for (const answerRef of questionAnswerRefs) {
+      for (const answerRef of infoAnswerRefs) {
         if (!answerRef.current) continue
 
         const currentTranslation = answerRef.current.translation()
@@ -138,7 +141,7 @@ const QuestionElements: FC<Props> = ({ ref }) => {
         answerRef.current.setTranslation(translation.current, true)
       }
     },
-    [questionAnswerRefs],
+    [infoAnswerRefs],
   )
 
   useImperativeHandle(ref, () => {
@@ -152,13 +155,13 @@ const QuestionElements: FC<Props> = ({ ref }) => {
   return (
     <>
       <Text
-        ref={questionText}
-        text={currentQuestion?.text ?? ''}
-        position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
-        width={QUESTION_TEXT_WIDTH}
-        height={QUESTION_TEXT_HEIGHT}
+        ref={infoText}
+        text={currentInfo?.text ?? ''}
+        position={[0, INITIAL_INFO_POSITION.Y, INITIAL_INFO_POSITION.Z]}
+        width={INFO_TEXT_WIDTH}
+        height={INFO_TEXT_HEIGHT}
       />
-      {questionAnswerRefs.map((answerRef, answerIndex) => (
+      {infoAnswerRefs.map((answerRef, answerIndex) => (
         <QuestionAnswerTile
           key={`question-answer-${answerIndex}`}
           ref={answerRef}
@@ -174,4 +177,4 @@ const QuestionElements: FC<Props> = ({ ref }) => {
   )
 }
 
-export default QuestionElements
+export default InfoElements

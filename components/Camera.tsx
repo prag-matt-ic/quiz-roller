@@ -22,7 +22,7 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
-  [Stage.QUESTION]: {
+  [Stage.INFO]: {
     position: { x: 0, y: 3, z: 7 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
@@ -32,7 +32,7 @@ export const CAMERA_CONFIG: Record<
     target: { x: 0, y: 0, z: 0 },
     zoom: 1.0,
   },
-  [Stage.GAME_OVER]: {
+  [Stage.CTA]: {
     position: { x: 6, y: 12, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
@@ -49,7 +49,7 @@ const Camera: FC = () => {
     if (!cameraControls.current) return
     cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
 
-    if (stage !== Stage.GAME_OVER) return // Position handled in useFrame below
+    if (stage !== Stage.CTA) return // Position handled in useFrame below
 
     const { position, target } = CAMERA_CONFIG[stage]
     cameraControls.current.setLookAt(
@@ -65,7 +65,7 @@ const Camera: FC = () => {
 
   useFrame(() => {
     if (!cameraControls.current) return
-    if (stage === Stage.GAME_OVER) return
+    if (stage === Stage.CTA) return
     const lookAt = !!cameraLookAtPosition ? cameraLookAtPosition : playerPosition.current
 
     cameraControls.current.setLookAt(

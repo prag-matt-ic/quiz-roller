@@ -56,7 +56,7 @@ const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setConfirmingPaletteIndex = useGameStore((s) => s.setConfirmingPaletteIndex)
   const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
-  const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
+  // const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
@@ -182,8 +182,8 @@ const Player: FC = () => {
     }
 
     if (otherUserData.type === 'answer') {
-      if (stage !== Stage.QUESTION) return
-      setConfirmingAnswer(otherUserData)
+      if (stage !== Stage.INFO) return
+      // setConfirmingAnswer(otherUserData)
       return
     }
 
@@ -209,7 +209,7 @@ const Player: FC = () => {
     }
 
     if (otherUserData.type === 'answer') {
-      setConfirmingAnswer(null)
+      // setConfirmingAnswer(null)
       return
     }
 

@@ -17,26 +17,26 @@ export const OBSTACLE_SECTION_ROWS = 48
 export const OBSTACLE_BUFFER_SECTIONS = 10
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const QUESTION_SECTION_ROWS = 12
-export const QUESTION_TEXT_WIDTH = 8 * TILE_SIZE
-export const QUESTION_TEXT_ROWS = 4
-export const QUESTION_TEXT_HEIGHT = QUESTION_TEXT_ROWS * TILE_SIZE
+export const INFO_SECTION_ROWS = 12
+export const INFO_TEXT_WIDTH = 8 * TILE_SIZE
+export const INFO_TEXT_ROWS = 4
+export const INFO_TEXT_HEIGHT = INFO_TEXT_ROWS * TILE_SIZE
 
 export const ANSWER_TILE_COUNT = 2
 
-export function generateQuestionSectionRowData(): RowData[] {
+export function generateInfoSectionRowData(): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows
-  const heights: number[][] = Array.from({ length: QUESTION_SECTION_ROWS }, () =>
+  const heights: number[][] = Array.from({ length: INFO_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
 
   // Text appears first, then answers further down the section
-  const questionTextCenterRow = 3.5
-  const textTriggerRow = Math.ceil(questionTextCenterRow + QUESTION_TEXT_ROWS / 2)
-  const textZRelative = (textTriggerRow - questionTextCenterRow) * TILE_SIZE
+  const infoTextCenterRow = 3.5
+  const textTriggerRow = Math.ceil(infoTextCenterRow + INFO_TEXT_ROWS / 2)
+  const textZRelative = (textTriggerRow - infoTextCenterRow) * TILE_SIZE
 
   // Two-tile layout positioned after the text
-  const tilesCenterRow = questionTextCenterRow + QUESTION_TEXT_ROWS
+  const tilesCenterRow = infoTextCenterRow + INFO_TEXT_ROWS
   const tilesTriggerRow = Math.ceil(tilesCenterRow)
   const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
 
@@ -49,7 +49,7 @@ export function generateQuestionSectionRowData(): RowData[] {
   const endRow = startRow + ANSWER_TILE_ROWS - 1
 
   for (let r = startRow; r <= endRow; r++) {
-    if (r < 0 || r >= QUESTION_SECTION_ROWS) continue
+    if (r < 0 || r >= INFO_SECTION_ROWS) continue
     const row = heights[r]
     for (let c = 0; c < COLUMNS; c++) {
       const inLeft = c >= leftStartCol && c <= leftEndCol
@@ -61,11 +61,11 @@ export function generateQuestionSectionRowData(): RowData[] {
   const leftCenterCol = 0 + (ANSWER_TILE_COLS - 1) / 2
   const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
 
-  const rows: RowData[] = new Array(QUESTION_SECTION_ROWS)
+  const rows: RowData[] = new Array(INFO_SECTION_ROWS)
 
-  for (let i = 0; i < QUESTION_SECTION_ROWS; i++) {
+  for (let i = 0; i < INFO_SECTION_ROWS; i++) {
     const isStart = i === 0
-    const isEnd = i === QUESTION_SECTION_ROWS - 1
+    const isEnd = i === INFO_SECTION_ROWS - 1
 
     // Compute ownership array for this row (two-tile layout)
     const ownership = new Array<number>(COLUMNS).fill(0)
@@ -80,13 +80,13 @@ export function generateQuestionSectionRowData(): RowData[] {
 
     rows[i] = {
       heights: heights[i],
-      type: 'question',
+      type: 'info',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
       answerNumber: ownership,
     }
     if (i === textTriggerRow) {
-      rows[i].questionTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
+      rows[i].infoTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
     }
     if (i === tilesTriggerRow) {
       rows[i].answerTilePositions = [
