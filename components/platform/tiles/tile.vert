@@ -51,8 +51,8 @@ void main() {
   float radialAlpha = mix(1.0, uFadeMinAlpha, fadeT);
   vAlpha = radialAlpha * visible;
 
-  // Raise tiles slightly as they fade in for added depth
-  float fadeLift = radialAlpha * uFadeLiftHeight;
+  // Offset tiles downward when faded out, bring them back to baseline as they appear
+  float fadeLift = (radialAlpha - 1.0) * uFadeLiftHeight;
   worldPos.y += fadeLift;
   vWorldPos = worldPos.xyz;
 
