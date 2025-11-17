@@ -15,6 +15,9 @@ import { useGameStore } from '@/components/GameProvider'
 import { Text } from '@/components/Text'
 import { INFO_TEXT_HEIGHT, INFO_TEXT_WIDTH } from '@/utils/platform/infoSection'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, MAX_Z, type RowData } from '@/utils/tiles'
+import { InfoZone } from '@/components/infoZone/InfoZone'
+import { InfoIcon } from 'lucide-react'
+import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/homeSection'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -104,6 +107,17 @@ const InfoElements: FC<Props> = ({ ref }) => {
       />
       {/* TODO: add floating heading text */}
       {/* TODO: add info zone. */}
+      {/* <InfoZone
+        key="info-zone"
+        ref={infoZoneRef}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={INFO_ZONE_WIDTH}
+        height={INFO_ZONE_HEIGHT}
+        infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        Icon={InfoIcon}>
+        // CONTENT FROM DATA BELOW..
+        <></>
+      </InfoZone> */}
 
       {/* TODO: add collectible */}
     </>
