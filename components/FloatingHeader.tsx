@@ -20,7 +20,7 @@ type Props = {
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
-const textColour = '#ff0000'
+const textColour = '#ffffff'
 
 export const FloatingHeader: FC<Props> = ({
   text,
