@@ -161,7 +161,7 @@ type InfoContent = {
 
 const INFO_SECTION_CONTENT: InfoContent[] = [
   {
-    heading: 'Heading first!',
+    heading: 'We help you bring 3D to the browser without the bloat',
     infoZoneContent: (
       <>
         <Card className="w-full md:col-span-5" paletteIndex={0}>
@@ -200,6 +200,9 @@ const INFO_SECTION_CONTENT: InfoContent[] = [
       </>
     ),
   },
-  { heading: 'Heading second!', infoZoneContent: <></> },
+  {
+    heading: 'Senior Three.js developers supercharged with AI capabilities',
+    infoZoneContent: <></>,
+  },
   { heading: 'Heading third!', infoZoneContent: <></> },
 ]

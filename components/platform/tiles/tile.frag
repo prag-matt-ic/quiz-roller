@@ -17,8 +17,8 @@ varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
 
 // Constants
-const float HIGHLIGHTED_MIX_MIN = 0.12;
-const float HIGHLIGHTED_MIX_MAX = 0.2;
+const float HIGHLIGHTED_MIX_MIN = 0.04;
+const float HIGHLIGHTED_MIX_MAX = 0.12;
 
 const float REGULAR_MIX = 0.42;
 const float DARKEN_FACTOR = 0.5;
@@ -54,10 +54,11 @@ void main() {
   mediump float mixAmount = mix(REGULAR_MIX, highlightedMix, isHighlighted);
   vec3 background = mix(WHITE, bgColour, mixAmount);
 
-  // Apply player proximity highlight
-  mediump float highlightAmount = vPlayerHighlight;
-  vec3 highlightColour = mix(WHITE, bgColour, HIGHLIGHT_MIX);
-  background = mix(background, highlightColour, highlightAmount);
+  // Apply player proximity highlight without losing highlighted mix
+  mediump float proximityAmount = vPlayerHighlight;
+  mediump float proximityMixAmount = mix(HIGHLIGHT_MIX, mixAmount, isHighlighted);
+  vec3 proximityColour = mix(WHITE, bgColour, proximityMixAmount);
+  background = mix(background, proximityColour, proximityAmount);
 
   // Darken non-upward-facing surfaces
   // vWorldNormal should already be normalized from vertex shader

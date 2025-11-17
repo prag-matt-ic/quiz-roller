@@ -96,7 +96,7 @@ const PlayerHUD: FC = () => {
     <Html
       sprite={true}
       pointerEvents="none"
-      position={[0, PLAYER_RADIUS * 4, PLAYER_RADIUS]}
+      position={[0, PLAYER_RADIUS * 3, PLAYER_RADIUS]}
       center={true}
       renderOrder={2}
       className="relative select-none">
@@ -128,7 +128,7 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="overflow-hidden rounded-full bg-black/80 p-2 text-white opacity-0">
+                  className="overflow-hidden rounded-full bg-black p-2 text-white opacity-0 sm:p-3">
                   {/* {hudIndicator?.type === 'correct' && (
                     <CheckIcon strokeWidth={4} size={48} className="text-green-500" />
                   )}

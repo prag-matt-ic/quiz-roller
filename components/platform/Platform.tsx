@@ -3,12 +3,7 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useEffect, useRef, useState } from 'react'
 
-import {
-  PLAYER_INITIAL_POSITION_VEC3,
-  Stage,
-  useGameStore,
-  useGameStoreAPI,
-} from '@/components/GameProvider'
+import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
@@ -66,14 +61,14 @@ const EMPTY_ROW_DATA: RowData = {
   isSectionEnd: false,
 }
 
-const PLAYER_STAGE_Z = PLAYER_INITIAL_POSITION_VEC3.z
-const STAGE_ACTIVATION_HALF_BAND = TILE_SIZE * 0.5
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
 const FADE_MIN_RADIUS_SQ = TILE_PLAYER_FADE_MIN_RADIUS * TILE_PLAYER_FADE_MIN_RADIUS
 const ROW_FADE_DENOM = Math.max(EPSILON.SMALL, FADE_MIN_RADIUS_SQ - FADE_FULL_RADIUS_SQ)
 const ROW_CYCLE_DISTANCE = ROWS_RENDERED * TILE_SIZE
-const ROWS_COVERAGE_HALF_SPAN = ((ROWS_RENDERED - 1) * TILE_SIZE) * 0.5
+const ROWS_COVERAGE_HALF_SPAN = (ROWS_RENDERED - 1) * TILE_SIZE * 0.5
 const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
+const INITIAL_ROW_BACK_OFFSET_ROWS = 12
+const INITIAL_ROW_BACK_OFFSET = INITIAL_ROW_BACK_OFFSET_ROWS * TILE_SIZE
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 const warnVisibilityCoverageIfNeeded = (() => {
@@ -86,7 +81,7 @@ const warnVisibilityCoverageIfNeeded = (() => {
           2,
         )}) exceeds instanced coverage (${ROW_CYCLE_DISTANCE.toFixed(
           2,
-        )}). Expect reduced buffer or increase ROWS_RENDERED.`,
+        )}). Expect reduced buffer or inc rease ROWS_RENDERED.`,
       )
     }
     hasWarned = true
@@ -208,7 +203,7 @@ const Platform: FC = () => {
 
       const playerZ = playerPosition.current.z
       const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
-      const nextStartZ = playerZ + initialHalfSpan
+      const nextStartZ = playerZ + initialHalfSpan - INITIAL_ROW_BACK_OFFSET
       initialRowStartZ.current = nextStartZ
       if (IS_DEV_ENV) {
         console.warn(
@@ -309,15 +304,34 @@ const Platform: FC = () => {
     setInfoContentIndex(contentIndex)
   }
 
-  function updateStageForRow(rowIndex: number, rowZ: number) {
+  function getStageDeterminingRowIndex() {
+    let bestIndex = -1
+    let smallestAbsZ = Infinity
+
+    for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
+      const row = activeRowsData.current[rowIndex]
+      if (!row || !row.isSectionStart) continue
+      const rowZ = rowZByIndex.current[rowIndex]
+      if (typeof rowZ !== 'number') continue
+
+      const absZ = Math.abs(rowZ)
+      if (absZ < smallestAbsZ) {
+        smallestAbsZ = absZ
+        bestIndex = rowIndex
+      }
+    }
+
+    return bestIndex
+  }
+
+  function applyStageForRow(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row || !row.isSectionStart) return
 
-    const isPlayerWithinRow = Math.abs(rowZ - PLAYER_STAGE_Z) <= STAGE_ACTIVATION_HALF_BAND
-    if (!isPlayerWithinRow) return
-
-    if (row.type === 'home' && stage !== Stage.HOME) {
-      goToStage(Stage.HOME)
+    if (row.type === 'home') {
+      if (stage !== Stage.HOME) {
+        goToStage(Stage.HOME)
+      }
       return
     }
 
@@ -330,8 +344,10 @@ const Platform: FC = () => {
       return
     }
 
-    if (row.type === 'obstacles' && stage !== Stage.TERRAIN) {
-      goToStage(Stage.TERRAIN)
+    if (row.type === 'obstacles') {
+      if (stage !== Stage.TERRAIN) {
+        goToStage(Stage.TERRAIN)
+      }
       return
     }
 
@@ -439,8 +455,11 @@ const Platform: FC = () => {
           hideRowDecorations(rowIndex)
         }
       }
+    }
 
-      updateStageForRow(rowIndex, rowZ)
+    const stageRowIndex = getStageDeterminingRowIndex()
+    if (stageRowIndex >= 0) {
+      applyStageForRow(stageRowIndex)
     }
   }
 

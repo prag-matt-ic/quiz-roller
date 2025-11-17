@@ -62,7 +62,7 @@ export const FloatingHeading: FC<Props> = ({
     color: '#ffffff',
     ...textCanvasOptions,
     lineHeightMultiplier: 1.2,
-    fontSize: 120 * dpr,
+    fontSize: 88 * dpr,
     fontWeight: 700,
   })
 
@@ -97,7 +97,7 @@ export const FloatingHeading: FC<Props> = ({
           ref={shaderRef}
           uOpacity={opacity}
           transparent
-          depthTest={false}
+          depthTest={true}
           depthWrite={false}
           toneMapped={false}
           side={BackSide}

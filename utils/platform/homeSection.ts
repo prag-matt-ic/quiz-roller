@@ -1,5 +1,6 @@
-import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT } from '@/utils/tiles'
+import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
 import { roughenEdges } from './roughenEdges'
+import { HEADING_Y } from './floatingHeading'
 
 const HOME_SECTION_ROWS = 16
 
@@ -10,10 +11,14 @@ const IMAGE_RELATIVE_Z = 0
 const HOME_ARROW_LINE_ROWS = 7
 const HOME_ARROW_HEAD_HALF_WIDTH = 2
 const HOME_ARROW_TRIANGLE_ROWS = HOME_ARROW_HEAD_HALF_WIDTH + 1
-const HOME_ARROW_LINE_START_ROW = 9
+const HOME_ARROW_LINE_START_ROW = 5
 const HOME_ARROW_CENTER_COLUMN = Math.floor(COLUMNS / 2)
 
-// TODO: add floating heading position.
+const HOME_HEADING_CENTER_ROW = 3
+const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
+const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_ROW) * TILE_SIZE
+const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
+
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
 
@@ -30,6 +35,14 @@ export function generateHomeSectionRowData(): RowData[] {
 
     if (rowIndex === IMAGE_TRIGGER_ROW) {
       rows[rowIndex].imagePosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, IMAGE_RELATIVE_Z]
+    }
+
+    if (rowIndex === HOME_HEADING_TRIGGER_ROW) {
+      rows[rowIndex].floatingHeadingPosition = [
+        HOME_HEADING_X,
+        HEADING_Y,
+        HOME_HEADING_RELATIVE_Z,
+      ]
     }
   }
 
