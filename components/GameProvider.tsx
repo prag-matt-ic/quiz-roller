@@ -168,8 +168,6 @@ const INITIAL_STATE: Pick<
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
-  let speedTween: GSAPTween | null = null
-  const speedTweenTarget = { value: 0 }
   let confirmationTween: GSAPTween | null = null
   const confirmationTweenTarget = { value: 0 }
 
@@ -392,11 +390,8 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         resetPlatformTick: 0,
         resetPlayerTick: 0,
         resetGame: () => {
-          speedTween?.kill()
           confirmationTween?.kill()
-          speedTween = null
           confirmationTween = null
-          speedTweenTarget.value = 0
           confirmationTweenTarget.value = 0
           set((s) => ({
             ...INITIAL_STATE,
@@ -433,12 +428,12 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }
 
           if (newStage === Stage.TERRAIN) {
-            handleTerrainStage({ set, speedTween, speedTweenTarget })
+            handleTerrainStage({ set })
             return
           }
 
           if (newStage === Stage.GAME_OVER) {
-            handleGameOverStage({ set, get, speedTween, speedTweenTarget })
+            handleGameOverStage({ set, get })
             return
           }
         },
@@ -525,52 +520,18 @@ function handleQuestionStage({
   })
 }
 
-function handleTerrainStage({
-  set,
-  speedTween,
-  speedTweenTarget,
-}: {
-  set: StoreApi<GameState>['setState']
-  speedTween: GSAPTween | null
-  speedTweenTarget: { value: number }
-}) {
+function handleTerrainStage({ set }: { set: StoreApi<GameState>['setState'] }) {
   set({ stage: Stage.TERRAIN, hudIndicator: 'move' }) // Updates confirmation result to show prompt to move..
-  speedTween?.kill()
-  gsap.to(speedTweenTarget, {
-    duration: TERRAIN_SPEED_DURATION,
-    ease: 'power2.out',
-    value: 1.0,
-    onUpdate: () => {
-      set({ terrainSpeed: speedTweenTarget.value })
-    },
-    onComplete: () => {
-      set({ hudIndicator: null })
-    },
-  })
 }
 
 function handleGameOverStage({
   set,
   get,
-  speedTween,
-  speedTweenTarget,
 }: {
   set: StoreApi<GameState>['setState']
   get: StoreApi<GameState>['getState']
-  speedTween: GSAPTween | null
-  speedTweenTarget: { value: number }
 }) {
   const { confirmedAnswers, distanceRows } = get()
-
-  speedTween?.kill()
-  gsap.to(speedTweenTarget, {
-    duration: 0.4,
-    ease: 'power2.out',
-    value: 0,
-    onUpdate: () => {
-      set({ terrainSpeed: speedTweenTarget.value })
-    },
-  })
 
   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
   const run: RunStats = {

@@ -73,7 +73,7 @@ const Camera: FC = () => {
       CAMERA_CONFIG[stage].position.y,
       playerPosition.current.z + CAMERA_CONFIG[stage].position.z,
       lookAt.x,
-      lookAt.y + 1.5,
+      lookAt.y,
       lookAt.z,
       true,
     )

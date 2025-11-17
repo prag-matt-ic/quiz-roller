@@ -23,8 +23,15 @@ import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
-import { PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/resources/game'
-import { COLUMNS, ENTRY_END_Z, EXIT_START_Z, TILE_SIZE } from '@/utils/tiles'
+import {
+  COLUMNS,
+  ENTRY_END_Z,
+  EXIT_START_Z,
+  TILE_SIZE,
+  EPSILON,
+  PLAYER_MOVE_UNITS,
+  TERRAIN_SPEED_UNITS,
+} from '@/utils/tiles'
 import { Marble } from '@/components/player/marble/Marble'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
@@ -34,7 +41,6 @@ import { Marble } from '@/components/player/marble/Marble'
 // Physics constants
 const GRAVITY_ACCELERATION = -9.81 // m/s²
 const UP_DIRECTION = new Vector3(0, 1, 0)
-const EPSILON = 1e-6 // Small value to prevent division by zero
 const PLATFORM_HALF_WIDTH = (COLUMNS * TILE_SIZE) / 2 - 1
 const EDGE_APPROACH_MARGIN = TILE_SIZE * 1.5
 const ROW_RAISE_BACK_BOUNDARY_Z = ENTRY_END_Z
@@ -140,8 +146,8 @@ const Player: FC = () => {
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
     nextPosition.current.y = currentPosition.y + correctedMovement.y
-    nextPosition.current.z =
-      currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
+    // nextPosition.current.z =
+    //   currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
@@ -269,7 +275,7 @@ function calculatePlayerVelocity(
   deltaTime: number,
   targetVelocity: Vector3,
 ): void {
-  targetVelocity.copy(displacement).divideScalar(Math.max(deltaTime, EPSILON))
+  targetVelocity.copy(displacement).divideScalar(Math.max(deltaTime, EPSILON.SMALL))
 }
 
 function calculateTerrainVelocity(
@@ -299,7 +305,7 @@ function applyRollingPhysics({
   const effectiveRadius = PLAYER_RADIUS * worldScale.x
   const speed = velocity.length()
 
-  if (speed <= EPSILON || effectiveRadius <= EPSILON) return
+  if (speed <= EPSILON.SMALL || effectiveRadius <= EPSILON.SMALL) return
   // Rolling without slipping: ω = (n × v) / R
   // Axis given by right-hand rule (surface normal × velocity)
   rollAxis.copy(UP_DIRECTION).cross(velocity).normalize()

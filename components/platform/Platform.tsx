@@ -11,7 +11,6 @@ import QuestionElements, {
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
-import { TERRAIN_SPEED_UNITS } from '@/resources/game'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
@@ -26,6 +25,7 @@ import {
 import {
   colToX,
   COLUMNS,
+  TERRAIN_SPEED_UNITS,
   ENTRY_Y_OFFSET,
   INITIAL_ROWS_Z_OFFSET,
   ENTRY_END_Z,
@@ -35,14 +35,11 @@ import {
   SAFE_HEIGHT,
   TILE_SIZE,
   ENTRY_START_Z,
+  EPSILON,
   EXIT_START_Z,
   EXIT_END_Z,
 } from '@/utils/tiles'
-
-const EPSILON = {
-  SMALL: 1e-6,
-  TINY: 1e-4,
-} as const
+import usePlayerInput from '@/hooks/usePlayerInput'
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {
@@ -67,9 +64,10 @@ const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const isQuestionStage = stage === Stage.QUESTION
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
-  const setTerrainSpeed = useGameStore((s) => s.setTerrainSpeed)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
+
+  const { input: playerInput } = usePlayerInput()
 
   const { terrainSpeed } = useTerrainSpeed()
   const instancedTilesRef = useRef<InstancedTilesHandle>(null)
@@ -400,21 +398,12 @@ const Platform: FC = () => {
     if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
     if (!homeElements.current || !questionElements.current) return
-    if (stage === Stage.GAME_OVER || stage === Stage.HOME) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
-    let computedSpeed = terrainSpeed.current
-
-    if (stage === Stage.QUESTION) {
-      computedSpeed = computeTerrainSpeedForQuestionSection()
-    }
-
-    if (computedSpeed !== terrainSpeed.current) {
-      setTerrainSpeed(computedSpeed)
-    }
-
-    const zStep = computedSpeed * TERRAIN_SPEED_UNITS * delta
+    // TODO: row wrapping needs to work backwards too.
+    const inputDirectionZ = playerInput.current.up - playerInput.current.down
+    const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
     updateTiles()
     questionElements.current.moveElements(zStep)
