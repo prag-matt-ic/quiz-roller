@@ -62,8 +62,8 @@ const PlayerHUD: FC = () => {
   })
 
   const showBar = false
-  const showResult = !!hudIndicator
-  const switchKey = `${showBar}-${showResult}`
+  const showLabel = !!hudIndicator
+  const switchKey = `${showBar}-${showLabel}`
 
   return (
     <Html
@@ -97,7 +97,7 @@ const PlayerHUD: FC = () => {
                   />
                 </div>
               )
-            if (showResult)
+            if (showLabel)
               return (
                 <div
                   ref={container}

@@ -39,29 +39,20 @@ const InfoElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
   const infoText = useRef<Mesh>(null)
-  const [contentIndex, setContentIndex] = useState<number>(0)
+  const contentIndex = useGameStore((s) => s.infoContentIndex)
 
-  const infoIsOutOfView = useRef<boolean>(false)
+  // const infoIsOutOfView = useRef<boolean>(false)
 
   // Called when the row is raised
-  const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row) return
-      if (row.type !== 'info') return
+  const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
+    if (!row) return
+    if (row.type !== 'info') return
 
-      console.log('Positioning info elements:', row)
-      if (!!row.infoContentIndex && row.infoContentIndex !== contentIndex) {
-        setContentIndex(row.infoContentIndex)
-      }
-
-      const textPosition = row.tileTextPosition
-      if (!!textPosition && infoText.current) {
-        infoText.current.position.set(textPosition[0], textPosition[1], rowZ + textPosition[2])
-        infoIsOutOfView.current = false
-      }
-    },
-    [contentIndex],
-  )
+    const textPosition = row.tileTextPosition
+    if (!!textPosition && infoText.current) {
+      infoText.current.position.set(textPosition[0], textPosition[1], rowZ + textPosition[2])
+    }
+  }, [])
 
   // Called when the row is lowered
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
@@ -77,14 +68,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
   const moveElements = useCallback((zStep: number) => {
     if (!infoText.current) return
 
-    const isInfoBehindCamera = infoText.current.position.z > MAX_Z
-    if (isInfoBehindCamera && !infoIsOutOfView.current) {
-      infoText.current.position.z = HIDE_POSITION_Z
-      infoText.current.position.y = HIDE_POSITION_Y
-      infoIsOutOfView.current = true
-    } else {
-      infoText.current.position.z += zStep
-    }
+    infoText.current.position.z += zStep
   }, [])
 
   useImperativeHandle(ref, () => {
