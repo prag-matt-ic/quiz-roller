@@ -20,10 +20,10 @@ varying mediump vec2 vUv;
 const float HIGHLIGHTED_MIX_MIN = 0.12;
 const float HIGHLIGHTED_MIX_MAX = 0.2;
 
-const float REGULAR_MIX = 0.3;
-const float DARKEN_FACTOR = 0.66;
+const float REGULAR_MIX = 0.42;
+const float DARKEN_FACTOR = 0.5;
 const float UP_THRESHOLD = 0.5;
-const float HIGHLIGHT_MIX = 0.7;
+const float HIGHLIGHT_MIX = 0.66;
 
 void main() {
   // Early discard for fully transparent tiles
@@ -34,7 +34,7 @@ void main() {
   mediump float alpha = vAlpha;
 
   // Compute background color with scrolling noise
-  highp vec3 bgNoisePos = vWorldPos * 0.1;
+  highp vec3 bgNoisePos = vWorldPos * 0.06;
   bgNoisePos.xy += vSeed * vec2(0.12, -0.12);
   bgNoisePos.z -= uScrollZ * 0.1;
   float bgNoise = noise(bgNoisePos);
