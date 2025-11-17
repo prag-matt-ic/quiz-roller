@@ -9,7 +9,7 @@ import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/float
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { InfoIcon } from 'lucide-react'
-import { FloatingHeading } from '@/components/FloatingHeading'
+import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Card from '@/components/ui/Card'
 import { Credit } from '../home/Credit'
 

@@ -76,7 +76,7 @@ const GameContext = createContext<GameStore>(undefined!)
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_PALETTE_DURATION_S = 1.5
 
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 2] // Used when re-spawning to home
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 0] // Used when re-spawning to home
 
 export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[0],

@@ -12,6 +12,9 @@ import {
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
 
+import fragmentShader from './floatingHeading.frag'
+import vertexShader from './floatingHeading.vert'
+
 type Props = {
   ref?: RefObject<Mesh | null>
   text: string
@@ -34,28 +37,8 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
 
 const FloatingHeadingShader = shaderMaterial(
   FLOATING_HEADING_UNIFORMS,
-  /* glsl */ `
-    varying vec2 vUv;
-
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  /* glsl */ `
-    varying vec2 vUv;
-
-    uniform sampler2D uTexture;
-    uniform float uOpacity;
-
-    void main() {
-      vec4 texel = texture2D(uTexture, vUv);
-      float alpha = texel.a * uOpacity;
-
-      if (alpha <= 0.001) discard;
-      gl_FragColor = vec4(texel.rgb, alpha);
-    }
-  `,
+  vertexShader,
+  fragmentShader,
 )
 
 const FloatingHeadingMaterial = extend(FloatingHeadingShader)
@@ -96,32 +79,12 @@ export const FloatingHeading: FC<Props> = ({
   }, [width])
 
   useEffect(() => {
-    if (!canvasState?.texture) {
-      materialTextureRef.current = TRANSPARENT_TEXTURE
-      if (shaderRef.current) {
-        shaderRef.current.uTexture = TRANSPARENT_TEXTURE
-      }
-      return
-    }
-
-    const nextTexture = canvasState.texture.clone()
-    nextTexture.repeat.set(-1, nextTexture.repeat.y)
-    nextTexture.offset.set(1, nextTexture.offset.y)
-    nextTexture.needsUpdate = true
+    const nextTexture = canvasState?.texture ?? TRANSPARENT_TEXTURE
     materialTextureRef.current = nextTexture
     if (shaderRef.current) {
       shaderRef.current.uTexture = nextTexture
     }
-
-    return () => {
-      nextTexture.dispose()
-    }
   }, [canvasState])
-
-  useEffect(() => {
-    if (!shaderRef.current) return
-    shaderRef.current.uTexture = materialTextureRef.current
-  }, [])
 
   return (
     <Suspense fallback={null}>
