@@ -13,9 +13,9 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 export const PLAYER_RADIUS = 0.5
 
 const PlayerHUD: FC = () => {
-  const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
-  const confirmingStart = useGameStore((s) => s.confirmingStart)
-  const confirmingAnswer = useGameStore((s) => s.confirmingAnswer)
+  const confirmingPaletteIndex = false // useGameStore((s) => s.confirmingPaletteIndex)
+  const confirmingStart = false //useGameStore((s) => s.confirmingStart)
+  const confirmingAnswer = false // useGameStore((s) => s.confirmingAnswer)
   const paletteIndex = useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
 

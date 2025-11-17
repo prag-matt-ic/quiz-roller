@@ -5,18 +5,16 @@ import { type FC, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
-import QuestionElements, {
-  type QuestionElementsHandle,
-} from '@/components/platform/question/QuestionElements'
+import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
   FIRST_OBSTACLE_SECTION_ROWS,
-  generateQuestionSectionRowData,
+  generateInfoSectionRowData,
   OBSTACLE_SECTION_ROWS,
-} from '@/utils/platform/questionSection'
+} from '@/utils/platform/infoSection'
 import {
   colToX,
   COLUMNS,
@@ -76,7 +74,7 @@ const Platform: FC = () => {
   // Per-instance GPU attributes
   const instanceSeed = useRef<Float32Array | null>(null)
   const instanceVisibility = useRef<Float32Array | null>(null)
-  const instanceAnswerNumber = useRef<Float32Array | null>(null)
+  const instanceIsHighlighted = useRef<Float32Array | null>(null)
 
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
@@ -86,14 +84,14 @@ const Platform: FC = () => {
   const activeRowsData = useRef<RowData[]>([])
 
   // Question Elements
-  const questionElements = useRef<QuestionElementsHandle | null>(null)
+  const infoElements = useRef<InfoElementsHandle | null>(null)
   // Home Elements
   const homeElements = useRef<HomeElementsHandle | null>(null)
 
   const isRowRaised = useRef<boolean[]>([])
 
-  function insertQuestionRows() {
-    const rows = generateQuestionSectionRowData()
+  function insertInfoRows(contentIndex: 0 | 1 | 2) {
+    const rows = generateInfoSectionRowData(contentIndex)
     rowsData.current = [...rowsData.current, ...rows]
   }
 
@@ -138,18 +136,19 @@ const Platform: FC = () => {
 
       insertHomeRows()
       insertObstacleRows(FIRST_OBSTACLE_SECTION_ROWS)
-      insertQuestionRows()
+      insertInfoRows(0)
       insertObstacleRows()
-      insertQuestionRows()
+      insertInfoRows(1)
       insertObstacleRows()
-      insertQuestionRows()
+      insertInfoRows(2)
       insertObstacleRows()
+      // TODO: insert CTA Rows.
 
       const instances: InstancedRigidBodyProps[] = []
       const totalInstances = ROWS_RENDERED * COLUMNS
       instanceVisibility.current = new Float32Array(totalInstances)
       instanceSeed.current = new Float32Array(totalInstances)
-      instanceAnswerNumber.current = new Float32Array(totalInstances)
+      instanceIsHighlighted.current = new Float32Array(totalInstances)
 
       let nextRowZ = INITIAL_ROWS_Z_OFFSET
 
@@ -169,7 +168,7 @@ const Platform: FC = () => {
 
           instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
           instanceSeed.current[bodyIndex] = Math.random()
-          instanceAnswerNumber.current[bodyIndex] = rowData.answerNumber?.[columnIndex] ?? 0
+          instanceIsHighlighted.current[bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
 
           instances.push({
             key: `terrain-${rowIndex}-${columnIndex}`,
@@ -201,14 +200,14 @@ const Platform: FC = () => {
         yByBodyIndex.current[bodyIndex] = newRowData.heights[columnIndex]
         const y = newRowData.heights[columnIndex]
         instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
-        instanceAnswerNumber.current![bodyIndex] = newRowData.answerNumber?.[columnIndex] ?? 0
+        instanceIsHighlighted.current![bodyIndex] = newRowData.isHighlighted?.[columnIndex] ?? 0
       }
 
       if (instancedTilesRef.current?.visibilityAttribute) {
         instancedTilesRef.current.visibilityAttribute.needsUpdate = true
       }
-      if (instancedTilesRef.current?.answerNumberAttribute) {
-        instancedTilesRef.current.answerNumberAttribute.needsUpdate = true
+      if (instancedTilesRef.current?.isHighlightedAttribute) {
+        instancedTilesRef.current.isHighlightedAttribute.needsUpdate = true
       }
 
       incrementDistanceRows(1)
@@ -257,13 +256,18 @@ const Platform: FC = () => {
     const rowMetadata = activeRowsData.current[rowIndex]
 
     isRowRaised.current[rowIndex] = true
-    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+    infoElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
 
-    const isQuestionSectionStart =
-      rowMetadata?.type === 'question' && rowMetadata.isSectionStart
+    const isHomeSectionStart = rowMetadata?.type === 'home' && rowMetadata.isSectionStart
 
-    if (isQuestionSectionStart && stage !== Stage.QUESTION) {
-      goToStage(Stage.QUESTION)
+    if (isHomeSectionStart && stage !== Stage.HOME) {
+      goToStage(Stage.HOME)
+    }
+
+    const isQuestionSectionStart = rowMetadata?.type === 'info' && rowMetadata.isSectionStart
+
+    if (isQuestionSectionStart && stage !== Stage.INFO) {
+      goToStage(Stage.INFO)
     }
 
     const isObstaclesSectionStart =
@@ -276,7 +280,7 @@ const Platform: FC = () => {
 
   function handleRowLowered(rowIndex: number) {
     isRowRaised.current[rowIndex] = false
-    questionElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
+    infoElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
   }
 
   function updateTiles() {
@@ -323,7 +327,7 @@ const Platform: FC = () => {
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
-    if (!homeElements.current || !questionElements.current) return
+    if (!homeElements.current || !infoElements.current) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
@@ -331,7 +335,7 @@ const Platform: FC = () => {
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
     updateTiles()
-    questionElements.current.moveElements(zStep)
+    infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })
 
@@ -344,14 +348,14 @@ const Platform: FC = () => {
         instances={tileInstances}
         instanceVisibility={instanceVisibility.current!}
         instanceSeed={instanceSeed.current!}
-        instanceAnswerNumber={instanceAnswerNumber.current!}
+        instanceIsHighlighted={instanceIsHighlighted.current!}
       />
 
       {/* Home Elements */}
       <HomeElements ref={homeElements} rowsData={rowsData} key={`${resetPlatformTick}-home`} />
 
-      {/* Question Elements */}
-      <QuestionElements ref={questionElements} key={`${resetPlatformTick}-question`} />
+      {/* Info Section Elements */}
+      <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />
     </group>
   )
 }

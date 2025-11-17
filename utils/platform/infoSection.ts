@@ -1,6 +1,4 @@
 import {
-  ANSWER_TILE_COLS,
-  ANSWER_TILE_ROWS,
   colToX,
   COLUMNS,
   ON_TILE_Y,
@@ -19,9 +17,7 @@ export const INFO_TEXT_WIDTH = 8 * TILE_SIZE
 export const INFO_TEXT_ROWS = 4
 export const INFO_TEXT_HEIGHT = INFO_TEXT_ROWS * TILE_SIZE
 
-export const ANSWER_TILE_COUNT = 2
-
-export function generateInfoSectionRowData(): RowData[] {
+export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows
   const heights: number[][] = Array.from({ length: INFO_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
@@ -32,64 +28,21 @@ export function generateInfoSectionRowData(): RowData[] {
   const textTriggerRow = Math.ceil(infoTextCenterRow + INFO_TEXT_ROWS / 2)
   const textZRelative = (textTriggerRow - infoTextCenterRow) * TILE_SIZE
 
-  // Two-tile layout positioned after the text
-  const tilesCenterRow = infoTextCenterRow + INFO_TEXT_ROWS
-  const tilesTriggerRow = Math.ceil(tilesCenterRow)
-  const tilesZRelative = (tilesTriggerRow - tilesCenterRow) * TILE_SIZE
-
-  // Carve non-tile areas in rows that contain the answer tile rectangles
-  const leftStartCol = 0
-  const leftEndCol = leftStartCol + ANSWER_TILE_COLS - 1
-  const rightStartCol = 9
-  const rightEndCol = rightStartCol + ANSWER_TILE_COLS - 1
-  const startRow = Math.ceil(tilesCenterRow - ANSWER_TILE_ROWS / 2)
-  const endRow = startRow + ANSWER_TILE_ROWS - 1
-
-  for (let r = startRow; r <= endRow; r++) {
-    if (r < 0 || r >= INFO_SECTION_ROWS) continue
-    const row = heights[r]
-    for (let c = 0; c < COLUMNS; c++) {
-      const inLeft = c >= leftStartCol && c <= leftEndCol
-      const inRight = c >= rightStartCol && c <= rightEndCol
-      if (!inLeft && !inRight) row[c] = UNSAFE_HEIGHT
-    }
-  }
-
-  const leftCenterCol = 0 + (ANSWER_TILE_COLS - 1) / 2
-  const rightCenterCol = 9 + (ANSWER_TILE_COLS - 1) / 2
-
   const rows: RowData[] = new Array(INFO_SECTION_ROWS)
 
   for (let i = 0; i < INFO_SECTION_ROWS; i++) {
     const isStart = i === 0
     const isEnd = i === INFO_SECTION_ROWS - 1
 
-    // Compute ownership array for this row (two-tile layout)
-    const ownership = new Array<number>(COLUMNS).fill(0)
-    // Left tile (answer 1)
-    if (i >= startRow && i <= endRow) {
-      for (let c = leftStartCol; c <= leftEndCol; c++) ownership[c] = 1
-    }
-    // Right tile (answer 2)
-    if (i >= startRow && i <= endRow) {
-      for (let c = rightStartCol; c <= rightEndCol; c++) ownership[c] = 2
-    }
-
     rows[i] = {
       heights: heights[i],
       type: 'info',
       isSectionStart: isStart,
       isSectionEnd: isEnd,
-      answerNumber: ownership,
+      infoContentIndex: contentIndex,
     }
     if (i === textTriggerRow) {
-      rows[i].infoTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
-    }
-    if (i === tilesTriggerRow) {
-      rows[i].answerTilePositions = [
-        [colToX(leftCenterCol), ON_TILE_Y, tilesZRelative],
-        [colToX(rightCenterCol), ON_TILE_Y, tilesZRelative],
-      ]
+      rows[i].tileTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
     }
   }
   return rows

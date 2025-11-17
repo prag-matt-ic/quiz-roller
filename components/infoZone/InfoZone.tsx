@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 'use client'
 
 import { useGSAP } from '@gsap/react'
@@ -142,7 +143,7 @@ export const InfoZone: FC<Props> = ({
   })
 
   const userData: RigidBodyUserData = {
-    type: 'info',
+    type: 'info-zone',
   }
 
   const aspect = width / height

@@ -18,18 +18,9 @@ import {
 } from 'react'
 import { Group } from 'three'
 
-import { AnswerTile } from '@/components/answerTile/AnswerTile'
-import ColourPicker from '@/components/colourPicker/ColourPicker'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { type StartUserData } from '@/model/schema'
-import {
-  COLOUR_TILE_OPTIONS,
-  HOME_ANSWER_TILE_HEIGHT,
-  HOME_ANSWER_TILE_WIDTH,
-  INFO_ZONE_HEIGHT,
-  INFO_ZONE_WIDTH,
-} from '@/utils/platform/homeSection'
+import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/homeSection'
 import {
   HIDE_POSITION_Y,
   HIDE_POSITION_Z,
@@ -43,10 +34,6 @@ import { Credit } from './HomeInfo'
 import Logo from './Logo'
 
 import Card from '@/components/ui/Card'
-
-const START_TILE_USER_DATA: StartUserData = {
-  type: 'start',
-}
 
 const headingClasses = 'text-xl lg:text-2xl font-bold text-black'
 
@@ -62,16 +49,7 @@ type Props = {
 // TODO: Replace the Logo with an Image component
 
 const HomeElements: FC<Props> = ({ ref, rowsData }) => {
-  const confirmingStart = useGameStore((s) => s.confirmingStart)
-  const isConfirmingStart = Boolean(confirmingStart)
-
-  const startTile = useRef<RapierRigidBody | null>(null)
-
-  const logo = useRef<Group>(null)
-
-  const [colourPickerOptions] = useState(
-    COLOUR_TILE_OPTIONS.map(() => createRef<RapierRigidBody>()),
-  )
+  const image = useRef<Group>(null)
 
   const [infoZoneRefs] = useState(Array.from({ length: 2 }, () => createRef<RapierRigidBody>()))
 
@@ -87,17 +65,13 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         if (row.type !== 'home') return
         const rowZ = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
 
-        const answerPosition = row.answerTilePositions?.[0]
-        if (!!answerPosition && !!startTile.current) {
-          translation.current.x = answerPosition[0]
-          translation.current.y = answerPosition[1]
-          translation.current.z = answerPosition[2] + rowZ
-          startTile.current.setTranslation(translation.current, true)
-        }
-
-        const logoPosition = row.logoPosition
-        if (!!logoPosition && !!logo.current) {
-          logo.current.position.set(logoPosition[0], logoPosition[1], logoPosition[2] + rowZ)
+        const imagePosition = row.imagePosition
+        if (!!imagePosition && !!image.current) {
+          image.current.position.set(
+            imagePosition[0],
+            imagePosition[1],
+            imagePosition[2] + rowZ,
+          )
         }
 
         const infoZonePlacements = row.infoZonePositions
@@ -119,75 +93,24 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
             infoZoneRef.current.setTranslation(translation.current, true)
           }
         }
-
-        const colourPickerPlacement = row.colourPickerPosition
-        if (!colourPickerPlacement) return
-
-        const baseZ = colourPickerPlacement[2] + rowZ
-
-        for (let index = 0; index < COLOUR_TILE_OPTIONS.length; index++) {
-          const optionRef = colourPickerOptions[index]
-          const option = COLOUR_TILE_OPTIONS[index]
-          if (!optionRef?.current) continue
-
-          translation.current.x = option.position[0]
-          translation.current.y = option.position[1]
-          translation.current.z = baseZ + option.relativeZ
-          optionRef.current.setTranslation(translation.current, true)
-        }
       })
     }
 
     positionElements(rowsData.current)
-  }, [colourPickerOptions, infoZoneRefs, rowsData])
+  }, [infoZoneRefs, rowsData])
 
   const moveElements = useCallback(
     (zStep: number) => {
       if (isOutOfView.current) return
 
-      if (!!startTile.current) {
-        const currentTranslation = startTile.current.translation()
-        const nextZ = currentTranslation.z + zStep
-        translation.current.x = currentTranslation.x
-        translation.current.y = currentTranslation.y
-
+      if (!!image.current) {
+        const nextZ = image.current.position.z + zStep
         if (nextZ > maxZ) {
-          translation.current.y = HIDE_POSITION_Y
-          translation.current.z = HIDE_POSITION_Z
-          startTile.current.setTranslation(translation.current, false)
-          isOutOfView.current = true
+          image.current.position.z = HIDE_POSITION_Z
+          image.current.position.y = HIDE_POSITION_Y
         } else {
-          translation.current.z = nextZ
-          startTile.current.setTranslation(translation.current, true)
+          image.current.position.z = nextZ
         }
-      }
-
-      if (!!logo.current) {
-        const nextZ = logo.current.position.z + zStep
-        if (nextZ > maxZ) {
-          logo.current.position.z = HIDE_POSITION_Z
-          logo.current.position.y = HIDE_POSITION_Y
-        } else {
-          logo.current.position.z = nextZ
-        }
-      }
-
-      for (const optionRef of colourPickerOptions) {
-        if (!optionRef.current) continue
-        const currentTranslation = optionRef.current.translation()
-        const nextZ = currentTranslation.z + zStep
-        translation.current.x = currentTranslation.x
-        translation.current.y = currentTranslation.y
-
-        if (nextZ > maxZ) {
-          translation.current.y = HIDE_POSITION_Y
-          translation.current.z = HIDE_POSITION_Z
-          optionRef.current.setTranslation(translation.current, false)
-          continue
-        }
-
-        translation.current.z = nextZ
-        optionRef.current.setTranslation(translation.current, true)
       }
 
       for (const infoZoneRef of infoZoneRefs) {
@@ -209,7 +132,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         infoZoneRef.current.setTranslation(translation.current, true)
       }
     },
-    [colourPickerOptions, infoZoneRefs, maxZ],
+    [infoZoneRefs, maxZ],
   )
 
   useImperativeHandle(ref, () => {
@@ -222,26 +145,8 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
   return (
     <>
-      <AnswerTile
-        ref={startTile}
-        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        text="Roll here to start"
-        userData={START_TILE_USER_DATA}
-        width={HOME_ANSWER_TILE_WIDTH}
-        height={HOME_ANSWER_TILE_HEIGHT}
-        isConfirming={isConfirmingStart}
-        wasConfirmed={false}
-        wasCorrect={false}
-        isOutOfView={isOutOfView}
-      />
-      {/* TODO: update with arrow. */}
-      <Logo ref={logo} />
-
-      <ColourPicker
-        options={COLOUR_TILE_OPTIONS}
-        optionRefs={colourPickerOptions}
-        isOutOfView={isOutOfView}
-      />
+      {/* TODO: update with Image component (pass in the Arrow png.). */}
+      <Logo ref={image} />
 
       <InfoZone
         key="info-zone-1"

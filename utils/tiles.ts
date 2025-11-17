@@ -1,11 +1,11 @@
 // Tile dimensions
-export const TILE_SIZE = 1
-export const TILE_THICKNESS = 0.16
+export const TILE_SIZE = 1.0
+export const TILE_THICKNESS = 0.25
 
-export const ANSWER_TILE_COLS = 7
-export const ANSWER_TILE_ROWS = 4
-export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
-export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
+// export const ANSWER_TILE_COLS = 7
+// export const ANSWER_TILE_ROWS = 4
+// export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
+// export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
 
 // Centralized game-wide constants
 // Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
@@ -20,7 +20,7 @@ export const EPSILON = {
 
 // Grid configuration
 export const COLUMNS = 16
-export const ROWS_RENDERED = 28
+export const ROWS_RENDERED = 32
 
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
@@ -64,16 +64,12 @@ export type RowData = {
   type: SectionType
   isSectionStart: boolean
   isSectionEnd: boolean
-  infoTextPosition?: [number, number, number] // If true, when this row is visible, position Q text here
-  // Optional per-index answer tile placements for this trigger row.
-  // Use null for indices that should not be placed on this trigger.
-  // Example: for a 4-tile layout, top trigger provides [pos, pos, null, null],
-  // bottom trigger provides [null, null, pos, pos].
-  answerTilePositions?: ([number, number, number] | null)[]
-  answerNumber?: number[] // Per-column answer number: 0=not under answer, 1=under answer 1, 2=under answer 2, etc.
-  logoPosition?: [number, number, number]
-  colourPickerPosition?: [number, number, number]
-  // Optional per-index info zone placements for this trigger row.
-  // Use null to skip moving a specific info zone on this trigger.
-  infoZonePositions?: ([number, number, number] | null)[]
+
+  isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
+
+  infoContentIndex?: number
+  tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface (previously question text)
+  imagePosition?: [number, number, number] // 2D image rendered on the platform (previously logo)
+  infoZonePositions?: ([number, number, number] | null)[] // Info zones rendered on the platform
+  floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
 }

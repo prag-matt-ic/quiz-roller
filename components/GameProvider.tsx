@@ -4,15 +4,6 @@ import { createContext, type FC, type PropsWithChildren, useContext, useState } 
 import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-import {
-  // type AnswerUserData,
-  // type Question,
-  type Info,
-  type RunStats,
-  type StartUserData,
-} from '@/model/schema'
-import { getNextQuestion } from '@/resources/content'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
 
@@ -46,7 +37,6 @@ type GameState = {
   setPlayerInput: (input: PlayerInput) => void
 
   paletteIndex: 0 | 1 | 2
-  confirmingPaletteIndex: 0 | 1 | 2 | null
   setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
 
   confirmationProgress: number // [0, 1]
@@ -64,26 +54,6 @@ type GameState = {
   distanceRows: number
   incrementDistanceRows: (delta: number) => void
 
-  // Start confirmation
-  hasStarted: boolean
-  confirmingStart: StartUserData | null
-  setConfirmingStart: (data: StartUserData | null) => void
-  // onStartConfirmed: () => void
-
-  // Info
-  currentDifficulty: number
-  currentInfoIndex: number
-  currentInfo: Info | null
-  info: Info[]
-  // questions: Question[]
-  // confirmingAnswer: AnswerUserData | null
-  // setConfirmingAnswer: (data: AnswerUserData | null) => void
-  // onAnswerConfirmed: () => void
-  // confirmedAnswers: AnswerUserData[]
-
-  currentRun: RunStats | null
-  previousRuns: RunStats[]
-
   onOutOfBounds: () => void
 
   resetGame: () => void
@@ -96,7 +66,6 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-const MAX_DIFFICULTY = 3
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_PALETTE_DURATION_S = 1.5
 
@@ -114,22 +83,8 @@ const INITIAL_STATE: Pick<
   | 'confirmationProgress'
   | 'playerInput'
   | 'playerWorldPosition'
-  | 'hasStarted'
-  | 'confirmingStart'
-  | 'confirmingPaletteIndex'
-  // | 'questions'
-  | 'currentDifficulty'
-  | 'currentInfoIndex'
-  | 'currentInfo'
-  | 'info'
-  // | 'currentQuestionIndex'
-  // | 'currentQuestion'
-  // | 'confirmingAnswer'
-  // | 'confirmedAnswers'
   | 'distanceRows'
   | 'paletteIndex'
-  | 'currentRun'
-  | 'previousRuns'
   | 'cameraLookAtPosition'
   | 'hudIndicator'
   | 'edgeWarningIntensities'
@@ -137,30 +92,16 @@ const INITIAL_STATE: Pick<
   stage: Stage.HOME,
   confirmationProgress: 0,
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
-  hasStarted: false,
   playerInput: {
     up: 0,
     down: 0,
     left: 0,
     right: 0,
   },
-  confirmingStart: null,
-  currentDifficulty: 1,
-  // questions: [],
-  // currentQuestion: null,
-  // currentQuestionIndex: 0,
-  // confirmingAnswer: null,
-  // confirmedAnswers: [],
-  currentInfoIndex: 0,
-  info: [],
-  currentInfo: null,
   distanceRows: 0,
   paletteIndex: 1,
-  confirmingPaletteIndex: null,
-  currentRun: null,
   cameraLookAtPosition: null,
-  previousRuns: [],
-  hudIndicator: null,
+  hudIndicator: 'move',
   edgeWarningIntensities: {
     left: 0,
     right: 0,
@@ -200,9 +141,9 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
   function cancelConfirmation(set: StoreApi<GameState>['setState']) {
     set({
-      confirmingStart: null,
+      // confirmingStart: null,
       // confirmingAnswer: null,
-      confirmingPaletteIndex: null,
+      // confirmingPaletteIndex: null,
     })
     confirmationTween = gsap.to(confirmationTweenTarget, {
       duration: 0.3,
@@ -263,129 +204,49 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           playSoundFX(SoundFX.CHANGE_COLOUR)
 
           set({
-            confirmingPaletteIndex: newPaletteIndex,
-            confirmingStart: null,
-            // confirmingAnswer: null,
+            // confirmingPaletteIndex: newPaletteIndex,
             confirmationProgress: 0,
           })
 
           const onConfirmed = () => {
-            if (get().confirmingPaletteIndex !== newPaletteIndex) return
-            set({
-              paletteIndex: newPaletteIndex,
-              confirmingPaletteIndex: null,
-              confirmationProgress: 0,
-            })
+            // if (get().confirmingPaletteIndex !== newPaletteIndex) return
+            // set({
+            //   paletteIndex: newPaletteIndex,
+            //   confirmingPaletteIndex: null,
+            //   confirmationProgress: 0,
+            // })
           }
 
           startConfirmation(set, onConfirmed, CONFIRMING_PALETTE_DURATION_S)
         },
 
-        setConfirmingStart: (startData: StartUserData | null) => {
-          const { stage, hasStarted, confirmingStart } = get()
+        // setConfirmingStart: (startData: StartUserData | null) => {
+        //   const { stage, hasStarted, confirmingStart } = get()
 
-          if (stage !== Stage.HOME || hasStarted) return
+        //   if (stage !== Stage.HOME || hasStarted) return
 
-          if (!!startData && !!confirmingStart) return // No change
-          confirmationTween?.kill()
-
-          if (startData === null) {
-            cancelConfirmation(set)
-            return
-          }
-
-          set({
-            confirmingStart: startData,
-            // confirmingAnswer: null,
-            confirmingPaletteIndex: null,
-            confirmationProgress: 0,
-          })
-
-          const onConfirmed = () => {
-            if (!!get().confirmingStart) {
-              // get().onStartConfirmed()
-            }
-          }
-
-          startConfirmation(set, onConfirmed)
-        },
-
-        // setConfirmingAnswer: (answer: AnswerUserData | null) => {
-        //   const { confirmingAnswer, confirmedAnswers, onAnswerConfirmed } = get()
-        //   if (answer?.questionId === confirmingAnswer?.questionId) return // No change
-
+        //   if (!!startData && !!confirmingStart) return // No change
         //   confirmationTween?.kill()
 
-        //   if (answer === null) {
+        //   if (startData === null) {
         //     cancelConfirmation(set)
         //     return
         //   }
 
-        //   const hasAlreadyAnswered = confirmedAnswers.some(
-        //     ({ questionId }) => questionId === answer.questionId,
-        //   )
-        //   if (hasAlreadyAnswered) return
-
         //   set({
-        //     confirmingAnswer: answer,
-        //     confirmingStart: null,
+        //     confirmingStart: startData,
+        //     // confirmingAnswer: null,
         //     confirmingPaletteIndex: null,
         //     confirmationProgress: 0,
         //   })
 
         //   const onConfirmed = () => {
-        //     if (!!get().confirmingAnswer) onAnswerConfirmed()
+        //     if (!!get().confirmingStart) {
+        //       // get().onStartConfirmed()
+        //     }
         //   }
+
         //   startConfirmation(set, onConfirmed)
-        // },
-
-        // onStartConfirmed: () => {
-        //   const { confirmingStart, goToStage } = get()
-
-        //   if (!confirmingStart) {
-        //     console.error('No start tile selected to confirm')
-        //     return
-        //   }
-
-        //   const firstQuestion = getNextQuestion({
-        //     currentDifficulty: 1,
-        //     askedIds: new Set(),
-        //   })
-
-        //   if (!firstQuestion) {
-        //     console.error('No questions available to start the game')
-        //     set({ confirmingStart: null, confirmationProgress: 0 })
-        //     return
-        //   }
-
-        //   set({
-        //     hasStarted: true,
-        //     // questions: [firstQuestion],
-        //     // currentQuestionIndex: 0,
-        //     // currentQuestion: firstQuestion,
-        //     confirmingStart: null,
-        //   })
-
-        //   goToStage(Stage.TERRAIN)
-        // },
-
-        // onAnswerConfirmed: async () => {
-        //   const { confirmingAnswer } = get()
-
-        //   if (!confirmingAnswer) {
-        //     console.error('No answer selected to confirm')
-        //     return
-        //   }
-
-        //   confirmationTween?.kill()
-
-        //   if (confirmingAnswer.answer.isCorrect) {
-        //     handleCorrectAnswer({ confirmingAnswer, set })
-        //     playSoundFX(SoundFX.CORRECT_ANSWER)
-        //   } else {
-        //     handleIncorrectAnswer({ confirmingAnswer, set })
-        //     playSoundFX(SoundFX.INCORRECT_ANSWER)
-        //   }
         // },
 
         resetPlatformTick: 0,
@@ -397,7 +258,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           set((s) => ({
             ...INITIAL_STATE,
             paletteIndex: s.paletteIndex,
-            previousRuns: s.previousRuns,
             resetPlatformTick: s.resetPlatformTick + 1,
             resetPlayerTick: s.resetPlayerTick + 1,
           }))
@@ -421,20 +281,22 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
 
         goToStage: (newStage: Stage) => {
-          // if (get().stage === Stage.GAME_OVER) return // Prevent moving to other stages from GAME_OVER
+          if (newStage === Stage.HOME) {
+            set({ stage: Stage.HOME, hudIndicator: 'move' })
+          }
 
           if (newStage === Stage.INFO) {
-            // handleInfoStage({ set, get })
+            set({ stage: Stage.INFO, hudIndicator: null })
             return
           }
 
           if (newStage === Stage.TERRAIN) {
-            handleTerrainStage({ set })
+            set({ stage: Stage.TERRAIN })
             return
           }
 
           if (newStage === Stage.CTA) {
-            // handleCTAStage({ set, get })
+            set({ stage: Stage.CTA })
             return
           }
         },
@@ -442,7 +304,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
       {
         name: 'quizroller',
         partialize: (s) => ({
-          previousRuns: s.previousRuns,
           paletteIndex: s.paletteIndex,
         }),
         version: 2,
@@ -489,37 +350,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 // }
 
 // Helper functions for goToStage
-
-function handleInfoStage({
-  set,
-  get,
-}: {
-  set: StoreApi<GameState>['setState']
-  get: StoreApi<GameState>['getState']
-}) {
-  const currentInfoIndex = get().currentInfoIndex
-  const newInfoIndex = currentInfoIndex + 1
-
-  const info = get().info
-  const askedIds = new Set<string>(info.map((info) => info.id))
-  const newQuestion = getNextQuestion({
-    currentDifficulty: get().currentDifficulty,
-    askedIds,
-  })
-
-  if (!newQuestion) {
-    console.error('No more questions available')
-    return
-  }
-
-  set({
-    stage: Stage.INFO,
-    confirmationProgress: 0,
-    currentInfoIndex: newInfoIndex,
-    currentInfo: newQuestion,
-    info: [...info, newQuestion],
-  })
-}
 
 function handleTerrainStage({ set }: { set: StoreApi<GameState>['setState'] }) {
   set({ stage: Stage.TERRAIN, hudIndicator: 'move' }) // Updates confirmation result to show prompt to move..

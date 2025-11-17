@@ -57,7 +57,7 @@ const TileShaderMaterial = extend(CustomTileShaderMaterial)
 export type InstancedTilesHandle = {
   rigidBodies: RapierRigidBody[] | null
   visibilityAttribute: InstancedBufferAttribute | null
-  answerNumberAttribute: InstancedBufferAttribute | null
+  isHighlightedAttribute: InstancedBufferAttribute | null
   shader: (typeof TileShaderMaterial & TileShaderUniforms) | null
 }
 
@@ -66,7 +66,7 @@ type InstancedTilesProps = {
   instances: InstancedRigidBodyProps[]
   instanceVisibility: Float32Array
   instanceSeed: Float32Array
-  instanceAnswerNumber: Float32Array
+  instanceIsHighlighted: Float32Array
   initialUniforms?: Partial<TileShaderUniforms>
 }
 
@@ -74,7 +74,7 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
   instances,
   instanceVisibility,
   instanceSeed,
-  instanceAnswerNumber,
+  instanceIsHighlighted,
   initialUniforms,
   ref,
 }) => {
@@ -82,7 +82,7 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
   const paletteIndex = useGameStore((s) => s.paletteIndex)
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
   const instanceVisibilityBufferAttribute = useRef<InstancedBufferAttribute>(null)
-  const instanceAnswerNumberBufferAttribute = useRef<InstancedBufferAttribute>(null)
+  const instanceIsHighlightedBufferAttribute = useRef<InstancedBufferAttribute>(null)
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
 
   useImperativeHandle(
@@ -94,8 +94,8 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
       get visibilityAttribute() {
         return instanceVisibilityBufferAttribute.current
       },
-      get answerNumberAttribute() {
-        return instanceAnswerNumberBufferAttribute.current
+      get isHighlightedAttribute() {
+        return instanceIsHighlightedBufferAttribute.current
       },
       get shader() {
         return tileShader.current
@@ -133,9 +133,9 @@ export const PlatformTiles: FC<InstancedTilesProps> = ({
           />
           <instancedBufferAttribute attach="attributes-seed" args={[instanceSeed, 1]} />
           <instancedBufferAttribute
-            ref={instanceAnswerNumberBufferAttribute}
-            attach="attributes-answerNumber"
-            args={[instanceAnswerNumber, 1]}
+            ref={instanceIsHighlightedBufferAttribute}
+            attach="attributes-isHighlighted"
+            args={[instanceIsHighlighted, 1]}
           />
         </boxGeometry>
         <TileShaderMaterial

@@ -6,7 +6,7 @@
 
 attribute float visibility;
 attribute float seed;
-attribute float answerNumber;
+attribute float isHighlighted;
 
 uniform float uEntryStartZ;
 uniform float uEntryEndZ;
@@ -20,7 +20,7 @@ varying mediump float vPlayerHighlight;
 varying highp vec3 vWorldPos;
 varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
-varying mediump float vAnswerNumber;
+varying mediump float vIsHighlighted;
 varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
@@ -70,8 +70,8 @@ void main() {
   // Pass seed to fragment for noise offset
   vSeed = seed;
 
-  // Pass answer number to fragment shader
-  vAnswerNumber = answerNumber;
+  // Pass isHighlighted to fragment shader
+  vIsHighlighted = isHighlighted;
 
   vUv = uv;
 

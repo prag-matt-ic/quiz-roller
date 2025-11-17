@@ -28,17 +28,6 @@ export type PlayerUserData = {
   type: 'player'
 }
 
-export type AnswerUserData = {
-  type: 'answer'
-  questionId: string
-  answer: Answer
-  answerNumber: number
-}
-
-export type StartUserData = {
-  type: 'start'
-}
-
 export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
@@ -49,19 +38,11 @@ export type ColourTileUserData = {
 }
 
 export type InfoZoneUserData = {
-  type: 'info'
+  type: 'info-zone'
 }
 
 export type RigidBodyUserData =
   | PlayerUserData
-  | StartUserData
-  | AnswerUserData
   | OutOfBoundsUserData
   | ColourTileUserData
   | InfoZoneUserData
-
-export type RunStats = {
-  correctAnswers: number
-  distance: number
-  date: Date
-}

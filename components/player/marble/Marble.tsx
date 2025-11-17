@@ -43,7 +43,7 @@ type MarbleProps = {
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
   const paletteIndex = useGameStore((s) => s.paletteIndex)
-  const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
+  // const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat } = playerConfig
   const normalMap = useTexture(normal.src)
@@ -73,7 +73,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           ref={shader}
           uTime={INITIAL_UNIFORMS.uTime}
           uPaletteIndex={paletteIndex}
-          uConfirmingPaletteIndex={confirmingPaletteIndex ?? -1}
+          uConfirmingPaletteIndex={-1} // TODO: review when colour shifting
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}

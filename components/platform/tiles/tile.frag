@@ -13,13 +13,13 @@ varying highp vec3 vWorldPos;
 varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vPlayerHighlight;
-varying mediump float vAnswerNumber;
+varying mediump float vIsHighlighted;
 varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
 // Constants
-const float ANSWER_MIX = 0.14;
-const float NON_ANSWER_MIX = 0.3;
+const float HIGHLIGHTED_MIX = 0.14;
+const float REGULAR_MIX = 0.3;
 const float DARKEN_FACTOR = 0.66;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.7;
@@ -29,7 +29,7 @@ void main() {
   if (vAlpha <= 0.001 || vFadeOut <= 0.001) discard;
 
   // Determine if this instance is an answer tile (branch-free)
-  mediump float hasAnswer = step(0.5, vAnswerNumber);
+  mediump float isHighlighted = step(0.5, vIsHighlighted);
   mediump float alpha = vAlpha;
 
   // Compute background color with scrolling noise
@@ -48,7 +48,7 @@ void main() {
   }
 
   // Mix with white based on tile type
-  mediump float mixAmount = mix(NON_ANSWER_MIX, ANSWER_MIX, hasAnswer);
+  mediump float mixAmount = mix(REGULAR_MIX, HIGHLIGHTED_MIX, isHighlighted);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
 
   // Apply player proximity highlight

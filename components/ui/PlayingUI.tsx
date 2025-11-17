@@ -15,29 +15,7 @@ type Props = {
 }
 
 const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
-  const confirmedAnswers = useGameStore((s) => s.confirmedAnswers)
   const distanceRows = useGameStore((s) => s.distanceRows)
-  const previousRuns = useGameStore((s) => s.previousRuns)
-
-  const correctCount = Math.max(
-    0,
-    confirmedAnswers.reduce((acc, a) => acc + (a.answer.isCorrect ? 1 : 0), 0),
-  )
-
-  const { maxDistance, maxCorrect } = useMemo<{
-    maxDistance: number
-    maxCorrect: number
-  }>(() => {
-    if (!previousRuns.length) return { maxDistance: 0, maxCorrect: 0 }
-
-    return {
-      maxDistance: Math.max(...previousRuns.map((r) => r.distance)),
-      maxCorrect: Math.max(...previousRuns.map((r) => r.correctAnswers)),
-    }
-  }, [previousRuns])
-
-  const isDistancePB = distanceRows > maxDistance
-  const isCorrectPB = correctCount > maxCorrect
 
   useGSAP(
     () => {
@@ -74,7 +52,8 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
     <section
       ref={ref}
       className="pointer-events-none fixed bottom-4 left-4 flex flex-col justify-center gap-1 opacity-0 sm:flex-row sm:gap-2">
-      {renderBlock({
+      {/* TODO: show collectibles. */}
+      {/* {renderBlock({
         icon: GemIcon,
         content: (
           <span
@@ -85,17 +64,11 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
             {correctCount}
           </span>
         ),
-      })}
+      })} */}
       {renderBlock({
         icon: FootprintsIcon,
         content: (
-          <span
-            className={twJoin(
-              'text-lg font-extrabold sm:text-2xl',
-              isDistancePB && 'text-amber-200',
-            )}>
-            {distanceRows}
-          </span>
+          <span className={twJoin('text-lg font-extrabold sm:text-2xl')}>{distanceRows}</span>
         ),
       })}
     </section>

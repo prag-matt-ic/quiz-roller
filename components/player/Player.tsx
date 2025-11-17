@@ -55,7 +55,6 @@ const Player: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setConfirmingPaletteIndex = useGameStore((s) => s.setConfirmingPaletteIndex)
-  const setConfirmingStart = useGameStore((s) => s.setConfirmingStart)
   // const setConfirmingAnswer = useGameStore((s) => s.setConfirmingAnswer)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
@@ -175,18 +174,6 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
-    if (otherUserData.type === 'start') {
-      if (stage !== Stage.HOME) return
-      setConfirmingStart(otherUserData)
-      return
-    }
-
-    if (otherUserData.type === 'answer') {
-      if (stage !== Stage.INFO) return
-      // setConfirmingAnswer(otherUserData)
-      return
-    }
-
     if (otherUserData.type === 'colour') {
       if (stage !== Stage.HOME) return
       setConfirmingPaletteIndex(otherUserData.paletteIndex)
@@ -202,16 +189,6 @@ const Player: FC = () => {
   const onIntersectionExit: IntersectionExitHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
-
-    if (otherUserData.type === 'start') {
-      setConfirmingStart(null)
-      return
-    }
-
-    if (otherUserData.type === 'answer') {
-      // setConfirmingAnswer(null)
-      return
-    }
 
     if (otherUserData.type === 'colour') {
       setConfirmingPaletteIndex(null)
