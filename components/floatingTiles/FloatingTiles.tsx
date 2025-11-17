@@ -14,7 +14,9 @@ import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTile
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
 import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import { COLUMNS, TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
+import { COLUMNS, TILE_SIZE } from '@/utils/tiles'
+
+const TILE_THICKNESS = 0.24
 
 type FloatingTilesUniforms = {
   uMix: number

@@ -23,12 +23,12 @@ export const CAMERA_CONFIG: Record<
     zoom: 0.8,
   },
   [Stage.INFO]: {
-    position: { x: 0, y: 3, z: 7 },
+    position: { x: 0, y: 4, z: 7 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
   [Stage.TERRAIN]: {
-    position: { x: 0, y: 6, z: 7 },
+    position: { x: 0, y: 9, z: 6 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 1.0,
   },

@@ -56,7 +56,6 @@ const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
-  const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
 
   const { input: playerInput } = usePlayerInput()
 
@@ -209,8 +208,6 @@ const Platform: FC = () => {
       if (instancedTilesRef.current?.isHighlightedAttribute) {
         instancedTilesRef.current.isHighlightedAttribute.needsUpdate = true
       }
-
-      incrementDistanceRows(1)
     }
 
     if (wrapsToApply > 0) {
@@ -253,28 +250,30 @@ const Platform: FC = () => {
   }
 
   function handleRowRaised(rowIndex: number, rowZ: number) {
-    const rowMetadata = activeRowsData.current[rowIndex]
+    const data = activeRowsData.current[rowIndex]
 
     isRowRaised.current[rowIndex] = true
-    infoElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+    infoElements.current!.positionElementsIfNeeded(data, rowZ)
 
-    const isHomeSectionStart = rowMetadata?.type === 'home' && rowMetadata.isSectionStart
+    const isHomeSectionStart = data?.type === 'home' && data.isSectionStart
 
     if (isHomeSectionStart && stage !== Stage.HOME) {
       goToStage(Stage.HOME)
+      return
     }
 
-    const isQuestionSectionStart = rowMetadata?.type === 'info' && rowMetadata.isSectionStart
+    const isQuestionSectionStart = data?.type === 'info' && data.isSectionStart
 
     if (isQuestionSectionStart && stage !== Stage.INFO) {
       goToStage(Stage.INFO)
+      return
     }
 
-    const isObstaclesSectionStart =
-      rowMetadata?.type === 'obstacles' && rowMetadata.isSectionStart
+    const isObstaclesSectionStart = data?.type === 'obstacles' && data.isSectionStart
 
     if (isObstaclesSectionStart && stage !== Stage.TERRAIN) {
       goToStage(Stage.TERRAIN)
+      return
     }
   }
 

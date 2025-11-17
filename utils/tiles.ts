@@ -1,6 +1,6 @@
 // Tile dimensions
 export const TILE_SIZE = 1.0
-export const TILE_THICKNESS = 0.25
+export const TILE_THICKNESS = 4.0
 
 // export const ANSWER_TILE_COLS = 7
 // export const ANSWER_TILE_ROWS = 4
@@ -34,9 +34,9 @@ export const ON_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
 
 // Entry lift animation config (rows -> world units via TILE_SIZE)
 export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 8
-export const ENTRY_Y_OFFSET = TILE_THICKNESS * 10 // How far down to start when entering (world units)
-export const ENTRY_RAISE_DURATION_ROWS = 4
-export const EXIT_LOWER_DURATION_ROWS = 4
+export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world units)
+export const ENTRY_RAISE_DURATION_ROWS = 5
+export const EXIT_LOWER_DURATION_ROWS = 5
 export const MAX_Z = TILE_SIZE * 12
 
 // Fixed entry window values for row raising animation

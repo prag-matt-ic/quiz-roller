@@ -61,6 +61,7 @@ void main() {
   // Gate fade by visibility: 0 => invisible, 1 => fade by t
   vAlpha = t * clamp(visibility, 0.0, 1.0);
 
+
   // Compute fade-out factor based on exit window; 1.0 before window, 0.0 at/after end.
   float denomExit = max(0.0001, (uExitEndZ - uExitStartZ));
   float invDenomExit = 1.0 / denomExit;

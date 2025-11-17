@@ -50,10 +50,6 @@ type GameState = {
   cameraLookAtPosition: Vector3 | null // Used if you want to look at something other than the player
   setCameraLookAtPosition: (pos: Vector3 | null) => void
 
-  // Distance travelled in rows (increments when terrain rows recycle)
-  distanceRows: number
-  incrementDistanceRows: (delta: number) => void
-
   onOutOfBounds: () => void
 
   resetGame: () => void
@@ -83,7 +79,6 @@ const INITIAL_STATE: Pick<
   | 'confirmationProgress'
   | 'playerInput'
   | 'playerWorldPosition'
-  | 'distanceRows'
   | 'paletteIndex'
   | 'cameraLookAtPosition'
   | 'hudIndicator'
@@ -98,7 +93,6 @@ const INITIAL_STATE: Pick<
     left: 0,
     right: 0,
   },
-  distanceRows: 0,
   paletteIndex: 1,
   cameraLookAtPosition: null,
   hudIndicator: 'move',
@@ -185,9 +179,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         setCameraLookAtPosition: (cameraLookAtPosition) => {
           set({ cameraLookAtPosition })
         },
-
-        incrementDistanceRows: (delta = 1) =>
-          set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),
 
         setConfirmingPaletteIndex: (newPaletteIndex) => {
           const { paletteIndex } = get()

@@ -61,7 +61,7 @@ const PlayerHUD: FC = () => {
     mode: 'oklch',
   })
 
-  const showBar = !!confirmingAnswer || !!confirmingStart || confirmingPaletteIndex !== null
+  const showBar = false
   const showResult = !!hudIndicator
   const switchKey = `${showBar}-${showResult}`
 
