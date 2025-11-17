@@ -79,7 +79,10 @@ const InfoElements: FC<Props> = ({ ref }) => {
     if (!row) return
     if (row.type !== 'info') return
 
-    if (!!heading.current) {
+    const shouldHideHeading = !!row.floatingHeadingPosition
+    const shouldHideInfoZone = row.infoZonePositions?.some((pos) => !!pos) === true
+
+    if (shouldHideHeading && heading.current) {
       heading.current.position.z = HIDE_POSITION_Z
       heading.current.position.y = HIDE_POSITION_Y
       console.warn('[InfoElements] Hid heading', {
@@ -88,7 +91,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
       })
     }
 
-    if (!!infoZone.current) {
+    if (shouldHideInfoZone && infoZone.current) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)

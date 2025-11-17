@@ -1,4 +1,5 @@
 import { colToX, COLUMNS, ON_TILE_Y, RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
+import { roughenEdges, type ProtectRange } from './roughenEdges'
 import { HEADING_Y } from './floatingHeading'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
@@ -41,6 +42,7 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     COLUMNS,
     infoZoneHighlightStartColumn + INFO_ZONE_COLS,
   )
+  const protectedRanges: ProtectRange[] = []
   const infoZoneHighlightStartRow = clampRangeStart(
     Math.ceil(infoZoneCenterRow - INFO_ZONE_ROWS / 2),
     INFO_ZONE_ROWS,
@@ -54,6 +56,13 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     infoZoneHighlightEndColumn > infoZoneHighlightStartColumn
       ? buildHighlightTemplate(infoZoneHighlightStartColumn, infoZoneHighlightEndColumn)
       : null
+
+  if (infoZoneHighlightEndColumn > infoZoneHighlightStartColumn) {
+    protectedRanges.push({
+      startCol: infoZoneHighlightStartColumn,
+      endColExclusive: infoZoneHighlightEndColumn,
+    })
+  }
 
   const rows: RowData[] = new Array(INFO_SECTION_ROWS)
 
@@ -92,6 +101,16 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
       rows[i].isHighlighted = infoZoneHighlightTemplate.slice()
     }
   }
+  roughenEdges({
+    rows,
+    seed: 50 + contentIndex * 101,
+    protectRanges: protectedRanges,
+    rowWindow: {
+      start: 1,
+      endExclusive: INFO_SECTION_ROWS - 1,
+    },
+    maxIndentColumns: 3,
+  })
   return rows
 }
 

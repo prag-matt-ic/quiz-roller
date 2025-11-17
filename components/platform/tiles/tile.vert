@@ -11,6 +11,7 @@ uniform float uHighlightRadius;
 uniform float uFadeFullRadius;
 uniform float uFadeMinRadius;
 uniform float uFadeMinAlpha;
+uniform float uFadeLiftHeight;
 
 varying mediump float vAlpha;
 varying mediump float vPlayerHighlight;
@@ -27,7 +28,6 @@ void main() {
 
   // Compute world position for current vertex of the instance
   vec4 worldPos = modelInstanceMatrix * vec4(position, 1.0);
-  vWorldPos = worldPos.xyz;
 
   // Compute world-space normal (approximate by applying linear part of modelInstanceMatrix)
   // This is sufficient for axis-aligned boxes used for tiles
@@ -50,6 +50,11 @@ void main() {
   float fadeT = clamp((distSq - fullRadiusSq) / fadeDenom, 0.0, 1.0);
   float radialAlpha = mix(1.0, uFadeMinAlpha, fadeT);
   vAlpha = radialAlpha * visible;
+
+  // Raise tiles slightly as they fade in for added depth
+  float fadeLift = radialAlpha * uFadeLiftHeight;
+  worldPos.y += fadeLift;
+  vWorldPos = worldPos.xyz;
 
   // Pass seed to fragment for noise offset
   vSeed = seed;

@@ -1,4 +1,5 @@
 import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT } from '@/utils/tiles'
+import { roughenEdges } from './roughenEdges'
 
 const HOME_SECTION_ROWS = 24
 
@@ -33,6 +34,25 @@ export function generateHomeSectionRowData(): RowData[] {
   }
 
   applyBitmapArrowHighlight(rows)
+
+  roughenEdges({
+    rows,
+    seed: 1337,
+    protectRanges: [
+      {
+        startCol: Math.max(0, HOME_ARROW_CENTER_COLUMN - HOME_ARROW_HEAD_HALF_WIDTH),
+        endColExclusive: Math.min(
+          COLUMNS,
+          HOME_ARROW_CENTER_COLUMN + HOME_ARROW_HEAD_HALF_WIDTH + 1,
+        ),
+      },
+    ],
+    rowWindow: {
+      start: 1,
+      endExclusive: HOME_SECTION_ROWS - 1,
+    },
+    maxIndentColumns: 3,
+  })
 
   return rows
 }

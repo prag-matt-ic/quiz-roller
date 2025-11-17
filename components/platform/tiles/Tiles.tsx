@@ -15,6 +15,7 @@ import {
   TILE_PLAYER_FADE_FULL_RADIUS,
   TILE_PLAYER_FADE_MIN_ALPHA,
   TILE_PLAYER_FADE_MIN_RADIUS,
+  TILE_PLAYER_FADE_LIFT,
   TILE_PLAYER_HIGHLIGHT_RADIUS,
   TILE_SIZE,
   TILE_THICKNESS,
@@ -34,6 +35,7 @@ type TileShaderUniforms = {
   uFadeFullRadius: number
   uFadeMinRadius: number
   uFadeMinAlpha: number
+  uFadeLiftHeight: number
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
@@ -45,6 +47,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
   uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
   uFadeMinAlpha: TILE_PLAYER_FADE_MIN_ALPHA,
+  uFadeLiftHeight: TILE_PLAYER_FADE_LIFT,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(
