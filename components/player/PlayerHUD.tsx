@@ -102,12 +102,12 @@ const PlayerHUD: FC = () => {
                 <div
                   ref={container}
                   className="overflow-hidden rounded-xl bg-white p-2 opacity-0 shadow-lg shadow-black/25">
-                  {hudIndicator === 'correct' && (
+                  {/* {hudIndicator === 'correct' && (
                     <CheckIcon strokeWidth={4} size={48} className="text-green-500" />
                   )}
                   {hudIndicator === 'incorrect' && (
                     <XIcon strokeWidth={4} size={48} className="text-red-600" />
-                  )}
+                  )} */}
                   {hudIndicator === 'move' && (
                     <div className="flex items-center gap-2 pr-2 text-black">
                       <ArrowUpCircleIcon strokeWidth={2} size={32} />

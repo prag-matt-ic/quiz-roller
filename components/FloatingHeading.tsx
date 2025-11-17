@@ -20,9 +20,7 @@ type Props = {
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
-const textColour = '#ffffff'
-
-export const FloatingHeader: FC<Props> = ({
+export const FloatingHeading: FC<Props> = ({
   text,
   position,
   width,
@@ -35,21 +33,23 @@ export const FloatingHeader: FC<Props> = ({
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
     height: height * dpr * TEXT_CANVAS_SCALE,
-    color: textColour,
+    color: '#ffffff',
     ...textCanvasOptions,
-    fontSize: 60 * dpr,
+    lineHeightMultiplier: 1.2,
+    fontSize: 64 * dpr,
     fontWeight: 700,
   })
 
   return (
     <Suspense fallback={null}>
-      <mesh ref={ref} position={position} rotation={[0, 0, 0]} renderOrder={2}>
+      <mesh ref={ref} position={position}>
         <planeGeometry args={[width, height]} />
         <meshBasicMaterial
           map={canvasState?.texture ?? TRANSPARENT_TEXTURE}
           transparent={true}
-          depthTest={true}
+          depthTest={false}
           depthWrite={false}
+          toneMapped={false}
         />
       </mesh>
     </Suspense>

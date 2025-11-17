@@ -1,37 +1,16 @@
-import { type Vector3Tuple } from 'three'
-import {
-  colToX,
-  COLUMNS,
-  ON_TILE_Y,
-  type RowData,
-  SAFE_HEIGHT,
-  TILE_SIZE,
-  UNSAFE_HEIGHT,
-} from '@/utils/tiles'
+import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT } from '@/utils/tiles'
 
-const HOME_SECTION_ROWS = 16
+const HOME_SECTION_ROWS = 24
 
 const IMAGE_CENTER_ROW = 5
 const IMAGE_TRIGGER_ROW = IMAGE_CENTER_ROW
 const IMAGE_RELATIVE_Z = 0
 
-const INFO_ZONE_COLS = 2
-const INFO_ZONE_ROWS = 3
-const INFO_ZONE_CENTER_ROW = 5
-const INFO_ZONE_TRIGGER_ROW = Math.round(INFO_ZONE_CENTER_ROW)
-const INFO_ZONE_RELATIVE_Z = (INFO_ZONE_TRIGGER_ROW - INFO_ZONE_CENTER_ROW) * TILE_SIZE
-const INFO_ZONE_RIGHT_START_COL = COLUMNS - INFO_ZONE_COLS - 1
-const INFO_ZONE_RIGHT_CENTER_COL = INFO_ZONE_RIGHT_START_COL + (INFO_ZONE_COLS - 1) / 2
-const INFO_ZONE_LEFT_START_COL = 1
-const INFO_ZONE_LEFT_CENTER_COL = INFO_ZONE_LEFT_START_COL + (INFO_ZONE_COLS - 1) / 2
-
-const INFO_ZONE_POSITIONS: [number, number, number][] = [
-  [colToX(INFO_ZONE_RIGHT_CENTER_COL), ON_TILE_Y, INFO_ZONE_RELATIVE_Z],
-  [colToX(INFO_ZONE_LEFT_CENTER_COL), ON_TILE_Y, INFO_ZONE_RELATIVE_Z],
-]
-
-export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
-export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
+const HOME_ARROW_LINE_ROWS = 7
+const HOME_ARROW_HEAD_HALF_WIDTH = 2
+const HOME_ARROW_TRIANGLE_ROWS = HOME_ARROW_HEAD_HALF_WIDTH + 1
+const HOME_ARROW_LINE_START_ROW = 9
+const HOME_ARROW_CENTER_COLUMN = Math.floor(COLUMNS / 2)
 
 // TODO: add floating heading position.
 export function generateHomeSectionRowData(): RowData[] {
@@ -45,22 +24,55 @@ export function generateHomeSectionRowData(): RowData[] {
       type: 'home',
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === HOME_SECTION_ROWS - 1,
+      isHighlighted: [],
     }
 
     if (rowIndex === IMAGE_TRIGGER_ROW) {
       rows[rowIndex].imagePosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, IMAGE_RELATIVE_Z]
     }
-
-    // TODO: remove info zone from home section.
-    if (rowIndex === INFO_ZONE_TRIGGER_ROW) {
-      rows[rowIndex].infoZonePositions = INFO_ZONE_POSITIONS
-    }
   }
+
+  applyBitmapArrowHighlight(rows)
 
   return rows
 }
 
-// Colour picker config
-export const COLOUR_TILE_SIZE = TILE_SIZE * 2
-export const COLOUR_TILE_GAP = TILE_SIZE
-// export const COLOUR_TILE_TEXT_RELATIVE_Z = -2
+function applyBitmapArrowHighlight(rows: RowData[]) {
+  const startRow = clampRowIndex(rows, HOME_ARROW_LINE_START_ROW)
+  const endRowExclusive = Math.min(rows.length, startRow + HOME_ARROW_LINE_ROWS)
+  const headRow = endRowExclusive - 1
+
+  for (let rowIndex = startRow; rowIndex < endRowExclusive; rowIndex++) {
+    const highlight = fillHighlightArray(rows[rowIndex])
+    highlight[HOME_ARROW_CENTER_COLUMN] = 1
+  }
+
+  for (let offset = 0; offset < HOME_ARROW_TRIANGLE_ROWS; offset++) {
+    const rowIndex = headRow - offset
+    if (rowIndex < startRow || rowIndex < 0) break
+
+    const highlight = fillHighlightArray(rows[rowIndex])
+    const radius = Math.min(offset, HOME_ARROW_HEAD_HALF_WIDTH)
+    if (radius === 0) continue
+
+    const leftColumn = HOME_ARROW_CENTER_COLUMN - radius
+    const rightColumn = HOME_ARROW_CENTER_COLUMN + radius
+
+    if (leftColumn >= 0) highlight[leftColumn] = 1
+    if (rightColumn < COLUMNS) highlight[rightColumn] = 1
+  }
+}
+
+function fillHighlightArray(row: RowData): number[] {
+  if (!row.isHighlighted || row.isHighlighted.length !== COLUMNS) {
+    row.isHighlighted = new Array(COLUMNS).fill(0)
+  }
+  return row.isHighlighted
+}
+
+function clampRowIndex(rows: RowData[], requestedIndex: number): number {
+  if (rows.length === 0) return 0
+  if (requestedIndex < 0) return 0
+  if (requestedIndex >= rows.length) return rows.length - 1
+  return requestedIndex
+}

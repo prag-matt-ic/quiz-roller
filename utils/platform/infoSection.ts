@@ -1,23 +1,18 @@
-import {
-  colToX,
-  COLUMNS,
-  ON_TILE_Y,
-  RowData,
-  SAFE_HEIGHT,
-  TILE_SIZE,
-  UNSAFE_HEIGHT,
-} from '@/utils/tiles'
+import { colToX, COLUMNS, ON_TILE_Y, RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
+import { HEADING_Y } from './floatingHeading'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const INFO_SECTION_ROWS = 12
-export const INFO_TEXT_WIDTH = 8 * TILE_SIZE
-export const INFO_TEXT_ROWS = 4
-export const INFO_TEXT_HEIGHT = INFO_TEXT_ROWS * TILE_SIZE
-export const HEADER_FLOAT_HEIGHT = 5
+
 export const INFO_ZONE_CENTER_ROW = 6
+const INFO_ZONE_COLS = 4
+const INFO_ZONE_ROWS = 5
+const INFO_ZONE_CENTER_COLUMN = COLUMNS / 2 + 3
+export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
+export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
 // TODO: update to include the infoZone position, floating heading position....
 export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
@@ -26,21 +21,42 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
   )
 
-  // Text appears first, then answers further down the section
-  const infoTextCenterRow = 3.5
-  const textTriggerRow = Math.ceil(infoTextCenterRow + INFO_TEXT_ROWS / 2)
-  const textZRelative = (textTriggerRow - infoTextCenterRow) * TILE_SIZE
-
   // Floating header appears at the top of the section
-  const floatingHeaderCenterRow = 1.5
+  const floatingHeaderCenterRow = 3
   const floatingHeaderTriggerRow = Math.ceil(floatingHeaderCenterRow)
   const floatingHeaderZRelative =
     (floatingHeaderTriggerRow - floatingHeaderCenterRow) * TILE_SIZE
 
   // Info zone appears at the same level as the header, but on the right side
-  const infoZoneCenterRow = 1.5
+  const infoZoneCenterRow = 2
   const infoZoneTriggerRow = Math.ceil(infoZoneCenterRow)
   const infoZoneZRelative = (infoZoneTriggerRow - infoZoneCenterRow) * TILE_SIZE
+  const infoZoneHighlightStartColumn = clampRangeStart(
+    Math.ceil(INFO_ZONE_CENTER_COLUMN - INFO_ZONE_COLS / 2),
+    INFO_ZONE_COLS,
+    COLUMNS,
+  )
+  const infoZoneHighlightEndColumn = Math.min(
+    COLUMNS,
+    infoZoneHighlightStartColumn + INFO_ZONE_COLS,
+  )
+  const infoZoneHighlightStartRow = clampRangeStart(
+    Math.ceil(infoZoneCenterRow - INFO_ZONE_ROWS / 2),
+    INFO_ZONE_ROWS,
+    INFO_SECTION_ROWS,
+  )
+  const infoZoneHighlightEndRow = Math.min(
+    INFO_SECTION_ROWS,
+    infoZoneHighlightStartRow + INFO_ZONE_ROWS,
+  )
+  const infoZoneHighlightTemplate =
+    infoZoneHighlightEndColumn > infoZoneHighlightStartColumn
+      ? buildHighlightTemplate(
+          COLUMNS,
+          infoZoneHighlightStartColumn,
+          infoZoneHighlightEndColumn,
+        )
+      : null
 
   const rows: RowData[] = new Array(INFO_SECTION_ROWS)
 
@@ -59,20 +75,46 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     if (i === floatingHeaderTriggerRow) {
       rows[i].floatingHeadingPosition = [
         colToX(COLUMNS / 2 - 0.5),
-        HEADER_FLOAT_HEIGHT,
+        HEADING_Y,
         floatingHeaderZRelative,
       ]
     }
 
     if (i === infoZoneTriggerRow) {
       rows[i].infoZonePositions = [
-        [colToX(COLUMNS / 2 + 3), ON_TILE_Y, infoZoneZRelative], // Positioned to the right (offset by 3 columns)
+        [colToX(INFO_ZONE_CENTER_COLUMN), ON_TILE_Y, infoZoneZRelative], // Positioned to the right (offset by 3 columns)
       ]
     }
 
-    if (i === textTriggerRow) {
-      rows[i].tileTextPosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, textZRelative]
+    const shouldHighlightInfoZoneRow =
+      infoZoneHighlightTemplate !== null &&
+      i >= infoZoneHighlightStartRow &&
+      i < infoZoneHighlightEndRow
+
+    if (shouldHighlightInfoZoneRow && infoZoneHighlightTemplate !== null) {
+      rows[i].isHighlighted = infoZoneHighlightTemplate.slice()
     }
   }
   return rows
+}
+
+function clampRangeStart(requestedStart: number, span: number, maxExclusive: number): number {
+  if (span >= maxExclusive) return 0
+  const minStart = 0
+  const maxStart = maxExclusive - span
+  if (requestedStart < minStart) return minStart
+  if (requestedStart > maxStart) return maxStart
+  return requestedStart
+}
+
+function buildHighlightTemplate(
+  columnsCount: number,
+  startColumn: number,
+  endColumnExclusive: number,
+): number[] {
+  const highlight = new Array<number>(columnsCount).fill(0)
+  for (let columnIndex = startColumn; columnIndex < endColumnExclusive; columnIndex++) {
+    highlight[columnIndex] = 1
+  }
+  return highlight
 }

@@ -15,8 +15,6 @@ type Props = {
 }
 
 const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
-  const distanceRows = useGameStore((s) => s.distanceRows)
-
   useGSAP(
     () => {
       if (transitionStatus === 'entered') {
@@ -65,12 +63,6 @@ const PlayingUI: FC<Props> = ({ transitionStatus, ref }) => {
           </span>
         ),
       })} */}
-      {renderBlock({
-        icon: FootprintsIcon,
-        content: (
-          <span className={twJoin('text-lg font-extrabold sm:text-2xl')}>{distanceRows}</span>
-        ),
-      })}
     </section>
   )
 }

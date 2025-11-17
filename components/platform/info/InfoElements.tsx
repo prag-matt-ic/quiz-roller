@@ -1,30 +1,17 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import {
-  createRef,
-  type FC,
-  ReactNode,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
+import { type FC, type ReactNode, useCallback, useImperativeHandle, useRef } from 'react'
 import { type RefObject } from 'react'
 import { Mesh } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
-import { Text } from '@/components/Text'
-import {
-  HEADER_FLOAT_HEIGHT,
-  INFO_TEXT_HEIGHT,
-  INFO_TEXT_WIDTH,
-} from '@/utils/platform/infoSection'
+import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
+import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, MAX_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { InfoIcon } from 'lucide-react'
-import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/homeSection'
-import { FloatingHeader } from '@/components/FloatingHeader'
+import { FloatingHeading } from '@/components/FloatingHeading'
 import Card from '@/components/ui/Card'
-import { Credit } from '../home/HomeInfo'
+import { Credit } from '../home/Credit'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -37,69 +24,56 @@ type Props = {
 }
 
 const INITIAL_INFO_POSITION = {
-  Y: HEADER_FLOAT_HEIGHT,
+  Y: HEADING_Y,
   Z: -999,
 } as const
 
-// TODO: add InfoZone component.
 const InfoElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
-  const infoText = useRef<Mesh>(null)
+  const heading = useRef<Mesh>(null)
   const infoZone = useRef<RapierRigidBody>(null)
-  const contentIndex = useGameStore((s) => s.infoContentIndex)
-  const setContentIndex = useGameStore((s) => s.setInfoContentIndex)
+  const contentIndex = useGameStore((s) => s.infoContentIndex) // Content index is set in Platform when the info section row is raised.
 
   const infoIsOutOfView = useRef<boolean>(false)
 
   // Called when the row is raised
-  const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row) return
-      if (row.type !== 'info') return
+  const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
+    if (!row) return
+    if (row.type !== 'info') return
 
-      if (!!row.infoContentIndex && row.infoContentIndex !== contentIndex) {
-        setContentIndex(row.infoContentIndex)
+    // Check for floating heading position
+    const floatingHeadingPosition = row.floatingHeadingPosition
+    if (!!floatingHeadingPosition && heading.current) {
+      const newZ = rowZ + floatingHeadingPosition[2]
+
+      heading.current.position.set(floatingHeadingPosition[0], floatingHeadingPosition[1], newZ)
+      infoIsOutOfView.current = false
+    }
+
+    // Check for info zone positions
+    const infoZonePositions = row.infoZonePositions
+    if (!!infoZonePositions && infoZone.current) {
+      const zonePos = infoZonePositions[0]
+      if (zonePos) {
+        const newZ = rowZ + zonePos[2]
+
+        translation.current.x = zonePos[0]
+        translation.current.y = zonePos[1]
+        translation.current.z = newZ
+        infoZone.current.setTranslation(translation.current, true)
       }
-
-      // Check for floating heading position
-      const floatingHeadingPosition = row.floatingHeadingPosition
-      if (!!floatingHeadingPosition && infoText.current) {
-        const newZ = rowZ + floatingHeadingPosition[2]
-
-        infoText.current.position.set(
-          floatingHeadingPosition[0],
-          floatingHeadingPosition[1],
-          newZ,
-        )
-        infoIsOutOfView.current = false
-      }
-
-      // Check for info zone positions
-      const infoZonePositions = row.infoZonePositions
-      if (!!infoZonePositions && infoZone.current) {
-        const zonePos = infoZonePositions[0]
-        if (zonePos) {
-          const newZ = rowZ + zonePos[2]
-
-          translation.current.x = zonePos[0]
-          translation.current.y = zonePos[1]
-          translation.current.z = newZ
-          infoZone.current.setTranslation(translation.current, true)
-        }
-      }
-    },
-    [contentIndex],
-  )
+    }
+  }, [])
 
   // Called when the row is lowered
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
     if (!row) return
     if (row.type !== 'info') return
 
-    if (!!infoText.current) {
-      infoText.current.position.z = HIDE_POSITION_Z
-      infoText.current.position.y = HIDE_POSITION_Y
+    if (!!heading.current) {
+      heading.current.position.z = HIDE_POSITION_Z
+      heading.current.position.y = HIDE_POSITION_Y
     }
 
     if (!!infoZone.current) {
@@ -110,14 +84,14 @@ const InfoElements: FC<Props> = ({ ref }) => {
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
-    if (!infoText.current) return
-    const isInfoBehindCamera = infoText.current.position.z > MAX_Z + 10
+    if (!heading.current) return
+    const isInfoBehindCamera = heading.current.position.z > MAX_Z + 10
     if (isInfoBehindCamera && !infoIsOutOfView.current) {
-      infoText.current.position.z = HIDE_POSITION_Z
-      infoText.current.position.y = HIDE_POSITION_Y
+      heading.current.position.z = HIDE_POSITION_Z
+      heading.current.position.y = HIDE_POSITION_Y
       infoIsOutOfView.current = true
     } else if (!infoIsOutOfView.current) {
-      infoText.current.position.z += zStep
+      heading.current.position.z += zStep
     }
 
     // Move info zone
@@ -142,12 +116,12 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
   return (
     <>
-      <FloatingHeader
-        ref={infoText}
+      <FloatingHeading
+        ref={heading}
         text={INFO_SECTION_CONTENT[contentIndex].heading}
         position={[0, INITIAL_INFO_POSITION.Y, INITIAL_INFO_POSITION.Z]}
-        width={INFO_TEXT_WIDTH}
-        height={INFO_TEXT_HEIGHT}
+        width={HEADING_WIDTH}
+        height={HEADING_HEIGHT}
       />
 
       <InfoZone

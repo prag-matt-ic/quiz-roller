@@ -18,7 +18,9 @@ varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
 // Constants
-const float HIGHLIGHTED_MIX = 0.14;
+const float HIGHLIGHTED_MIX_MIN = 0.12;
+const float HIGHLIGHTED_MIX_MAX = 0.2;
+
 const float REGULAR_MIX = 0.3;
 const float DARKEN_FACTOR = 0.66;
 const float UP_THRESHOLD = 0.5;
@@ -48,7 +50,8 @@ void main() {
   }
 
   // Mix with white based on tile type
-  mediump float mixAmount = mix(REGULAR_MIX, HIGHLIGHTED_MIX, isHighlighted);
+  mediump float highlightedMix = mix(HIGHLIGHTED_MIX_MIN, HIGHLIGHTED_MIX_MAX, vSeed);
+  mediump float mixAmount = mix(REGULAR_MIX, highlightedMix, isHighlighted);
   vec3 background = mix(vec3(1.0), bgColour, mixAmount);
 
   // Apply player proximity highlight

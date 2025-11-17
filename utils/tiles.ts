@@ -1,11 +1,6 @@
 // Tile dimensions
 export const TILE_SIZE = 1.0
-export const TILE_THICKNESS = 4.0
-
-// export const ANSWER_TILE_COLS = 7
-// export const ANSWER_TILE_ROWS = 4
-// export const ANSWER_TILE_WIDTH = ANSWER_TILE_COLS * TILE_SIZE
-// export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
+export const TILE_THICKNESS = 0.16
 
 // Centralized game-wide constants
 // Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
@@ -19,8 +14,8 @@ export const EPSILON = {
 } as const
 
 // Grid configuration
-export const COLUMNS = 16
-export const ROWS_RENDERED = 32
+export const COLUMNS = 33 // odd number so that there is a center column
+export const ROWS_RENDERED = 28
 
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
