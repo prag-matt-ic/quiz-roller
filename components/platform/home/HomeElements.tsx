@@ -60,6 +60,8 @@ type Props = {
   rowsData: RefObject<RowData[]>
 }
 
+// TODO: Replace the Logo with an Image component
+
 const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   const confirmingStart = useGameStore((s) => s.confirmingStart)
   const isConfirmingStart = Boolean(confirmingStart)
@@ -244,6 +246,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
       <InvisibleWall ref={invisibleWall} position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]} />
 
+      {/* TODO: update with arrow. */}
       <Logo ref={logo} />
 
       <ColourPicker

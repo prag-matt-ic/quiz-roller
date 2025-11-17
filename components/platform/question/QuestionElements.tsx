@@ -34,6 +34,8 @@ const INITIAL_QUESTION_POSITION = {
   Z: -999,
 } as const
 
+// TODO: rename InfoElements... for the Info Section..
+// TODO: add InfoZone component.
 const QuestionElements: FC<Props> = ({ ref }) => {
   const currentQuestion = useGameStore((s) => s.currentQuestion)
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
@@ -148,7 +150,7 @@ const QuestionElements: FC<Props> = ({ ref }) => {
 
   return (
     <>
-      <Text
+      {/* <Text
         ref={questionText}
         text={currentQuestion?.text ?? ''}
         position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
@@ -163,7 +165,10 @@ const QuestionElements: FC<Props> = ({ ref }) => {
           position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
           isOutOfView={answersAreOutOfView}
         />
-      ))}
+      ))} */}
+      {/* TODO: add floating heading text */}
+      {/* TODO: add collectibe */}
+      {/* TODO: add info zone. */}
       <InvisibleWall ref={invisibleWall} position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]} />
     </>
   )

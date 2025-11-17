@@ -9,6 +9,9 @@ type Props = {
   ref: RefObject<Group | null>
 }
 
+// TODO: update to Image component with width and height as props..
+// TODO: in the home section, this will be a forward facing arrow..
+
 const WIDTH = TILE_SIZE * 8
 const ASPECT = logo.width / logo.height
 const HEIGHT = WIDTH / ASPECT

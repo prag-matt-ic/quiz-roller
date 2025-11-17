@@ -18,14 +18,14 @@ export const CAMERA_CONFIG: Record<
   }
 > = {
   [Stage.HOME]: {
-    position: { x: 0, y: 8, z: 5 },
+    position: { x: 0, y: 3, z: 6 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
   [Stage.QUESTION]: {
-    position: { x: 0, y: 11, z: 5 },
+    position: { x: 0, y: 3, z: 7 },
     target: { x: 0, y: 0, z: 0 },
-    zoom: 1.1,
+    zoom: 0.8,
   },
   [Stage.TERRAIN]: {
     position: { x: 0, y: 6, z: 7 },
@@ -73,7 +73,7 @@ const Camera: FC = () => {
       CAMERA_CONFIG[stage].position.y,
       playerPosition.current.z + CAMERA_CONFIG[stage].position.z,
       lookAt.x,
-      lookAt.y,
+      lookAt.y + 1.5,
       lookAt.z,
       true,
     )
