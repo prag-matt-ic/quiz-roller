@@ -47,8 +47,8 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
   const infoText = useRef<Mesh>(null)
   const infoZone = useRef<RapierRigidBody>(null)
-  const infoContentIndex = useGameStore((s) => s.infoContentIndex)
-  const [contentIndex, setContentIndex] = useState<number>(0)
+  const contentIndex = useGameStore((s) => s.infoContentIndex)
+  const setContentIndex = useGameStore((s) => s.setInfoContentIndex)
 
   const infoIsOutOfView = useRef<boolean>(false)
 
@@ -81,6 +81,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         const zonePos = infoZonePositions[0]
         if (zonePos) {
           const newZ = rowZ + zonePos[2]
+
           translation.current.x = zonePos[0]
           translation.current.y = zonePos[1]
           translation.current.z = newZ
