@@ -7,10 +7,10 @@ export const OBSTACLE_SECTION_ROWS = 48
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const INFO_SECTION_ROWS = 12
 
-export const INFO_ZONE_CENTER_ROW = 6
+export const INFO_ZONE_CENTER_ROW = 10
 const INFO_ZONE_COLS = 4
 const INFO_ZONE_ROWS = 5
-const INFO_ZONE_CENTER_COLUMN = COLUMNS / 2 + 3
+const INFO_ZONE_CENTER_COLUMN = Math.floor(COLUMNS - INFO_ZONE_COLS / 2 - 2)
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
@@ -51,11 +51,7 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
   )
   const infoZoneHighlightTemplate =
     infoZoneHighlightEndColumn > infoZoneHighlightStartColumn
-      ? buildHighlightTemplate(
-          COLUMNS,
-          infoZoneHighlightStartColumn,
-          infoZoneHighlightEndColumn,
-        )
+      ? buildHighlightTemplate(infoZoneHighlightStartColumn, infoZoneHighlightEndColumn)
       : null
 
   const rows: RowData[] = new Array(INFO_SECTION_ROWS)
@@ -107,12 +103,8 @@ function clampRangeStart(requestedStart: number, span: number, maxExclusive: num
   return requestedStart
 }
 
-function buildHighlightTemplate(
-  columnsCount: number,
-  startColumn: number,
-  endColumnExclusive: number,
-): number[] {
-  const highlight = new Array<number>(columnsCount).fill(0)
+function buildHighlightTemplate(startColumn: number, endColumnExclusive: number): number[] {
+  const highlight = new Array<number>(COLUMNS).fill(0)
   for (let columnIndex = startColumn; columnIndex < endColumnExclusive; columnIndex++) {
     highlight[columnIndex] = 1
   }
