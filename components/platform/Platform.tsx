@@ -82,10 +82,8 @@ const Platform: FC = () => {
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
 
-  // Question Elements
-  const infoElements = useRef<InfoElementsHandle | null>(null)
-  // Home Elements
   const homeElements = useRef<HomeElementsHandle | null>(null)
+  const infoElements = useRef<InfoElementsHandle | null>(null)
 
   const isRowRaised = useRef<boolean[]>([])
 
@@ -262,9 +260,9 @@ const Platform: FC = () => {
       return
     }
 
-    const isQuestionSectionStart = data?.type === 'info' && data.isSectionStart
+    const isInfoSectionStart = data?.type === 'info' && data.isSectionStart
 
-    if (isQuestionSectionStart && stage !== Stage.INFO) {
+    if (isInfoSectionStart && stage !== Stage.INFO) {
       goToStage(Stage.INFO)
       return
     }
@@ -278,8 +276,23 @@ const Platform: FC = () => {
   }
 
   function handleRowLowered(rowIndex: number) {
+    const data = activeRowsData.current[rowIndex]
     isRowRaised.current[rowIndex] = false
     infoElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
+
+    const isInfoSectionStart = data?.type === 'info' && data.isSectionStart
+
+    if (isInfoSectionStart && stage === Stage.INFO) {
+      goToStage(Stage.TERRAIN)
+      return
+    }
+
+    const isObstaclesSectionStart = data?.type === 'obstacles' && data.isSectionStart
+
+    if (isObstaclesSectionStart && stage === Stage.TERRAIN) {
+      goToStage(Stage.INFO)
+      return
+    }
   }
 
   function updateTiles() {
