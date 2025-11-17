@@ -1,7 +1,7 @@
 import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT } from '@/utils/tiles'
 import { roughenEdges } from './roughenEdges'
 
-const HOME_SECTION_ROWS = 24
+const HOME_SECTION_ROWS = 16
 
 const IMAGE_CENTER_ROW = 5
 const IMAGE_TRIGGER_ROW = IMAGE_CENTER_ROW
