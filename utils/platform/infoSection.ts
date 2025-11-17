@@ -13,9 +13,6 @@ import {
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
 
-// Terrain scrolling and animation constants
-export const OBSTACLE_BUFFER_SECTIONS = 10
-
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const INFO_SECTION_ROWS = 12
 export const INFO_TEXT_WIDTH = 8 * TILE_SIZE

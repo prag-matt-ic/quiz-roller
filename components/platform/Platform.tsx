@@ -1,24 +1,22 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, startTransition, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
-import InfoElements, {
-  type InfoElementsHandle,
-} from '@/components/platform/info/InfoElements'
+import QuestionElements, {
+  type QuestionElementsHandle,
+} from '@/components/platform/question/QuestionElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
   FIRST_OBSTACLE_SECTION_ROWS,
-  generateInfoSectionRowData,
-  OBSTACLE_BUFFER_SECTIONS,
+  generateQuestionSectionRowData,
   OBSTACLE_SECTION_ROWS,
-  INFO_SECTION_ROWS,
-} from '@/utils/platform/infoSection'
+} from '@/utils/platform/questionSection'
 import {
   colToX,
   COLUMNS,
@@ -32,7 +30,6 @@ import {
   SAFE_HEIGHT,
   TILE_SIZE,
   ENTRY_START_Z,
-  EPSILON,
   EXIT_START_Z,
   EXIT_END_Z,
 } from '@/utils/tiles'
@@ -59,7 +56,6 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const isInfoStage = stage === Stage.INFO
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
@@ -84,24 +80,20 @@ const Platform: FC = () => {
 
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
-  // Obstacle section precomputation buffer
-  const obstacleSectionBuffer = useRef<RowData[][]>([])
-  const isObstacleTopUpScheduled = useRef(false)
-
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
 
   // Question Elements
-  const infoElements = useRef<InfoElementsHandle | null>(null)
+  const questionElements = useRef<QuestionElementsHandle | null>(null)
   // Home Elements
   const homeElements = useRef<HomeElementsHandle | null>(null)
 
   const isRowRaised = useRef<boolean[]>([])
 
-  function insertInfoRows() {
-    const rows = generateInfoSectionRowData()
+  function insertQuestionRows() {
+    const rows = generateQuestionSectionRowData()
     rowsData.current = [...rowsData.current, ...rows]
   }
 
@@ -126,41 +118,13 @@ const Platform: FC = () => {
     }))
   }
 
-  function topUpObstacleBuffer(count: number) {
-    for (let i = 0; i < count; i++) {
-      obstacleSectionBuffer.current.push(getObstacleSectionRows())
-    }
-  }
-
-  function scheduleObstacleTopUpIfNeeded() {
-    if (isObstacleTopUpScheduled.current) return
-    if (obstacleSectionBuffer.current.length > OBSTACLE_BUFFER_SECTIONS) return
-
-    isObstacleTopUpScheduled.current = true
-    startTransition(() => {
-      const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
-      if (needed > 0) topUpObstacleBuffer(needed)
-      isObstacleTopUpScheduled.current = false
-    })
-  }
-
   function insertObstacleRows(rows?: number) {
-    if (typeof rows === 'number') {
-      const blocks = getObstacleSectionRows(rows)
-      rowsData.current = [...rowsData.current, ...blocks]
-      scheduleObstacleTopUpIfNeeded()
-      return
-    }
-
-    const blocks = obstacleSectionBuffer.current.shift() ?? getObstacleSectionRows()
+    const blocks = getObstacleSectionRows(rows)
     rowsData.current = [...rowsData.current, ...blocks]
-    scheduleObstacleTopUpIfNeeded()
   }
 
   useEffect(() => {
     function setupInitialRowsAndInstances() {
-      topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
-
       // Reset state
       rowsData.current = []
       nextRowDataIndex.current = 0
@@ -174,11 +138,11 @@ const Platform: FC = () => {
 
       insertHomeRows()
       insertObstacleRows(FIRST_OBSTACLE_SECTION_ROWS)
-      insertInfoRows()
+      insertQuestionRows()
       insertObstacleRows()
-      insertInfoRows()
+      insertQuestionRows()
       insertObstacleRows()
-      insertInfoRows()
+      insertQuestionRows()
       insertObstacleRows()
 
       const instances: InstancedRigidBodyProps[] = []
@@ -226,24 +190,8 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick])
 
-  useEffect(() => {
-    if (stage === Stage.TERRAIN) {
-      resetInfoSectionDeceleration()
-    }
-  }, [stage])
-
   function applyRowWraps(rowIndex: number, wrapsToApply: number) {
     for (let wrapCount = 0; wrapCount < wrapsToApply; wrapCount++) {
-      const currentRowData = activeRowsData.current[rowIndex]
-
-      if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-        insertObstacleRows()
-      }
-
-      if (currentRowData.type === 'info' && currentRowData.isSectionEnd) {
-        // insertInfoRows()
-      }
-
       const newRowData = rowsData.current[nextRowDataIndex.current]
       activeRowsData.current[rowIndex] = newRowData
       nextRowDataIndex.current++
@@ -269,12 +217,6 @@ const Platform: FC = () => {
     if (wrapsToApply > 0) {
       isRowRaised.current[rowIndex] = false
     }
-  }
-
-  function resetInfoSectionDeceleration() {
-    infoSectionStartZ.current = null
-    infoSectionEndZ.current = null
-    initialSpeedAtSectionStart.current = 1
   }
 
   function computeLiftLowerOffset(rowZ: number): number {
@@ -315,13 +257,20 @@ const Platform: FC = () => {
     const rowMetadata = activeRowsData.current[rowIndex]
 
     isRowRaised.current[rowIndex] = true
-    infoElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
+    questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
 
-    const isInfoSectionStart =
-      rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isInfoStage
+    const isQuestionSectionStart =
+      rowMetadata?.type === 'question' && rowMetadata.isSectionStart
 
-    if (isQuestionSectionStart) {
+    if (isQuestionSectionStart && stage !== Stage.QUESTION) {
       goToStage(Stage.QUESTION)
+    }
+
+    const isObstaclesSectionStart =
+      rowMetadata?.type === 'obstacles' && rowMetadata.isSectionStart
+
+    if (isObstaclesSectionStart && stage !== Stage.TERRAIN) {
+      goToStage(Stage.TERRAIN)
     }
   }
 
@@ -330,7 +279,7 @@ const Platform: FC = () => {
     questionElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
   }
 
-  function updateTiles(zStep: number) {
+  function updateTiles() {
     if (!instancedTilesRef.current?.rigidBodies) return
     const cycleDistance = ROWS_RENDERED * TILE_SIZE
     const minZ = MAX_Z - cycleDistance
@@ -374,14 +323,14 @@ const Platform: FC = () => {
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
-    if (!homeElements.current || !infoElements.current) return
+    if (!homeElements.current || !questionElements.current) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
-    updateTiles(zStep)
+    updateTiles()
     questionElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })
@@ -402,7 +351,7 @@ const Platform: FC = () => {
       <HomeElements ref={homeElements} rowsData={rowsData} key={`${resetPlatformTick}-home`} />
 
       {/* Question Elements */}
-      <InfoElements ref={infoElements} key={`${resetPlatformTick}-question`} />
+      <QuestionElements ref={questionElements} key={`${resetPlatformTick}-question`} />
     </group>
   )
 }
