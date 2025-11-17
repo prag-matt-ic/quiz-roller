@@ -8,6 +8,7 @@ import HomeElements, { type HomeElementsHandle } from '@/components/platform/hom
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
@@ -18,13 +19,18 @@ import {
 import {
   colToX,
   COLUMNS,
+  EPSILON,
+  clamp,
   TERRAIN_SPEED_UNITS,
   INITIAL_ROWS_Z_OFFSET,
-  ENTRY_END_Z,
   MAX_Z,
+  lerp,
   RowData,
   ROWS_RENDERED,
   SAFE_HEIGHT,
+  TILE_PLAYER_FADE_FULL_RADIUS,
+  TILE_PLAYER_FADE_MIN_ALPHA,
+  TILE_PLAYER_FADE_MIN_RADIUS,
   TILE_SIZE,
   UNSAFE_HEIGHT,
 } from '@/utils/tiles'
@@ -58,7 +64,16 @@ const EMPTY_ROW_DATA: RowData = {
 
 const PLAYER_STAGE_Z = PLAYER_INITIAL_POSITION_VEC3.z
 const STAGE_ACTIVATION_HALF_BAND = TILE_SIZE * 0.5
-const ROW_VISIBILITY_THRESHOLD_Z = ENTRY_END_Z
+const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
+const FADE_MIN_RADIUS_SQ = TILE_PLAYER_FADE_MIN_RADIUS * TILE_PLAYER_FADE_MIN_RADIUS
+const ROW_FADE_DENOM = Math.max(EPSILON.SMALL, FADE_MIN_RADIUS_SQ - FADE_FULL_RADIUS_SQ)
+
+function getRowAlpha(rowZ: number, playerZ: number) {
+  const dz = rowZ - playerZ
+  const distSq = dz * dz
+  const fadeT = clamp((distSq - FADE_FULL_RADIUS_SQ) / ROW_FADE_DENOM, 0, 1)
+  return lerp(1, TILE_PLAYER_FADE_MIN_ALPHA, fadeT)
+}
 
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
@@ -67,6 +82,7 @@ const Platform: FC = () => {
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
 
   const { input: playerInput } = usePlayerInput()
+  const { playerPosition } = usePlayerPosition()
 
   const instancedTilesRef = useRef<InstancedTilesHandle>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
@@ -321,7 +337,7 @@ const Platform: FC = () => {
     }
   }
 
-  function updateTiles() {
+  function updateTiles(playerZ: number) {
     if (!instancedTilesRef.current?.rigidBodies) return
     const cycleDistance = ROWS_RENDERED * TILE_SIZE
     const minZ = MAX_Z - cycleDistance
@@ -352,7 +368,8 @@ const Platform: FC = () => {
       rowZByIndex.current[rowIndex] = rowZ
 
       const wasVisible = rowIsVisible.current[rowIndex] === true
-      const isVisible = rowZ >= ROW_VISIBILITY_THRESHOLD_Z
+      const rowAlpha = getRowAlpha(rowZ, playerZ)
+      const isVisible = rowAlpha > TILE_PLAYER_FADE_MIN_ALPHA
       if (wasVisible !== isVisible) {
         rowIsVisible.current[rowIndex] = isVisible
         if (isVisible) {
@@ -376,7 +393,8 @@ const Platform: FC = () => {
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
-    updateTiles()
+    const playerZ = playerPosition.current.z
+    updateTiles(playerZ)
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })

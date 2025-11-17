@@ -30,6 +30,13 @@ export type PlayerInput = {
   right: number
 }
 
+export type HudIndicatorType = 'move' | 'correct' | 'incorrect'
+
+export type HudIndicatorConfig = {
+  type: HudIndicatorType
+  autoDismissMs?: number
+}
+
 type GameState = {
   stage: Stage
 
@@ -41,9 +48,10 @@ type GameState = {
 
   paletteIndex: 0 | 1 | 2
   setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
+  setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
   confirmationProgress: number // [0, 1]
-  hudIndicator: null | 'move'
+  hudIndicator: HudIndicatorConfig | null
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -76,6 +84,11 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[2],
 )
 
+const createDefaultHudIndicator = (): HudIndicatorConfig => ({
+  type: 'move',
+  autoDismissMs: 4000,
+})
+
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
@@ -100,7 +113,7 @@ const INITIAL_STATE: Pick<
   },
   paletteIndex: 0,
   cameraLookAtPosition: null,
-  hudIndicator: 'move',
+  hudIndicator: createDefaultHudIndicator(),
   edgeWarningIntensities: {
     left: 0,
     right: 0,
@@ -187,6 +200,10 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         setInfoContentIndex: (index) => {
           set({ infoContentIndex: index })
+        },
+
+        setHudIndicator: (indicator) => {
+          set({ hudIndicator: indicator })
         },
 
         setConfirmingPaletteIndex: (newPaletteIndex) => {
@@ -282,7 +299,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         goToStage: (newStage: Stage) => {
           if (newStage === Stage.HOME) {
-            set({ stage: Stage.HOME, hudIndicator: 'move' })
+            set({ stage: Stage.HOME, hudIndicator: createDefaultHudIndicator() })
           }
 
           if (newStage === Stage.INFO) {

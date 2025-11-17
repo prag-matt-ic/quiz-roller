@@ -11,7 +11,14 @@ import { type InstancedBufferAttribute, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
+import {
+  TILE_PLAYER_FADE_FULL_RADIUS,
+  TILE_PLAYER_FADE_MIN_ALPHA,
+  TILE_PLAYER_FADE_MIN_RADIUS,
+  TILE_PLAYER_HIGHLIGHT_RADIUS,
+  TILE_SIZE,
+  TILE_THICKNESS,
+} from '@/utils/tiles'
 
 import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
@@ -23,6 +30,10 @@ type TileShaderUniforms = {
   uScrollZ: number
   uAddDetailNoise: number
   uPaletteIndex: number
+  uHighlightRadius: number
+  uFadeFullRadius: number
+  uFadeMinRadius: number
+  uFadeMinAlpha: number
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
@@ -30,6 +41,10 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uScrollZ: 0,
   uAddDetailNoise: 1,
   uPaletteIndex: 0,
+  uHighlightRadius: TILE_PLAYER_HIGHLIGHT_RADIUS,
+  uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
+  uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
+  uFadeMinAlpha: TILE_PLAYER_FADE_MIN_ALPHA,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(

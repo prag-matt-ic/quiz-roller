@@ -1,6 +1,13 @@
 // Tile dimensions
 export const TILE_SIZE = 1.0
 export const TILE_THICKNESS = 0.16
+export const TILE_PLAYER_HIGHLIGHT_ROW_COUNT = 4
+export const TILE_PLAYER_FADE_FULL_ROWS = 6
+export const TILE_PLAYER_FADE_MIN_ROWS = 12
+export const TILE_PLAYER_FADE_MIN_ALPHA = 0
+export const TILE_PLAYER_HIGHLIGHT_RADIUS = TILE_PLAYER_HIGHLIGHT_ROW_COUNT * TILE_SIZE
+export const TILE_PLAYER_FADE_FULL_RADIUS = TILE_PLAYER_FADE_FULL_ROWS * TILE_SIZE
+export const TILE_PLAYER_FADE_MIN_RADIUS = TILE_PLAYER_FADE_MIN_ROWS * TILE_SIZE
 
 // Centralized game-wide constants
 // Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
