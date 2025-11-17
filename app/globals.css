@@ -62,4 +62,7 @@ h6 {
   .paragraph-xs {
     @apply text-xs lg:text-sm;
   }
+  .info-header {
+    @apply text-xl font-bold text-black lg:text-2xl;
+  }
 }

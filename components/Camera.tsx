@@ -18,12 +18,12 @@ export const CAMERA_CONFIG: Record<
   }
 > = {
   [Stage.HOME]: {
-    position: { x: 0, y: 3, z: 6 },
+    position: { x: 0, y: 3, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },
   [Stage.INFO]: {
-    position: { x: 0, y: 4, z: 7 },
+    position: { x: 0, y: 5, z: 8 },
     target: { x: 0, y: 0, z: 0 },
     zoom: 0.8,
   },

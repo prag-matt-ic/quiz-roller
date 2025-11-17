@@ -18,8 +18,12 @@ import {
 } from 'react'
 import { Group } from 'three'
 
+import startArrow from '@/assets/textures/arrow-big-up-dash.webp'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone } from '@/components/infoZone/InfoZone'
+import FlatImage from '@/components/platform/home/FlatImage'
+import { Credit } from '@/components/platform/home/HomeInfo'
+import Card from '@/components/ui/Card'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/homeSection'
 import {
   HIDE_POSITION_Y,
@@ -30,12 +34,9 @@ import {
   TILE_SIZE,
 } from '@/utils/tiles'
 
-import { Credit } from './HomeInfo'
-import Logo from './Logo'
-
-import Card from '@/components/ui/Card'
-
-const headingClasses = 'text-xl lg:text-2xl font-bold text-black'
+const WIDTH = TILE_SIZE * 4
+const ASPECT = startArrow.width / startArrow.height
+const HEIGHT = WIDTH / ASPECT
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
@@ -45,8 +46,6 @@ type Props = {
   ref: RefObject<HomeElementsHandle | null>
   rowsData: RefObject<RowData[]>
 }
-
-// TODO: Replace the Logo with an Image component
 
 const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   const image = useRef<Group>(null)
@@ -145,10 +144,9 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
   return (
     <>
-      {/* TODO: update with Image component (pass in the Arrow png.). */}
-      <Logo ref={image} />
+      <FlatImage ref={image} image={startArrow} height={HEIGHT} width={WIDTH} />
 
-      <InfoZone
+      {/* <InfoZone
         key="info-zone-1"
         ref={infoZoneRefs[0]}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
@@ -243,7 +241,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
             </p>
           </Card>
         </>
-      </InfoZone>
+      </InfoZone> */}
     </>
   )
 }
