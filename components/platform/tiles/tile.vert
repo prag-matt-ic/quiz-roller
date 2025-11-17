@@ -12,7 +12,7 @@ uniform float uFadeFullRadius;
 uniform float uFadeMinRadius;
 uniform float uFadeMinAlpha;
 
-const float TILE_FADE_ROTATE_MAX = 0.6;
+const float TILE_FADE_ROTATE_MAX = 0.3;
 const float AXIS_EPSILON = 0.001;
 
 float hashFloat(float n) {
