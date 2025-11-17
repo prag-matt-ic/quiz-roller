@@ -1,7 +1,7 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, startTransition, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
@@ -15,9 +15,7 @@ import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
   FIRST_OBSTACLE_SECTION_ROWS,
   generateQuestionSectionRowData,
-  OBSTACLE_BUFFER_SECTIONS,
   OBSTACLE_SECTION_ROWS,
-  QUESTION_SECTION_ROWS,
 } from '@/utils/platform/questionSection'
 import {
   colToX,
@@ -32,7 +30,6 @@ import {
   SAFE_HEIGHT,
   TILE_SIZE,
   ENTRY_START_Z,
-  EPSILON,
   EXIT_START_Z,
   EXIT_END_Z,
 } from '@/utils/tiles'
@@ -59,7 +56,6 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
 
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
-  const isQuestionStage = stage === Stage.QUESTION
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
   const incrementDistanceRows = useGameStore((s) => s.incrementDistanceRows)
@@ -83,10 +79,6 @@ const Platform: FC = () => {
   const instanceAnswerNumber = useRef<Float32Array | null>(null)
 
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-
-  // Obstacle section precomputation buffer
-  const obstacleSectionBuffer = useRef<RowData[][]>([])
-  const isObstacleTopUpScheduled = useRef(false)
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
@@ -126,41 +118,13 @@ const Platform: FC = () => {
     }))
   }
 
-  function topUpObstacleBuffer(count: number) {
-    for (let i = 0; i < count; i++) {
-      obstacleSectionBuffer.current.push(getObstacleSectionRows())
-    }
-  }
-
-  function scheduleObstacleTopUpIfNeeded() {
-    if (isObstacleTopUpScheduled.current) return
-    if (obstacleSectionBuffer.current.length > OBSTACLE_BUFFER_SECTIONS) return
-
-    isObstacleTopUpScheduled.current = true
-    startTransition(() => {
-      const needed = OBSTACLE_BUFFER_SECTIONS - obstacleSectionBuffer.current.length
-      if (needed > 0) topUpObstacleBuffer(needed)
-      isObstacleTopUpScheduled.current = false
-    })
-  }
-
   function insertObstacleRows(rows?: number) {
-    if (typeof rows === 'number') {
-      const blocks = getObstacleSectionRows(rows)
-      rowsData.current = [...rowsData.current, ...blocks]
-      scheduleObstacleTopUpIfNeeded()
-      return
-    }
-
-    const blocks = obstacleSectionBuffer.current.shift() ?? getObstacleSectionRows()
+    const blocks = getObstacleSectionRows(rows)
     rowsData.current = [...rowsData.current, ...blocks]
-    scheduleObstacleTopUpIfNeeded()
   }
 
   useEffect(() => {
     function setupInitialRowsAndInstances() {
-      topUpObstacleBuffer(OBSTACLE_BUFFER_SECTIONS)
-
       // Reset state
       rowsData.current = []
       nextRowDataIndex.current = 0
@@ -226,24 +190,8 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick])
 
-  useEffect(() => {
-    if (stage === Stage.TERRAIN) {
-      resetQuestionSectionDeceleration()
-    }
-  }, [stage])
-
   function applyRowWraps(rowIndex: number, wrapsToApply: number) {
     for (let wrapCount = 0; wrapCount < wrapsToApply; wrapCount++) {
-      const currentRowData = activeRowsData.current[rowIndex]
-
-      if (currentRowData.type === 'obstacles' && currentRowData.isSectionEnd) {
-        insertObstacleRows()
-      }
-
-      if (currentRowData.type === 'question' && currentRowData.isSectionEnd) {
-        insertQuestionRows()
-      }
-
       const newRowData = rowsData.current[nextRowDataIndex.current]
       activeRowsData.current[rowIndex] = newRowData
       nextRowDataIndex.current++
@@ -269,12 +217,6 @@ const Platform: FC = () => {
     if (wrapsToApply > 0) {
       isRowRaised.current[rowIndex] = false
     }
-  }
-
-  function resetQuestionSectionDeceleration() {
-    questionSectionStartZ.current = null
-    questionSectionEndZ.current = null
-    initialSpeedAtSectionStart.current = 1
   }
 
   function computeLiftLowerOffset(rowZ: number): number {
@@ -318,10 +260,17 @@ const Platform: FC = () => {
     questionElements.current!.positionElementsIfNeeded(rowMetadata, rowZ)
 
     const isQuestionSectionStart =
-      rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
+      rowMetadata?.type === 'question' && rowMetadata.isSectionStart
 
-    if (isQuestionSectionStart) {
+    if (isQuestionSectionStart && stage !== Stage.QUESTION) {
       goToStage(Stage.QUESTION)
+    }
+
+    const isObstaclesSectionStart =
+      rowMetadata?.type === 'obstacles' && rowMetadata.isSectionStart
+
+    if (isObstaclesSectionStart && stage !== Stage.TERRAIN) {
+      goToStage(Stage.TERRAIN)
     }
   }
 
@@ -330,7 +279,7 @@ const Platform: FC = () => {
     questionElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
   }
 
-  function updateTiles(zStep: number) {
+  function updateTiles() {
     if (!instancedTilesRef.current?.rigidBodies) return
     const cycleDistance = ROWS_RENDERED * TILE_SIZE
     const minZ = MAX_Z - cycleDistance
@@ -381,7 +330,7 @@ const Platform: FC = () => {
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
-    updateTiles(zStep)
+    updateTiles()
     questionElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })
