@@ -2,8 +2,10 @@
 
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
+import gsap from 'gsap'
 import { FC, type RefObject, Suspense, useEffect, useMemo, useRef } from 'react'
-import { BackSide, Mesh, type Texture, type Vector3Tuple } from 'three'
+import { BackSide, Mesh, Vector2, Vector3, type Texture, type Vector3Tuple } from 'three'
+import { useGSAP } from '@gsap/react'
 
 import {
   TEXT_CANVAS_SCALE,
@@ -12,8 +14,13 @@ import {
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
 
+import { Stage, useGameStore } from '@/components/GameProvider'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+
 import fragmentShader from './floatingHeading.frag'
 import vertexShader from './floatingHeading.vert'
+
+gsap.registerPlugin(useGSAP)
 
 type Props = {
   ref?: RefObject<Mesh | null>
@@ -21,18 +28,27 @@ type Props = {
   position: Vector3Tuple
   width: number
   height: number
-  opacity?: number
+  activeStage: Stage
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
 type FloatingHeadingUniforms = {
   uTexture: Texture
   uOpacity: number
+  uPlayerXZ: Vector2
+  uPlayerFadeInner: number
+  uPlayerFadeOuter: number
 }
+
+const PLAYER_FADE_INNER = 1.5
+const PLAYER_FADE_OUTER = 4.0
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uTexture: TRANSPARENT_TEXTURE,
   uOpacity: 1,
+  uPlayerXZ: new Vector2(0, 0),
+  uPlayerFadeInner: PLAYER_FADE_INNER,
+  uPlayerFadeOuter: PLAYER_FADE_OUTER,
 }
 
 const FloatingHeadingShader = shaderMaterial(
@@ -48,13 +64,27 @@ export const FloatingHeading: FC<Props> = ({
   position,
   width,
   height,
-  opacity = 1,
+  activeStage,
   textCanvasOptions = {},
   ref,
 }) => {
-  const dpr = useThree((s) => s.viewport.dpr)
+  const stage = useGameStore((s) => s.stage)
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
+  const latestPlayerXZ = useRef<[number, number]>([0, 0])
+
+  const onPlayerPosition = (newPosition: Vector3) => {
+    latestPlayerXZ.current[0] = newPosition.x
+    latestPlayerXZ.current[1] = newPosition.z
+    if (shaderRef.current) {
+      shaderRef.current.uPlayerXZ.set(newPosition.x, newPosition.z)
+    }
+  }
+
+  usePlayerPosition(onPlayerPosition)
+
+  const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)
+  const opacityState = useRef({ value: 0 })
 
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
@@ -67,7 +97,7 @@ export const FloatingHeading: FC<Props> = ({
   })
 
   const { radius, thetaLength, thetaStart } = useMemo(() => {
-    const arcLength = Math.PI * 0.8 // keeps a gentle bend without wrapping the texture
+    const arcLength = Math.PI * 0.9 // keeps a gentle bend without wrapping the texture
     const computedRadius = Math.max(width / arcLength, 0.001)
     const start = Math.PI / 2 - arcLength / 2
 
@@ -77,6 +107,34 @@ export const FloatingHeading: FC<Props> = ({
       thetaStart: start,
     }
   }, [width])
+
+  useGSAP(
+    () => {
+      const isActive = stage === activeStage
+      if (!isActive) return
+
+      const tween = gsap.fromTo(
+        opacityState.current,
+        { value: 0 },
+        {
+          value: 1,
+          duration: 1.2,
+          delay: 0.4,
+          ease: 'power2.out',
+          onUpdate: () => {
+            if (shaderRef.current) {
+              shaderRef.current.uOpacity = opacityState.current.value
+            }
+          },
+        },
+      )
+
+      return () => {
+        tween.kill()
+      }
+    },
+    { dependencies: [stage, activeStage] },
+  )
 
   useEffect(() => {
     const nextTexture = canvasState?.texture ?? TRANSPARENT_TEXTURE
@@ -95,8 +153,8 @@ export const FloatingHeading: FC<Props> = ({
         <FloatingHeadingMaterial
           key={(FloatingHeadingShader as unknown as { key: string }).key}
           ref={shaderRef}
-          uOpacity={opacity}
-          transparent
+          uOpacity={0}
+          transparent={true}
           depthTest={true}
           depthWrite={false}
           toneMapped={false}

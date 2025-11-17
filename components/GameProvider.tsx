@@ -30,7 +30,7 @@ export type PlayerInput = {
   right: number
 }
 
-export type HudIndicatorType = 'move' | 'correct' | 'incorrect'
+export type HudIndicatorType = 'move' | 'collected'
 
 export type HudIndicatorConfig = {
   type: HudIndicatorType
@@ -319,11 +319,11 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
       }),
       {
-        name: 'quizroller',
+        name: 'quizroller-page',
         partialize: (s) => ({
           paletteIndex: s.paletteIndex,
         }),
-        version: 2,
+        version: 1,
       },
     ),
   )

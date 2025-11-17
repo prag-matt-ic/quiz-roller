@@ -3,7 +3,7 @@ import { type FC, type ReactNode, useCallback, useImperativeHandle, useRef } fro
 import { type RefObject } from 'react'
 import { Mesh } from 'three'
 
-import { useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
 import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
@@ -133,6 +133,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         position={[0, INITIAL_INFO_POSITION.Y, INITIAL_INFO_POSITION.Z]}
         width={HEADING_WIDTH}
         height={HEADING_HEIGHT}
+        activeStage={Stage.INFO}
       />
 
       <InfoZone

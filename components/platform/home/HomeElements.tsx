@@ -11,6 +11,7 @@ import { Mesh } from 'three'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_HEIGHT, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
+import { Stage } from '@/components/GameProvider'
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
@@ -68,6 +69,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData, rowStartZ }) => {
         position={HIDDEN_HEADING_POSITION}
         width={HEADING_WIDTH}
         height={HEADING_HEIGHT}
+        activeStage={Stage.HOME}
       />
     </>
   )

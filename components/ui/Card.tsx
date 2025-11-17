@@ -9,6 +9,7 @@ type CardProps = PropsWithChildren<{
   childrenClassName?: string
 }>
 
+// TODO: new deisgn for this in-keeping with the grid and use a cool masked reveal effect.
 const Card: FC<CardProps> = ({ paletteIndex = 1, className, children, childrenClassName }) => {
   const oklchGradient = createPaletteGradient(paletteIndex, {
     mode: 'oklch',
