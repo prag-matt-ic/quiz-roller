@@ -1,8 +1,4 @@
 import { type Vector3Tuple } from 'three'
-
-import type { ColourTileOption } from '@/components/colourPicker/ColourPicker'
-import { PALETTE_COUNT } from '@/components/palette'
-import { type ColourTileUserData } from '@/model/schema'
 import {
   colToX,
   COLUMNS,
@@ -37,6 +33,7 @@ const INFO_ZONE_POSITIONS: [number, number, number][] = [
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
+// TODO: add floating heading position.
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
 
@@ -54,6 +51,7 @@ export function generateHomeSectionRowData(): RowData[] {
       rows[rowIndex].imagePosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, IMAGE_RELATIVE_Z]
     }
 
+    // TODO: remove info zone from home section.
     if (rowIndex === INFO_ZONE_TRIGGER_ROW) {
       rows[rowIndex].infoZonePositions = INFO_ZONE_POSITIONS
     }

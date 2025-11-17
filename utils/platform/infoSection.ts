@@ -17,6 +17,7 @@ export const INFO_TEXT_WIDTH = 8 * TILE_SIZE
 export const INFO_TEXT_ROWS = 4
 export const INFO_TEXT_HEIGHT = INFO_TEXT_ROWS * TILE_SIZE
 
+// TODO: update to include the infoZone position, floating heading position....
 export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
   // Start fully open, then carve out non-tile areas within tile rows
   const heights: number[][] = Array.from({ length: INFO_SECTION_ROWS }, () =>
