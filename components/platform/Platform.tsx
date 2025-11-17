@@ -10,12 +10,9 @@ import QuestionElements, {
 } from '@/components/platform/question/QuestionElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
-import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
-  DECEL_EASE_POWER,
-  DECEL_START_OFFSET_ROWS,
   FIRST_OBSTACLE_SECTION_ROWS,
   generateQuestionSectionRowData,
   OBSTACLE_BUFFER_SECTIONS,
@@ -69,7 +66,6 @@ const Platform: FC = () => {
 
   const { input: playerInput } = usePlayerInput()
 
-  const { terrainSpeed } = useTerrainSpeed()
   const instancedTilesRef = useRef<InstancedTilesHandle>(null)
   const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const hasInitialized = useRef(false)
@@ -102,10 +98,6 @@ const Platform: FC = () => {
   // Home Elements
   const homeElements = useRef<HomeElementsHandle | null>(null)
 
-  // Question section speed deceleration state
-  const questionSectionStartZ = useRef<number | null>(null)
-  const questionSectionEndZ = useRef<number | null>(null)
-  const initialSpeedAtSectionStart = useRef<number>(1)
   const isRowRaised = useRef<boolean[]>([])
 
   function insertQuestionRows() {
@@ -279,29 +271,6 @@ const Platform: FC = () => {
     }
   }
 
-  function computeTerrainSpeedForQuestionSection(): number {
-    const startZ = questionSectionStartZ.current
-    const targetScrollZ = questionSectionEndZ.current
-    const currentScrollZ = currentScrollPosition.current
-
-    if (startZ === null || targetScrollZ === null) {
-      return terrainSpeed.current
-    }
-
-    if (currentScrollZ < startZ) {
-      return terrainSpeed.current
-    }
-
-    if (currentScrollZ >= targetScrollZ) {
-      return 0
-    }
-
-    const progress = (currentScrollZ - startZ) / (targetScrollZ - startZ)
-    const normalizedProgress = Math.max(0, Math.min(1, progress))
-    const easedSpeed = 1 - Math.pow(normalizedProgress, DECEL_EASE_POWER)
-    return easedSpeed
-  }
-
   function resetQuestionSectionDeceleration() {
     questionSectionStartZ.current = null
     questionSectionEndZ.current = null
@@ -352,20 +321,19 @@ const Platform: FC = () => {
       rowMetadata?.type === 'question' && rowMetadata.isSectionStart && !isQuestionStage
 
     if (isQuestionSectionStart) {
-      const currentScrollZ = currentScrollPosition.current
-      const endScrollZ = currentScrollZ + (QUESTION_SECTION_ROWS - 1) * TILE_SIZE
-      const delayedStartScrollZ = currentScrollZ + DECEL_START_OFFSET_ROWS * TILE_SIZE
-
-      questionSectionStartZ.current = Math.min(delayedStartScrollZ, endScrollZ - EPSILON.TINY)
-      questionSectionEndZ.current = endScrollZ
-      initialSpeedAtSectionStart.current = terrainSpeed.current
       goToStage(Stage.QUESTION)
     }
   }
 
-  function updateTiles() {
+  function handleRowLowered(rowIndex: number) {
+    isRowRaised.current[rowIndex] = false
+    questionElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
+  }
+
+  function updateTiles(zStep: number) {
     if (!instancedTilesRef.current?.rigidBodies) return
     const cycleDistance = ROWS_RENDERED * TILE_SIZE
+    const minZ = MAX_Z - cycleDistance
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
       let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
@@ -374,6 +342,11 @@ const Platform: FC = () => {
       while (rowZ >= MAX_Z) {
         rowZ -= cycleDistance
         wraps++
+      }
+
+      while (rowZ < minZ) {
+        rowZ += cycleDistance
+        wraps--
       }
 
       const previousWraps = wrapCountByRow.current[rowIndex]
@@ -391,6 +364,10 @@ const Platform: FC = () => {
       if (!wasRaised && isRaised) {
         handleRowRaised(rowIndex, rowZ)
       }
+
+      if (wasRaised && !isRaised) {
+        handleRowLowered(rowIndex)
+      }
     }
   }
 
@@ -401,11 +378,10 @@ const Platform: FC = () => {
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
-    // TODO: row wrapping needs to work backwards too.
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
-    updateTiles()
+    updateTiles(zStep)
     questionElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
   })

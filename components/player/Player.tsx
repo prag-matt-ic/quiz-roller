@@ -21,7 +21,6 @@ import {
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
-import { useTerrainSpeed } from '@/hooks/useTerrainSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import {
   COLUMNS,
@@ -62,7 +61,6 @@ const Player: FC = () => {
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
 
-  const { terrainSpeed } = useTerrainSpeed()
   const { controllerRef, input } = usePlayerController()
 
   // Refs for physics bodies and meshes
@@ -136,7 +134,8 @@ const Player: FC = () => {
     const correctedMovement = controllerRef.current.computedMovement()
     const currentPosition = bodyRef.current.translation()
 
-    calculateTerrainVelocity(terrainSpeed.current, terrainVelocity.current)
+    // TODO: simplify this now that the terrain/platform moves in sync with the player
+    calculateTerrainVelocity(0, terrainVelocity.current)
 
     // Terrain conveyor only moves along +Z/-Z, zero out lateral components to avoid drift
     terrainDisplacement.current.copy(terrainVelocity.current).multiplyScalar(deltaTime)

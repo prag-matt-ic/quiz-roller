@@ -9,9 +9,9 @@ export const ANSWER_TILE_HEIGHT = ANSWER_TILE_ROWS * TILE_SIZE
 
 // Centralized game-wide constants
 // Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
-export const TERRAIN_SPEED_UNITS = 5
+export const TERRAIN_SPEED_UNITS = 7
 // Player lateral/forward intended movement speed in world units per second
-export const PLAYER_MOVE_UNITS = 5
+export const PLAYER_MOVE_UNITS = 7
 
 export const EPSILON = {
   SMALL: 1e-6,

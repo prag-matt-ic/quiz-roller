@@ -40,9 +40,6 @@ export type PlayerInput = {
 
 type GameState = {
   stage: Stage
-  // Consumers can scale by a constant to get world units per second.
-  terrainSpeed: number // Normalized speed in range [0, 1].
-  setTerrainSpeed: (speed: number) => void
 
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
@@ -100,7 +97,6 @@ const GameContext = createContext<GameStore>(undefined!)
 const MAX_DIFFICULTY = 3
 const CONFIRMING_ANSWER_DURATION_S = 2.4
 const CONFIRMING_PALETTE_DURATION_S = 1.5
-const TERRAIN_SPEED_DURATION = 2.4
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 2] // Used when re-spawning to home
 
@@ -113,7 +109,6 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
-  | 'terrainSpeed'
   | 'confirmationProgress'
   | 'playerInput'
   | 'playerWorldPosition'
@@ -135,7 +130,6 @@ const INITIAL_STATE: Pick<
   | 'edgeWarningIntensities'
 > = {
   stage: Stage.HOME,
-  terrainSpeed: 0,
   confirmationProgress: 0,
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   hasStarted: false,
@@ -242,7 +236,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         setCameraLookAtPosition: (cameraLookAtPosition) => {
           set({ cameraLookAtPosition })
         },
-        setTerrainSpeed: (terrainSpeed) => set({ terrainSpeed }),
 
         incrementDistanceRows: (delta = 1) =>
           set((s) => ({ distanceRows: Math.max(0, s.distanceRows + delta) })),

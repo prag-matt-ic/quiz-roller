@@ -11,18 +11,12 @@ import {
   QUESTION_TEXT_HEIGHT,
   QUESTION_TEXT_WIDTH,
 } from '@/utils/platform/questionSection'
-import {
-  ANSWER_TILE_HEIGHT,
-  HIDE_POSITION_Y,
-  HIDE_POSITION_Z,
-  MAX_Z,
-  type RowData,
-} from '@/utils/tiles'
-import InvisibleWall from '@/components/invisibleWall/InvisibleWall'
+import { HIDE_POSITION_Y, HIDE_POSITION_Z, MAX_Z, type RowData } from '@/utils/tiles'
 
 export type QuestionElementsHandle = {
   moveElements: (zStep: number) => void
   positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData | undefined) => void
 }
 
 type Props = {
@@ -44,11 +38,11 @@ const QuestionElements: FC<Props> = ({ ref }) => {
   const [questionAnswerRefs, _] = useState(
     Array.from({ length: ANSWER_TILE_COUNT }, () => createRef<RapierRigidBody>()),
   )
-  const invisibleWall = useRef<RapierRigidBody | null>(null)
 
   const questionIsOutOfView = useRef<boolean>(false)
   const answersAreOutOfView = useRef<boolean>(false)
 
+  // Called when the row is raised
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
       if (!row) return
@@ -84,12 +78,27 @@ const QuestionElements: FC<Props> = ({ ref }) => {
         translation.current.z = rowZ + position[2]
         answerRef.current.setTranslation(translation.current, true)
       }
+    },
+    [questionAnswerRefs],
+  )
 
-      if (!!invisibleWall.current) {
-        translation.current.x = 0
-        translation.current.y = 0
-        translation.current.z = translation.current.z - ANSWER_TILE_HEIGHT / 2
-        invisibleWall.current.setTranslation(translation.current, true)
+  // Called when the row is lowered
+  const hideElementsIfNeeded = useCallback(
+    (row: RowData | undefined) => {
+      if (!row) return
+      if (row.type !== 'question') return
+
+      if (!!questionText.current) {
+        questionText.current.position.z = HIDE_POSITION_Z
+        questionText.current.position.y = HIDE_POSITION_Y
+      }
+
+      for (const answerRef of questionAnswerRefs) {
+        if (!answerRef.current) continue
+        translation.current.x = answerRef.current.translation().x
+        translation.current.y = HIDE_POSITION_Y
+        translation.current.z = HIDE_POSITION_Z
+        answerRef.current.setTranslation(translation.current, false)
       }
     },
     [questionAnswerRefs],
@@ -128,15 +137,6 @@ const QuestionElements: FC<Props> = ({ ref }) => {
         translation.current.z = currentTranslation.z + zStep
         answerRef.current.setTranslation(translation.current, true)
       }
-
-      // Move the invisible wall with the answers
-      if (!!invisibleWall.current && !answersAreOutOfView.current) {
-        const wallTranslation = invisibleWall.current.translation()
-        translation.current.x = 0
-        translation.current.y = wallTranslation.y
-        translation.current.z = wallTranslation.z + zStep
-        invisibleWall.current.setTranslation(translation.current, true)
-      }
     },
     [questionAnswerRefs],
   )
@@ -145,12 +145,13 @@ const QuestionElements: FC<Props> = ({ ref }) => {
     return {
       moveElements,
       positionElementsIfNeeded,
+      hideElementsIfNeeded,
     }
-  }, [moveElements, positionElementsIfNeeded])
+  }, [moveElements, positionElementsIfNeeded, hideElementsIfNeeded])
 
   return (
     <>
-      {/* <Text
+      <Text
         ref={questionText}
         text={currentQuestion?.text ?? ''}
         position={[0, INITIAL_QUESTION_POSITION.Y, INITIAL_QUESTION_POSITION.Z]}
@@ -165,11 +166,10 @@ const QuestionElements: FC<Props> = ({ ref }) => {
           position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
           isOutOfView={answersAreOutOfView}
         />
-      ))} */}
+      ))}
       {/* TODO: add floating heading text */}
-      {/* TODO: add collectibe */}
+      {/* TODO: add collectible */}
       {/* TODO: add info zone. */}
-      <InvisibleWall ref={invisibleWall} position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]} />
     </>
   )
 }
