@@ -11,27 +11,16 @@ import { type InstancedBufferAttribute, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import {
-  TILE_SIZE,
-  TILE_THICKNESS,
-  ENTRY_END_Z,
-  ENTRY_START_Z,
-  EXIT_END_Z,
-  EXIT_START_Z,
-} from '@/utils/tiles'
+import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
 
 import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 
-// Shader material for fade-in/out and player proximity effects
+// Shader material for proximity-driven tile visibility and coloring
 type TileShaderUniforms = {
-  uEntryStartZ: number
-  uEntryEndZ: number
   uPlayerWorldPos: Vector3
   uScrollZ: number
-  uExitStartZ: number
-  uExitEndZ: number
   uAddDetailNoise: number
   uPaletteIndex: number
 }
@@ -39,10 +28,6 @@ type TileShaderUniforms = {
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uPlayerWorldPos: PLAYER_INITIAL_POSITION_VEC3,
   uScrollZ: 0,
-  uEntryStartZ: ENTRY_START_Z,
-  uEntryEndZ: ENTRY_END_Z,
-  uExitStartZ: EXIT_START_Z,
-  uExitEndZ: EXIT_END_Z,
   uAddDetailNoise: 1,
   uPaletteIndex: 0,
 }

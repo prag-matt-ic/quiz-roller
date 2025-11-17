@@ -22,7 +22,7 @@ export default async function Home(props: PageProps) {
       <main className="h-lvh w-full overflow-hidden">
         <SoundProvider>
           <GameProvider>
-            <LoadingOverlay />
+            {/* <LoadingOverlay /> */}
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>
         </SoundProvider>

@@ -72,7 +72,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         {isDebug && <Stats />}
         <Suspense>
           <Physics debug={false} timeStep={physicsTimeStep}>
-            <Background />
+            {/* <Background /> */}
             <FloatingTiles />
             <OutOfBounds />
             <Platform />

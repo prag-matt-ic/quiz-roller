@@ -35,7 +35,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
   const infoZone = useRef<RapierRigidBody>(null)
   const contentIndex = useGameStore((s) => s.infoContentIndex) // Content index is set in Platform when the info section row is raised.
 
-  const infoIsOutOfView = useRef<boolean>(false)
+  // const infoIsOutOfView = useRef<boolean>(false)
 
   // Called when the row is raised
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
@@ -48,7 +48,11 @@ const InfoElements: FC<Props> = ({ ref }) => {
       const newZ = rowZ + floatingHeadingPosition[2]
 
       heading.current.position.set(floatingHeadingPosition[0], floatingHeadingPosition[1], newZ)
-      infoIsOutOfView.current = false
+      console.warn('[InfoElements] Positioned heading', {
+        contentIndex: row.infoContentIndex,
+        position: heading.current.position,
+      })
+      // infoIsOutOfView.current = false
     }
 
     // Check for info zone positions
@@ -62,6 +66,10 @@ const InfoElements: FC<Props> = ({ ref }) => {
         translation.current.y = zonePos[1]
         translation.current.z = newZ
         infoZone.current.setTranslation(translation.current, true)
+        console.warn('[InfoElements] Positioned info zone', {
+          contentIndex: row.infoContentIndex,
+          translation: { ...translation.current },
+        })
       }
     }
   }, [])
@@ -74,31 +82,31 @@ const InfoElements: FC<Props> = ({ ref }) => {
     if (!!heading.current) {
       heading.current.position.z = HIDE_POSITION_Z
       heading.current.position.y = HIDE_POSITION_Y
+      console.warn('[InfoElements] Hid heading', {
+        contentIndex: row.infoContentIndex,
+        position: heading.current.position,
+      })
     }
 
     if (!!infoZone.current) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)
+      console.warn('[InfoElements] Hid info zone', {
+        contentIndex: row.infoContentIndex,
+        translation: { ...translation.current },
+      })
     }
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
     if (!heading.current) return
-    const isInfoBehindCamera = heading.current.position.z > MAX_Z + 10
-    if (isInfoBehindCamera && !infoIsOutOfView.current) {
-      heading.current.position.z = HIDE_POSITION_Z
-      heading.current.position.y = HIDE_POSITION_Y
-      infoIsOutOfView.current = true
-    } else if (!infoIsOutOfView.current) {
-      heading.current.position.z += zStep
-    }
+    heading.current.position.z += zStep
 
     // Move info zone
-    if (!!infoZone.current && !infoIsOutOfView.current) {
+    if (!!infoZone.current) {
       const currentTranslation = infoZone.current.translation()
       const newZ = currentTranslation.z + zStep
-
       translation.current.x = currentTranslation.x
       translation.current.y = currentTranslation.y
       translation.current.z = newZ

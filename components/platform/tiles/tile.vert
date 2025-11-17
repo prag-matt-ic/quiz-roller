@@ -1,19 +1,12 @@
 // Instanced tile fade vertex shader
 // - visibility: 1.0 for open (safe) tiles, 0.0 otherwise
-// - uEntryStartZ/uEntryEndZ: world-Z window over which open tiles fade in
-// - uExitStartZ/uExitEndZ: world-Z window over which tiles fade out
-// - uPlayerWorldPos: player world-space position for simple tile highlighting
+// - uPlayerWorldPos: player world-space position for proximity-driven alpha/highlight
 
 attribute float visibility;
 attribute float seed;
 attribute float isHighlighted;
 
-uniform float uEntryStartZ;
-uniform float uEntryEndZ;
 uniform vec3 uPlayerWorldPos;
-uniform float uScrollZ;
-uniform float uExitStartZ;
-uniform float uExitEndZ;
 
 varying mediump float vAlpha;
 varying mediump float vPlayerHighlight;
@@ -21,10 +14,20 @@ varying highp vec3 vWorldPos;
 varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vIsHighlighted;
-varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
-const float PLAYER_IMPACT_RADIUS = 1.75; // world units
+const float TILE_WORLD_UNITS = 1.0; // Matches TILE_SIZE (world units per row)
+
+// Player proximity highlight settings
+const float PLAYER_HIGHLIGHT_ROW_COUNT = 4.0;
+const float PLAYER_HIGHLIGHT_RADIUS = PLAYER_HIGHLIGHT_ROW_COUNT * TILE_WORLD_UNITS;
+
+// Radial fade settings (alpha)
+const float PLAYER_FADE_FULL_OPACITY_ROWS = 6.0;
+const float PLAYER_FADE_MIN_OPACITY_ROWS = 12.0;
+const float PLAYER_FADE_MIN_ALPHA = 0.0;
+const float PLAYER_FADE_FULL_RADIUS = PLAYER_FADE_FULL_OPACITY_ROWS * TILE_WORLD_UNITS;
+const float PLAYER_FADE_MIN_RADIUS = PLAYER_FADE_MIN_OPACITY_ROWS * TILE_WORLD_UNITS;
 
 void main() {
   // Compute combined model-instance matrix once and reuse
@@ -45,28 +48,17 @@ void main() {
   // Precompute highlight based on distance to player in the vertex shader.
   vec3 playerOffset = instanceCenter - uPlayerWorldPos;
   float distSq = dot(playerOffset, playerOffset);
-  float radiusSq = PLAYER_IMPACT_RADIUS * PLAYER_IMPACT_RADIUS;
+  float radiusSq = PLAYER_HIGHLIGHT_RADIUS * PLAYER_HIGHLIGHT_RADIUS;
   vPlayerHighlight = smoothstep(radiusSq, 0.0, distSq);
 
-  // Fade only for open tiles as they enter the threshold window.
-  // Seed adjusts the speed (curve shape) but preserves endpoints:
-  // tBase == 0 at entry start, 1 at entry end; alpha remains 0 before start and 1 after end.
-  float denom = max(0.0001, (uEntryEndZ - uEntryStartZ));
-  float invDenom = 1.0 / denom;
-  float tBase = clamp((worldPos.z - uEntryStartZ) * invDenom, 0.0, 1.0);
-  // Map seed into an exponent to speed up or slow down the ramp without shifting start/end.
-  // <1.0 => faster start (ease-out), >1.0 => slower start (ease-in).
-  float speedExp = mix(0.6, 1.4, clamp(seed, 0.0, 1.0));
-  float t = pow(tBase, speedExp);
-  // Gate fade by visibility: 0 => invisible, 1 => fade by t
-  vAlpha = t * clamp(visibility, 0.0, 1.0);
-
-
-  // Compute fade-out factor based on exit window; 1.0 before window, 0.0 at/after end.
-  float denomExit = max(0.0001, (uExitEndZ - uExitStartZ));
-  float invDenomExit = 1.0 / denomExit;
-  float tOut = clamp((worldPos.z - uExitStartZ) * invDenomExit, 0.0, 1.0);
-  vFadeOut = 1.0 - tOut;
+  // Alpha is controlled by a radial falloff around the player.
+  float visible = clamp(visibility, 0.0, 1.0);
+  float fullRadiusSq = PLAYER_FADE_FULL_RADIUS * PLAYER_FADE_FULL_RADIUS;
+  float minRadiusSq = PLAYER_FADE_MIN_RADIUS * PLAYER_FADE_MIN_RADIUS;
+  float fadeDenom = max(0.0001, (minRadiusSq - fullRadiusSq));
+  float fadeT = clamp((distSq - fullRadiusSq) / fadeDenom, 0.0, 1.0);
+  float radialAlpha = mix(1.0, PLAYER_FADE_MIN_ALPHA, fadeT);
+  vAlpha = radialAlpha * visible;
 
   // Pass seed to fragment for noise offset
   vSeed = seed;

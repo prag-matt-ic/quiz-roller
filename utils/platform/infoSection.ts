@@ -5,12 +5,13 @@ export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
 
 // Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const INFO_SECTION_ROWS = 12
+export const INFO_SECTION_ROWS = 16
 
 export const INFO_ZONE_CENTER_ROW = 10
 const INFO_ZONE_COLS = 4
 const INFO_ZONE_ROWS = 5
-const INFO_ZONE_CENTER_COLUMN = Math.floor(COLUMNS - INFO_ZONE_COLS / 2 - 2)
+const INFO_ZONE_START_COLUMN = COLUMNS - INFO_ZONE_COLS - 2
+const INFO_ZONE_CENTER_COLUMN = INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
@@ -32,7 +33,7 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
   const infoZoneTriggerRow = Math.ceil(infoZoneCenterRow)
   const infoZoneZRelative = (infoZoneTriggerRow - infoZoneCenterRow) * TILE_SIZE
   const infoZoneHighlightStartColumn = clampRangeStart(
-    Math.ceil(INFO_ZONE_CENTER_COLUMN - INFO_ZONE_COLS / 2),
+    INFO_ZONE_START_COLUMN,
     INFO_ZONE_COLS,
     COLUMNS,
   )

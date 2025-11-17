@@ -15,7 +15,7 @@ export const EPSILON = {
 
 // Grid configuration
 export const COLUMNS = 33 // odd number so that there is a center column
-export const ROWS_RENDERED = 28
+export const ROWS_RENDERED = 32
 
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
@@ -30,9 +30,9 @@ export const ON_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
 // Entry lift animation config (rows -> world units via TILE_SIZE)
 export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 8
 export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world units)
-export const ENTRY_RAISE_DURATION_ROWS = 5
-export const EXIT_LOWER_DURATION_ROWS = 5
-export const MAX_Z = TILE_SIZE * 12
+export const ENTRY_RAISE_DURATION_ROWS = 6
+export const EXIT_LOWER_DURATION_ROWS = 6
+export const MAX_Z = TILE_SIZE * 8
 
 // Fixed entry window values for row raising animation
 export const ENTRY_END_Z = MAX_Z - 16 * TILE_SIZE - EXIT_LOWER_DURATION_ROWS

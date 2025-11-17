@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CanvasTexture, ClampToEdgeWrapping, DataTexture, LinearFilter, Texture } from 'three'
 
 export type CanvasState = {
@@ -148,20 +148,31 @@ export function writeTextToCanvas(
 
 export function useTextCanvas(text: string, options: TextCanvasOptions): CanvasState | null {
   const [state, setState] = useState<CanvasState | null>(null)
+  const textureRef = useRef<CanvasTexture | null>(null)
 
   useEffect(() => {
     const cs = setupCanvasTexture(options.width, options.height)
-    setState(cs)
+    textureRef.current = cs.texture
+    let disposed = false
+    const frameId = requestAnimationFrame(() => {
+      if (!disposed) {
+        setState(cs)
+      }
+    })
     return () => {
-      cs.texture.dispose()
+      disposed = true
+      cancelAnimationFrame(frameId)
+      textureRef.current?.dispose()
+      textureRef.current = null
     }
   }, [options.height, options.width])
 
   useEffect(() => {
     if (!state) return
     writeTextToCanvas(state.context, text, options)
-    // eslint-disable-next-line react-hooks/immutability
-    state.texture.needsUpdate = true
+    if (textureRef.current) {
+      textureRef.current.needsUpdate = true
+    }
   }, [state, text, options])
 
   return state

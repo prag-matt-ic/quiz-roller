@@ -3,7 +3,7 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useEffect, useRef, useState } from 'react'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION_VEC3, Stage, useGameStore } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
@@ -19,7 +19,6 @@ import {
   colToX,
   COLUMNS,
   TERRAIN_SPEED_UNITS,
-  ENTRY_Y_OFFSET,
   INITIAL_ROWS_Z_OFFSET,
   ENTRY_END_Z,
   MAX_Z,
@@ -27,9 +26,6 @@ import {
   ROWS_RENDERED,
   SAFE_HEIGHT,
   TILE_SIZE,
-  ENTRY_START_Z,
-  EXIT_START_Z,
-  EXIT_END_Z,
   UNSAFE_HEIGHT,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
@@ -60,6 +56,10 @@ const EMPTY_ROW_DATA: RowData = {
   isSectionEnd: false,
 }
 
+const PLAYER_STAGE_Z = PLAYER_INITIAL_POSITION_VEC3.z
+const STAGE_ACTIVATION_HALF_BAND = TILE_SIZE * 0.5
+const ROW_VISIBILITY_THRESHOLD_Z = ENTRY_END_Z
+
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
@@ -76,6 +76,8 @@ const Platform: FC = () => {
   const currentScrollPosition = useRef(0)
   const baseZByRow = useRef<number[]>([])
   const wrapCountByRow = useRef<number[]>([])
+  const rowZByIndex = useRef<number[]>([])
+  const rowIsVisible = useRef<boolean[]>([])
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
 
@@ -93,8 +95,6 @@ const Platform: FC = () => {
 
   const homeElements = useRef<HomeElementsHandle | null>(null)
   const infoElements = useRef<InfoElementsHandle | null>(null)
-
-  const isRowRaised = useRef<boolean[]>([])
 
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
     const rows = generateInfoSectionRowData(contentIndex)
@@ -135,9 +135,10 @@ const Platform: FC = () => {
       activeRowsData.current = []
       baseZByRow.current = []
       wrapCountByRow.current = []
+      rowZByIndex.current = []
+      rowIsVisible.current = []
       xByBodyIndex.current = []
       yByBodyIndex.current = []
-      isRowRaised.current = []
       currentScrollPosition.current = 0
 
       insertHomeRows()
@@ -162,7 +163,9 @@ const Platform: FC = () => {
         const rowData = rowsData.current[rowIndex] ?? EMPTY_ROW_DATA
         activeRowsData.current[rowIndex] = rowData
         baseZByRow.current[rowIndex] = nextRowZ
+        rowZByIndex.current[rowIndex] = nextRowZ
         wrapCountByRow.current[rowIndex] = 0
+        rowIsVisible.current[rowIndex] = false
 
         for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
           const x = colToX(columnIndex)
@@ -217,25 +220,77 @@ const Platform: FC = () => {
     }
   }
 
-  function applyForwardRowWraps(rowIndex: number, wrapsToApply: number) {
+  function hideRowDecorations(rowIndex: number) {
+    const row = activeRowsData.current[rowIndex]
+    if (!row) return
+    if (row.type === 'info') {
+      infoElements.current?.hideElementsIfNeeded(row)
+    }
+  }
+
+  function positionRowDecorations(rowIndex: number, rowZ: number) {
+    const row = activeRowsData.current[rowIndex]
+    if (!row) return
+    if (row.type === 'info') {
+      infoElements.current?.positionElementsIfNeeded(row, rowZ)
+    }
+  }
+
+  function updateStageForRow(rowIndex: number, rowZ: number) {
+    const row = activeRowsData.current[rowIndex]
+    if (!row || !row.isSectionStart) return
+
+    const isPlayerWithinRow = Math.abs(rowZ - PLAYER_STAGE_Z) <= STAGE_ACTIVATION_HALF_BAND
+    if (!isPlayerWithinRow) return
+
+    if (row.type === 'home' && stage !== Stage.HOME) {
+      goToStage(Stage.HOME)
+      return
+    }
+
+    if (row.type === 'info') {
+      const contentIndex = row.infoContentIndex ?? 0
+      setInfoContentIndex(contentIndex)
+      if (stage !== Stage.INFO) {
+        goToStage(Stage.INFO)
+      }
+      return
+    }
+
+    if (row.type === 'obstacles' && stage !== Stage.TERRAIN) {
+      goToStage(Stage.TERRAIN)
+      return
+    }
+
+    if (row.type === 'cta' && stage !== Stage.CTA) {
+      goToStage(Stage.CTA)
+    }
+  }
+
+  function applyForwardRowWraps(rowIndex: number, wrapsToApply: number): void {
+    if (wrapsToApply <= 0) return
     let wrapsApplied = 0
 
     for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
+      hideRowDecorations(rowIndex)
+      rowIsVisible.current[rowIndex] = false
       const newRowData = rowsData.current[nextRowDataIndex.current] ?? EMPTY_ROW_DATA
       updateInstanceAttributesForRow(rowIndex, newRowData)
       nextRowDataIndex.current++
     }
 
     if (wrapsApplied > 0) {
-      isRowRaised.current[rowIndex] = false
       markInstanceAttributesDirty()
     }
   }
 
-  function applyBackwardRowWraps(rowIndex: number, wrapsToApply: number) {
+  function applyBackwardRowWraps(rowIndex: number, wrapsToApply: number): void {
+    if (wrapsToApply <= 0) return
     let wrapsApplied = 0
 
     for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
+      hideRowDecorations(rowIndex)
+      rowIsVisible.current[rowIndex] = false
       nextRowDataIndex.current = Math.max(0, nextRowDataIndex.current - 1)
       const earliestRowIndex = nextRowDataIndex.current - ROWS_RENDERED
       const newRowData =
@@ -244,28 +299,11 @@ const Platform: FC = () => {
     }
 
     if (wrapsApplied > 0) {
-      isRowRaised.current[rowIndex] = false
       markInstanceAttributesDirty()
     }
   }
 
-  function computeLiftLowerOffset(rowZ: number): number {
-    // Entry lift: raise from -ENTRY_Y_OFFSET up to 0 across the entry window
-    if (rowZ < ENTRY_START_Z) return -ENTRY_Y_OFFSET
-    if (rowZ < ENTRY_END_Z) {
-      const tIn = (rowZ - ENTRY_START_Z) / (ENTRY_END_Z - ENTRY_START_Z)
-      return -ENTRY_Y_OFFSET * (1 - tIn)
-    }
-    // Exit lower: lower from 0 down to -ENTRY_Y_OFFSET across the exit window
-    if (rowZ >= EXIT_START_Z && rowZ < EXIT_END_Z) {
-      const tOut = (rowZ - EXIT_START_Z) / (EXIT_END_Z - EXIT_START_Z)
-      return ENTRY_Y_OFFSET * tOut
-    }
-    // Otherwise, tiles are flat at y=0
-    return 0
-  }
-
-  function updateRowPositions(rowIndex: number, rowZ: number, yOffset: number) {
+  function updateRowPositions(rowIndex: number, rowZ: number) {
     const firstBodyIndex = rowIndex * COLUMNS
     const rigidBodies = instancedTilesRef.current?.rigidBodies
     if (!rigidBodies) return
@@ -277,60 +315,9 @@ const Platform: FC = () => {
       const bodyIndex = firstBodyIndex + columnIndex
       translation.current.x = xByBodyIndex.current[bodyIndex]
       const baseY = yByBodyIndex.current[bodyIndex]
-      translation.current.y = baseY === SAFE_HEIGHT ? baseY + yOffset : baseY
+      translation.current.y = baseY
       translation.current.z = rowZ
       body.setTranslation(translation.current, true)
-    }
-  }
-
-  function handleRowRaised(rowIndex: number, rowZ: number) {
-    const data = activeRowsData.current[rowIndex]
-
-    isRowRaised.current[rowIndex] = true
-    infoElements.current!.positionElementsIfNeeded(data, rowZ)
-
-    const isHomeSectionStart = data?.type === 'home' && data.isSectionStart
-
-    if (isHomeSectionStart && stage !== Stage.HOME) {
-      goToStage(Stage.HOME)
-      return
-    }
-
-    const isInfoSectionStart = data?.type === 'info' && data.isSectionStart
-
-    if (isInfoSectionStart && stage !== Stage.INFO) {
-      goToStage(Stage.INFO)
-      setInfoContentIndex(data.infoContentIndex ?? 0)
-      return
-    }
-
-    const isObstaclesSectionStart = data?.type === 'obstacles' && data.isSectionStart
-
-    if (isObstaclesSectionStart && stage !== Stage.TERRAIN) {
-      goToStage(Stage.TERRAIN)
-      return
-    }
-  }
-
-  function handleRowLowered(rowIndex: number) {
-    const data = activeRowsData.current[rowIndex]
-    isRowRaised.current[rowIndex] = false
-
-    infoElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
-
-    const isInfoSectionStart = data?.type === 'info' && data.isSectionStart
-
-    if (isInfoSectionStart && stage === Stage.INFO) {
-      goToStage(Stage.TERRAIN)
-      return
-    }
-
-    const isObstaclesSectionStart = data?.type === 'obstacles' && data.isSectionStart
-
-    if (isObstaclesSectionStart && stage === Stage.TERRAIN) {
-      const previousRow = activeRowsData.current[rowIndex - 1]
-      if (previousRow?.type === 'info') goToStage(Stage.INFO)
-      if (previousRow?.type === 'home') goToStage(Stage.HOME)
     }
   }
 
@@ -361,19 +348,21 @@ const Platform: FC = () => {
       }
       wrapCountByRow.current[rowIndex] = wraps
 
-      const yOffset = computeLiftLowerOffset(rowZ)
-      updateRowPositions(rowIndex, rowZ, yOffset)
+      updateRowPositions(rowIndex, rowZ)
+      rowZByIndex.current[rowIndex] = rowZ
 
-      const wasRaised = isRowRaised.current[rowIndex] === true
-      const isRaised = rowZ >= ENTRY_END_Z
-
-      if (!wasRaised && isRaised) {
-        handleRowRaised(rowIndex, rowZ)
+      const wasVisible = rowIsVisible.current[rowIndex] === true
+      const isVisible = rowZ >= ROW_VISIBILITY_THRESHOLD_Z
+      if (wasVisible !== isVisible) {
+        rowIsVisible.current[rowIndex] = isVisible
+        if (isVisible) {
+          positionRowDecorations(rowIndex, rowZ)
+        } else {
+          hideRowDecorations(rowIndex)
+        }
       }
 
-      if (wasRaised && !isRaised) {
-        handleRowLowered(rowIndex)
-      }
+      updateStageForRow(rowIndex, rowZ)
     }
   }
 

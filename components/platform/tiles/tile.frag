@@ -14,7 +14,6 @@ varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vPlayerHighlight;
 varying mediump float vIsHighlighted;
-varying mediump float vFadeOut;
 varying mediump vec2 vUv;
 
 // Constants
@@ -28,7 +27,7 @@ const float HIGHLIGHT_MIX = 0.7;
 
 void main() {
   // Early discard for fully transparent tiles
-  if (vAlpha <= 0.001 || vFadeOut <= 0.001) discard;
+  if (vAlpha <= 0.001) discard;
 
   // Determine if this instance is an answer tile (branch-free)
   mediump float isHighlighted = step(0.5, vIsHighlighted);
@@ -66,6 +65,6 @@ void main() {
   mediump float shade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
   background *= shade;
 
-  // Apply final fade-out
-  gl_FragColor = vec4(background, alpha * vFadeOut);
+  // Output final color
+  gl_FragColor = vec4(background, alpha);
 }
