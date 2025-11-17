@@ -8,7 +8,17 @@ export const TILE_PLAYER_FADE_MIN_ALPHA = 0
 export const TILE_PLAYER_HIGHLIGHT_RADIUS = TILE_PLAYER_HIGHLIGHT_ROW_COUNT * TILE_SIZE
 export const TILE_PLAYER_FADE_FULL_RADIUS = TILE_PLAYER_FADE_FULL_ROWS * TILE_SIZE
 export const TILE_PLAYER_FADE_MIN_RADIUS = TILE_PLAYER_FADE_MIN_ROWS * TILE_SIZE
-export const TILE_PLAYER_FADE_LIFT = TILE_THICKNESS * 3
+
+const ROW_VISIBILITY_BUFFER_ROWS = 6
+const ROW_VISIBILITY_BUFFER_RADIUS = ROW_VISIBILITY_BUFFER_ROWS * TILE_SIZE
+export const ROW_VISIBILITY_HALF_SPAN =
+  TILE_PLAYER_FADE_MIN_RADIUS + ROW_VISIBILITY_BUFFER_RADIUS
+
+const EXIT_LOWER_DURATION_ROWS = 6
+const PLATFORM_MAX_Z = TILE_SIZE * 8
+
+export const ENTRY_END_Z = PLATFORM_MAX_Z - 16 * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
+export const EXIT_START_Z = PLATFORM_MAX_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
 
 // Centralized game-wide constants
 // Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
@@ -34,20 +44,6 @@ export const HIDE_POSITION_Z = 40 as const
 
 // Y value for elements placed directly on top of tiles
 export const ON_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
-
-// Entry lift animation config (rows -> world units via TILE_SIZE)
-export const INITIAL_ROWS_Z_OFFSET = TILE_SIZE * 8
-export const ENTRY_Y_OFFSET = 2.0 // How far down to start when entering (world units)
-export const ENTRY_RAISE_DURATION_ROWS = 6
-export const EXIT_LOWER_DURATION_ROWS = 6
-export const MAX_Z = TILE_SIZE * 8
-
-// Fixed entry window values for row raising animation
-export const ENTRY_END_Z = MAX_Z - 16 * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
-export const ENTRY_START_Z = ENTRY_END_Z - ENTRY_RAISE_DURATION_ROWS * TILE_SIZE
-// Exit window values for row lowering (pre-wrap)
-export const EXIT_END_Z = MAX_Z
-export const EXIT_START_Z = EXIT_END_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
 
 // Convert a grid column index (can be fractional for centers) to world X.
 export const colToX = (col: number): number => (col - COLUMNS / 2 + 0.5) * TILE_SIZE

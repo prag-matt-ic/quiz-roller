@@ -22,8 +22,6 @@ import {
   EPSILON,
   clamp,
   TERRAIN_SPEED_UNITS,
-  INITIAL_ROWS_Z_OFFSET,
-  MAX_Z,
   lerp,
   RowData,
   ROWS_RENDERED,
@@ -33,6 +31,7 @@ import {
   TILE_PLAYER_FADE_MIN_RADIUS,
   TILE_SIZE,
   UNSAFE_HEIGHT,
+  ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
 
@@ -67,6 +66,33 @@ const STAGE_ACTIVATION_HALF_BAND = TILE_SIZE * 0.5
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
 const FADE_MIN_RADIUS_SQ = TILE_PLAYER_FADE_MIN_RADIUS * TILE_PLAYER_FADE_MIN_RADIUS
 const ROW_FADE_DENOM = Math.max(EPSILON.SMALL, FADE_MIN_RADIUS_SQ - FADE_FULL_RADIUS_SQ)
+const ROW_CYCLE_DISTANCE = ROWS_RENDERED * TILE_SIZE
+const ROWS_COVERAGE_HALF_SPAN = ((ROWS_RENDERED - 1) * TILE_SIZE) * 0.5
+const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
+const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
+
+const warnVisibilityCoverageIfNeeded = (() => {
+  let hasWarned = false
+  return () => {
+    if (hasWarned || !IS_DEV_ENV) return
+    if (VISIBILITY_WINDOW_SPAN > ROW_CYCLE_DISTANCE) {
+      console.warn(
+        `[Platform] Visibility span (${VISIBILITY_WINDOW_SPAN.toFixed(
+          2,
+        )}) exceeds instanced coverage (${ROW_CYCLE_DISTANCE.toFixed(
+          2,
+        )}). Expect reduced buffer or increase ROWS_RENDERED.`,
+      )
+    }
+    hasWarned = true
+  }
+})()
+
+const logRowWrap = (direction: 'forward' | 'backward', rowIndex: number, wraps: number) => {
+  if (!IS_DEV_ENV || wraps <= 0) return
+  const action = direction === 'forward' ? 'advanced' : 'rewound'
+  console.warn(`[Platform] Row ${rowIndex} ${action} ${wraps} wrap(s).`)
+}
 
 function getRowAlpha(rowZ: number, playerZ: number) {
   const dz = rowZ - playerZ
@@ -103,6 +129,7 @@ const Platform: FC = () => {
   const instanceIsHighlighted = useRef<Float32Array | null>(null)
 
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
+  const initialRowStartZ = useRef(playerPosition.current.z + ROW_VISIBILITY_HALF_SPAN)
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
@@ -173,7 +200,20 @@ const Platform: FC = () => {
       instanceSeed.current = new Float32Array(totalInstances)
       instanceIsHighlighted.current = new Float32Array(totalInstances)
 
-      let nextRowZ = INITIAL_ROWS_Z_OFFSET
+      const playerZ = playerPosition.current.z
+      const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
+      const nextStartZ = playerZ + initialHalfSpan
+      initialRowStartZ.current = nextStartZ
+      if (IS_DEV_ENV) {
+        console.warn(
+          `[Platform] Initializing rows around playerZ=${playerZ.toFixed(
+            2,
+          )} with startZ=${nextStartZ.toFixed(2)} (halfSpan=${initialHalfSpan.toFixed(2)}).`,
+        )
+      }
+      warnVisibilityCoverageIfNeeded()
+
+      let nextRowZ = nextStartZ
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
         const rowData = rowsData.current[rowIndex] ?? EMPTY_ROW_DATA
@@ -297,6 +337,7 @@ const Platform: FC = () => {
 
     if (wrapsApplied > 0) {
       markInstanceAttributesDirty()
+      logRowWrap('forward', rowIndex, wrapsApplied)
     }
   }
 
@@ -316,6 +357,7 @@ const Platform: FC = () => {
 
     if (wrapsApplied > 0) {
       markInstanceAttributesDirty()
+      logRowWrap('backward', rowIndex, wrapsApplied)
     }
   }
 
@@ -339,14 +381,15 @@ const Platform: FC = () => {
 
   function updateTiles(playerZ: number) {
     if (!instancedTilesRef.current?.rigidBodies) return
-    const cycleDistance = ROWS_RENDERED * TILE_SIZE
-    const minZ = MAX_Z - cycleDistance
+    const cycleDistance = ROW_CYCLE_DISTANCE
+    const maxZ = playerZ + ROW_VISIBILITY_HALF_SPAN
+    const minZ = playerZ - ROW_VISIBILITY_HALF_SPAN
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
       let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
       let wraps = 0
 
-      while (rowZ >= MAX_Z) {
+      while (rowZ >= maxZ) {
         rowZ -= cycleDistance
         wraps++
       }
@@ -412,7 +455,12 @@ const Platform: FC = () => {
       />
 
       {/* Home Elements */}
-      <HomeElements ref={homeElements} rowsData={rowsData} key={`${resetPlatformTick}-home`} />
+      <HomeElements
+        ref={homeElements}
+        rowsData={rowsData}
+        rowStartZ={initialRowStartZ.current}
+        key={`${resetPlatformTick}-home`}
+      />
 
       {/* Info Section Elements */}
       <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />

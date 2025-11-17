@@ -11,7 +11,19 @@ uniform float uHighlightRadius;
 uniform float uFadeFullRadius;
 uniform float uFadeMinRadius;
 uniform float uFadeMinAlpha;
-uniform float uFadeLiftHeight;
+
+const float TILE_FADE_ROTATE_MAX = 0.6;
+const float AXIS_EPSILON = 0.001;
+
+float hashFloat(float n) {
+  return fract(sin(n) * 43758.5453123);
+}
+
+vec3 rotateAroundAxis(vec3 v, vec3 axis, float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  return v * c + cross(axis, v) * s + axis * dot(axis, v) * (1.0 - c);
+}
 
 varying mediump float vAlpha;
 varying mediump float vPlayerHighlight;
@@ -51,9 +63,22 @@ void main() {
   float radialAlpha = mix(1.0, uFadeMinAlpha, fadeT);
   vAlpha = radialAlpha * visible;
 
-  // Offset tiles downward when faded out, bring them back to baseline as they appear
-  float fadeLift = (radialAlpha - 1.0) * uFadeLiftHeight;
-  worldPos.y += fadeLift;
+  // Apply per-instance tilt based on fade, but keep highlighted tiles steady
+  float highlightMask = step(0.5, isHighlighted);
+  float fadeAmount = (1.0 - radialAlpha) * (1.0 - highlightMask);
+  float axisSeedX = hashFloat(seed * 3.173);
+  float axisSeedZ = hashFloat(seed * 7.921);
+  vec3 tiltAxis = vec3(axisSeedX - 0.5, 0.0, axisSeedZ - 0.5);
+  float axisLength = max(length(tiltAxis), AXIS_EPSILON);
+  tiltAxis /= axisLength;
+
+  float signedNoise = hashFloat(seed * 11.0) * 2.0 - 1.0;
+  float tiltAngle = fadeAmount * TILE_FADE_ROTATE_MAX * signedNoise;
+
+  vec3 centeredPos = worldPos.xyz - instanceCenter;
+  centeredPos = rotateAroundAxis(centeredPos, tiltAxis, tiltAngle);
+  worldPos.xyz = centeredPos + instanceCenter;
+  vWorldNormal = normalize(rotateAroundAxis(vWorldNormal, tiltAxis, tiltAngle));
   vWorldPos = worldPos.xyz;
 
   // Pass seed to fragment for noise offset

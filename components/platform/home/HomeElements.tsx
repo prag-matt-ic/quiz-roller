@@ -1,31 +1,7 @@
-import { RapierRigidBody } from '@react-three/rapier'
-import {
-  createRef,
-  type FC,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-  type RefObject,
-  useEffect,
-  useState,
-} from 'react'
+import { type FC, useCallback, useImperativeHandle, useRef, type RefObject, useEffect } from 'react'
 import { Group } from 'three'
 
-import startArrow from '@/assets/textures/arrow-big-up-dash.webp'
-import { useGameStore } from '@/components/GameProvider'
-import FlatImage from '@/components/platform/home/FlatImage'
-import {
-  HIDE_POSITION_Y,
-  HIDE_POSITION_Z,
-  INITIAL_ROWS_Z_OFFSET,
-  MAX_Z,
-  type RowData,
-  TILE_SIZE,
-} from '@/utils/tiles'
-
-const WIDTH = TILE_SIZE * 4
-const ASPECT = startArrow.width / startArrow.height
-const HEIGHT = WIDTH / ASPECT
+import { type RowData, TILE_SIZE } from '@/utils/tiles'
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
@@ -34,17 +10,17 @@ export type HomeElementsHandle = {
 type Props = {
   ref: RefObject<HomeElementsHandle | null>
   rowsData: RefObject<RowData[]>
+  rowStartZ: number
 }
 
-const HomeElements: FC<Props> = ({ ref, rowsData }) => {
+const HomeElements: FC<Props> = ({ ref, rowsData, rowStartZ }) => {
   const image = useRef<Group>(null)
-  const translation = useRef({ x: 0, y: 0, z: 0 })
 
   useEffect(() => {
     const positionElements = (rowData: RowData[]) => {
       rowData.forEach((row, rowIndex) => {
         if (row.type !== 'home') return
-        const rowZ = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
+        const rowZ = rowStartZ - rowIndex * TILE_SIZE
 
         const imagePosition = row.imagePosition
         if (!!imagePosition && !!image.current) {
@@ -58,7 +34,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
     }
 
     positionElements(rowsData.current)
-  }, [rowsData])
+  }, [rowsData, rowStartZ])
 
   const moveElements = useCallback((zStep: number) => {
     if (!!image.current) {
