@@ -57,7 +57,7 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
-export type SectionType = 'home' | 'info' | 'obstacles'
+export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty'
 
 export type RowData = {
   heights: number[]

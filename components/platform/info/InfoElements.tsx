@@ -47,6 +47,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
   const infoText = useRef<Mesh>(null)
   const infoZone = useRef<RapierRigidBody>(null)
+  const infoContentIndex = useGameStore((s) => s.infoContentIndex)
   const [contentIndex, setContentIndex] = useState<number>(0)
 
   const infoIsOutOfView = useRef<boolean>(false)
@@ -80,14 +81,6 @@ const InfoElements: FC<Props> = ({ ref }) => {
         const zonePos = infoZonePositions[0]
         if (zonePos) {
           const newZ = rowZ + zonePos[2]
-          console.log('ℹ️ InfoZone - Setting position:', {
-            x: zonePos[0],
-            y: zonePos[1],
-            z: newZ,
-            rowZ,
-            relativeZ: zonePos[2],
-          })
-
           translation.current.x = zonePos[0]
           translation.current.y = zonePos[1]
           translation.current.z = newZ
@@ -109,7 +102,6 @@ const InfoElements: FC<Props> = ({ ref }) => {
     }
 
     if (!!infoZone.current) {
-      console.log('ℹ️ InfoZone - Hiding')
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)
@@ -157,7 +149,6 @@ const InfoElements: FC<Props> = ({ ref }) => {
         height={INFO_TEXT_HEIGHT}
       />
 
-      {/* TODO: add info zone. */}
       <InfoZone
         key="info-zone"
         ref={infoZone}

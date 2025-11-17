@@ -30,6 +30,7 @@ import {
   ENTRY_START_Z,
   EXIT_START_Z,
   EXIT_END_Z,
+  UNSAFE_HEIGHT,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
 
@@ -52,10 +53,18 @@ const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> =
   notchChance: 0.1,
 }
 
+const EMPTY_ROW_DATA: RowData = {
+  heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
+  type: 'empty',
+  isSectionStart: false,
+  isSectionEnd: false,
+}
+
 const Platform: FC = () => {
   const stage = useGameStore((s) => s.stage)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
+  const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
 
   const { input: playerInput } = usePlayerInput()
 
@@ -150,7 +159,7 @@ const Platform: FC = () => {
       let nextRowZ = INITIAL_ROWS_Z_OFFSET
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-        const rowData = rowsData.current[rowIndex]
+        const rowData = rowsData.current[rowIndex] ?? EMPTY_ROW_DATA
         activeRowsData.current[rowIndex] = rowData
         baseZByRow.current[rowIndex] = nextRowZ
         wrapCountByRow.current[rowIndex] = 0
@@ -168,9 +177,9 @@ const Platform: FC = () => {
           instanceIsHighlighted.current[bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
 
           instances.push({
-            key: `terrain-${rowIndex}-${columnIndex}`,
+            key: `tile-${rowIndex}-${columnIndex}`,
             position: [x, y, z],
-            userData: { type: 'terrain', rowIndex, colIndex: columnIndex },
+            userData: { type: 'tile', rowIndex, colIndex: columnIndex },
           })
         }
 
@@ -186,30 +195,57 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick])
 
-  function applyRowWraps(rowIndex: number, wrapsToApply: number) {
-    for (let wrapCount = 0; wrapCount < wrapsToApply; wrapCount++) {
-      const newRowData = rowsData.current[nextRowDataIndex.current]
-      activeRowsData.current[rowIndex] = newRowData
+  function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
+    const data = newRowData ?? EMPTY_ROW_DATA
+    activeRowsData.current[rowIndex] = data
+
+    for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+      const bodyIndex = rowIndex * COLUMNS + columnIndex
+      const y = data.heights[columnIndex]
+      yByBodyIndex.current[bodyIndex] = y
+      instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+      instanceIsHighlighted.current![bodyIndex] = data.isHighlighted?.[columnIndex] ?? 0
+    }
+  }
+
+  function markInstanceAttributesDirty() {
+    if (instancedTilesRef.current?.visibilityAttribute) {
+      instancedTilesRef.current.visibilityAttribute.needsUpdate = true
+    }
+    if (instancedTilesRef.current?.isHighlightedAttribute) {
+      instancedTilesRef.current.isHighlightedAttribute.needsUpdate = true
+    }
+  }
+
+  function applyForwardRowWraps(rowIndex: number, wrapsToApply: number) {
+    let wrapsApplied = 0
+
+    for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
+      const newRowData = rowsData.current[nextRowDataIndex.current] ?? EMPTY_ROW_DATA
+      updateInstanceAttributesForRow(rowIndex, newRowData)
       nextRowDataIndex.current++
-
-      for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-        const bodyIndex = rowIndex * COLUMNS + columnIndex
-        yByBodyIndex.current[bodyIndex] = newRowData.heights[columnIndex]
-        const y = newRowData.heights[columnIndex]
-        instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
-        instanceIsHighlighted.current![bodyIndex] = newRowData.isHighlighted?.[columnIndex] ?? 0
-      }
-
-      if (instancedTilesRef.current?.visibilityAttribute) {
-        instancedTilesRef.current.visibilityAttribute.needsUpdate = true
-      }
-      if (instancedTilesRef.current?.isHighlightedAttribute) {
-        instancedTilesRef.current.isHighlightedAttribute.needsUpdate = true
-      }
     }
 
-    if (wrapsToApply > 0) {
+    if (wrapsApplied > 0) {
       isRowRaised.current[rowIndex] = false
+      markInstanceAttributesDirty()
+    }
+  }
+
+  function applyBackwardRowWraps(rowIndex: number, wrapsToApply: number) {
+    let wrapsApplied = 0
+
+    for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
+      nextRowDataIndex.current = Math.max(0, nextRowDataIndex.current - 1)
+      const earliestRowIndex = nextRowDataIndex.current - ROWS_RENDERED
+      const newRowData =
+        earliestRowIndex >= 0 ? rowsData.current[earliestRowIndex] : EMPTY_ROW_DATA
+      updateInstanceAttributesForRow(rowIndex, newRowData)
+    }
+
+    if (wrapsApplied > 0) {
+      isRowRaised.current[rowIndex] = false
+      markInstanceAttributesDirty()
     }
   }
 
@@ -264,6 +300,7 @@ const Platform: FC = () => {
 
     if (isInfoSectionStart && stage !== Stage.INFO) {
       goToStage(Stage.INFO)
+      setInfoContentIndex(data.infoContentIndex ?? 0)
       return
     }
 
@@ -278,6 +315,7 @@ const Platform: FC = () => {
   function handleRowLowered(rowIndex: number) {
     const data = activeRowsData.current[rowIndex]
     isRowRaised.current[rowIndex] = false
+
     infoElements.current?.hideElementsIfNeeded(activeRowsData.current[rowIndex])
 
     const isInfoSectionStart = data?.type === 'info' && data.isSectionStart
@@ -290,8 +328,9 @@ const Platform: FC = () => {
     const isObstaclesSectionStart = data?.type === 'obstacles' && data.isSectionStart
 
     if (isObstaclesSectionStart && stage === Stage.TERRAIN) {
-      goToStage(Stage.INFO)
-      return
+      const previousRow = activeRowsData.current[rowIndex - 1]
+      if (previousRow?.type === 'info') goToStage(Stage.INFO)
+      if (previousRow?.type === 'home') goToStage(Stage.HOME)
     }
   }
 
@@ -316,9 +355,11 @@ const Platform: FC = () => {
 
       const previousWraps = wrapCountByRow.current[rowIndex]
       if (wraps > previousWraps) {
-        applyRowWraps(rowIndex, wraps - previousWraps)
-        wrapCountByRow.current[rowIndex] = wraps
+        applyForwardRowWraps(rowIndex, wraps - previousWraps)
+      } else if (wraps < previousWraps) {
+        applyBackwardRowWraps(rowIndex, previousWraps - wraps)
       }
+      wrapCountByRow.current[rowIndex] = wraps
 
       const yOffset = computeLiftLowerOffset(rowZ)
       updateRowPositions(rowIndex, rowZ, yOffset)
@@ -337,7 +378,7 @@ const Platform: FC = () => {
   }
 
   useGameFrame((_, delta) => {
-    if (!hasInitialized.current) return
+    if (!hasInitialized.current) return [[]]
     if (!instancedTilesRef.current?.shader) return
     if (!homeElements.current || !infoElements.current) return
 

@@ -18,6 +18,7 @@ type Props = {
 const UI: FC<Props> = ({ isMobile }) => {
   const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
+  const infoContentIndex = useGameStore((s) => s.infoContentIndex)
 
   // const isPlaying = hasStarted && !isGameOver
   // const switchKey = `${isPlaying}-${isGameOver}`
@@ -34,7 +35,11 @@ const UI: FC<Props> = ({ isMobile }) => {
           }}
         </Transition>
       </SwitchTransition> */}
-      <div className="fixed top-4 bg-white p-4 font-black text-black">{stage}</div>
+      <div className="fixed top-4 bg-white p-2 font-black text-black">
+        Stage: {stage}
+        <br />
+        Info content index: {infoContentIndex}
+      </div>
       <Controls isMobile={isMobile} />
       <AudioToggle />
     </>

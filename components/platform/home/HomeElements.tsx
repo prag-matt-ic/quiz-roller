@@ -53,13 +53,9 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
   const [infoZoneRefs] = useState(Array.from({ length: 2 }, () => createRef<RapierRigidBody>()))
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const isOutOfView = useRef(false)
-  const maxZ = MAX_Z + INITIAL_ROWS_Z_OFFSET
 
   useEffect(() => {
     const positionElements = (rowData: RowData[]) => {
-      isOutOfView.current = false
-
       rowData.forEach((row, rowIndex) => {
         if (row.type !== 'home') return
         const rowZ = -rowIndex * TILE_SIZE + INITIAL_ROWS_Z_OFFSET
@@ -100,16 +96,9 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
 
   const moveElements = useCallback(
     (zStep: number) => {
-      if (isOutOfView.current) return
-
       if (!!image.current) {
         const nextZ = image.current.position.z + zStep
-        if (nextZ > maxZ) {
-          image.current.position.z = HIDE_POSITION_Z
-          image.current.position.y = HIDE_POSITION_Y
-        } else {
-          image.current.position.z = nextZ
-        }
+        image.current.position.z = nextZ
       }
 
       for (const infoZoneRef of infoZoneRefs) {
@@ -120,18 +109,11 @@ const HomeElements: FC<Props> = ({ ref, rowsData }) => {
         translation.current.x = currentTranslation.x
         translation.current.y = currentTranslation.y
 
-        if (nextZ > maxZ) {
-          translation.current.y = HIDE_POSITION_Y
-          translation.current.z = HIDE_POSITION_Z
-          infoZoneRef.current.setTranslation(translation.current, false)
-          continue
-        }
-
         translation.current.z = nextZ
         infoZoneRef.current.setTranslation(translation.current, true)
       }
     },
-    [infoZoneRefs, maxZ],
+    [infoZoneRefs],
   )
 
   useImperativeHandle(ref, () => {

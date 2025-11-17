@@ -36,11 +36,14 @@ type GameState = {
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 
+  infoContentIndex: number
+  setInfoContentIndex: (index: number) => void
+
   paletteIndex: 0 | 1 | 2
   setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
 
   confirmationProgress: number // [0, 1]
-  hudIndicator: null | 'correct' | 'incorrect' | 'move' // Set when confirmation completes and then clear
+  hudIndicator: null | 'move'
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -76,6 +79,7 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
+  | 'infoContentIndex'
   | 'confirmationProgress'
   | 'playerInput'
   | 'playerWorldPosition'
@@ -85,6 +89,7 @@ const INITIAL_STATE: Pick<
   | 'edgeWarningIntensities'
 > = {
   stage: Stage.HOME,
+  infoContentIndex: 0,
   confirmationProgress: 0,
   playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
   playerInput: {
@@ -93,7 +98,7 @@ const INITIAL_STATE: Pick<
     left: 0,
     right: 0,
   },
-  paletteIndex: 1,
+  paletteIndex: 0,
   cameraLookAtPosition: null,
   hudIndicator: 'move',
   edgeWarningIntensities: {
@@ -178,6 +183,10 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
         setCameraLookAtPosition: (cameraLookAtPosition) => {
           set({ cameraLookAtPosition })
+        },
+
+        setInfoContentIndex: (index) => {
+          set({ infoContentIndex: index })
         },
 
         setConfirmingPaletteIndex: (newPaletteIndex) => {
@@ -282,12 +291,12 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }
 
           if (newStage === Stage.TERRAIN) {
-            set({ stage: Stage.TERRAIN })
+            set({ stage: Stage.TERRAIN, hudIndicator: null })
             return
           }
 
           if (newStage === Stage.CTA) {
-            set({ stage: Stage.CTA })
+            set({ stage: Stage.CTA, hudIndicator: null })
             return
           }
         },
@@ -302,73 +311,6 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
     ),
   )
 }
-
-// function handleIncorrectAnswer({
-//   set,
-//   confirmingAnswer,
-// }: {
-//   set: StoreApi<GameState>['setState']
-//   confirmingAnswer: AnswerUserData
-// }) {
-//   set((s) => ({
-//     confirmingAnswer: null,
-//     confirmedAnswers: [...s.confirmedAnswers, confirmingAnswer],
-//     hudIndicator: 'incorrect',
-//   }))
-// }
-
-// function handleCorrectAnswer({
-//   set,
-//   // confirmingAnswer,
-// }: {
-//   confirmingAnswer: AnswerUserData
-//   set: StoreApi<GameState>['setState']
-// }) {
-//   set((s) => {
-//     const newConfirmedAnswers = [...s.confirmedAnswers, confirmingAnswer]
-//     const totalCorrect = newConfirmedAnswers.filter((a) => a.answer.isCorrect).length
-
-//     Increment difficulty every 2 correct answers
-//     const newDifficulty = Math.min(Math.floor(totalCorrect / 2) + 1, MAX_DIFFICULTY)
-
-//     return {
-//       currentDifficulty: newDifficulty,
-//       confirmingAnswer: null,
-//       confirmedAnswers: newConfirmedAnswers,
-//       hudIndicator: 'correct',
-//     }
-//   })
-// }
-
-// Helper functions for goToStage
-
-function handleTerrainStage({ set }: { set: StoreApi<GameState>['setState'] }) {
-  set({ stage: Stage.TERRAIN, hudIndicator: 'move' }) // Updates confirmation result to show prompt to move..
-}
-
-// function handleGameOverStage({
-//   set,
-//   get,
-// }: {
-//   set: StoreApi<GameState>['setState']
-//   get: StoreApi<GameState>['getState']
-// }) {
-//   const { confirmedAnswers, distanceRows } = get()
-
-//   const totalCorrect = confirmedAnswers.filter((a) => a.answer.isCorrect).length
-//   const run: RunStats = {
-//     correctAnswers: totalCorrect,
-//     distance: distanceRows,
-//     date: new Date(),
-//   }
-
-//   set((s) => ({
-//     stage: Stage.CTA,
-//     currentRun: run,
-//     hasStarted: false,
-//     previousRuns: [...s.previousRuns, run],
-//   }))
-// }
 
 type Props = PropsWithChildren
 
