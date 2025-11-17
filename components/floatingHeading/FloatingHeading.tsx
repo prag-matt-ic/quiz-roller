@@ -36,19 +36,12 @@ type FloatingHeadingUniforms = {
   uTexture: Texture
   uOpacity: number
   uPlayerXZ: Vector2
-  uPlayerFadeInner: number
-  uPlayerFadeOuter: number
 }
-
-const PLAYER_FADE_INNER = 1.5
-const PLAYER_FADE_OUTER = 4.0
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uTexture: TRANSPARENT_TEXTURE,
   uOpacity: 1,
   uPlayerXZ: new Vector2(0, 0),
-  uPlayerFadeInner: PLAYER_FADE_INNER,
-  uPlayerFadeOuter: PLAYER_FADE_OUTER,
 }
 
 const FloatingHeadingShader = shaderMaterial(
