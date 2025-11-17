@@ -24,6 +24,7 @@ const float REGULAR_MIX = 0.42;
 const float DARKEN_FACTOR = 0.5;
 const float UP_THRESHOLD = 0.5;
 const float HIGHLIGHT_MIX = 0.66;
+const vec3 WHITE = vec3(1.0);
 
 void main() {
   // Early discard for fully transparent tiles
@@ -51,11 +52,11 @@ void main() {
   // Mix with white based on tile type
   mediump float highlightedMix = mix(HIGHLIGHTED_MIX_MIN, HIGHLIGHTED_MIX_MAX, vSeed);
   mediump float mixAmount = mix(REGULAR_MIX, highlightedMix, isHighlighted);
-  vec3 background = mix(vec3(1.0), bgColour, mixAmount);
+  vec3 background = mix(WHITE, bgColour, mixAmount);
 
   // Apply player proximity highlight
-  mediump float highlightAmount = clamp(vPlayerHighlight, 0.0, 1.0);
-  vec3 highlightColour = mix(vec3(1.0), bgColour, HIGHLIGHT_MIX);
+  mediump float highlightAmount = vPlayerHighlight;
+  vec3 highlightColour = mix(WHITE, bgColour, HIGHLIGHT_MIX);
   background = mix(background, highlightColour, highlightAmount);
 
   // Darken non-upward-facing surfaces

@@ -19,10 +19,8 @@ float hashFloat(float n) {
   return fract(sin(n) * 43758.5453123);
 }
 
-vec3 rotateAroundAxis(vec3 v, vec3 axis, float angle) {
-  float s = sin(angle);
-  float c = cos(angle);
-  return v * c + cross(axis, v) * s + axis * dot(axis, v) * (1.0 - c);
+vec3 rotateWithTrig(vec3 v, vec3 axis, float sinAngle, float cosAngle) {
+  return v * cosAngle + cross(axis, v) * sinAngle + axis * dot(axis, v) * (1.0 - cosAngle);
 }
 
 varying mediump float vAlpha;
@@ -42,8 +40,8 @@ void main() {
   vec4 worldPos = modelInstanceMatrix * vec4(position, 1.0);
 
   // Compute world-space normal (approximate by applying linear part of modelInstanceMatrix)
-  // This is sufficient for axis-aligned boxes used for tiles
-  vWorldNormal = normalize(linearPart * normal);
+  // Normalize after tilt so we do it once.
+  vec3 rawNormal = linearPart * normal;
 
   // Compute instance center in world space once per vertex (constant per instance)
   vec3 instanceCenter = modelInstanceMatrix[3].xyz;
@@ -66,19 +64,21 @@ void main() {
   // Apply per-instance tilt based on fade, but keep highlighted tiles steady
   float highlightMask = step(0.5, isHighlighted);
   float fadeAmount = (1.0 - radialAlpha) * (1.0 - highlightMask);
-  float axisSeedX = hashFloat(seed * 3.173);
-  float axisSeedZ = hashFloat(seed * 7.921);
-  vec3 tiltAxis = vec3(axisSeedX - 0.5, 0.0, axisSeedZ - 0.5);
+  vec2 axisSeeds = vec2(hashFloat(seed * 3.173), hashFloat(seed * 7.921));
+  vec3 tiltAxis = vec3(axisSeeds.x - 0.5, 0.0, axisSeeds.y - 0.5);
   float axisLength = max(length(tiltAxis), AXIS_EPSILON);
   tiltAxis /= axisLength;
 
   float signedNoise = hashFloat(seed * 11.0) * 2.0 - 1.0;
   float tiltAngle = fadeAmount * TILE_FADE_ROTATE_MAX * signedNoise;
+  float tiltSin = sin(tiltAngle);
+  float tiltCos = cos(tiltAngle);
 
   vec3 centeredPos = worldPos.xyz - instanceCenter;
-  centeredPos = rotateAroundAxis(centeredPos, tiltAxis, tiltAngle);
+  centeredPos = rotateWithTrig(centeredPos, tiltAxis, tiltSin, tiltCos);
   worldPos.xyz = centeredPos + instanceCenter;
-  vWorldNormal = normalize(rotateAroundAxis(vWorldNormal, tiltAxis, tiltAngle));
+  rawNormal = rotateWithTrig(rawNormal, tiltAxis, tiltSin, tiltCos);
+  vWorldNormal = normalize(rawNormal);
   vWorldPos = worldPos.xyz;
 
   // Pass seed to fragment for noise offset

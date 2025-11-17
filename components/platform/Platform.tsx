@@ -3,7 +3,12 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useEffect, useRef, useState } from 'react'
 
-import { PLAYER_INITIAL_POSITION_VEC3, Stage, useGameStore } from '@/components/GameProvider'
+import {
+  PLAYER_INITIAL_POSITION_VEC3,
+  Stage,
+  useGameStore,
+  useGameStoreAPI,
+} from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
@@ -102,6 +107,7 @@ function getRowAlpha(rowZ: number, playerZ: number) {
 }
 
 const Platform: FC = () => {
+  const gameStore = useGameStoreAPI()
   const stage = useGameStore((s) => s.stage)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
@@ -292,6 +298,17 @@ const Platform: FC = () => {
     }
   }
 
+  function setInfoContentIndexForVisibleRow(rowIndex: number) {
+    const row = activeRowsData.current[rowIndex]
+    if (!row) return
+    if (row.type !== 'info' || !row.isSectionStart) return
+    const contentIndex = row.infoContentIndex
+    if (typeof contentIndex !== 'number') return
+    const currentIndex = gameStore.getState().infoContentIndex
+    if (currentIndex === contentIndex) return
+    setInfoContentIndex(contentIndex)
+  }
+
   function updateStageForRow(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row || !row.isSectionStart) return
@@ -416,6 +433,7 @@ const Platform: FC = () => {
       if (wasVisible !== isVisible) {
         rowIsVisible.current[rowIndex] = isVisible
         if (isVisible) {
+          setInfoContentIndexForVisibleRow(rowIndex)
           positionRowDecorations(rowIndex, rowZ)
         } else {
           hideRowDecorations(rowIndex)
