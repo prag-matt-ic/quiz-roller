@@ -12,6 +12,7 @@ import { GemIcon, InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Card from '@/components/ui/Card'
 import { Credit } from '../home/Credit'
+import GemModel from '@/components/collectible/GemModel'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -153,7 +154,10 @@ const InfoElements: FC<Props> = ({ ref }) => {
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
         infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
-        Icon={GemIcon}>
+        Icon={GemIcon}
+        isCollectible={true}
+        contentIndex={contentIndex}
+        gemModelSlot={<GemModel scale={0.08} />}>
         {INFO_SECTION_CONTENT[contentIndex].collectible}
       </InfoZone>
 
@@ -176,7 +180,7 @@ export default InfoElements
 type InfoContent = {
   heading: string
   infoZoneContent: ReactNode
-  collectible?: ReactNode
+  collectible: ReactNode
   isInfoOnLeft: boolean
 }
 
@@ -220,7 +224,14 @@ export const INFO_SECTION_CONTENT: InfoContent[] = [
         </Card>
       </>
     ),
-    collectible: <></>,
+    collectible: (
+      <>
+        <Card className="w-full md:col-span-3" paletteIndex={0}>
+          <h2 className="info-header">Collectables</h2>
+          <p className="paragraph-sm">You&apos;ve unlocked a special feature!</p>
+        </Card>
+      </>
+    ),
     isInfoOnLeft: true,
   },
   {

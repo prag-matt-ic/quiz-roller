@@ -2,7 +2,7 @@ import './globals.css'
 
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Cinzel, Nunito_Sans } from 'next/font/google'
+import { Cinzel, Nunito_Sans, Unbounded } from 'next/font/google'
 
 const cinzel = Cinzel({
   variable: '--font-cinzel',
@@ -13,6 +13,13 @@ const nunitoSans = Nunito_Sans({
   variable: '--font-nunito-sans',
   subsets: ['latin'],
   weight: ['400', '600', '900'],
+  display: 'swap',
+})
+
+const unbounded = Unbounded({
+  variable: '--font-unbounded',
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
   display: 'swap',
 })
 
@@ -48,7 +55,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${cinzel.variable} ${nunitoSans.variable} overflow-hidden antialiased`}>
+      <body
+        className={`${cinzel.variable} ${nunitoSans.variable} ${unbounded.variable} overflow-hidden antialiased`}>
         {children}
         <Analytics />
       </body>

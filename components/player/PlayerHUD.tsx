@@ -4,7 +4,7 @@ import { Html } from '@react-three/drei'
 import gsap from 'gsap'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
-import { ArrowUpCircleIcon, CheckIcon, XIcon } from 'lucide-react'
+import { ArrowUpCircleIcon } from 'lucide-react'
 
 import { useGameStore } from '@/components/GameProvider'
 import { createPaletteGradient } from '@/components/palette'
@@ -13,9 +13,7 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 export const PLAYER_RADIUS = 0.5
 
 const PlayerHUD: FC = () => {
-  const confirmingPaletteIndex = false // useGameStore((s) => s.confirmingPaletteIndex)
-  const confirmingStart = false //useGameStore((s) => s.confirmingStart)
-  const confirmingAnswer = false // useGameStore((s) => s.confirmingAnswer)
+  const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
   const paletteIndex = useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
@@ -25,7 +23,16 @@ const PlayerHUD: FC = () => {
     [],
   )
 
+  const lastLoggedProgress = useRef(-1)
+
   const onConfirmationProgressChange = (progress: number) => {
+    // Log at key milestones
+    const milestone = Math.floor(progress * 2) / 2
+    if (milestone !== lastLoggedProgress.current) {
+      console.warn(`[PlayerHUD] Progress: ${(milestone * 100).toFixed(0)}%`)
+      lastLoggedProgress.current = milestone
+    }
+
     const xValue = -100 + progress * 100
     setter(xValue)
   }
@@ -88,9 +95,22 @@ const PlayerHUD: FC = () => {
     mode: 'oklch',
   })
 
-  const showBar = false
+  const showBar = confirmingCollectible !== null
   const showLabel = !!hudIndicator
   const switchKey = `${showBar}-${showLabel}`
+
+  useEffect(() => {
+    console.warn(
+      '[PlayerHUD] Render state - confirmingCollectible:',
+      confirmingCollectible,
+      'showBar:',
+      showBar,
+      'showLabel:',
+      showLabel,
+      'switchKey:',
+      switchKey,
+    )
+  }, [confirmingCollectible, showBar, showLabel, switchKey])
 
   return (
     <Html
@@ -109,19 +129,28 @@ const PlayerHUD: FC = () => {
           appear={true}
           nodeRef={container}>
           {() => {
+            console.warn(
+              '[PlayerHUD] Transition rendering - showBar:',
+              showBar,
+              'showLabel:',
+              showLabel,
+            )
             if (showBar)
               return (
-                <div
-                  ref={container}
-                  className="relative h-5 w-36 overflow-hidden rounded-full border-2 border-white bg-white opacity-0 shadow-lg shadow-black/25">
-                  <div
-                    id="progress-bar"
-                    className="absolute h-full w-full -translate-x-full rounded-full"
-                    style={{
-                      background: rgbGradient,
-                      backgroundImage: oklchGradient,
-                    }}
-                  />
+                <div ref={container} className="flex flex-col items-center gap-2 opacity-0">
+                  <div className="text-sm font-bold tracking-wide text-nowrap text-white uppercase">
+                    Unlocking collectable...
+                  </div>
+                  <div className="relative h-5 w-36 overflow-hidden rounded-full border-2 border-white bg-white shadow-lg shadow-black/25">
+                    <div
+                      id="progress-bar"
+                      className="absolute h-full w-full -translate-x-full rounded-full"
+                      style={{
+                        background: rgbGradient,
+                        backgroundImage: oklchGradient,
+                      }}
+                    />
+                  </div>
                 </div>
               )
             if (showLabel)

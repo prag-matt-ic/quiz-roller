@@ -50,6 +50,11 @@ type GameState = {
   setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
+  confirmingCollectible: number | null // content index being confirmed
+  setConfirmingCollectible: (contentIndex: number | null) => void
+  collectedCollectibles: number[] // array of collected content indices
+  addCollectedCollectible: (contentIndex: number) => void
+
   confirmationProgress: number // [0, 1]
   hudIndicator: HudIndicatorConfig | null
 
@@ -100,6 +105,8 @@ const INITIAL_STATE: Pick<
   | 'cameraLookAtPosition'
   | 'hudIndicator'
   | 'edgeWarningIntensities'
+  | 'confirmingCollectible'
+  | 'collectedCollectibles'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -120,6 +127,8 @@ const INITIAL_STATE: Pick<
     near: 0,
     far: 0,
   },
+  confirmingCollectible: null,
+  collectedCollectibles: [],
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -204,6 +213,51 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         setHudIndicator: (indicator) => {
           set({ hudIndicator: indicator })
+        },
+
+        setConfirmingCollectible: (contentIndex) => {
+          confirmationTween?.kill()
+
+          if (contentIndex === null) {
+            cancelConfirmation(set)
+            set({ confirmingCollectible: null })
+            return
+          }
+
+          // Don't re-confirm already collected
+          if (get().collectedCollectibles.includes(contentIndex)) {
+            return
+          }
+
+          set({
+            confirmingCollectible: contentIndex,
+            confirmationProgress: 0,
+          })
+
+          const onConfirmed = () => {
+            const currentConfirming = get().confirmingCollectible
+            if (currentConfirming === contentIndex) {
+              // Add to collected and reset confirmation
+              const collected = get().collectedCollectibles
+              if (!collected.includes(contentIndex)) {
+                set({
+                  collectedCollectibles: [...collected, contentIndex],
+                  confirmingCollectible: null,
+                  confirmationProgress: 0,
+                })
+                playSoundFX(SoundFX.OPEN_INFO)
+              }
+            }
+          }
+
+          startConfirmation(set, onConfirmed, 2.0)
+        },
+
+        addCollectedCollectible: (contentIndex) => {
+          const collected = get().collectedCollectibles
+          if (!collected.includes(contentIndex)) {
+            set({ collectedCollectibles: [...collected, contentIndex] })
+          }
         },
 
         setConfirmingPaletteIndex: (newPaletteIndex) => {

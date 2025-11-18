@@ -9,9 +9,10 @@
   --color-foreground: #fff;
   --font-sans: var(--font-nunito-sans);
   --font-serif: var(--font-cinzel);
+  --font-unbounded: var(--font-unbounded);
 
-  --color-teal-accent: #37D6C7;
-  --color-orange-accent: #E97449;
+  --color-teal-accent: #37d6c7;
+  --color-orange-accent: #e97449;
 }
 
 @theme {
@@ -35,7 +36,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-cinzel), serif;
+  font-family: var(--font-unbounded), serif;
   user-select: none;
 }
 

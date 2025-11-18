@@ -94,7 +94,7 @@ const warnVisibilityCoverageIfNeeded = (() => {
 const logRowWrap = (direction: 'forward' | 'backward', rowIndex: number, wraps: number) => {
   if (!IS_DEV_ENV || wraps <= 0) return
   const action = direction === 'forward' ? 'advanced' : 'rewound'
-  console.warn(`[Platform] Row ${rowIndex} ${action} ${wraps} wrap(s).`)
+  // console.warn(`[Platform] Row ${rowIndex} ${action} ${wraps} wrap(s).`)
 }
 
 function getRowAlpha(rowZ: number, playerZ: number) {

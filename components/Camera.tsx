@@ -68,10 +68,16 @@ const Camera: FC = () => {
     if (stage === Stage.CTA) return
     const lookAt = !!cameraLookAtPosition ? cameraLookAtPosition : playerPosition.current
 
+    // When looking at info content, pan camera backward to keep player visible
+    const isLookingAtInfo = !!cameraLookAtPosition
+    const zOffset = isLookingAtInfo
+      ? CAMERA_CONFIG[stage].position.z + 4 // Move 4 units further back
+      : CAMERA_CONFIG[stage].position.z
+
     cameraControls.current.setLookAt(
       playerPosition.current.x,
       CAMERA_CONFIG[stage].position.y,
-      playerPosition.current.z + CAMERA_CONFIG[stage].position.z,
+      playerPosition.current.z + zOffset,
       lookAt.x,
       3.5,
       lookAt.z,
