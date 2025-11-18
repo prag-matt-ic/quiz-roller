@@ -109,10 +109,8 @@ export function generateInfoSectionRowData(config: InfoZone): RowData[] {
         ? LEFT_INFO_ZONE_CENTER_COLUMN
         : RIGHT_INFO_ZONE_CENTER_COLUMN
 
-      rows[i].infoZonePositions = [
-        [colToX(collectiblePosition), ON_TILE_Y, infoZoneZRelative],
-        [colToX(infoPosition), ON_TILE_Y, infoZoneZRelative],
-      ]
+      rows[i].collectiblePosition = [colToX(collectiblePosition), ON_TILE_Y, infoZoneZRelative]
+      rows[i].infoZonePositions = [[colToX(infoPosition), ON_TILE_Y, infoZoneZRelative]]
     }
 
     // Check if we should highlight on this row

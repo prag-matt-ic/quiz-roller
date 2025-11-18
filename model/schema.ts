@@ -20,6 +20,7 @@ export enum Collectible {
 export type CollectibleUserData = {
   type: 'collectible'
   collectible: Collectible
+  index: number
 }
 
 export type InfoZoneUserData = {

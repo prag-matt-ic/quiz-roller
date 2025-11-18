@@ -10,8 +10,9 @@ import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
+import { useControls } from 'leva'
 
-const CORRECT_COLOUR_HEX = [
+const PARTICLE_COLOUR_HEX = [
   '#509e7b',
   '#00ea89',
   '#00f394',
@@ -25,32 +26,16 @@ const CORRECT_COLOUR_HEX = [
   '#267152',
 ] as const
 
-const INCORRECT_COLOUR_HEX = [
-  '#d58d03',
-  '#ffe738',
-  '#fff500',
-  '#fce100',
-  '#ffb800',
-  '#ffcd26',
-  '#ffa360',
-  '#ffd147',
-  '#fce8cc',
-  '#fff9df',
-  '#b89164',
-] as const
-
 type PointsShaderUniforms = {
   uBurstProgress: number
   uPlayerPosition: Vector3
   uDpr: number
-  uWasCorrect: number
 }
 
 const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
   uBurstProgress: 0,
   uPlayerPosition: new Vector3(),
   uDpr: 1,
-  uWasCorrect: 0,
 }
 
 const CustomPointsShaderMaterial = shaderMaterial(
@@ -64,10 +49,9 @@ type Props = {
   width: number
   height: number
   wasConfirmed: boolean
-  wasCorrect: boolean
 }
 
-const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect = false }) => {
+const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.answerTile.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
   const goToStage = useGameStore((s) => s.goToStage)
@@ -78,64 +62,68 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
   const progress = useRef({ value: 0 })
   const progressTween = useRef<GSAPTween | null>(null)
   const isActive = useRef(false)
+  const hasMounted = useRef(false)
+  const previouslyConfirmed = useRef(false)
 
   const playerLocalPosition = useRef(new Vector3())
   const { playerPosition } = usePlayerPosition()
 
   // Geometry buffers
-  const initialPositions = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
-  const spawnPositions = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
+  const positionComponentCount = particleCount * 3
+  const initialPositions = useMemo(
+    () => new Float32Array(positionComponentCount),
+    [positionComponentCount],
+  )
+  const spawnPositions = useMemo(
+    () => new Float32Array(positionComponentCount),
+    [positionComponentCount],
+  )
   const seeds = useMemo(() => new Float32Array(particleCount), [particleCount])
-  const correctColours = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
-  const wrongColours = useMemo(() => new Float32Array(particleCount * 3), [particleCount])
+  const colours = useMemo(() => new Float32Array(positionComponentCount), [positionComponentCount])
+
 
   const spawnAttribute = useRef<BufferAttribute>(null)
   const seedAttribute = useRef<BufferAttribute>(null)
-  const correctColourAttribute = useRef<BufferAttribute>(null)
-  const wrongColourAttribute = useRef<BufferAttribute>(null)
-  const correctColourTemp = useRef(new Color())
-  const wrongColourTemp = useRef(new Color())
+  const colourAttribute = useRef<BufferAttribute>(null)
+  const colourTemp = useRef(new Color())
 
   const refreshSeeds = useCallback(() => {
     if (!seedAttribute.current) {
       console.error('Seed attribute not initialized')
       return
     }
+    /* eslint-disable react-hooks/immutability */
     for (let i = 0; i < particleCount; i++) {
       seeds[i] = Math.random()
     }
+    /* eslint-enable react-hooks/immutability */
     seedAttribute.current.needsUpdate = true
   }, [particleCount, seeds])
 
   const assignColours = useCallback(() => {
-    if (!correctColourAttribute.current || !wrongColourAttribute.current) {
-      console.error('Colour attributes not initialized')
+    if (!colourAttribute.current) {
+      console.error('Colour attribute not initialized')
       return
     }
-    const correctColour = correctColourTemp.current
-    const wrongColour = wrongColourTemp.current
+    const tempColour = colourTemp.current
+    /* eslint-disable react-hooks/immutability */
     for (let i = 0; i < particleCount; i++) {
       const colourOffset = i * 3
-      const correctColourIndex = Math.floor(Math.random() * CORRECT_COLOUR_HEX.length)
-      const wrongColourIndex = Math.floor(Math.random() * INCORRECT_COLOUR_HEX.length)
+      const colourIndex = Math.floor(Math.random() * PARTICLE_COLOUR_HEX.length)
 
-      correctColour.set(CORRECT_COLOUR_HEX[correctColourIndex])
-      wrongColour.set(INCORRECT_COLOUR_HEX[wrongColourIndex])
+      tempColour.set(PARTICLE_COLOUR_HEX[colourIndex])
 
-      correctColours[colourOffset] = correctColour.r
-      correctColours[colourOffset + 1] = correctColour.g
-      correctColours[colourOffset + 2] = correctColour.b
-
-      wrongColours[colourOffset] = wrongColour.r
-      wrongColours[colourOffset + 1] = wrongColour.g
-      wrongColours[colourOffset + 2] = wrongColour.b
+      colours[colourOffset] = tempColour.r
+      colours[colourOffset + 1] = tempColour.g
+      colours[colourOffset + 2] = tempColour.b
     }
-    correctColourAttribute.current.needsUpdate = true
-    wrongColourAttribute.current.needsUpdate = true
-  }, [correctColours, correctColourTemp, particleCount, wrongColourTemp, wrongColours])
+    /* eslint-enable react-hooks/immutability */
+    colourAttribute.current.needsUpdate = true
+  }, [colours, particleCount])
 
   useEffect(() => {
     const initializeStaticParticleData = () => {
+      /* eslint-disable react-hooks/immutability */
       for (let i = 0; i < particleCount; i++) {
         const spawnIndex = i * 3
         // Spawn within tile footprint (local space)
@@ -143,6 +131,7 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
         spawnPositions[spawnIndex + 1] = 0
         spawnPositions[spawnIndex + 2] = (Math.random() - 0.5) * height
       }
+      /* eslint-enable react-hooks/immutability */
       if (spawnAttribute.current) {
         spawnAttribute.current.needsUpdate = true
       }
@@ -156,16 +145,24 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
   }, [refreshSeeds])
 
   useEffect(() => {
-    if (!wasConfirmed || !materialRef.current) return
+    if (!materialRef.current) return
+
+    if (!hasMounted.current) {
+      hasMounted.current = true
+      previouslyConfirmed.current = wasConfirmed
+      return
+    }
+
+    const justConfirmed = wasConfirmed && !previouslyConfirmed.current
+    previouslyConfirmed.current = wasConfirmed
+
+    if (!justConfirmed) return
 
     progressTween.current?.kill()
     progress.current.value = 0
     isActive.current = true
 
-    // refreshSeeds()
-
     materialRef.current.uBurstProgress = 0
-    materialRef.current.uWasCorrect = wasCorrect ? 1 : 0
 
     progressTween.current = gsap.to(progress.current, {
       value: 1,
@@ -177,29 +174,21 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
         goToStage(Stage.TERRAIN)
       },
     })
-  }, [goToStage, refreshSeeds, wasConfirmed, wasCorrect])
+  }, [goToStage, wasConfirmed])
 
-  // useControls({
-  //   wasCorrect: {
-  //     value: false,
-  //     onChange: (v) => {
-  //       if (materialRef.current) {
-  //         materialRef.current.uWasCorrect = v ? 1 : 0
-  //       }
-  //     },
-  //   },
-  //   progress: {
-  //     value: 0,
-  //     min: 0,
-  //     max: 1,
-  //     step: 0.01,
-  //     onChange: (v) => {
-  //       if (materialRef.current) {
-  //         materialRef.current.uBurstProgress = v
-  //       }
-  //     },
-  //   },
-  // })
+  useControls({
+    progress: {
+      value: 0,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      onChange: (v) => {
+        if (materialRef.current) {
+          materialRef.current.uBurstProgress = v
+        }
+      },
+    },
+  })
 
   useEffect(() => {
     return () => {
@@ -248,17 +237,10 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false, wasCorrect 
           itemSize={1}
         />
         <bufferAttribute
-          ref={correctColourAttribute}
-          attach="attributes-correctColour"
-          args={[correctColours, 3]}
-          count={correctColours.length / 3}
-          itemSize={3}
-        />
-        <bufferAttribute
-          ref={wrongColourAttribute}
-          attach="attributes-wrongColour"
-          args={[wrongColours, 3]}
-          count={wrongColours.length / 3}
+          ref={colourAttribute}
+          attach="attributes-colour"
+          args={[colours, 3]}
+          count={colours.length / 3}
           itemSize={3}
         />
       </bufferGeometry>

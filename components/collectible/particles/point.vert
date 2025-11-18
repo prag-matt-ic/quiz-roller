@@ -6,12 +6,10 @@ precision highp float;
 uniform float uBurstProgress; // 0.0 to 1.0
 uniform vec3 uPlayerPosition;
 uniform float uDpr;
-uniform float uWasCorrect; // 0.0 or 1.0
 
 attribute vec3 spawnPosition;
 attribute float seed;
-attribute vec3 correctColour;
-attribute vec3 wrongColour;
+attribute vec3 colour;
 
 varying mediump float vProgress;
 varying mediump float vOpacityFactor;
@@ -75,7 +73,7 @@ void main() {
     attractionNoise.y *= 0.6;
     attractionPosition += attractionNoise;
 
-    float attractStrength = clamp(uWasCorrect, 0.0, step(0.3, seed)); // 70% chance to attract if correct
+    float attractStrength = step(0.3, seed); // 70% chance to attract
     vec3 finalPosition = mix(burstPosition, attractionPosition, attractStrength);
 
     // Standard transform
@@ -91,5 +89,5 @@ void main() {
     // Varyings
     vProgress = progress;
     vOpacityFactor = 1.0 - seed * 0.5;
-    vColor = mix(wrongColour, correctColour, clamp(uWasCorrect, 0.0, 1.0));
+    vColor = colour;
 }

@@ -8,11 +8,11 @@ import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
 import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { GemIcon, InfoIcon } from 'lucide-react'
+import { InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Card from '@/components/ui/Card'
 import { Credit } from '../home/Credit'
-import GemModel from '@/components/collectible/GemModel'
+import Collectible from '@/components/collectible/Collectible'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -51,27 +51,22 @@ const InfoElements: FC<Props> = ({ ref }) => {
     }
 
     // Check for info zone positions
-    const infoZonePositions = row.infoZonePositions
-    if (!!infoZonePositions) {
-      // Position LEFT - index 0
-      const collectiblePos = infoZonePositions[0]
-      if (collectiblePos && collectible.current) {
-        const newZ = rowZ + collectiblePos[2]
-        translation.current.x = collectiblePos[0]
-        translation.current.y = collectiblePos[1]
-        translation.current.z = newZ
-        collectible.current.setTranslation(translation.current, true)
-      }
+    const collectiblePos = row.collectiblePosition
+    if (collectiblePos && collectible.current) {
+      const newZ = rowZ + collectiblePos[2]
+      translation.current.x = collectiblePos[0]
+      translation.current.y = collectiblePos[1]
+      translation.current.z = newZ
+      collectible.current.setTranslation(translation.current, true)
+    }
 
-      // Position RIGHT - index 1
-      const infoPos = infoZonePositions[1]
-      if (infoPos && infoZone.current) {
-        const newZ = rowZ + infoPos[2]
-        translation.current.x = infoPos[0]
-        translation.current.y = infoPos[1]
-        translation.current.z = newZ
-        infoZone.current.setTranslation(translation.current, true)
-      }
+    const infoZonePos = row.infoZonePositions?.find((pos) => !!pos)
+    if (infoZonePos && infoZone.current) {
+      const newZ = rowZ + infoZonePos[2]
+      translation.current.x = infoZonePos[0]
+      translation.current.y = infoZonePos[1]
+      translation.current.z = newZ
+      infoZone.current.setTranslation(translation.current, true)
     }
   }, [])
 
@@ -82,24 +77,23 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
     const shouldHideHeading = !!row.floatingHeadingPosition
     const shouldHideInfoZone = row.infoZonePositions?.some((pos) => !!pos) === true
+    const shouldHideCollectible = !!row.collectiblePosition
 
     if (shouldHideHeading && heading.current) {
       heading.current.position.z = HIDE_POSITION_Z
       heading.current.position.y = HIDE_POSITION_Y
     }
 
-    if (shouldHideInfoZone) {
-      if (collectible.current) {
-        translation.current.z = HIDE_POSITION_Z
-        translation.current.y = HIDE_POSITION_Y
-        collectible.current.setTranslation(translation.current, true)
-      }
+    if (shouldHideCollectible && collectible.current) {
+      translation.current.z = HIDE_POSITION_Z
+      translation.current.y = HIDE_POSITION_Y
+      collectible.current.setTranslation(translation.current, true)
+    }
 
-      if (infoZone.current) {
-        translation.current.z = HIDE_POSITION_Z
-        translation.current.y = HIDE_POSITION_Y
-        infoZone.current.setTranslation(translation.current, true)
-      }
+    if (shouldHideInfoZone && infoZone.current) {
+      translation.current.z = HIDE_POSITION_Z
+      translation.current.y = HIDE_POSITION_Y
+      infoZone.current.setTranslation(translation.current, true)
     }
   }, [])
 
@@ -147,17 +141,14 @@ const InfoElements: FC<Props> = ({ ref }) => {
         activeStage={Stage.INFO}
       />
 
-      <InfoZone
+      <Collectible
         key="collectible"
         ref={collectible}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
-        Icon={GemIcon}
-        isCollectible={true}
         contentIndex={contentIndex}
-        gemModelSlot={<GemModel scale={0.08} />}/>
+      />
 
       <InfoZone
         key="info-zone"

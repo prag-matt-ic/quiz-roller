@@ -1,4 +1,7 @@
 // AnswerTile vertex shader (pass-through)
+precision mediump float;
+precision mediump int;
+
 uniform mediump float uTileAspect;
 
 varying mediump vec2 vUv;

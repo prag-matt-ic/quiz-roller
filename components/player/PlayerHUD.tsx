@@ -23,16 +23,7 @@ const PlayerHUD: FC = () => {
     [],
   )
 
-  const lastLoggedProgress = useRef(-1)
-
   const onConfirmationProgressChange = (progress: number) => {
-    // Log at key milestones
-    const milestone = Math.floor(progress * 2) / 2
-    if (milestone !== lastLoggedProgress.current) {
-      console.warn(`[PlayerHUD] Progress: ${(milestone * 100).toFixed(0)}%`)
-      lastLoggedProgress.current = milestone
-    }
-
     const xValue = -100 + progress * 100
     setter(xValue)
   }
@@ -99,19 +90,6 @@ const PlayerHUD: FC = () => {
   const showLabel = !!hudIndicator
   const switchKey = `${showBar}-${showLabel}`
 
-  useEffect(() => {
-    console.warn(
-      '[PlayerHUD] Render state - confirmingCollectible:',
-      confirmingCollectible,
-      'showBar:',
-      showBar,
-      'showLabel:',
-      showLabel,
-      'switchKey:',
-      switchKey,
-    )
-  }, [confirmingCollectible, showBar, showLabel, switchKey])
-
   return (
     <Html
       sprite={true}
@@ -137,9 +115,11 @@ const PlayerHUD: FC = () => {
             )
             if (showBar)
               return (
-                <div ref={container} className="flex flex-col items-center gap-2 opacity-0">
-                  <div className="text-sm font-bold tracking-wide text-nowrap text-white uppercase">
-                    Unlocking collectable...
+                <div
+                  ref={container}
+                  className="flex flex-col items-center gap-2 bg-black opacity-0">
+                  <div className="animate-pulse text-sm font-bold tracking-wide text-nowrap text-white/70 uppercase">
+                    Unlocking bonus...
                   </div>
                   <div className="relative h-5 w-36 overflow-hidden rounded-full border-2 border-white bg-white shadow-lg shadow-black/25">
                     <div
@@ -164,7 +144,7 @@ const PlayerHUD: FC = () => {
                   {hudIndicator?.type === 'incorrect' && (
                     <XIcon strokeWidth={4} size={48} className="text-red-600" />
                   )} */}
-                  {hudIndicator?.type === 'move' && (
+                  {hudIndicator.type === 'move' && (
                     <div className="flex items-center gap-2 pr-2">
                       <ArrowUpCircleIcon strokeWidth={1.5} size={32} />
                       <span className="block font-bold whitespace-nowrap uppercase">

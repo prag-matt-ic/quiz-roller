@@ -70,5 +70,6 @@ export type RowData = {
   tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface
   imagePosition?: [number, number, number] // 2D image rendered on the platform
   infoZonePositions?: ([number, number, number] | null)[] // Info zones rendered on the platform
+  collectiblePosition?: [number, number, number] // Collectibles rendered on the platform
   floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
 }

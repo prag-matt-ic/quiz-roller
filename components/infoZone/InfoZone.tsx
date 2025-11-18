@@ -15,15 +15,7 @@ import {
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
 import { type LucideIcon } from 'lucide-react'
-import {
-  type FC,
-  type PropsWithChildren,
-  type RefObject,
-  type ReactNode,
-  useRef,
-  useState,
-  useEffect,
-} from 'react'
+import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -63,9 +55,6 @@ type Props = PropsWithChildren<{
   height: number
   infoContainerClassName?: string
   Icon: LucideIcon
-  isCollectible?: boolean
-  contentIndex?: number
-  gemModelSlot?: ReactNode
 }>
 
 // Shows HTML content when the player enters the zone
@@ -76,25 +65,16 @@ export const InfoZone: FC<Props> = ({
   height,
   infoContainerClassName,
   Icon,
-  isCollectible = false,
-  contentIndex = 0,
-  gemModelSlot,
   children,
 }) => {
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
-  const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
-  const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
 
   const [showInfo, setShowInfo] = useState(false)
-  const [isPlayerInZone, setIsPlayerInZone] = useState(false)
-  const justCollectedRef = useRef(false)
   const iconContainer = useRef<HTMLDivElement>(null)
   const infoContainer = useRef<HTMLDivElement>(null)
   const iconPositionOffset: Vector3Tuple = [0, 0, 1]
   const infoPositionOffset: Vector3Tuple = [0, 0, 4]
-
-  const isCollected = isCollectible && collectedCollectibles.includes(contentIndex)
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
@@ -112,21 +92,8 @@ export const InfoZone: FC<Props> = ({
     if (!otherUserData) return
     if (otherUserData.type !== 'player') return
 
-    setIsPlayerInZone(true)
-    justCollectedRef.current = false
-
-    if (isCollectible) {
-      // lookAtInfo()
-
-      if (isCollected) {
-        setShowInfo(true)
-      } else {
-        setConfirmingCollectible(contentIndex)
-      }
-    } else {
-      setShowInfo(true)
-      lookAtInfo()
-    }
+    setShowInfo(true)
+    lookAtInfo()
   }
 
   const onIntersectionExit: IntersectionExitHandler = (event) => {
@@ -134,34 +101,10 @@ export const InfoZone: FC<Props> = ({
     if (!otherUserData) return
     if (otherUserData.type !== 'player') return
 
-    setIsPlayerInZone(false)
-
-    if (isCollectible && !isCollected) {
-      setConfirmingCollectible(null)
-    }
-
     // Always reset camera and hide info when exiting
     setShowInfo(false)
     setCameraLookAtPosition(null)
   }
-
-  // When a collectible is collected, show the content and move camera (only if player still in zone)
-  useEffect(() => {
-    // Check if collection status changed
-    const wasJustCollected = isCollectible && isCollected && !justCollectedRef.current
-
-    if (wasJustCollected && isPlayerInZone && !showInfo) {
-      justCollectedRef.current = true
-      setShowInfo(true)
-      // lookAtInfo()
-    }
-  }, [
-    isCollected,
-    isCollectible,
-    showInfo,
-    // lookAtInfo,
-    isPlayerInZone,
-  ])
 
   const { contextSafe } = useGSAP({ dependencies: [showInfo] })
 
@@ -271,53 +214,6 @@ export const InfoZone: FC<Props> = ({
           <sphereGeometry args={[0.5, 16, 16]} />
           <meshBasicMaterial color="white" />
         </mesh> */}
-
-        {/* 3D Gem Model - always rendered to avoid flash, visibility controlled by scale */}
-        {isCollectible && gemModelSlot && (
-          <>
-            {/* Lights from camera viewing angle (front) - 4 corners */}
-            <spotLight
-              position={[3.5 + 1, 0.5 + 1, 1.5 + 3]}
-              target-position={[3.5, 0.5, 1.5]}
-              intensity={25}
-              angle={Math.PI / 3}
-              penumbra={0.1}
-              distance={10}
-              castShadow
-            />
-            <spotLight
-              position={[3.5 - 1, 0.5 + 1, 1.5 + 3]}
-              target-position={[3.5, 0.5, 1.5]}
-              intensity={25}
-              angle={Math.PI / 3}
-              penumbra={0.1}
-              distance={10}
-            />
-            <spotLight
-              position={[3.5 + 1, 0.5 - 1, 1.5 + 3]}
-              target-position={[3.5, 0.5, 1.5]}
-              intensity={25}
-              angle={Math.PI / 3}
-              penumbra={0.1}
-              distance={10}
-            />
-            <spotLight
-              position={[3.5 - 1, 0.5 - 1, 1.5 + 3]}
-              target-position={[3.5, 0.5, 1.5]}
-              intensity={25}
-              angle={Math.PI / 3}
-              penumbra={0.1}
-              distance={10}
-            />
-            {/* Additional lights from below to illuminate bottom half */}
-            {/* <pointLight position={[3.5, 0.5 - 2, 1.5]} intensity={15} distance={5} />
-            <pointLight position={[3.5 + 1.5, 0.5, 1.5]} intensity={12} distance={5} />
-            <pointLight position={[3.5 - 1.5, 0.5, 1.5]} intensity={12} distance={5} /> */}
-            <group position={[0, -1, 2.5]} scale={showInfo ? 1 : 0}>
-              {gemModelSlot}
-            </group>
-          </>
-        )}
 
         {/* Info Content */}
         <Html

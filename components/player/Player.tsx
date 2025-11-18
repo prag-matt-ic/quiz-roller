@@ -15,7 +15,6 @@ import { Mesh, type Object3D, Vector3 } from 'three'
 import {
   type EdgeWarningIntensities,
   PLAYER_INITIAL_POSITION,
-  Stage,
   useGameStore,
 } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
@@ -57,6 +56,8 @@ const Player: FC = () => {
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
+  const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
+  const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
 
   const { controllerRef, input } = usePlayerController()
 
@@ -172,11 +173,10 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
-    // if (otherUserData.type === 'colour') {
-    //   if (stage !== Stage.HOME) return
-    //   setConfirmingPaletteIndex(otherUserData.paletteIndex)
-    //   return
-    // }
+    if (otherUserData.type === 'collectible') {
+      setConfirmingCollectible(otherUserData.index)
+      return
+    }
 
     if (otherUserData.type === 'out-of-bounds') {
       onOutOfBounds()
@@ -188,10 +188,12 @@ const Player: FC = () => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
 
-    // if (otherUserData.type === 'colour') {
-    //   setConfirmingPaletteIndex(null)
-    //   return
-    // }
+    if (otherUserData.type === 'collectible') {
+      if (confirmingCollectible === otherUserData.index) {
+        setConfirmingCollectible(null)
+      }
+      return
+    }
   }
 
   const userData: PlayerUserData = { type: 'player' }
