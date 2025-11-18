@@ -109,7 +109,6 @@ const Platform: FC = () => {
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
   const stageRef = useStage()
-  const stage = stageRef.current
 
   const { input: playerInput } = usePlayerInput()
   const { playerPosition } = usePlayerPosition()
@@ -133,7 +132,6 @@ const Platform: FC = () => {
   const instanceIsHighlighted = useRef<Float32Array | null>(null)
 
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
-  const initialRowStartZ = useRef(playerPosition.current.z + ROW_VISIBILITY_HALF_SPAN)
 
   // Precomputed row sequence
   const rowsData = useRef<RowData[]>([])
@@ -210,7 +208,6 @@ const Platform: FC = () => {
       const playerZ = playerPosition.current.z
       const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
       const nextStartZ = playerZ + initialHalfSpan - INITIAL_ROW_BACK_OFFSET
-      initialRowStartZ.current = nextStartZ
       if (IS_DEV_ENV) {
         console.warn(
           `[Platform] Initializing rows around playerZ=${playerZ.toFixed(
@@ -286,16 +283,30 @@ const Platform: FC = () => {
   function hideRowDecorations(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    if (row.type === 'info') {
-      infoElements.current?.hideElementsIfNeeded(row)
+    switch (row.type) {
+      case 'info':
+        infoElements.current?.hideElementsIfNeeded(row)
+        break
+      case 'home':
+        homeElements.current?.hideElementsIfNeeded(row)
+        break
+      default:
+        break
     }
   }
 
   function positionRowDecorations(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    if (row.type === 'info') {
-      infoElements.current?.positionElementsIfNeeded(row, rowZ)
+    switch (row.type) {
+      case 'info':
+        infoElements.current?.positionElementsIfNeeded(row, rowZ)
+        break
+      case 'home':
+        homeElements.current?.positionElementsIfNeeded(row, rowZ)
+        break
+      default:
+        break
     }
   }
 
@@ -310,16 +321,23 @@ const Platform: FC = () => {
     setInfoContentIndex(contentIndex)
   }
 
-  function getStageDeterminingRowIndex() {
+  const logStageTransition = (nextStage: Stage, rowIndex: number, row: RowData) => {
+    if (!IS_DEV_ENV) return
+    const currentStage = stageRef.current
+    const rowZ = rowZByIndex.current[rowIndex]
+    const zDisplay = rowZ == null ? 'n/a' : rowZ.toFixed(2)
+    console.warn(
+      `[Platform] Stage ${currentStage} -> ${nextStage} via row ${rowIndex} (${row.type}) z=${zDisplay}`,
+    )
+  }
+
+  function getRowIndexClosestToOrigin() {
     let bestIndex = -1
     let smallestAbsZ = Infinity
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-      const row = activeRowsData.current[rowIndex]
-      if (!row || !row.isSectionStart) continue
       const rowZ = rowZByIndex.current[rowIndex]
       if (typeof rowZ !== 'number') continue
-
       const absZ = Math.abs(rowZ)
       if (absZ < smallestAbsZ) {
         smallestAbsZ = absZ
@@ -332,10 +350,11 @@ const Platform: FC = () => {
 
   function applyStageForRow(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
-    if (!row || !row.isSectionStart) return
+    if (!row) return
 
     if (row.type === 'home') {
-      if (stage !== Stage.HOME) {
+      if (stageRef.current !== Stage.HOME) {
+        logStageTransition(Stage.HOME, rowIndex, row)
         goToStage(Stage.HOME)
       }
       return
@@ -344,20 +363,23 @@ const Platform: FC = () => {
     if (row.type === 'info') {
       const contentIndex = row.infoContentIndex ?? 0
       setInfoContentIndex(contentIndex)
-      if (stage !== Stage.INFO) {
+      if (stageRef.current !== Stage.INFO) {
+        logStageTransition(Stage.INFO, rowIndex, row)
         goToStage(Stage.INFO)
       }
       return
     }
 
     if (row.type === 'obstacles') {
-      if (stage !== Stage.TERRAIN) {
+      if (stageRef.current !== Stage.TERRAIN) {
+        logStageTransition(Stage.TERRAIN, rowIndex, row)
         goToStage(Stage.TERRAIN)
       }
       return
     }
 
-    if (row.type === 'cta' && stage !== Stage.CTA) {
+    if (row.type === 'cta' && stageRef.current !== Stage.CTA) {
+      logStageTransition(Stage.CTA, rowIndex, row)
       goToStage(Stage.CTA)
     }
   }
@@ -463,7 +485,7 @@ const Platform: FC = () => {
       }
     }
 
-    const stageRowIndex = getStageDeterminingRowIndex()
+    const stageRowIndex = getRowIndexClosestToOrigin()
     if (stageRowIndex >= 0) {
       applyStageForRow(stageRowIndex)
     }
@@ -498,12 +520,7 @@ const Platform: FC = () => {
       />
 
       {/* Home Elements */}
-      <HomeElements
-        ref={homeElements}
-        rowsData={rowsData}
-        rowStartZ={initialRowStartZ.current}
-        key={`${resetPlatformTick}-home`}
-      />
+      <HomeElements ref={homeElements} key={`${resetPlatformTick}-home`} />
 
       {/* Info Section Elements */}
       <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />

@@ -79,8 +79,10 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
     [positionComponentCount],
   )
   const seeds = useMemo(() => new Float32Array(particleCount), [particleCount])
-  const colours = useMemo(() => new Float32Array(positionComponentCount), [positionComponentCount])
-
+  const colours = useMemo(
+    () => new Float32Array(positionComponentCount),
+    [positionComponentCount],
+  )
 
   const spawnAttribute = useRef<BufferAttribute>(null)
   const seedAttribute = useRef<BufferAttribute>(null)
@@ -176,19 +178,19 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
     })
   }, [goToStage, wasConfirmed])
 
-  useControls({
-    progress: {
-      value: 0,
-      min: 0,
-      max: 1,
-      step: 0.01,
-      onChange: (v) => {
-        if (materialRef.current) {
-          materialRef.current.uBurstProgress = v
-        }
-      },
-    },
-  })
+  // useControls({
+  //   progress: {
+  //     value: 0,
+  //     min: 0,
+  //     max: 1,
+  //     step: 0.01,
+  //     onChange: (v) => {
+  //       if (materialRef.current) {
+  //         materialRef.current.uBurstProgress = v
+  //       }
+  //     },
+  //   },
+  // })
 
   useEffect(() => {
     return () => {

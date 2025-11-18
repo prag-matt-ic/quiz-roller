@@ -1,8 +1,8 @@
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import { Credit } from '@/components/platform/home/Credit'
 import Card from '@/components/ui/Card'
-import { ArrowUpCircleIcon, CoinsIcon } from 'lucide-react'
-import { type ReactNode } from 'react'
+import { ArrowUpCircleIcon, CoinsIcon, LucideIcon } from 'lucide-react'
+import { FC, type ReactNode } from 'react'
 
 type InfoContent = {
   heading: string
@@ -60,6 +60,21 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
   { heading: 'Heading third!', infoZoneContent: <></>, isInfoOnLeft: true },
 ]
 
+const BonusContent: FC<{
+  Icon: LucideIcon
+  text: ReactNode
+}> = ({ Icon, text }) => {
+  return (
+    <div className="flex items-center gap-2 pr-2">
+      <Icon strokeWidth={1.5} size={32} />
+      <p className="block text-sm font-medium uppercase">
+        Bonus
+        <span className="block text-xl font-bold whitespace-nowrap uppercase">{text}</span>
+      </p>
+    </div>
+  )
+}
+
 export const COLLECTIBLE_HUD_CONTENT: [
   HudIndicatorConfig,
   HudIndicatorConfig,
@@ -67,36 +82,15 @@ export const COLLECTIBLE_HUD_CONTENT: [
 ] = [
   {
     autoDismissS: 6,
-    content: (
-      <div className="flex items-center gap-2 pr-2">
-        <CoinsIcon strokeWidth={1.5} size={32} />
-        <span className="block font-bold whitespace-nowrap uppercase">
-          10% off your first project!
-        </span>
-      </div>
-    ),
+    content: <BonusContent Icon={CoinsIcon} text="10% off your first project!" />,
   },
   {
     autoDismissS: 6,
-    content: (
-      <div className="flex items-center gap-2 pr-2">
-        <CoinsIcon strokeWidth={1.5} size={32} />
-        <span className="block font-bold whitespace-nowrap uppercase">
-          Collectible two acquired!
-        </span>
-      </div>
-    ),
+    content: <BonusContent Icon={CoinsIcon} text="Free 30 minute consultation!" />,
   },
   {
     autoDismissS: 6,
-    content: (
-      <div className="flex items-center gap-2 pr-2">
-        <CoinsIcon strokeWidth={1.5} size={32} />
-        <span className="block font-bold whitespace-nowrap uppercase">
-          Collectible three bonus unlock!
-        </span>
-      </div>
-    ),
+    content: <BonusContent Icon={CoinsIcon} text="Access to proprietary AI prompts" />,
   },
 ]
 

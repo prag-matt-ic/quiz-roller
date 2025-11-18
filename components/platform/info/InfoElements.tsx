@@ -1,8 +1,15 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { type FC, useCallback, useImperativeHandle, useRef, type RefObject } from 'react'
+import {
+  type FC,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  type RefObject,
+  useState,
+} from 'react'
 import { Mesh } from 'three'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
 import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
@@ -31,6 +38,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
   const heading = useRef<Mesh>(null)
+  const [isHeadingVisible, setHeadingVisible] = useState(false)
   const collectible = useRef<RapierRigidBody>(null)
   const isCollectibleOutOfView = useRef(true)
   const infoZone = useRef<RapierRigidBody>(null)
@@ -43,10 +51,17 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
     // Check for floating heading position
     const floatingHeadingPosition = row.floatingHeadingPosition
-    if (!!floatingHeadingPosition && heading.current) {
+    if (!!floatingHeadingPosition) {
       const newZ = rowZ + floatingHeadingPosition[2]
 
-      heading.current.position.set(floatingHeadingPosition[0], floatingHeadingPosition[1], newZ)
+      if (heading.current) {
+        heading.current.position.set(
+          floatingHeadingPosition[0],
+          floatingHeadingPosition[1],
+          newZ,
+        )
+      }
+      setHeadingVisible(true)
     }
 
     // Check for info zone positions
@@ -79,9 +94,8 @@ const InfoElements: FC<Props> = ({ ref }) => {
     const shouldHideInfoZone = row.infoZonePositions?.some((pos) => !!pos) === true
     const shouldHideCollectible = !!row.collectiblePosition
 
-    if (shouldHideHeading && heading.current) {
-      heading.current.position.z = HIDE_POSITION_Z
-      heading.current.position.y = HIDE_POSITION_Y
+    if (shouldHideHeading) {
+      setHeadingVisible(false)
     }
 
     if (shouldHideCollectible && collectible.current) {
@@ -140,7 +154,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         position={[0, INITIAL_INFO_POSITION.Y, INITIAL_INFO_POSITION.Z]}
         width={HEADING_WIDTH}
         height={HEADING_HEIGHT}
-        activeStage={Stage.INFO}
+        isVisible={isHeadingVisible}
       />
 
       <Collectible

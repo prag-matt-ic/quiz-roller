@@ -14,7 +14,6 @@ import {
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useGameFrame from '@/hooks/useGameFrame'
 
@@ -29,7 +28,7 @@ type Props = {
   position: Vector3Tuple
   width: number
   height: number
-  activeStage: Stage
+  isVisible?: boolean
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
@@ -60,11 +59,10 @@ export const FloatingHeading: FC<Props> = ({
   position,
   width,
   height,
-  activeStage,
+  isVisible = false,
   textCanvasOptions = {},
   ref,
 }) => {
-  const stage = useGameStore((s) => s.stage)
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
 
   const onPlayerPosition = (newPosition: Vector3) => {
@@ -76,7 +74,7 @@ export const FloatingHeading: FC<Props> = ({
 
   const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)
-  const opacity = useRef({ value: 0 })
+  const opacity = useRef({ value: isVisible ? 1 : 0 })
 
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
@@ -99,16 +97,18 @@ export const FloatingHeading: FC<Props> = ({
     }
   }, [width])
 
+  useEffect(() => {
+    if (!shaderRef.current) return
+    shaderRef.current.uOpacity = opacity.current.value
+  }, [])
+
   useGSAP(
     () => {
-      const isActive = stage === activeStage
-      if (!isActive) return
-
       const tween = gsap.to(opacity.current, {
-        value: 1,
-        duration: 2.0,
-        delay: 0.3,
-        ease: 'power2.out',
+        value: isVisible ? 1 : 0,
+        duration: isVisible ? 2.0 : 0.6,
+        delay: isVisible ? 0.3 : 0,
+        ease: isVisible ? 'power2.out' : 'power2.inOut',
         onUpdate: () => {
           if (!shaderRef.current) return
           shaderRef.current.uOpacity = opacity.current.value
@@ -119,7 +119,7 @@ export const FloatingHeading: FC<Props> = ({
         tween.kill()
       }
     },
-    { dependencies: [stage, activeStage] },
+    { dependencies: [isVisible] },
   )
 
   useEffect(() => {

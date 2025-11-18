@@ -4,50 +4,56 @@ import {
   useImperativeHandle,
   useRef,
   type RefObject,
-  useEffect,
+  useState,
 } from 'react'
 import { Mesh } from 'three'
 
-import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData, TILE_SIZE } from '@/utils/tiles'
+import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { HEADING_HEIGHT, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
-import { Stage } from '@/components/GameProvider'
 
 export type HomeElementsHandle = {
   moveElements: (zStep: number) => void
+  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData | undefined) => void
 }
 
 type Props = {
   ref: RefObject<HomeElementsHandle | null>
-  rowsData: RefObject<RowData[]>
-  rowStartZ: number
 }
 
 const HOME_HEADING_TEXT = 'From scroll-driven storytelling to fully interactive worlds'
 const HIDDEN_HEADING_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
-const HomeElements: FC<Props> = ({ ref, rowsData, rowStartZ }) => {
+const HomeElements: FC<Props> = ({ ref }) => {
   const heading = useRef<Mesh>(null)
+  const [isHeadingVisible, setHeadingVisible] = useState(false)
 
-  useEffect(() => {
-    const positionElements = (rowData: RowData[]) => {
-      rowData.forEach((row, rowIndex) => {
-        if (row.type !== 'home') return
-        const rowZ = rowStartZ - rowIndex * TILE_SIZE
+  const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
+    if (!row) return
+    if (row.type !== 'home') return
+    const floatingHeadingPosition = row.floatingHeadingPosition
+    if (!floatingHeadingPosition) return
 
-        const floatingHeadingPosition = row.floatingHeadingPosition
-        if (!!floatingHeadingPosition && heading.current) {
-          heading.current.position.set(
-            floatingHeadingPosition[0],
-            floatingHeadingPosition[1],
-            floatingHeadingPosition[2] + rowZ,
-          )
-        }
-      })
+    if (heading.current) {
+      heading.current.position.set(
+        floatingHeadingPosition[0],
+        floatingHeadingPosition[1],
+        floatingHeadingPosition[2] + rowZ,
+      )
     }
 
-    positionElements(rowsData.current)
-  }, [rowsData, rowStartZ])
+    setHeadingVisible(true)
+  }, [])
+
+  const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
+    if (!row) return
+    if (row.type !== 'home') return
+    const shouldHideHeading = !!row.floatingHeadingPosition
+    if (!shouldHideHeading) return
+
+    setHeadingVisible(false)
+  }, [])
 
   const moveElements = useCallback((zStep: number) => {
     if (heading.current) {
@@ -58,8 +64,10 @@ const HomeElements: FC<Props> = ({ ref, rowsData, rowStartZ }) => {
   useImperativeHandle(ref, () => {
     return {
       moveElements,
+      positionElementsIfNeeded,
+      hideElementsIfNeeded,
     }
-  }, [moveElements])
+  }, [moveElements, positionElementsIfNeeded, hideElementsIfNeeded])
 
   return (
     <>
@@ -69,7 +77,7 @@ const HomeElements: FC<Props> = ({ ref, rowsData, rowStartZ }) => {
         position={HIDDEN_HEADING_POSITION}
         width={HEADING_WIDTH}
         height={HEADING_HEIGHT}
-        activeStage={Stage.HOME}
+        isVisible={isHeadingVisible}
       />
     </>
   )

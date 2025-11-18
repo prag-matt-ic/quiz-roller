@@ -9,6 +9,7 @@ import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import GemModel from '@/components/collectible/GemModel'
 import Particles from '@/components/collectible/particles/Particles'
 import { Collectible as CollectibleType, type CollectibleUserData } from '@/model/schema'
+import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
 import fragmentShader from './collectibleTile.frag'
 import { extend } from '@react-three/fiber'
@@ -21,6 +22,8 @@ type TileShaderUniforms = {
   uTileAspect: number
   uTime: number
   uPlayerPaletteIndex: number
+  uTilesX: number
+  uTilesY: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
@@ -29,6 +32,8 @@ const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uTileAspect: 1,
   uTime: 0,
   uPlayerPaletteIndex: 1,
+  uTilesX: 1,
+  uTilesY: 1,
 }
 
 const CollectibleTileShader = shaderMaterial(
@@ -87,6 +92,8 @@ export const Collectible: FC<Props> = ({
   })
 
   const tileAspect = width / height
+  const tilesX = width / TILE_SIZE
+  const tilesY = height / TILE_SIZE
 
   const userData = useMemo<CollectibleUserData>(
     () => ({
@@ -128,6 +135,8 @@ export const Collectible: FC<Props> = ({
           uIsConfirming={0}
           uPlayerPaletteIndex={paletteIndex}
           uTileAspect={tileAspect}
+          uTilesX={tilesX}
+          uTilesY={tilesY}
         />
       </mesh>
 
