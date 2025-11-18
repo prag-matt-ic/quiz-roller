@@ -268,13 +268,9 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
 
         onOutOfBounds: () => {
-          const { stage, resetPlayer, goToStage } = get()
+          const { resetPlayer } = get()
           playSoundFX(SoundFX.OUT_OF_BOUNDS)
-          if (stage === Stage.HOME) {
-            resetPlayer()
-          } else {
-            goToStage(Stage.HOME)
-          }
+          resetPlayer()
         },
 
         goToStage: (newStage: Stage) => {
