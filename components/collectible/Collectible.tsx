@@ -11,8 +11,9 @@ import Particles from '@/components/collectible/particles/Particles'
 import { Collectible as CollectibleType, type CollectibleUserData } from '@/model/schema'
 import vertexShader from './collectibleTile.vert'
 import fragmentShader from './collectibleTile.frag'
-import { extend, useFrame } from '@react-three/fiber'
+import { extend } from '@react-three/fiber'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
+import useGameFrame from '@/hooks/useGameFrame'
 
 type TileShaderUniforms = {
   uConfirmingProgress: number
@@ -67,7 +68,7 @@ export const Collectible: FC<Props> = ({
   const { confirmationProgress } = useConfirmationProgress()
   const isConfirming = useGameStore((s) => s.confirmingCollectible === contentIndex)
 
-  useFrame(({ clock }) => {
+  useGameFrame(({ clock }) => {
     if (!shader.current) return
     if (isOutOfView.current) return
     const globalProgress = confirmationProgress.current

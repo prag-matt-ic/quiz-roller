@@ -16,6 +16,7 @@ import {
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import useGameFrame from '@/hooks/useGameFrame'
 
 import fragmentShader from './floatingHeading.frag'
 import vertexShader from './floatingHeading.vert'
@@ -35,12 +36,14 @@ type Props = {
 type FloatingHeadingUniforms = {
   uTexture: Texture
   uOpacity: number
+  uTime: number
   uPlayerXZ: Vector2
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uTexture: TRANSPARENT_TEXTURE,
   uOpacity: 1,
+  uTime: 0,
   uPlayerXZ: new Vector2(0, 0),
 }
 
@@ -63,21 +66,17 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const stage = useGameStore((s) => s.stage)
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
-  const latestPlayerXZ = useRef<[number, number]>([0, 0])
 
   const onPlayerPosition = (newPosition: Vector3) => {
-    latestPlayerXZ.current[0] = newPosition.x
-    latestPlayerXZ.current[1] = newPosition.z
-    if (shaderRef.current) {
-      shaderRef.current.uPlayerXZ.set(newPosition.x, newPosition.z)
-    }
+    if (!shaderRef.current) return
+    shaderRef.current.uPlayerXZ.set(newPosition.x, newPosition.z)
   }
 
   usePlayerPosition(onPlayerPosition)
 
   const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)
-  const opacityState = useRef({ value: 0 })
+  const opacity = useRef({ value: 0 })
 
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
@@ -93,7 +92,6 @@ export const FloatingHeading: FC<Props> = ({
     const arcLength = Math.PI * 0.9 // keeps a gentle bend without wrapping the texture
     const computedRadius = Math.max(width / arcLength, 0.001)
     const start = Math.PI / 2 - arcLength / 2
-
     return {
       radius: computedRadius,
       thetaLength: arcLength,
@@ -106,21 +104,16 @@ export const FloatingHeading: FC<Props> = ({
       const isActive = stage === activeStage
       if (!isActive) return
 
-      const tween = gsap.fromTo(
-        opacityState.current,
-        { value: 0 },
-        {
-          value: 1,
-          duration: 1.2,
-          delay: 0.4,
-          ease: 'power2.out',
-          onUpdate: () => {
-            if (shaderRef.current) {
-              shaderRef.current.uOpacity = opacityState.current.value
-            }
-          },
+      const tween = gsap.to(opacity.current, {
+        value: 1,
+        duration: 2.0,
+        delay: 0.3,
+        ease: 'power2.out',
+        onUpdate: () => {
+          if (!shaderRef.current) return
+          shaderRef.current.uOpacity = opacity.current.value
         },
-      )
+      })
 
       return () => {
         tween.kill()
@@ -137,16 +130,22 @@ export const FloatingHeading: FC<Props> = ({
     }
   }, [canvasState])
 
+  useGameFrame(({ clock }) => {
+    if (!shaderRef.current) return
+    shaderRef.current.uTime = clock.elapsedTime
+  })
+
   return (
     <Suspense fallback={null}>
       <mesh ref={ref} position={position} rotation={[0, Math.PI / 2, 0]}>
         <cylinderGeometry
-          args={[radius, radius, height, 64, 1, true, thetaStart, thetaLength]}
+          args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]}
         />
         <FloatingHeadingMaterial
           key={(FloatingHeadingShader as unknown as { key: string }).key}
           ref={shaderRef}
           uOpacity={0}
+          uTime={0}
           transparent={true}
           depthTest={true}
           depthWrite={false}
