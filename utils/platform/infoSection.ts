@@ -11,13 +11,23 @@ export const INFO_SECTION_ROWS = 16
 export const INFO_ZONE_CENTER_ROW = 10
 const INFO_ZONE_COLS = 5
 const INFO_ZONE_ROWS = 5
-const INFO_ZONE_START_COLUMN = COLUMNS - INFO_ZONE_COLS
-const INFO_ZONE_CENTER_COLUMN = INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
+
+const RIGHT_INFO_ZONE_START_COLUMN = COLUMNS - INFO_ZONE_COLS // right side
+const RIGHT_INFO_ZONE_CENTER_COLUMN = RIGHT_INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
+const LEFT_INFO_ZONE_START_COLUMN = 0 // left side
+const LEFT_INFO_ZONE_CENTER_COLUMN = LEFT_INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
+
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
-// TODO: update to include the infoZone position, floating heading position....
-export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
+type InfoZone = {
+  contentIndex: 0 | 1 | 2
+  isInfoOnLeft: boolean
+}
+
+export function generateInfoSectionRowData(config: InfoZone): RowData[] {
+  const { contentIndex, isInfoOnLeft } = config
+
   // Start fully open, then carve out non-tile areas within tile rows
   const heights: number[][] = Array.from({ length: INFO_SECTION_ROWS }, () =>
     new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
@@ -29,22 +39,27 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
   const floatingHeaderZRelative =
     (floatingHeaderTriggerRow - floatingHeaderCenterRow) * TILE_SIZE
 
-  // Info zone appears at the same level as the header, but on the right side
-  const infoZoneCenterRow = 2
-  const infoZoneTriggerRow = Math.ceil(infoZoneCenterRow)
-  const infoZoneZRelative = (infoZoneTriggerRow - infoZoneCenterRow) * TILE_SIZE
-  const infoZoneHighlightStartColumn = clampRangeStart(
-    INFO_ZONE_START_COLUMN,
-    INFO_ZONE_COLS,
-    COLUMNS,
-  )
-  const infoZoneHighlightEndColumn = Math.min(
-    COLUMNS,
-    infoZoneHighlightStartColumn + INFO_ZONE_COLS,
-  )
+  // Info zones appear at the same row
+  const infoZoneTriggerRow = Math.ceil(INFO_ZONE_CENTER_ROW)
+  const infoZoneZRelative = (infoZoneTriggerRow - INFO_ZONE_CENTER_ROW) * TILE_SIZE
+
+  // Calculate highlight ranges for both zones using a loop
+  const zonePositions = [
+    { startColumn: LEFT_INFO_ZONE_START_COLUMN, centerColumn: LEFT_INFO_ZONE_CENTER_COLUMN },
+    { startColumn: RIGHT_INFO_ZONE_START_COLUMN, centerColumn: RIGHT_INFO_ZONE_CENTER_COLUMN },
+  ]
+
+  const highlightData = zonePositions.map((zone) => {
+    const startColumn = clampRangeStart(zone.startColumn, INFO_ZONE_COLS, COLUMNS)
+    const endColumn = Math.min(COLUMNS, startColumn + INFO_ZONE_COLS)
+    const template =
+      endColumn > startColumn ? buildHighlightTemplate(startColumn, endColumn) : null
+    return { startColumn, endColumn, template }
+  })
+
   const protectedRanges: ProtectRange[] = []
   const infoZoneHighlightStartRow = clampRangeStart(
-    Math.ceil(infoZoneCenterRow - INFO_ZONE_ROWS / 2),
+    Math.ceil(INFO_ZONE_CENTER_ROW - INFO_ZONE_ROWS / 2),
     INFO_ZONE_ROWS,
     INFO_SECTION_ROWS,
   )
@@ -52,17 +67,16 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     INFO_SECTION_ROWS,
     infoZoneHighlightStartRow + INFO_ZONE_ROWS,
   )
-  const infoZoneHighlightTemplate =
-    infoZoneHighlightEndColumn > infoZoneHighlightStartColumn
-      ? buildHighlightTemplate(infoZoneHighlightStartColumn, infoZoneHighlightEndColumn)
-      : null
 
-  if (infoZoneHighlightEndColumn > infoZoneHighlightStartColumn) {
-    protectedRanges.push({
-      startCol: infoZoneHighlightStartColumn,
-      endColExclusive: infoZoneHighlightEndColumn,
-    })
-  }
+  // Add protected ranges for both zones
+  highlightData.forEach(({ startColumn, endColumn }) => {
+    if (endColumn > startColumn) {
+      protectedRanges.push({
+        startCol: startColumn,
+        endColExclusive: endColumn,
+      })
+    }
+  })
 
   const rows: RowData[] = new Array(INFO_SECTION_ROWS)
 
@@ -87,18 +101,35 @@ export function generateInfoSectionRowData(contentIndex: 0 | 1 | 2): RowData[] {
     }
 
     if (i === infoZoneTriggerRow) {
+      // Index 0 = collectible zone, Index 1 = info zone
+      const collectiblePosition = isInfoOnLeft
+        ? RIGHT_INFO_ZONE_CENTER_COLUMN
+        : LEFT_INFO_ZONE_CENTER_COLUMN
+      const infoPosition = isInfoOnLeft
+        ? LEFT_INFO_ZONE_CENTER_COLUMN
+        : RIGHT_INFO_ZONE_CENTER_COLUMN
+
       rows[i].infoZonePositions = [
-        [colToX(INFO_ZONE_CENTER_COLUMN), ON_TILE_Y, infoZoneZRelative], // Positioned to the right (offset by 3 columns)
+        [colToX(collectiblePosition), ON_TILE_Y, infoZoneZRelative],
+        [colToX(infoPosition), ON_TILE_Y, infoZoneZRelative],
       ]
     }
 
-    const shouldHighlightInfoZoneRow =
-      infoZoneHighlightTemplate !== null &&
-      i >= infoZoneHighlightStartRow &&
-      i < infoZoneHighlightEndRow
+    // Check if we should highlight on this row
+    const inCurrentRowRange = i >= infoZoneHighlightStartRow && i < infoZoneHighlightEndRow
+    if (inCurrentRowRange) {
+      const combinedHighlight = new Array<number>(COLUMNS).fill(0)
 
-    if (shouldHighlightInfoZoneRow && infoZoneHighlightTemplate !== null) {
-      rows[i].isHighlighted = infoZoneHighlightTemplate.slice()
+      // Apply both zone highlights
+      highlightData.forEach(({ template }) => {
+        if (template !== null) {
+          for (let col = 0; col < COLUMNS; col++) {
+            combinedHighlight[col] = combinedHighlight[col] || template[col]
+          }
+        }
+      })
+
+      rows[i].isHighlighted = combinedHighlight
     }
   }
   roughenEdges({

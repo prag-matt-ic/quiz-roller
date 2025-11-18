@@ -9,6 +9,9 @@
   --color-foreground: #fff;
   --font-sans: var(--font-nunito-sans);
   --font-serif: var(--font-cinzel);
+
+  --color-teal-accent: #37D6C7;
+  --color-orange-accent: #E97449;
 }
 
 @theme {

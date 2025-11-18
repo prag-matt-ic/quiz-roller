@@ -5,7 +5,10 @@ import { type FC, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
-import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
+import InfoElements, {
+  INFO_SECTION_CONTENT,
+  type InfoElementsHandle,
+} from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -141,7 +144,10 @@ const Platform: FC = () => {
   const infoElements = useRef<InfoElementsHandle | null>(null)
 
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
-    const rows = generateInfoSectionRowData(contentIndex)
+    const rows = generateInfoSectionRowData({
+      contentIndex,
+      isInfoOnLeft: INFO_SECTION_CONTENT[contentIndex]?.isInfoOnLeft ?? true,
+    })
     rowsData.current = [...rowsData.current, ...rows]
   }
 

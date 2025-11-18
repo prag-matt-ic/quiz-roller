@@ -8,7 +8,7 @@ import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
 import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { InfoIcon } from 'lucide-react'
+import { GemIcon, InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Card from '@/components/ui/Card'
 import { Credit } from '../home/Credit'
@@ -32,10 +32,9 @@ const InfoElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
   const heading = useRef<Mesh>(null)
+  const collectible = useRef<RapierRigidBody>(null)
   const infoZone = useRef<RapierRigidBody>(null)
   const contentIndex = useGameStore((s) => s.infoContentIndex) // Content index is set in Platform when the info section row is raised.
-
-  // const infoIsOutOfView = useRef<boolean>(false)
 
   // Called when the row is raised
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
@@ -48,28 +47,29 @@ const InfoElements: FC<Props> = ({ ref }) => {
       const newZ = rowZ + floatingHeadingPosition[2]
 
       heading.current.position.set(floatingHeadingPosition[0], floatingHeadingPosition[1], newZ)
-      console.warn('[InfoElements] Positioned heading', {
-        contentIndex: row.infoContentIndex,
-        position: heading.current.position,
-      })
-      // infoIsOutOfView.current = false
     }
 
     // Check for info zone positions
     const infoZonePositions = row.infoZonePositions
-    if (!!infoZonePositions && infoZone.current) {
-      const zonePos = infoZonePositions[0]
-      if (zonePos) {
-        const newZ = rowZ + zonePos[2]
+    if (!!infoZonePositions) {
+      // Position LEFT - index 0
+      const collectiblePos = infoZonePositions[0]
+      if (collectiblePos && collectible.current) {
+        const newZ = rowZ + collectiblePos[2]
+        translation.current.x = collectiblePos[0]
+        translation.current.y = collectiblePos[1]
+        translation.current.z = newZ
+        collectible.current.setTranslation(translation.current, true)
+      }
 
-        translation.current.x = zonePos[0]
-        translation.current.y = zonePos[1]
+      // Position RIGHT - index 1
+      const infoPos = infoZonePositions[1]
+      if (infoPos && infoZone.current) {
+        const newZ = rowZ + infoPos[2]
+        translation.current.x = infoPos[0]
+        translation.current.y = infoPos[1]
         translation.current.z = newZ
         infoZone.current.setTranslation(translation.current, true)
-        console.warn('[InfoElements] Positioned info zone', {
-          contentIndex: row.infoContentIndex,
-          translation: { ...translation.current },
-        })
       }
     }
   }, [])
@@ -85,26 +85,36 @@ const InfoElements: FC<Props> = ({ ref }) => {
     if (shouldHideHeading && heading.current) {
       heading.current.position.z = HIDE_POSITION_Z
       heading.current.position.y = HIDE_POSITION_Y
-      console.warn('[InfoElements] Hid heading', {
-        contentIndex: row.infoContentIndex,
-        position: heading.current.position,
-      })
     }
 
-    if (shouldHideInfoZone && infoZone.current) {
-      translation.current.z = HIDE_POSITION_Z
-      translation.current.y = HIDE_POSITION_Y
-      infoZone.current.setTranslation(translation.current, true)
-      console.warn('[InfoElements] Hid info zone', {
-        contentIndex: row.infoContentIndex,
-        translation: { ...translation.current },
-      })
+    if (shouldHideInfoZone) {
+      if (collectible.current) {
+        translation.current.z = HIDE_POSITION_Z
+        translation.current.y = HIDE_POSITION_Y
+        collectible.current.setTranslation(translation.current, true)
+      }
+
+      if (infoZone.current) {
+        translation.current.z = HIDE_POSITION_Z
+        translation.current.y = HIDE_POSITION_Y
+        infoZone.current.setTranslation(translation.current, true)
+      }
     }
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
     if (!heading.current) return
     heading.current.position.z += zStep
+
+    // Move collectible zone
+    if (!!collectible.current) {
+      const currentTranslation = collectible.current.translation()
+      const newZ = currentTranslation.z + zStep
+      translation.current.x = currentTranslation.x
+      translation.current.y = currentTranslation.y
+      translation.current.z = newZ
+      collectible.current.setTranslation(translation.current, true)
+    }
 
     // Move info zone
     if (!!infoZone.current) {
@@ -137,6 +147,17 @@ const InfoElements: FC<Props> = ({ ref }) => {
       />
 
       <InfoZone
+        key="collectible"
+        ref={collectible}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={INFO_ZONE_WIDTH}
+        height={INFO_ZONE_HEIGHT}
+        infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        Icon={GemIcon}>
+        {INFO_SECTION_CONTENT[contentIndex].collectible}
+      </InfoZone>
+
+      <InfoZone
         key="info-zone"
         ref={infoZone}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
@@ -146,8 +167,6 @@ const InfoElements: FC<Props> = ({ ref }) => {
         Icon={InfoIcon}>
         {INFO_SECTION_CONTENT[contentIndex].infoZoneContent}
       </InfoZone>
-
-      {/* TODO: add collectible */}
     </>
   )
 }
@@ -157,10 +176,11 @@ export default InfoElements
 type InfoContent = {
   heading: string
   infoZoneContent: ReactNode
-  // collectible?
+  collectible?: ReactNode
+  isInfoOnLeft: boolean
 }
 
-const INFO_SECTION_CONTENT: InfoContent[] = [
+export const INFO_SECTION_CONTENT: InfoContent[] = [
   {
     heading: 'We help you bring 3D to the browser without the bloat',
     infoZoneContent: (
@@ -200,10 +220,14 @@ const INFO_SECTION_CONTENT: InfoContent[] = [
         </Card>
       </>
     ),
+    collectible: <></>,
+    isInfoOnLeft: true,
   },
   {
     heading: 'Senior Three.js developers supercharged with AI capabilities',
     infoZoneContent: <></>,
+    collectible: <></>,
+    isInfoOnLeft: false,
   },
-  { heading: 'Heading third!', infoZoneContent: <></> },
+  { heading: 'Heading third!', infoZoneContent: <></>, collectible: <></>, isInfoOnLeft: true },
 ]
