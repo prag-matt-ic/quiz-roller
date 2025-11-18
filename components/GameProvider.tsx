@@ -47,16 +47,14 @@ type GameState = {
   setInfoContentIndex: (index: number) => void
 
   paletteIndex: 0 | 1 | 2
-  setConfirmingPaletteIndex: (index: 0 | 1 | 2 | null) => void
+
+  confirmationProgress: number // [0, 1]
+  hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
   confirmingCollectible: number | null // content index being confirmed
   setConfirmingCollectible: (contentIndex: number | null) => void
   collectedCollectibles: number[] // array of collected content indices
-  addCollectedCollectible: (contentIndex: number) => void
-
-  confirmationProgress: number // [0, 1]
-  hudIndicator: HudIndicatorConfig | null
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -78,8 +76,7 @@ type GameState = {
 type GameStore = StoreApi<GameState>
 const GameContext = createContext<GameStore>(undefined!)
 
-const CONFIRMING_ANSWER_DURATION_S = 2.4
-const CONFIRMING_PALETTE_DURATION_S = 1.5
+const COLLECTIBLE_DURATION_S = 2.0
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 0] // Used when re-spawning to home
 
@@ -138,7 +135,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
   function startConfirmation(
     set: StoreApi<GameState>['setState'],
     onComplete: () => void,
-    duration: number = CONFIRMING_ANSWER_DURATION_S,
+    duration: number,
   ) {
     confirmationTweenTarget.value = 0
     confirmationTween = gsap.fromTo(
@@ -162,9 +159,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
   function cancelConfirmation(set: StoreApi<GameState>['setState']) {
     set({
-      // confirmingStart: null,
-      // confirmingAnswer: null,
-      // confirmingPaletteIndex: null,
+      confirmingCollectible: null,
     })
     confirmationTween = gsap.to(confirmationTweenTarget, {
       duration: 0.3,
@@ -225,9 +220,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }
 
           // Don't re-confirm already collected
-          if (get().collectedCollectibles.includes(contentIndex)) {
-            return
-          }
+          if (get().collectedCollectibles.includes(contentIndex)) return
 
           set({
             confirmingCollectible: contentIndex,
@@ -250,75 +243,8 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             }
           }
 
-          startConfirmation(set, onConfirmed, 2.0)
+          startConfirmation(set, onConfirmed, COLLECTIBLE_DURATION_S)
         },
-
-        addCollectedCollectible: (contentIndex) => {
-          const collected = get().collectedCollectibles
-          if (!collected.includes(contentIndex)) {
-            set({ collectedCollectibles: [...collected, contentIndex] })
-          }
-        },
-
-        setConfirmingPaletteIndex: (newPaletteIndex) => {
-          const { paletteIndex } = get()
-
-          if (newPaletteIndex === paletteIndex) return // Already selected
-          confirmationTween?.kill()
-
-          if (newPaletteIndex === null) {
-            cancelConfirmation(set)
-            stopSoundFX(SoundFX.CHANGE_COLOUR)
-            return
-          }
-
-          playSoundFX(SoundFX.CHANGE_COLOUR)
-
-          set({
-            // confirmingPaletteIndex: newPaletteIndex,
-            confirmationProgress: 0,
-          })
-
-          const onConfirmed = () => {
-            // if (get().confirmingPaletteIndex !== newPaletteIndex) return
-            // set({
-            //   paletteIndex: newPaletteIndex,
-            //   confirmingPaletteIndex: null,
-            //   confirmationProgress: 0,
-            // })
-          }
-
-          startConfirmation(set, onConfirmed, CONFIRMING_PALETTE_DURATION_S)
-        },
-
-        // setConfirmingStart: (startData: StartUserData | null) => {
-        //   const { stage, hasStarted, confirmingStart } = get()
-
-        //   if (stage !== Stage.HOME || hasStarted) return
-
-        //   if (!!startData && !!confirmingStart) return // No change
-        //   confirmationTween?.kill()
-
-        //   if (startData === null) {
-        //     cancelConfirmation(set)
-        //     return
-        //   }
-
-        //   set({
-        //     confirmingStart: startData,
-        //     // confirmingAnswer: null,
-        //     confirmingPaletteIndex: null,
-        //     confirmationProgress: 0,
-        //   })
-
-        //   const onConfirmed = () => {
-        //     if (!!get().confirmingStart) {
-        //       // get().onStartConfirmed()
-        //     }
-        //   }
-
-        //   startConfirmation(set, onConfirmed)
-        // },
 
         resetPlatformTick: 0,
         resetPlayerTick: 0,

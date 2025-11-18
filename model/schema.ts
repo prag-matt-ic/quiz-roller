@@ -11,6 +11,17 @@ export type ColourTileUserData = {
   paletteIndex: 0 | 1 | 2
 }
 
+export enum Collectible {
+  Coin = 'coin',
+  Gem = 'gem',
+  Bar = 'bar',
+}
+
+export type CollectibleUserData = {
+  type: 'collectible'
+  collectible: Collectible
+}
+
 export type InfoZoneUserData = {
   type: 'info-zone'
 }
@@ -19,4 +30,5 @@ export type RigidBodyUserData =
   | PlayerUserData
   | OutOfBoundsUserData
   | ColourTileUserData
+  | CollectibleUserData
   | InfoZoneUserData

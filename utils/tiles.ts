@@ -67,8 +67,8 @@ export type RowData = {
   isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
 
   infoContentIndex?: number
-  tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface (previously question text)
-  imagePosition?: [number, number, number] // 2D image rendered on the platform (previously logo)
+  tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface
+  imagePosition?: [number, number, number] // 2D image rendered on the platform
   infoZonePositions?: ([number, number, number] | null)[] // Info zones rendered on the platform
   floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
 }
