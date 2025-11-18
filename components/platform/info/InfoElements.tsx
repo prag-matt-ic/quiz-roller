@@ -1,6 +1,5 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { type FC, type ReactNode, useCallback, useImperativeHandle, useRef } from 'react'
-import { type RefObject } from 'react'
+import { type FC, useCallback, useImperativeHandle, useRef, type RefObject } from 'react'
 import { Mesh } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -10,9 +9,8 @@ import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
-import Card from '@/components/ui/Card'
-import { Credit } from '../home/Credit'
 import Collectible from '@/components/collectible/Collectible'
+import { INFO_SECTION_CONTENT } from '@/resources/content'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -34,6 +32,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
 
   const heading = useRef<Mesh>(null)
   const collectible = useRef<RapierRigidBody>(null)
+  const isCollectibleOutOfView = useRef(true)
   const infoZone = useRef<RapierRigidBody>(null)
   const contentIndex = useGameStore((s) => s.infoContentIndex) // Content index is set in Platform when the info section row is raised.
 
@@ -58,6 +57,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
       translation.current.y = collectiblePos[1]
       translation.current.z = newZ
       collectible.current.setTranslation(translation.current, true)
+      isCollectibleOutOfView.current = false
     }
 
     const infoZonePos = row.infoZonePositions?.find((pos) => !!pos)
@@ -88,6 +88,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       collectible.current.setTranslation(translation.current, true)
+      isCollectibleOutOfView.current = true
     }
 
     if (shouldHideInfoZone && infoZone.current) {
@@ -98,10 +99,11 @@ const InfoElements: FC<Props> = ({ ref }) => {
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
-    if (!heading.current) return
-    heading.current.position.z += zStep
+    if (!!heading.current) {
+      heading.current.position.z += zStep
+    }
 
-    // Move collectible zone
+    // Move collectible
     if (!!collectible.current) {
       const currentTranslation = collectible.current.translation()
       const newZ = currentTranslation.z + zStep
@@ -148,6 +150,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
         contentIndex={contentIndex}
+        isOutOfView={isCollectibleOutOfView}
       />
 
       <InfoZone
@@ -165,59 +168,3 @@ const InfoElements: FC<Props> = ({ ref }) => {
 }
 
 export default InfoElements
-
-type InfoContent = {
-  heading: string
-  infoZoneContent: ReactNode
-  isInfoOnLeft: boolean
-}
-
-export const INFO_SECTION_CONTENT: InfoContent[] = [
-  {
-    heading: 'We help you bring 3D to the browser without the bloat',
-    infoZoneContent: (
-      <>
-        <Card className="w-full md:col-span-5" paletteIndex={0}>
-          <h2 className="info-header">About</h2>
-          <p className="paragraph-sm max-w-md">
-            Quizroller is a proof of concept developed to showcase the potential of 3D web
-            experiences for educational purposes.
-            <br />
-            <br />
-            It&apos;s built using React Three Fiber, Rapier physics and WebGL for immersive
-            graphics.
-          </p>
-        </Card>
-
-        <Card className="w-full md:col-span-3" paletteIndex={0}>
-          <h2 className="info-header">Partnerships</h2>
-          <p className="paragraph-sm">
-            Interested in launching your own immersive learning experience?
-            <br />
-            <br />
-            <a href="mailto:pragmattic.ltd@gmail.com" className="underline underline-offset-2">
-              Let&apos;s chat!
-            </a>
-          </p>
-        </Card>
-
-        <Card className="w-full md:col-span-2" paletteIndex={0}>
-          <h2 className="info-header">Credits</h2>
-          <Credit
-            role="Lead Developer"
-            name="Matthew Frawley"
-            url="https://github.com/prag-matt-ic"
-          />
-          <Credit role="Support" name="Theo Walton" url="https://github.com/Void-vlk" />
-        </Card>
-      </>
-    ),
-    isInfoOnLeft: true,
-  },
-  {
-    heading: 'Senior Three.js developers supercharged with AI capabilities',
-    infoZoneContent: <></>,
-    isInfoOnLeft: false,
-  },
-  { heading: 'Heading third!', infoZoneContent: <></>, isInfoOnLeft: true },
-]

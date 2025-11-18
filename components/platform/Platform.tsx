@@ -5,10 +5,7 @@ import { type FC, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
-import InfoElements, {
-  INFO_SECTION_CONTENT,
-  type InfoElementsHandle,
-} from '@/components/platform/info/InfoElements'
+import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -37,6 +34,7 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
+import { INFO_SECTION_CONTENT } from '@/resources/content'
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {

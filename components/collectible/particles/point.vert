@@ -1,4 +1,4 @@
-// Answer Tile Particle Point Vertex Shader (optimized)
+// Collectible Particle Point Vertex Shader (optimized)
 #pragma glslify: noise3d = require('glsl-noise/simplex/3d')
 
 precision highp float;

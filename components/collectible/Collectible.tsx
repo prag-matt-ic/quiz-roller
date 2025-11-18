@@ -14,14 +14,6 @@ import fragmentShader from './collectibleTile.frag'
 import { extend, useFrame } from '@react-three/fiber'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
-type Props = {
-  ref?: RefObject<RapierRigidBody | null>
-  position: Vector3Tuple
-  width: number
-  height: number
-  contentIndex: number
-}
-
 type TileShaderUniforms = {
   uConfirmingProgress: number
   uIsConfirming: number
@@ -49,7 +41,23 @@ const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 const GEM_POSITION: Vector3Tuple = [0, -1, 2.5]
 const GEM_SCALE = 0.08
 
-export const Collectible: FC<Props> = ({ ref, position, width, height, contentIndex }) => {
+type Props = {
+  ref?: RefObject<RapierRigidBody | null>
+  position: Vector3Tuple
+  width: number
+  height: number
+  contentIndex: number
+  isOutOfView: RefObject<boolean>
+}
+
+export const Collectible: FC<Props> = ({
+  ref,
+  position,
+  width,
+  height,
+  contentIndex,
+  isOutOfView,
+}) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(contentIndex))
   const paletteIndex = useGameStore((s) => s.paletteIndex)
 
@@ -61,7 +69,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, contentIn
 
   useFrame(({ clock }) => {
     if (!shader.current) return
-    // if (isOutOfView.current) return
+    if (isOutOfView.current) return
     const globalProgress = confirmationProgress.current
 
     if (isConfirming) {
@@ -122,15 +130,16 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, contentIn
         />
       </mesh>
 
-      <group position={GEM_POSITION}>
-        {isCollected && (
-          <>
-            <pointLight intensity={1} position={[1, 3, 0]} />
-            <GemModel scale={GEM_SCALE} />
-          </>
-        )}
-        <Particles width={width} height={height} wasConfirmed={isCollected} />
-      </group>
+      <pointLight intensity={isCollected ? 2 : 0} position={[-2, 0, 5]}>
+        {/* Visualises light position */}
+        <mesh>
+          <sphereGeometry args={[0.25, 16, 16]} />
+        </mesh>
+      </pointLight>
+
+      {/* TODO: we shouldn't conditionally mount models, they should have opacity/hidden toggled. */}
+      {isCollected && <GemModel position={GEM_POSITION} scale={GEM_SCALE} />}
+      <Particles width={width} height={height} wasConfirmed={isCollected} />
     </RigidBody>
   )
 }
