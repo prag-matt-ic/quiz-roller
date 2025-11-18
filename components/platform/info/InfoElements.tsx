@@ -157,9 +157,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         Icon={GemIcon}
         isCollectible={true}
         contentIndex={contentIndex}
-        gemModelSlot={<GemModel scale={0.08} />}>
-        {INFO_SECTION_CONTENT[contentIndex].collectible}
-      </InfoZone>
+        gemModelSlot={<GemModel scale={0.08} />}/>
 
       <InfoZone
         key="info-zone"
@@ -180,7 +178,6 @@ export default InfoElements
 type InfoContent = {
   heading: string
   infoZoneContent: ReactNode
-  collectible: ReactNode
   isInfoOnLeft: boolean
 }
 
@@ -224,21 +221,12 @@ export const INFO_SECTION_CONTENT: InfoContent[] = [
         </Card>
       </>
     ),
-    collectible: (
-      <>
-        <Card className="w-full md:col-span-3" paletteIndex={0}>
-          <h2 className="info-header">Collectables</h2>
-          <p className="paragraph-sm">You&apos;ve unlocked a special feature!</p>
-        </Card>
-      </>
-    ),
     isInfoOnLeft: true,
   },
   {
     heading: 'Senior Three.js developers supercharged with AI capabilities',
     infoZoneContent: <></>,
-    collectible: <></>,
     isInfoOnLeft: false,
   },
-  { heading: 'Heading third!', infoZoneContent: <></>, collectible: <></>, isInfoOnLeft: true },
+  { heading: 'Heading third!', infoZoneContent: <></>, isInfoOnLeft: true },
 ]

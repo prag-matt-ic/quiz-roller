@@ -314,7 +314,7 @@ export const InfoZone: FC<Props> = ({
             <pointLight position={[3.5 + 1.5, 0.5, 1.5]} intensity={12} distance={5} />
             <pointLight position={[3.5 - 1.5, 0.5, 1.5]} intensity={12} distance={5} /> */}
             <ambientLight intensity={0.8} />
-            <group position={[3, 1, 2]} scale={showInfo ? 1 : 0}>
+            <group position={[0, -1, 2.5]} scale={showInfo ? 1 : 0}>
               {gemModelSlot}
             </group>
           </>

@@ -31,19 +31,16 @@ const GemModel: FC<Props> = ({ ...props }) => {
 
     return new THREE.MeshPhysicalMaterial({
       color: baseColor,
-      metalness: 0.05,
-      roughness: 0.05,
+      metalness: 0.1,
+      roughness: 0.1,
       emissive: emissiveColor,
-      emissiveIntensity: 0.95,
+      emissiveIntensity: 1,
       envMapIntensity: 1.5,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.02,
-      reflectivity: 1.0,
-      ior: 1.6,
-      transmission: 0.0,
-      thickness: 0.5,
+      clearcoatRoughness: 0.1,
+      reflectivity: 1,
       transparent: true,
-      opacity: 0.8,
+      opacity: 1,
     })
   }, [])
 
@@ -55,11 +52,6 @@ const GemModel: FC<Props> = ({ ...props }) => {
         child.material = material
         child.castShadow = true
         child.receiveShadow = true
-
-        // Check if vertex colors exist and remove them
-        if (child.geometry.attributes.color) {
-          child.geometry.deleteAttribute('color')
-        }
       }
     })
     return cloned
