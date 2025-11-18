@@ -1,11 +1,19 @@
 'use client'
 import gsap from 'gsap'
-import { createContext, type FC, type PropsWithChildren, useContext, useState } from 'react'
+import {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  type ReactNode,
+  useContext,
+  useState,
+} from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
 import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
+import { MOVE_HUD_INDICATOR, COLLECTIBLE_HUD_CONTENT } from '@/resources/content'
 
 export enum Stage {
   HOME = 'home',
@@ -30,11 +38,9 @@ export type PlayerInput = {
   right: number
 }
 
-export type HudIndicatorType = 'move' | 'collected'
-
 export type HudIndicatorConfig = {
-  type: HudIndicatorType
-  autoDismissMs?: number
+  content: ReactNode
+  autoDismissS?: number
 }
 
 type GameState = {
@@ -86,11 +92,6 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[2],
 )
 
-const createDefaultHudIndicator = (): HudIndicatorConfig => ({
-  type: 'move',
-  autoDismissMs: 4000,
-})
-
 const INITIAL_STATE: Pick<
   GameState,
   | 'stage'
@@ -117,7 +118,7 @@ const INITIAL_STATE: Pick<
   },
   paletteIndex: 0,
   cameraLookAtPosition: null,
-  hudIndicator: createDefaultHudIndicator(),
+  hudIndicator: MOVE_HUD_INDICATOR,
   edgeWarningIntensities: {
     left: 0,
     right: 0,
@@ -229,18 +230,13 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
           const onConfirmed = () => {
             const currentConfirming = get().confirmingCollectible
-            if (currentConfirming === contentIndex) {
-              // Add to collected and reset confirmation
-              const collected = get().collectedCollectibles
-              if (!collected.includes(contentIndex)) {
-                set({
-                  collectedCollectibles: [...collected, contentIndex],
-                  confirmingCollectible: null,
-                  confirmationProgress: 0,
-                })
-                playSoundFX(SoundFX.OPEN_INFO)
-              }
-            }
+            if (currentConfirming !== contentIndex) return
+            set((s) => ({
+              collectedCollectibles: [...s.collectedCollectibles, contentIndex],
+              confirmingCollectible: null,
+              hudIndicator: COLLECTIBLE_HUD_CONTENT[currentConfirming],
+            }))
+            playSoundFX(SoundFX.OPEN_INFO)
           }
 
           startConfirmation(set, onConfirmed, COLLECTIBLE_DURATION_S)
@@ -268,29 +264,25 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
 
         onOutOfBounds: () => {
-          const { resetPlayer } = get()
           playSoundFX(SoundFX.OUT_OF_BOUNDS)
-          resetPlayer()
+          get().resetPlayer()
         },
 
         goToStage: (newStage: Stage) => {
           if (newStage === Stage.HOME) {
-            set({ stage: Stage.HOME, hudIndicator: createDefaultHudIndicator() })
+            set({ stage: Stage.HOME })
           }
 
           if (newStage === Stage.INFO) {
-            set({ stage: Stage.INFO, hudIndicator: null })
-            return
+            set({ stage: Stage.INFO })
           }
 
           if (newStage === Stage.TERRAIN) {
-            set({ stage: Stage.TERRAIN, hudIndicator: null })
-            return
+            set({ stage: Stage.TERRAIN })
           }
 
           if (newStage === Stage.CTA) {
-            set({ stage: Stage.CTA, hudIndicator: null })
-            return
+            set({ stage: Stage.CTA })
           }
         },
       }),

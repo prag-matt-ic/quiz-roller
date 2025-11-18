@@ -34,7 +34,7 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
-import { INFO_SECTION_CONTENT } from '@/resources/content'
+import { INFO_ZONES_CONTENT } from '@/resources/content'
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {
@@ -144,7 +144,7 @@ const Platform: FC = () => {
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
     const rows = generateInfoSectionRowData({
       contentIndex,
-      isInfoOnLeft: INFO_SECTION_CONTENT[contentIndex]?.isInfoOnLeft ?? true,
+      isInfoOnLeft: INFO_ZONES_CONTENT[contentIndex]?.isInfoOnLeft ?? true,
     })
     rowsData.current = [...rowsData.current, ...rows]
   }

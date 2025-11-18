@@ -2,9 +2,8 @@
 
 import { Html } from '@react-three/drei'
 import gsap from 'gsap'
-import { type FC, useCallback, useEffect, useRef } from 'react'
+import { type FC, useCallback, useRef } from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
-import { ArrowUpCircleIcon } from 'lucide-react'
 
 import { useGameStore } from '@/components/GameProvider'
 import { createPaletteGradient } from '@/components/palette'
@@ -32,34 +31,29 @@ const PlayerHUD: FC = () => {
 
   const containerTween = useRef<GSAPTween>(null)
   const container = useRef<HTMLDivElement>(null)
-  const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const clearDismissTimeout = useCallback(() => {
-    if (dismissTimeoutRef.current !== null) {
-      clearTimeout(dismissTimeoutRef.current)
-      dismissTimeoutRef.current = null
-    }
-  }, [])
-
-  const scheduleDismiss = useCallback(() => {
-    if (!hudIndicator?.autoDismissMs) return
-    clearDismissTimeout()
-    dismissTimeoutRef.current = setTimeout(() => {
-      setHudIndicator(null)
-    }, hudIndicator.autoDismissMs)
-  }, [clearDismissTimeout, hudIndicator, setHudIndicator])
-
-  const onEnter = useCallback(() => {
+  const onEnter = () => {
     containerTween.current?.kill()
     containerTween.current = gsap.fromTo(
       container.current,
       { opacity: 0, scale: 1.2 },
-      { opacity: 1, scale: 1, duration: 0.24, ease: 'power1.out' },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.24,
+        ease: 'power1.out',
+        onComplete: () => {
+          if (!!hudIndicator?.autoDismissS) {
+            gsap.delayedCall(hudIndicator.autoDismissS, () => {
+              setHudIndicator(null)
+            })
+          }
+        },
+      },
     )
-    scheduleDismiss()
-  }, [scheduleDismiss])
+  }
 
-  const onExit = useCallback(() => {
+  const onExit = () => {
     containerTween.current?.kill()
     containerTween.current = gsap.to(container.current, {
       scale: 1.2,
@@ -67,16 +61,7 @@ const PlayerHUD: FC = () => {
       duration: 0.2,
       ease: 'power1.out',
     })
-    clearDismissTimeout()
-  }, [clearDismissTimeout])
-
-  useEffect(() => () => clearDismissTimeout(), [clearDismissTimeout])
-
-  useEffect(() => {
-    if (!hudIndicator) {
-      clearDismissTimeout()
-    }
-  }, [clearDismissTimeout, hudIndicator])
+  }
 
   // Generate gradient colors based on selected colour band
   const rgbGradient = createPaletteGradient(paletteIndex, {
@@ -87,8 +72,8 @@ const PlayerHUD: FC = () => {
   })
 
   const showBar = confirmingCollectible !== null
-  const showLabel = !!hudIndicator
-  const switchKey = `${showBar}-${showLabel}`
+  const showContent = !!hudIndicator
+  const switchKey = `${showBar}-${showContent}`
 
   return (
     <Html
@@ -107,12 +92,6 @@ const PlayerHUD: FC = () => {
           appear={true}
           nodeRef={container}>
           {() => {
-            console.warn(
-              '[PlayerHUD] Transition rendering - showBar:',
-              showBar,
-              'showLabel:',
-              showLabel,
-            )
             if (showBar)
               return (
                 <div
@@ -133,25 +112,12 @@ const PlayerHUD: FC = () => {
                   </div>
                 </div>
               )
-            if (showLabel)
+            if (showContent)
               return (
                 <div
                   ref={container}
                   className="overflow-hidden rounded-full bg-black p-2 text-white opacity-0 sm:p-3">
-                  {/* {hudIndicator?.type === 'correct' && (
-                    <CheckIcon strokeWidth={4} size={48} className="text-green-500" />
-                  )}
-                  {hudIndicator?.type === 'incorrect' && (
-                    <XIcon strokeWidth={4} size={48} className="text-red-600" />
-                  )} */}
-                  {hudIndicator.type === 'move' && (
-                    <div className="flex items-center gap-2 pr-2">
-                      <ArrowUpCircleIcon strokeWidth={1.5} size={32} />
-                      <span className="block font-bold whitespace-nowrap uppercase">
-                        Use your keys to move along
-                      </span>
-                    </div>
-                  )}
+                  {hudIndicator.content}
                 </div>
               )
             return <div ref={container} className="hidden" />

@@ -10,7 +10,7 @@ import { InfoZone } from '@/components/infoZone/InfoZone'
 import { InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Collectible from '@/components/collectible/Collectible'
-import { INFO_SECTION_CONTENT } from '@/resources/content'
+import { INFO_ZONES_CONTENT } from '@/resources/content'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -136,7 +136,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
     <>
       <FloatingHeading
         ref={heading}
-        text={INFO_SECTION_CONTENT[contentIndex].heading}
+        text={INFO_ZONES_CONTENT[contentIndex].heading}
         position={[0, INITIAL_INFO_POSITION.Y, INITIAL_INFO_POSITION.Z]}
         width={HEADING_WIDTH}
         height={HEADING_HEIGHT}
@@ -161,7 +161,7 @@ const InfoElements: FC<Props> = ({ ref }) => {
         height={INFO_ZONE_HEIGHT}
         infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
         Icon={InfoIcon}>
-        {INFO_SECTION_CONTENT[contentIndex].infoZoneContent}
+        {INFO_ZONES_CONTENT[contentIndex].infoZoneContent}
       </InfoZone>
     </>
   )
