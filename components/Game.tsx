@@ -56,7 +56,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       gl={{
         alpha: false,
         antialias: !isMobile,
-        toneMappingExposure: 0.24,
+        toneMappingExposure: 0.2,
         powerPreference: 'high-performance',
       }}>
       <PerformanceMonitor
@@ -71,7 +71,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Camera />
         {isDebug && <Stats />}
         <Suspense>
-          <Physics debug={false} timeStep={physicsTimeStep}>
+          <Physics debug={isDebug} timeStep={physicsTimeStep}>
             {/* <Background /> */}
             <FloatingTiles />
             <OutOfBounds />

@@ -51,7 +51,6 @@ const edgeWarningScratch: EdgeWarningIntensities = {
 }
 
 const Player: FC = () => {
-  const stage = useGameStore((s) => s.stage)
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)

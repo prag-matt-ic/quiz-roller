@@ -9,6 +9,7 @@ import InfoElements, { type InfoElementsHandle } from '@/components/platform/inf
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import useStage from '@/hooks/useStage'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
 import {
@@ -104,10 +105,11 @@ function getRowAlpha(rowZ: number, playerZ: number) {
 
 const Platform: FC = () => {
   const gameStore = useGameStoreAPI()
-  const stage = useGameStore((s) => s.stage)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
+  const stageRef = useStage()
+  const stage = stageRef.current
 
   const { input: playerInput } = usePlayerInput()
   const { playerPosition } = usePlayerPosition()

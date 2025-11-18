@@ -2,10 +2,11 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, useCallback, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import useStage from '@/hooks/useStage'
 
 const { ACTION } = CameraControlsImpl
 
@@ -41,42 +42,30 @@ export const CAMERA_CONFIG: Record<
 
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
-  const stage = useGameStore((s) => s.stage)
   const { playerPosition } = usePlayerPosition()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
-  useEffect(() => {
+  const applyStageCamera = useCallback((nextStage: Stage) => {
     if (!cameraControls.current) return
-    cameraControls.current.zoomTo(CAMERA_CONFIG[stage].zoom, true)
+    cameraControls.current.zoomTo(CAMERA_CONFIG[nextStage].zoom, true)
+    console.log('Camera zoom to', CAMERA_CONFIG[nextStage].zoom)
+  }, [])
 
-    if (stage !== Stage.CTA) return // Position handled in useFrame below
-
-    const { position, target } = CAMERA_CONFIG[stage]
-    cameraControls.current.setLookAt(
-      position.x,
-      position.y,
-      position.z,
-      target.x,
-      target.y,
-      target.z,
-      true,
-    )
-  }, [stage, playerPosition])
+  const stage = useStage(applyStageCamera)
 
   useFrame(() => {
     if (!cameraControls.current) return
-    if (stage === Stage.CTA) return
-    const lookAt = !!cameraLookAtPosition ? cameraLookAtPosition : playerPosition.current
+    const lookAt = cameraLookAtPosition ?? playerPosition.current
 
     // When looking at info content, pan camera backward to keep player visible
-    const isLookingAtInfo = !!cameraLookAtPosition
-    const zOffset = isLookingAtInfo
-      ? CAMERA_CONFIG[stage].position.z + 4 // Move 4 units further back
-      : CAMERA_CONFIG[stage].position.z
+    const isLookingAway = !!cameraLookAtPosition
+    const zOffset = isLookingAway
+      ? CAMERA_CONFIG[stage.current].position.z + 4 // Move 4 units further back
+      : CAMERA_CONFIG[stage.current].position.z
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
-      CAMERA_CONFIG[stage].position.y,
+      CAMERA_CONFIG[stage.current].position.y,
       playerPosition.current.z + zOffset,
       lookAt.x,
       3.5,
