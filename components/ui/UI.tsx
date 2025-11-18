@@ -20,6 +20,9 @@ const UI: FC<Props> = ({ isMobile }) => {
   const stage = useGameStore((s) => s.stage)
   const infoContentIndex = useGameStore((s) => s.infoContentIndex)
 
+  // TODO: add rings collected count (ring x number)
+  // TODO: add collectibles (x/3) gem icons fade in when collected
+
   // const isPlaying = hasStarted && !isGameOver
   // const switchKey = `${isPlaying}-${isGameOver}`
 
@@ -35,7 +38,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           }}
         </Transition>
       </SwitchTransition> */}
-      <div className="fixed top-4 bg-white p-2 font-black text-black">
+      <div className="fixed bottom-0 bg-white p-2 font-black text-black">
         Stage: {stage}
         <br />
         Info content index: {infoContentIndex}
