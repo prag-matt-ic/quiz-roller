@@ -67,6 +67,11 @@ type GameState = {
   edgeWarningIntensities: EdgeWarningIntensities
   setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
 
+  totalRows: number
+  setTotalRows: (rows: number) => void
+  currentRow: number
+  setCurrentRow: (row: number) => void
+
   cameraLookAtPosition: Vector3 | null // Used if you want to look at something other than the player
   setCameraLookAtPosition: (pos: Vector3 | null) => void
 
@@ -105,6 +110,8 @@ const INITIAL_STATE: Pick<
   | 'edgeWarningIntensities'
   | 'confirmingCollectible'
   | 'collectedCollectibles'
+  | 'totalRows'
+  | 'currentRow'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -127,6 +134,8 @@ const INITIAL_STATE: Pick<
   },
   confirmingCollectible: null,
   collectedCollectibles: [],
+  totalRows: 100,
+  currentRow: 0,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -240,6 +249,14 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }
 
           startConfirmation(set, onConfirmed, COLLECTIBLE_DURATION_S)
+        },
+
+        setTotalRows: (totalRows) => {
+          set({ totalRows })
+        },
+
+        setCurrentRow: (currentRow) => {
+          set({ currentRow })
         },
 
         resetPlatformTick: 0,

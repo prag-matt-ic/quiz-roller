@@ -1,4 +1,12 @@
-import { colToX, COLUMNS, ON_TILE_Y, type RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
+import {
+  colToX,
+  COLUMNS,
+  createEmptyRingPositions,
+  ON_TILE_Y,
+  type RowData,
+  SAFE_HEIGHT,
+  TILE_SIZE,
+} from '@/utils/tiles'
 import { roughenEdges } from './roughenEdges'
 import { HEADING_Y } from './floatingHeading'
 
@@ -14,10 +22,29 @@ const HOME_ARROW_TRIANGLE_ROWS = HOME_ARROW_HEAD_HALF_WIDTH + 1
 const HOME_ARROW_LINE_START_ROW = 5
 const HOME_ARROW_CENTER_COLUMN = Math.floor(COLUMNS / 2)
 
-const HOME_HEADING_CENTER_ROW = 3
+const HOME_HEADING_CENTER_ROW = 6
 const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
 const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_ROW) * TILE_SIZE
 const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
+
+const HOME_RING_LAYOUT = [
+  {
+    row: 2,
+    columns: [
+      Math.max(0, Math.floor(COLUMNS / 2) - 6),
+      Math.floor(COLUMNS / 2),
+      Math.min(COLUMNS - 1, Math.floor(COLUMNS / 2) + 6),
+    ],
+  },
+  {
+    row: 8,
+    columns: [2, COLUMNS - 3],
+  },
+  {
+    row: 12,
+    columns: [Math.floor(COLUMNS / 2) - 10, Math.floor(COLUMNS / 2) + 10],
+  },
+]
 
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
@@ -31,6 +58,7 @@ export function generateHomeSectionRowData(): RowData[] {
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === HOME_SECTION_ROWS - 1,
       isHighlighted: [],
+      ringPositions: createEmptyRingPositions(),
     }
 
     if (rowIndex === IMAGE_TRIGGER_ROW) {
@@ -47,6 +75,7 @@ export function generateHomeSectionRowData(): RowData[] {
   }
 
   applyBitmapArrowHighlight(rows)
+  applyHomeRingLayout(rows)
 
   roughenEdges({
     rows,
@@ -94,6 +123,22 @@ function applyBitmapArrowHighlight(rows: RowData[]) {
     if (leftColumn >= 0) highlight[leftColumn] = 1
     if (rightColumn < COLUMNS) highlight[rightColumn] = 1
   }
+}
+
+function applyHomeRingLayout(rows: RowData[]) {
+  HOME_RING_LAYOUT.forEach(({ row, columns }) => {
+    if (row < 0 || row >= rows.length) return
+    const targetRow = rows[row]
+    if (!targetRow) return
+    if (!targetRow.ringPositions || targetRow.ringPositions.length !== COLUMNS) {
+      targetRow.ringPositions = createEmptyRingPositions()
+    }
+
+    columns.forEach((columnIndex) => {
+      if (columnIndex < 0 || columnIndex >= COLUMNS) return
+      targetRow.ringPositions![columnIndex] = 1
+    })
+  })
 }
 
 function fillHighlightArray(row: RowData): number[] {

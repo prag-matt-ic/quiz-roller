@@ -16,8 +16,6 @@ import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLUMNS, TILE_SIZE } from '@/utils/tiles'
 
-const TILE_THICKNESS = 0.24
-
 type FloatingTilesUniforms = {
   uMix: number
   uPositionTexture: Texture | null
@@ -37,7 +35,11 @@ const CustomFloatingTilesMaterial = shaderMaterial(
 )
 const FloatingTilesMaterial = extend(CustomFloatingTilesMaterial)
 
+// TODO: hook this into the Platform row data system and match the grid but with additional columns on either side.
+// Then fill unsafe tiles with floating tiles. This will bring these right up to the edges of the terrain.
+
 // Configuration constants
+const TILE_THICKNESS = 0.24
 const EXTRA_SIDE_COLUMNS = 8
 const Z_ROWS_HALF = 20 // rows in each direction (band depth)
 const Z_MIN_ROW = -Z_ROWS_HALF

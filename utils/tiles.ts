@@ -58,11 +58,18 @@ export function lerp(a: number, b: number, t: number): number {
 
 export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty'
 
+export type RingPositions = (0 | 1)[]
+
+export const createEmptyRingPositions = (): RingPositions =>
+  new Array<number>(COLUMNS).fill(0) as RingPositions
+
 export type RowData = {
   heights: number[]
   type: SectionType
   isSectionStart: boolean
   isSectionEnd: boolean
+  rowIndex?: number
+  ringPositions?: RingPositions
 
   isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
 

@@ -7,6 +7,7 @@ import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
+import RingElements, { type RingElementsHandle } from '@/components/platform/rings/Rings'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
@@ -20,6 +21,7 @@ import {
 import {
   colToX,
   COLUMNS,
+  createEmptyRingPositions,
   EPSILON,
   clamp,
   TERRAIN_SPEED_UNITS,
@@ -61,6 +63,8 @@ const EMPTY_ROW_DATA: RowData = {
   type: 'empty',
   isSectionStart: false,
   isSectionEnd: false,
+  rowIndex: -1,
+  ringPositions: createEmptyRingPositions(),
 }
 
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
@@ -90,9 +94,8 @@ const warnVisibilityCoverageIfNeeded = (() => {
   }
 })()
 
-const logRowWrap = (direction: 'forward' | 'backward', rowIndex: number, wraps: number) => {
+const logRowWrap = (_direction: 'forward' | 'backward', rowIndex: number, wraps: number) => {
   if (!IS_DEV_ENV || wraps <= 0) return
-  const action = direction === 'forward' ? 'advanced' : 'rewound'
   // console.warn(`[Platform] Row ${rowIndex} ${action} ${wraps} wrap(s).`)
 }
 
@@ -108,6 +111,8 @@ const Platform: FC = () => {
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
+  const setTotalRows = useGameStore((s) => s.setTotalRows)
+  const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
@@ -137,21 +142,35 @@ const Platform: FC = () => {
   const rowsData = useRef<RowData[]>([])
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
+  const nextAbsoluteRowIndex = useRef(0)
 
   const homeElements = useRef<HomeElementsHandle | null>(null)
   const infoElements = useRef<InfoElementsHandle | null>(null)
+  const ringElements = useRef<RingElementsHandle | null>(null)
+  const pendingRingPlacements = useRef<Map<number, number>>(new Map())
+
+  const appendRowsWithIndices = (rows: RowData[]) => {
+    // Ensures rows have absolute rowIndex assigned
+    if (!rows.length) return
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      row.rowIndex = nextAbsoluteRowIndex.current
+      nextAbsoluteRowIndex.current++
+      rowsData.current.push(row)
+    }
+  }
 
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
     const rows = generateInfoSectionRowData({
       contentIndex,
       isInfoOnLeft: INFO_ZONES_CONTENT[contentIndex]?.isInfoOnLeft ?? true,
     })
-    rowsData.current = [...rowsData.current, ...rows]
+    appendRowsWithIndices(rows)
   }
 
   function insertHomeRows() {
     const rows = generateHomeSectionRowData()
-    rowsData.current = [...rowsData.current, ...rows]
+    appendRowsWithIndices(rows)
   }
 
   function getObstacleSectionRows(rows: number = OBSTACLE_SECTION_ROWS): RowData[] {
@@ -167,18 +186,20 @@ const Platform: FC = () => {
       type: 'obstacles' as const,
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === rows - 1,
+      ringPositions: createEmptyRingPositions(),
     }))
   }
 
   function insertObstacleRows(rows?: number) {
     const blocks = getObstacleSectionRows(rows)
-    rowsData.current = [...rowsData.current, ...blocks]
+    appendRowsWithIndices(blocks)
   }
 
   useEffect(() => {
     function setupInitialRowsAndInstances() {
       // Reset state
       rowsData.current = []
+      nextAbsoluteRowIndex.current = 0
       nextRowDataIndex.current = 0
       activeRowsData.current = []
       baseZByRow.current = []
@@ -188,6 +209,7 @@ const Platform: FC = () => {
       xByBodyIndex.current = []
       yByBodyIndex.current = []
       currentScrollPosition.current = 0
+      pendingRingPlacements.current.clear()
 
       insertHomeRows()
       insertObstacleRows(FIRST_OBSTACLE_SECTION_ROWS)
@@ -197,6 +219,7 @@ const Platform: FC = () => {
       insertObstacleRows()
       insertInfoRows(2)
       insertObstacleRows()
+      setTotalRows(nextAbsoluteRowIndex.current)
       // TODO: insert CTA Rows.
 
       const instances: InstancedRigidBodyProps[] = []
@@ -283,6 +306,8 @@ const Platform: FC = () => {
   function hideRowDecorations(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
+    pendingRingPlacements.current.delete(rowIndex)
+    ringElements.current?.hideElementsIfNeeded(row)
     switch (row.type) {
       case 'info':
         infoElements.current?.hideElementsIfNeeded(row)
@@ -298,6 +323,7 @@ const Platform: FC = () => {
   function positionRowDecorations(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
+    positionRingElements(row, rowZ, rowIndex)
     switch (row.type) {
       case 'info':
         infoElements.current?.positionElementsIfNeeded(row, rowZ)
@@ -307,6 +333,26 @@ const Platform: FC = () => {
         break
       default:
         break
+    }
+  }
+
+  const positionRingElements = (row: RowData, rowZ: number, rowIndex: number) => {
+    if (!ringElements.current?.isReady) {
+      pendingRingPlacements.current.set(rowIndex, rowZ)
+      return
+    }
+    ringElements.current.positionElementsIfNeeded(row, rowZ)
+    pendingRingPlacements.current.delete(rowIndex)
+  }
+
+  const flushPendingRingPlacements = () => {
+    if (!ringElements.current?.isReady) return
+    const entries = Array.from(pendingRingPlacements.current.entries())
+    for (const [rowIndexKey, rowZ] of entries) {
+      const row = activeRowsData.current[rowIndexKey]
+      if (!row) continue
+      ringElements.current.positionElementsIfNeeded(row, rowZ)
+      pendingRingPlacements.current.delete(rowIndexKey)
     }
   }
 
@@ -346,6 +392,11 @@ const Platform: FC = () => {
     }
 
     return bestIndex
+  }
+
+  function updateCurrentRowState(rowIndex: number) {
+    const currentRowIndex = activeRowsData.current[rowIndex]?.rowIndex ?? 0
+    setCurrentRow(currentRowIndex)
   }
 
   function applyStageForRow(rowIndex: number) {
@@ -488,13 +539,14 @@ const Platform: FC = () => {
     const stageRowIndex = getRowIndexClosestToOrigin()
     if (stageRowIndex >= 0) {
       applyStageForRow(stageRowIndex)
+      updateCurrentRowState(stageRowIndex)
     }
   }
 
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return [[]]
     if (!instancedTilesRef.current?.shader) return
-    if (!homeElements.current || !infoElements.current) return
+    if (!homeElements.current || !infoElements.current || !ringElements.current) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
@@ -505,6 +557,10 @@ const Platform: FC = () => {
     updateTiles(playerZ)
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
+    ringElements.current.moveElements(zStep)
+    if (pendingRingPlacements.current.size > 0) {
+      flushPendingRingPlacements()
+    }
   })
 
   if (!tileInstances.length) return null
@@ -518,6 +574,8 @@ const Platform: FC = () => {
         instanceSeed={instanceSeed.current!}
         instanceIsHighlighted={instanceIsHighlighted.current!}
       />
+
+      <RingElements ref={ringElements} key={`${resetPlatformTick}-rings`} />
 
       {/* Home Elements */}
       <HomeElements ref={homeElements} key={`${resetPlatformTick}-home`} />

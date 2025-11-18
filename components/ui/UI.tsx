@@ -2,12 +2,12 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { type FC, useRef } from 'react'
-import { SwitchTransition, Transition } from 'react-transition-group'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
-import PlayingUI from '@/components/ui/PlayingUI'
+import Collectibles from '@/components/ui/Collectibles'
+import ProgressBar from '@/components/ui/ProgressBar'
 
 gsap.registerPlugin(useGSAP)
 
@@ -16,34 +16,32 @@ type Props = {
 }
 
 const UI: FC<Props> = ({ isMobile }) => {
-  const wrapper = useRef<HTMLDivElement>(null)
   const stage = useGameStore((s) => s.stage)
   const infoContentIndex = useGameStore((s) => s.infoContentIndex)
 
-  // TODO: add rings collected count (ring x number)
-  // TODO: add collectibles (x/3) gem icons fade in when collected
+  const collectibles = useRef<HTMLDivElement>(null)
 
-  // const isPlaying = hasStarted && !isGameOver
-  // const switchKey = `${isPlaying}-${isGameOver}`
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        collectibles.current,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.4, delay: 1, ease: 'power2.out' },
+      )
+    },
+    { dependencies: [] },
+  )
 
   return (
     <>
-      {/* <SwitchTransition>
-        <Transition key={switchKey} timeout={{ enter: 0, exit: 500 }} nodeRef={wrapper}>
-          {(transitionStatus) => {
-            if (isPlaying)
-              // return <PlayingUI ref={wrapper} transitionStatus={transitionStatus} />
-
-              return <div ref={wrapper} className="hidden" />
-          }}
-        </Transition>
-      </SwitchTransition> */}
+      <Collectibles ref={collectibles} />
       <div className="fixed bottom-0 bg-white p-2 font-black text-black">
         Stage: {stage}
         <br />
         Info content index: {infoContentIndex}
       </div>
       <Controls isMobile={isMobile} />
+      <ProgressBar />
       <AudioToggle />
     </>
   )

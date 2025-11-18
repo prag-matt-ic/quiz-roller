@@ -1,4 +1,12 @@
-import { colToX, COLUMNS, ON_TILE_Y, RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
+import {
+  colToX,
+  COLUMNS,
+  createEmptyRingPositions,
+  ON_TILE_Y,
+  RowData,
+  SAFE_HEIGHT,
+  TILE_SIZE,
+} from '@/utils/tiles'
 import { roughenEdges, type ProtectRange } from './roughenEdges'
 import { HEADING_Y } from './floatingHeading'
 
@@ -90,6 +98,7 @@ export function generateInfoSectionRowData(config: InfoZone): RowData[] {
       isSectionStart: isStart,
       isSectionEnd: isEnd,
       infoContentIndex: contentIndex,
+      ringPositions: createEmptyRingPositions(),
     }
 
     if (i === floatingHeaderTriggerRow) {
