@@ -29,9 +29,12 @@ const Collectibles: FC<Props> = ({ ref }) => {
       className="pointer-events-none fixed inset-0 z-100 flex flex-col items-center justify-center">
       <div className="absolute top-6 flex items-center gap-2">
         {/* Rings/Coins */}
-        <div className="relative mr-2 flex size-fit items-center justify-center">
-          <Circle size={48} strokeWidth={1} className="text-yellow-400 opacity-100" />
-          <span className="absolute block text-center">{collectedRings.length}</span>
+        <div
+          className={twJoin(
+            'relative mr-2 flex aspect-square size-10 items-center justify-center rounded-full border text-center font-semibold',
+            collectedRings.length > 0 ? 'border-amber-400' : 'border-white/40',
+          )}>
+          {collectedRings.length}
         </div>
 
         {COLLECTIBLE_TYPES.map((type, index) => {
