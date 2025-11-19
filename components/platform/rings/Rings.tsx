@@ -11,7 +11,13 @@ import {
   useRef,
   type RefObject,
   useEffect,
+  useMemo,
 } from 'react'
+import { shaderMaterial } from '@react-three/drei'
+// import { extend } from '@react-three/fiber'
+
+import ringVert from './shaders/ring.vert'
+import ringFrag from './shaders/ring.frag'
 
 import {
   colToX,
@@ -25,6 +31,8 @@ import type { RigidBodyUserData, RingUserData } from '@/model/schema'
 import { type RingIndex, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+import useGameFrame from '@/hooks/useGameFrame'
+import { Color } from 'three'
 
 const MAX_RING_INSTANCES = 12
 const RING_MAJOR_RADIUS = 0.3
@@ -44,13 +52,30 @@ type Props = {
   ref: RefObject<RingElementsHandle | null>
 }
 
-const RING_COLOR = '#ffe066'
-const RING_EMISSIVE = '#ffd43b'
+type RingUniforms = {
+  uTime: number
+  uColor: Color
+  uEmissive: Color
+}
+
+const DEFAULT_UNIFORMS: RingUniforms = {
+  uTime: 0,
+  uColor: new Color('#ffe066'),
+  uEmissive: new Color('#ffd43b'),
+}
+
+const RingMaterialShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
 
 const RingElements: FC<Props> = ({ ref }) => {
   const collectedRings = useGameStore((s) => s.collectedRings)
   const onRingCollected = useGameStore((s) => s.onRingCollected)
   const ringConfig = usePerformanceStore((s) => s.sceneConfig.ring)
+
+  const material = useMemo(() => new RingMaterialShader(), [])
+
+  useEffect(() => {
+    return () => material.dispose()
+  }, [material])
 
   const rigidBodies = useRef<Array<RapierRigidBody | null>>(
     Array(MAX_RING_INSTANCES).fill(null),
@@ -201,6 +226,10 @@ const RingElements: FC<Props> = ({ ref }) => {
     onRingCollected(indexes)
   }
 
+  useGameFrame((_, delta) => {
+    material.uniforms.uTime.value += delta
+  })
+
   return (
     <group>
       {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
@@ -228,7 +257,7 @@ const RingElements: FC<Props> = ({ ref }) => {
               onIntersectionEnter={onIntersectionEnter}
               collisionGroups={COLLISION_GROUPS.ringSensor}
             />
-            <mesh visible={!isCollected}>
+            <mesh visible={!isCollected} material={material}>
               <torusGeometry
                 args={[
                   RING_MAJOR_RADIUS,
@@ -236,13 +265,6 @@ const RingElements: FC<Props> = ({ ref }) => {
                   ringConfig.radialSegments,
                   ringConfig.tubularSegments,
                 ]}
-              />
-              <meshStandardMaterial
-                color={RING_COLOR}
-                emissive={RING_EMISSIVE}
-                emissiveIntensity={0.4}
-                metalness={0.6}
-                roughness={0.25}
               />
             </mesh>
           </RigidBody>

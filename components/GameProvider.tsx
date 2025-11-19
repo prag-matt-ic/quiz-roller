@@ -92,6 +92,13 @@ type GameState = {
   goToStage: (stage: Stage) => void
 
   timeElapsed: number
+  setTimeElapsed: (time: number) => void
+  isTiming: boolean
+  setIsTiming: (isTiming: boolean) => void
+  isSpeedRunMode: boolean
+  startSpeedRun: () => void
+  stopSpeedRun: () => void
+  restartSpeedRun: () => void
 }
 
 type GameStore = Mutate<
@@ -103,7 +110,7 @@ type GameStore = Mutate<
 >
 const GameContext = createContext<GameStore>(undefined!)
 
-const COLLECTIBLE_DURATION_S = 2.0
+const COLLECTIBLE_DURATION_S = 1.0
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 0] // Used when re-spawning to home
 
@@ -130,6 +137,8 @@ const INITIAL_STATE: Pick<
   | 'currentRow'
   | 'collectedRings'
   | 'timeElapsed'
+  | 'isTiming'
+  | 'isSpeedRunMode'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -156,6 +165,8 @@ const INITIAL_STATE: Pick<
   totalRows: 100,
   currentRow: 0,
   timeElapsed: 0,
+  isTiming: false,
+  isSpeedRunMode: false,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -211,6 +222,9 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
       persist(
         (set, get) => ({
           ...INITIAL_STATE,
+          setTimeElapsed: (time: number) => {
+            set({ timeElapsed: time })
+          },
           setPlayerInput(input) {
             set({ playerInput: input })
           },
@@ -341,6 +355,31 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
               set({ stage: Stage.CTA })
             }
           },
+
+          setIsTiming: (isTiming) => {
+            set({ isTiming })
+          },
+
+          startSpeedRun: () => {
+            if (get().isSpeedRunMode) return
+            get().resetGame()
+            set({ isSpeedRunMode: true, timeElapsed: 0, isTiming: false })
+          },
+
+          stopSpeedRun: () => {
+            if (!get().isSpeedRunMode) return
+            set({ isSpeedRunMode: false, isTiming: false })
+            get().resetGame()
+          },
+
+          restartSpeedRun: () => {
+            if (!get().isSpeedRunMode) {
+              get().startSpeedRun()
+              return
+            }
+            get().resetGame()
+            set({ isSpeedRunMode: true, timeElapsed: 0, isTiming: false })
+          },
         }),
         {
           name: 'quizroller-page',
@@ -351,7 +390,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         },
       ),
     ),
-  )
+  ) as GameStore
 }
 
 type Props = PropsWithChildren
@@ -361,19 +400,37 @@ export const GameProvider: FC<Props> = ({ children }) => {
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
   const [store] = useState<GameStore>(createGameStore(playSoundFX, stopSoundFX))
 
+  return (
+    <GameContext value={store}>
+      {children}
+      <Timer />
+    </GameContext>
+  )
+}
+
+const Timer: FC = () => {
+  const isTiming = useGameStore((s) => s.isTiming)
+  const setIsTiming = useGameStore((s) => s.setIsTiming)
+  const isSpeedRun = useGameStore((s) => s.isSpeedRunMode)
+  const gameStoreAPI = useGameStoreAPI()
+
   useEffect(() => {
-    store.setState({ timeElapsed: 0 })
+    const interval = isSpeedRun ? 100 : 1000
 
-    const interval = setInterval(() => {
-      store.setState((prev) => ({
-        timeElapsed: prev.timeElapsed + 1,
+    gameStoreAPI.setState({ timeElapsed: 0 })
+    if (!isTiming) return
+
+    const intervalId = setInterval(() => {
+      console.log('updating time elapsed', { isSpeedRun })
+      gameStoreAPI.setState((s) => ({
+        timeElapsed: s.timeElapsed + interval,
       }))
-    }, 1000) // update every second
+    }, interval) // update every second
 
-    return () => clearInterval(interval)
-  }, [store])
+    return () => clearInterval(intervalId)
+  }, [setIsTiming, isTiming, isSpeedRun, gameStoreAPI])
 
-  return <GameContext value={store}>{children}</GameContext>
+  return null
 }
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {

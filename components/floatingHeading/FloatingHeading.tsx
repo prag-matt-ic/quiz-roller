@@ -142,7 +142,7 @@ export const FloatingHeading: FC<Props> = ({
           args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]}
         />
         <FloatingHeadingMaterial
-          key={(FloatingHeadingShader as unknown as { key: string }).key}
+          key={FloatingHeadingShader.key}
           ref={shaderRef}
           uOpacity={0}
           uTime={0}

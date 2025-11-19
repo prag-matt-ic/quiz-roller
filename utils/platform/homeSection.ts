@@ -1,7 +1,7 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
 import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
-import { applyBitmapRowFeatures } from './sectionLayoutFeatures'
+import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
 
 const HOME_HEADING_CENTER_ROW = 6
 const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
@@ -10,14 +10,8 @@ const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 export function generateHomeSectionRowData(homeBitmap: HTMLImageElement | null): RowData[] {
-  if (!homeBitmap) {
-    if (IS_DEV_ENV) {
-      console.warn('[HomeSection] Cannot generate home rows without a bitmap image')
-    }
-    return []
-  }
-
   try {
+    if (!homeBitmap) throw new Error('No bitmap provided')
     const layout = parseSectionBitmap(homeBitmap)
     return buildRowsFromLayout(layout)
   } catch (error) {
@@ -29,37 +23,16 @@ export function generateHomeSectionRowData(homeBitmap: HTMLImageElement | null):
 }
 
 function buildRowsFromLayout(layout: SectionBitmapLayout): RowData[] {
-  const rowCount = layout.rowCount
-  if (rowCount <= 0) return []
+  const headingRowIndex = clampRowIndex(layout.rowCount, HOME_HEADING_TRIGGER_ROW)
 
-  const headingRowIndex = clampRowIndex(rowCount, HOME_HEADING_TRIGGER_ROW)
-
-  const rows: RowData[] = new Array(rowCount)
-
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-    const layoutRow = layout.rows[rowIndex]
-    const heights = [...layoutRow.heights]
-
-    rows[rowIndex] = {
-      heights,
-      type: 'home',
-      isSectionStart: rowIndex === 0,
-      isSectionEnd: rowIndex === rowCount - 1,
-      isHighlighted: [],
-    }
-
+  return buildGenericRows(layout, 'home', (rowIndex) => {
     if (rowIndex === headingRowIndex) {
-      rows[rowIndex].floatingHeadingPosition = [
-        HOME_HEADING_X,
-        HEADING_Y,
-        HOME_HEADING_RELATIVE_Z,
-      ]
+      return {
+        floatingHeadingPosition: [HOME_HEADING_X, HEADING_Y, HOME_HEADING_RELATIVE_Z],
+      }
     }
-
-    applyBitmapRowFeatures(rows[rowIndex], layoutRow)
-  }
-
-  return rows
+    return {}
+  })
 }
 
 function clampRowIndex(rowCount: number, requestedIndex: number): number {

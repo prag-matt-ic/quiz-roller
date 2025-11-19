@@ -1,7 +1,7 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
 import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
-import { applyBitmapRowFeatures } from './sectionLayoutFeatures'
+import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
@@ -24,13 +24,8 @@ type InfoSectionConfig = {
 
 export function generateInfoSectionRowData(config: InfoSectionConfig): RowData[] {
   const { bitmap, contentIndex } = config
-
-  if (!bitmap) {
-    console.error('[InfoSection] Cannot generate info rows without a bitmap image')
-    return []
-  }
-
   try {
+    if (!bitmap) throw new Error('No bitmap provided')
     const layout = parseSectionBitmap(bitmap)
     return buildRowsFromLayout(layout, contentIndex)
   } catch (error) {
@@ -40,40 +35,24 @@ export function generateInfoSectionRowData(config: InfoSectionConfig): RowData[]
 }
 
 function buildRowsFromLayout(layout: SectionBitmapLayout, contentIndex: 0 | 1 | 2): RowData[] {
-  const rowCount = layout.rowCount
-  if (rowCount <= 0) return []
+  const headingRowIndex = clampRowIndex(layout.rowCount, INFO_HEADING_TRIGGER_ROW)
 
-  const headingRowIndex = clampRowIndex(rowCount, INFO_HEADING_TRIGGER_ROW)
-  const rows: RowData[] = new Array(rowCount)
-
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-    const layoutRow = layout.rows[rowIndex]
-    const heights = [...layoutRow.heights]
-
-    const row: RowData = {
-      heights,
-      type: 'info',
-      isSectionStart: rowIndex === 0,
-      isSectionEnd: rowIndex === rowCount - 1,
+  return buildGenericRows(layout, 'info', (rowIndex) => {
+    const extra: Partial<RowData> = {
       infoContentIndex: contentIndex,
-      isHighlighted: [],
     }
 
     if (rowIndex === headingRowIndex) {
-      row.floatingHeadingPosition = [
+      extra.floatingHeadingPosition = [
         colToX(COLUMNS / 2 - 0.5),
         HEADING_Y,
         INFO_HEADING_RELATIVE_Z,
       ]
     }
 
-    applyBitmapRowFeatures(row, layoutRow)
-    rows[rowIndex] = row
-  }
-
-  return rows
+    return extra
+  })
 }
-
 
 function clampRowIndex(rowCount: number, requestedIndex: number): number {
   if (rowCount === 0) return 0

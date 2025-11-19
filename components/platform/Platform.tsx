@@ -170,14 +170,6 @@ const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
 
   function insertObstacleRows(bitmapIndex: number) {
     const bitmap = obstacleBitmaps[bitmapIndex] ?? null
-    if (!bitmap) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(
-          `[Platform] Cannot insert obstacle rows for index ${bitmapIndex} without a bitmap image`,
-        )
-      }
-      return
-    }
     const rows = generateObstacleSectionRowData(bitmap)
     appendRowsWithIndices(rows)
   }

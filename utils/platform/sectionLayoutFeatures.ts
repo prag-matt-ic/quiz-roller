@@ -4,8 +4,41 @@ import {
   createEmptyRingPositions,
   ON_TILE_Y,
   type RowData,
+  type SectionType,
 } from '@/utils/tiles'
-import type { SectionBitmapRow } from './sectionBitmap'
+import type { SectionBitmapLayout, SectionBitmapRow } from './sectionBitmap'
+
+export function buildRowsFromLayout(
+  layout: SectionBitmapLayout,
+  type: SectionType,
+  extraRowData?: (rowIndex: number, rowCount: number) => Partial<RowData>,
+): RowData[] {
+  const rowCount = layout.rowCount
+  if (rowCount <= 0) return []
+
+  const rows: RowData[] = new Array(rowCount)
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const layoutRow = layout.rows[rowIndex]
+    const heights = [...layoutRow.heights]
+
+    const baseRow: RowData = {
+      heights,
+      type,
+      isSectionStart: rowIndex === 0,
+      isSectionEnd: rowIndex === rowCount - 1,
+      isHighlighted: [],
+    }
+
+    const extra = extraRowData ? extraRowData(rowIndex, rowCount) : {}
+    const row = { ...baseRow, ...extra }
+
+    applyBitmapRowFeatures(row, layoutRow)
+    rows[rowIndex] = row
+  }
+
+  return rows
+}
 
 export function applyBitmapRowFeatures(row: RowData, layoutRow: SectionBitmapRow) {
   applyRingColumns(row, layoutRow.ringColumns)
