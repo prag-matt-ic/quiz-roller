@@ -73,7 +73,7 @@ const Camera: FC = () => {
     cameraControls.current.setLookAt(
       playerPosition.current.x,
       CAMERA_CONFIG[stage.current].position.y,
-      playerPosition.current.z + zOffset,
+      zOffset,
       lookAt.x,
       3,
       lookAt.z,
