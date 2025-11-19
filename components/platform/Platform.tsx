@@ -7,9 +7,7 @@ import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
-import CTAElements, {
-  type CTAElementsHandle,
-} from '@/components/platform/cta/CTAElementsSection' // changed from lowercase and wont allow name CTAElements
+import CTAElements, { type CTAElementsHandle } from '@/components/platform/cta/CTAElements' // changed from lowercase and wont allow name CTAElements
 import RingElements, { type RingElementsHandle } from '@/components/platform/rings/Rings'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'

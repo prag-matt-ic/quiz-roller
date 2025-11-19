@@ -48,11 +48,6 @@ export type HudIndicatorConfig = {
 }
 export type RingIndex = [row: number, column: number]
 
-export type GameDataResults = {
-  totalTime: number
-  collectables: number
-}
-
 type GameState = {
   stage: Stage
 
@@ -97,7 +92,6 @@ type GameState = {
   goToStage: (stage: Stage) => void
 
   timeElapsed: number
-  // gameDataResults: GameDataResults | null
 }
 
 type GameStore = Mutate<

@@ -1,17 +1,13 @@
 'use client'
 import { type FC } from 'react'
+import { useGameStore } from '@/components/GameProvider'
 
-type TimeDisplayProps = {
-  finalTimeValue: number
-}
+type Props = {}
 
-const TimeDisplay: FC<TimeDisplayProps> = ({
-  finalTimeValue,
-}) => {
-
-  const totalSeconds = Math.floor(finalTimeValue / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
+const TimeDisplay: FC<Props> = ({}) => {
+  const timeElapsed = useGameStore((s) => s.timeElapsed)
+  const minutes = Math.floor(timeElapsed / 60)
+  const seconds = timeElapsed % 60
   const formatTime = (n: number) => n.toString().padStart(2, '0')
 
   return (

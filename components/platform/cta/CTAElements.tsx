@@ -7,7 +7,6 @@ import { InfoZone } from '@/components/infoZone/InfoZone'
 import { Trophy } from 'lucide-react'
 import TimeDisplay from '@/components/ui/TimeDisplay'
 import Card from '@/components/ui/Card'
-import { useGameStore } from '@/components/GameProvider'
 
 export type CTAElementsHandle = {
   moveElements: (zStep: number) => void
@@ -22,7 +21,6 @@ type Props = {
 const CTAElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const ctaZone = useRef<RapierRigidBody>(null)
-  const finalTimeValue = useGameStore((s) => s.timeElapsed)
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
@@ -84,7 +82,7 @@ const CTAElements: FC<Props> = ({ ref }) => {
         infoContainerClassName="w-[328px] sm:w-[450px]"
         Icon={Trophy}>
         <Card className="w-full md:col-span-5" paletteIndex={0}>
-          <TimeDisplay finalTimeValue={finalTimeValue} />
+          <TimeDisplay />
         </Card>
       </InfoZone>
     </>
