@@ -541,23 +541,27 @@ const Platform: FC = () => {
   }
 
   useGameFrame((_, delta) => {
-    if (!hasInitialized.current) return [[]]
+    if (!hasInitialized.current) return
     if (!instancedTilesRef.current?.shader) return
     if (!homeElements.current || !infoElements.current || !ringElements.current) return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
+
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
     currentScrollPosition.current += zStep
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
-    infoElements.current.moveElements(zStep)
-    homeElements.current.moveElements(zStep)
-    ringElements.current.moveElements(zStep)
+
     if (pendingRingPlacements.current.size > 0) {
       flushPendingRingPlacements()
     }
+
+    if (zStep === 0) return
+    infoElements.current.moveElements(zStep)
+    homeElements.current.moveElements(zStep)
+    ringElements.current.moveElements(zStep)
   })
 
   if (!tileInstances.length) return null
