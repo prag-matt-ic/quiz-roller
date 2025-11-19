@@ -435,26 +435,21 @@ const Background: FC = () => {
       staticRenderPending.current = true
     }
 
-    const unsubscribe = gameStore.subscribe((s, prev) => {
-      if (
-        s.edgeWarningIntensities.left === prev.edgeWarningIntensities.left &&
-        s.edgeWarningIntensities.right === prev.edgeWarningIntensities.right &&
-        s.edgeWarningIntensities.near === prev.edgeWarningIntensities.near &&
-        s.edgeWarningIntensities.far === prev.edgeWarningIntensities.far
-      )
-        return
-
-      edgeIntensityUniform.current.set(
-        s.edgeWarningIntensities.left,
-        s.edgeWarningIntensities.right,
-        s.edgeWarningIntensities.near,
-        s.edgeWarningIntensities.far,
-      )
-      edgeUniformDirty.current = true
-      if (!shouldAnimate) {
-        staticRenderPending.current = true
-      }
-    })
+    const unsubscribe = gameStore.subscribe(
+      (s) => s.edgeWarningIntensities,
+      (intensities) => {
+        edgeIntensityUniform.current.set(
+          intensities.left,
+          intensities.right,
+          intensities.near,
+          intensities.far,
+        )
+        edgeUniformDirty.current = true
+        if (!shouldAnimate) {
+          staticRenderPending.current = true
+        }
+      },
+    )
 
     return unsubscribe
   }, [gameStore, shouldAnimate])

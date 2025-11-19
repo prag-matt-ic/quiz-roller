@@ -10,8 +10,8 @@ import {
   useState,
 } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
-import { createStore, type StoreApi, useStore } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createStore, type StoreApi, useStore, type Mutate } from 'zustand'
+import { persist, subscribeWithSelector } from 'zustand/middleware'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { MOVE_HUD_INDICATOR, COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
@@ -23,6 +23,8 @@ export enum Stage {
   TERRAIN = 'terrain',
   CTA = 'cta',
 }
+
+// TODO: Split this into store slices.
 
 export type EdgeWarningIntensities = {
   left: number
@@ -94,12 +96,17 @@ type GameState = {
   resetPlayerTick: number
   goToStage: (stage: Stage) => void
 
-  finalTimeValue: number
-  isTimerActive: boolean
-  gameDataResults: GameDataResults | null
+  timeElapsed: number
+  // gameDataResults: GameDataResults | null
 }
 
-type GameStore = StoreApi<GameState>
+type GameStore = Mutate<
+  StoreApi<GameState>,
+  [
+    ['zustand/subscribeWithSelector', never],
+    ['zustand/persist', Pick<GameState, 'paletteIndex'>],
+  ]
+>
 const GameContext = createContext<GameStore>(undefined!)
 
 const COLLECTIBLE_DURATION_S = 2.0
@@ -128,9 +135,7 @@ const INITIAL_STATE: Pick<
   | 'totalRows'
   | 'currentRow'
   | 'collectedRings'
-  | 'finalTimeValue'
-  | 'isTimerActive'
-  | 'gameDataResults'
+  | 'timeElapsed'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -156,9 +161,7 @@ const INITIAL_STATE: Pick<
   collectedRings: [],
   totalRows: 100,
   currentRow: 0,
-  finalTimeValue: 0,
-  isTimerActive: false,
-  gameDataResults: null,
+  timeElapsed: 0,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -210,155 +213,149 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
   }
 
   return createStore<GameState>()(
-    persist(
-      (set, get) => ({
-        ...INITIAL_STATE,
-        setPlayerInput(input) {
-          set({ playerInput: input })
-        },
-        setPlayerPosition: (position) => {
-          set((s) => ({
-            playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
-          }))
-        },
-        setEdgeWarningIntensities: (intensities) => {
-          set({
-            edgeWarningIntensities: {
-              left: clampEdgeWarningValue(intensities.left),
-              right: clampEdgeWarningValue(intensities.right),
-              near: clampEdgeWarningValue(intensities.near),
-              far: clampEdgeWarningValue(intensities.far),
-            },
-          })
-        },
-        setCameraLookAtPosition: (cameraLookAtPosition) => {
-          set({ cameraLookAtPosition })
-        },
-
-        setInfoContentIndex: (index) => {
-          set({ infoContentIndex: index })
-        },
-
-        setHudIndicator: (indicator) => {
-          set({ hudIndicator: indicator })
-        },
-
-        onRingCollected: (ringIndex: [number, number]) => {
-          const isAlreadyCollected = get().collectedRings.some(
-            (rc) => rc[0] === ringIndex[0] && rc[1] === ringIndex[1],
-          )
-          if (isAlreadyCollected) return
-          set((s) => ({
-            collectedRings: [...s.collectedRings, ringIndex],
-          }))
-          playSoundFX(SoundFX.COIN_COLLECTED)
-        },
-
-        setConfirmingCollectible: (collectibleType: CollectibleType | null) => {
-          confirmationTween?.kill()
-
-          if (collectibleType === null) {
-            cancelConfirmation(set)
-            set({ confirmingCollectible: null })
-            stopSoundFX(SoundFX.CHANGE_COLOUR)
-            return
-          }
-
-          // Don't re-confirm already collected
-          if (get().collectedCollectibles.includes(collectibleType)) return
-
-          set({
-            confirmingCollectible: collectibleType,
-            confirmationProgress: 0,
-          })
-
-          playSoundFX(SoundFX.CHANGE_COLOUR)
-
-          const onConfirmed = () => {
-            const currentConfirming = get().confirmingCollectible
-            if (currentConfirming !== collectibleType) return
+    subscribeWithSelector(
+      persist(
+        (set, get) => ({
+          ...INITIAL_STATE,
+          setPlayerInput(input) {
+            set({ playerInput: input })
+          },
+          setPlayerPosition: (position) => {
             set((s) => ({
-              collectedCollectibles: [...s.collectedCollectibles, collectibleType],
-              confirmingCollectible: null,
-              hudIndicator: COLLECTIBLES_HUD_CONFIG[currentConfirming],
+              playerWorldPosition: s.playerWorldPosition.set(
+                position.x,
+                position.y,
+                position.z,
+              ),
             }))
-            playSoundFX(SoundFX.OPEN_INFO)
-          }
-
-          startConfirmation(set, onConfirmed, COLLECTIBLE_DURATION_S)
-        },
-
-        setTotalRows: (totalRows) => {
-          set({ totalRows })
-        },
-
-        setCurrentRow: (currentRow) => {
-          set({ currentRow })
-        },
-
-        resetPlatformTick: 0,
-        resetPlayerTick: 0,
-        resetGame: () => {
-          confirmationTween?.kill()
-          confirmationTween = null
-          confirmationTweenTarget.value = 0
-          set((s) => ({
-            ...INITIAL_STATE,
-            paletteIndex: s.paletteIndex,
-            resetPlatformTick: s.resetPlatformTick + 1,
-            resetPlayerTick: s.resetPlayerTick + 1,
-            finalTimeValue: 0,
-            isTimerActive: false,
-            gameDataResults: null,
-          }))
-        },
-
-        resetPlayer: () => {
-          set((s) => ({
-            playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
-            resetPlayerTick: s.resetPlayerTick + 1,
-          }))
-        },
-
-        onOutOfBounds: () => {
-          playSoundFX(SoundFX.OUT_OF_BOUNDS)
-          get().resetPlayer()
-        },
-
-        goToStage: (newStage: Stage) => {
-          if (newStage === Stage.HOME) {
-            set({ stage: Stage.HOME })
-          }
-
-          if (newStage === Stage.INFO) {
-            set({ stage: Stage.INFO })
-          }
-
-          if (newStage === Stage.TERRAIN) {
-            set({ stage: Stage.TERRAIN })
-          }
-
-          if (newStage === Stage.CTA) {
-            const state = get()
+          },
+          setEdgeWarningIntensities: (intensities) => {
             set({
-              stage: Stage.CTA,
-              isTimerActive: false,
-              gameDataResults: {
-                totalTime: state.finalTimeValue,
-                collectables: state.collectedCollectibles.length,
+              edgeWarningIntensities: {
+                left: clampEdgeWarningValue(intensities.left),
+                right: clampEdgeWarningValue(intensities.right),
+                near: clampEdgeWarningValue(intensities.near),
+                far: clampEdgeWarningValue(intensities.far),
               },
             })
-          }
-        },
-      }),
-      {
-        name: 'quizroller-page',
-        partialize: (s) => ({
-          paletteIndex: s.paletteIndex,
-          gameDataResults: s.gameDataResults,
+          },
+          setCameraLookAtPosition: (cameraLookAtPosition) => {
+            set({ cameraLookAtPosition })
+          },
+
+          setInfoContentIndex: (index) => {
+            set({ infoContentIndex: index })
+          },
+
+          setHudIndicator: (indicator) => {
+            set({ hudIndicator: indicator })
+          },
+
+          onRingCollected: (ringIndex: [number, number]) => {
+            const isAlreadyCollected = get().collectedRings.some(
+              (rc) => rc[0] === ringIndex[0] && rc[1] === ringIndex[1],
+            )
+            if (isAlreadyCollected) return
+            set((s) => ({
+              collectedRings: [...s.collectedRings, ringIndex],
+            }))
+            playSoundFX(SoundFX.COIN_COLLECTED)
+          },
+
+          setConfirmingCollectible: (collectibleType: CollectibleType | null) => {
+            confirmationTween?.kill()
+
+            if (collectibleType === null) {
+              cancelConfirmation(set)
+              set({ confirmingCollectible: null })
+              stopSoundFX(SoundFX.CHANGE_COLOUR)
+              return
+            }
+
+            // Don't re-confirm already collected
+            if (get().collectedCollectibles.includes(collectibleType)) return
+
+            set({
+              confirmingCollectible: collectibleType,
+              confirmationProgress: 0,
+            })
+
+            playSoundFX(SoundFX.CHANGE_COLOUR)
+
+            const onConfirmed = () => {
+              const currentConfirming = get().confirmingCollectible
+              if (currentConfirming !== collectibleType) return
+              set((s) => ({
+                collectedCollectibles: [...s.collectedCollectibles, collectibleType],
+                confirmingCollectible: null,
+                hudIndicator: COLLECTIBLES_HUD_CONFIG[currentConfirming],
+              }))
+              playSoundFX(SoundFX.OPEN_INFO)
+            }
+
+            startConfirmation(set, onConfirmed, COLLECTIBLE_DURATION_S)
+          },
+
+          setTotalRows: (totalRows) => {
+            set({ totalRows })
+          },
+
+          setCurrentRow: (currentRow) => {
+            set({ currentRow })
+          },
+
+          resetPlatformTick: 0,
+          resetPlayerTick: 0,
+          resetGame: () => {
+            confirmationTween?.kill()
+            confirmationTween = null
+            confirmationTweenTarget.value = 0
+            set((s) => ({
+              ...INITIAL_STATE,
+              paletteIndex: s.paletteIndex,
+              resetPlatformTick: s.resetPlatformTick + 1,
+              resetPlayerTick: s.resetPlayerTick + 1,
+            }))
+          },
+
+          resetPlayer: () => {
+            set((s) => ({
+              playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
+              resetPlayerTick: s.resetPlayerTick + 1,
+            }))
+          },
+
+          onOutOfBounds: () => {
+            playSoundFX(SoundFX.OUT_OF_BOUNDS)
+            get().resetPlayer()
+          },
+
+          goToStage: (newStage: Stage) => {
+            if (newStage === Stage.HOME) {
+              set({ stage: Stage.HOME })
+            }
+
+            if (newStage === Stage.INFO) {
+              set({ stage: Stage.INFO })
+            }
+
+            if (newStage === Stage.TERRAIN) {
+              set({ stage: Stage.TERRAIN })
+            }
+
+            if (newStage === Stage.CTA) {
+              set({ stage: Stage.CTA })
+            }
+          },
         }),
-        version: 1,
-      },
+        {
+          name: 'quizroller-page',
+          partialize: (s) => ({
+            paletteIndex: s.paletteIndex,
+          }),
+          version: 1,
+        },
+      ),
     ),
   )
 }
@@ -371,14 +368,12 @@ export const GameProvider: FC<Props> = ({ children }) => {
   const [store] = useState<GameStore>(createGameStore(playSoundFX, stopSoundFX))
 
   useEffect(() => {
-    const startTime = Date.now()
-    store.setState({ isTimerActive: true, finalTimeValue: 0 })
+    store.setState({ timeElapsed: 0 })
 
     const interval = setInterval(() => {
-      const state = store.getState()
-      if (state.isTimerActive) {
-        store.setState({ finalTimeValue: Date.now() - startTime })
-      }
+      store.setState((prev) => ({
+        timeElapsed: prev.timeElapsed + 1,
+      }))
     }, 1000) // update every second
 
     return () => clearInterval(interval)

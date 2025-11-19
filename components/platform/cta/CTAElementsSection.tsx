@@ -22,7 +22,7 @@ type Props = {
 const CTAElements: FC<Props> = ({ ref }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const ctaZone = useRef<RapierRigidBody>(null)
-  const finalTimeValue = useGameStore((s) => s.finalTimeValue)
+  const finalTimeValue = useGameStore((s) => s.timeElapsed)
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return

@@ -7,11 +7,13 @@ export function usePlayerInput(onInputChange?: (input: PlayerInput) => void) {
   const input = useRef(gameStoreAPI.getState().playerInput)
 
   useEffect(() => {
-    const unsubscribe = gameStoreAPI.subscribe((state, prevState) => {
-      if (state.playerInput === prevState.playerInput) return
-      input.current = state.playerInput
-      onInputChange?.(input.current)
-    })
+    const unsubscribe = gameStoreAPI.subscribe(
+      (state) => state.playerInput,
+      (newInput) => {
+        input.current = newInput
+        onInputChange?.(newInput)
+      },
+    )
 
     return unsubscribe
   }, [gameStoreAPI, onInputChange])

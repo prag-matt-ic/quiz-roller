@@ -32,14 +32,12 @@ const EdgeWarningOverlay: FC = () => {
 
     applyOpacities(gameStore.getState().edgeWarningIntensities)
 
-    const unsubscribe = gameStore.subscribe((state, prevState) => {
-      if (
-        JSON.stringify(state.edgeWarningIntensities) ===
-        JSON.stringify(prevState.edgeWarningIntensities)
-      )
-        return
-      applyOpacities(state.edgeWarningIntensities)
-    })
+    const unsubscribe = gameStore.subscribe(
+      (state) => state.edgeWarningIntensities,
+      (intensities) => {
+        applyOpacities(intensities)
+      },
+    )
 
     return unsubscribe
   }, [gameStore])

@@ -10,15 +10,14 @@ export function useStage(onStageChange?: StageChangeHandler): RefObject<Stage> {
   const prevStage = useRef<Stage>(stage.current)
 
   useEffect(() => {
-    const unsubscribe = gameStoreAPI.subscribe((state) => {
-      const nextStage = state.stage
-      if (stage.current === nextStage) return
-
-      const previousStage = stage.current
-      prevStage.current = previousStage
-      stage.current = nextStage
-      onStageChange?.(nextStage, previousStage)
-    })
+    const unsubscribe = gameStoreAPI.subscribe(
+      (state) => state.stage,
+      (nextStage, previousStage) => {
+        prevStage.current = previousStage
+        stage.current = nextStage
+        onStageChange?.(nextStage, previousStage)
+      },
+    )
 
     return unsubscribe
   }, [gameStoreAPI, onStageChange])
