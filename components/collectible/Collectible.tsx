@@ -20,9 +20,9 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 type TileShaderUniforms = {
   uConfirmingProgress: number
   uIsConfirming: number
-  uTileAspect: number
   uTime: number
   uPlayerPaletteIndex: number
+  uAspect: number
   uTilesX: number
   uTilesY: number
 }
@@ -30,11 +30,11 @@ type TileShaderUniforms = {
 const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uConfirmingProgress: 0,
   uIsConfirming: 0,
-  uTileAspect: 1,
   uTime: 0,
   uPlayerPaletteIndex: 1,
-  uTilesX: 1,
-  uTilesY: 1,
+  uAspect: 1,
+  uTilesX: 5,
+  uTilesY: 5,
 }
 
 const CollectibleTileShader = shaderMaterial(
@@ -89,6 +89,8 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
 
+  console.log({ tileAspect, tilesX, tilesY })
+
   const userData = useMemo<CollectibleUserData>(
     () => ({
       type: 'collectible',
@@ -128,7 +130,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
           uConfirmingProgress={0}
           uIsConfirming={0}
           uPlayerPaletteIndex={paletteIndex}
-          uTileAspect={tileAspect}
+          uAspect={tileAspect}
           uTilesX={tilesX}
           uTilesY={tilesY}
         />
@@ -141,8 +143,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         </mesh>
       </pointLight>
 
-      {/* TODO: we shouldn't conditionally mount models, they should have opacity/hidden toggled. */}
-      {isCollected && <GemModel position={GEM_POSITION} scale={GEM_SCALE} />}
+      <GemModel visible={isCollected} position={GEM_POSITION} scale={GEM_SCALE} />
       <Particles width={width} height={height} wasConfirmed={isCollected} />
     </RigidBody>
   )

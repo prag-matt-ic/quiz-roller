@@ -2,7 +2,8 @@ precision mediump float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 #pragma glslify: noise2d = require('glsl-noise/simplex/2d')
-#pragma glslify: getColourFromPalette = require(../../palette.glsl)
+
+#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
 
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
@@ -17,8 +18,8 @@ varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
 
 // Constants
-const float HIGHLIGHTED_MIX_MIN = 0.04;
-const float HIGHLIGHTED_MIX_MAX = 0.12;
+const float HIGHLIGHTED_MIX_MIN = 0.12;
+const float HIGHLIGHTED_MIX_MAX = 0.24;
 
 const float REGULAR_MIX = 0.42;
 const float DARKEN_FACTOR = 0.5;

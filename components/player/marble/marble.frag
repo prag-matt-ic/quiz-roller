@@ -3,7 +3,8 @@ precision mediump float;
 precision mediump int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
-#pragma glslify: getColourFromPalette = require(../../palette.glsl)
+
+#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
 
 uniform highp float uTime;
 uniform mediump int uPaletteIndex; // 0,1,2: selected palette

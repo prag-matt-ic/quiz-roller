@@ -2,7 +2,7 @@
 precision mediump float;
 precision mediump int;
 
-#pragma glslify: paintCorners = require(./paintCorners.glsl)
+#pragma glslify: paintCorners = require(../../resources/glsl/paintCorners.glsl)
 
 uniform mediump float uAspect; // width / height
 uniform mediump float uOpacity;
@@ -14,11 +14,10 @@ const float BORDER_THICKNESS_TILES = 0.1; // thickness relative to a tile height
 const float CORNER_LENGTH_TILES = 0.5; // fraction of tile to extend from each corner
 
 void main() {
-  vec2 tileCounts = vec2(uTilesX, uTilesY);
   float bracketMask = paintCorners(
     vHeightSpacePosition,
     uAspect,
-    tileCounts,
+    vec2(uTilesX, uTilesY),
     BORDER_THICKNESS_TILES,
     CORNER_LENGTH_TILES
   );

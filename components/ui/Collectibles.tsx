@@ -26,23 +26,21 @@ const Collectibles: FC<Props> = ({ ref }) => {
   return (
     <section
       ref={ref}
-      className="pointer-events-none fixed inset-0 z-100 flex flex-col items-center justify-center">
-      <div className="absolute top-6 flex items-center gap-2">
-        {/* Rings/Coins */}
-        <div
-          className={twJoin(
-            'relative mr-2 flex aspect-square size-10 items-center justify-center rounded-full border text-center font-semibold',
-            collectedRings.length > 0 ? 'border-amber-400' : 'border-white/40',
-          )}>
-          {collectedRings.length}
-        </div>
-
-        {COLLECTIBLE_TYPES.map((type, index) => {
-          return (
-            <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(type)} />
-          )
-        })}
+      className="pointer-events-none fixed inset-x-0 top-0 z-100 flex items-center justify-center gap-2 p-6 opacity-0">
+      {/* Rings/Coins */}
+      <div
+        className={twJoin(
+          'relative mr-2 flex aspect-square size-10 items-center justify-center rounded-full border text-center font-semibold',
+          collectedRings.length > 0 ? 'border-amber-400' : 'border-white/40',
+        )}>
+        {collectedRings.length}
       </div>
+
+      {COLLECTIBLE_TYPES.map((type, index) => {
+        return (
+          <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(type)} />
+        )
+      })}
     </section>
   )
 }

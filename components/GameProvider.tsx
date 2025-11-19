@@ -244,6 +244,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           if (collectibleType === null) {
             cancelConfirmation(set)
             set({ confirmingCollectible: null })
+            stopSoundFX(SoundFX.CHANGE_COLOUR)
             return
           }
 
@@ -254,6 +255,8 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             confirmingCollectible: collectibleType,
             confirmationProgress: 0,
           })
+
+          playSoundFX(SoundFX.CHANGE_COLOUR)
 
           const onConfirmed = () => {
             const currentConfirming = get().confirmingCollectible

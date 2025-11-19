@@ -554,9 +554,7 @@ const Platform: FC = () => {
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
 
-    if (pendingRingPlacements.current.size > 0) {
-      flushPendingRingPlacements()
-    }
+    if (pendingRingPlacements.current.size > 0) flushPendingRingPlacements()
 
     if (zStep === 0) return
     infoElements.current.moveElements(zStep)
