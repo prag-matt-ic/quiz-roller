@@ -13,12 +13,8 @@ import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
-import { generateObstacleHeights } from '@/utils/platform/obstaclesSection'
-import {
-  FIRST_OBSTACLE_SECTION_ROWS,
-  generateInfoSectionRowData,
-  OBSTACLE_SECTION_ROWS,
-} from '@/utils/platform/infoSection'
+import { generateObstacleSectionRowData } from '@/utils/platform/obstaclesSection'
+import { generateInfoSectionRowData } from '@/utils/platform/infoSection'
 import {
   colToX,
   COLUMNS,
@@ -37,27 +33,7 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
-import { INFO_ZONES_CONTENT } from '@/resources/content'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
-
-// Type for obstacle generation configuration
-type ObstacleGenerationConfig = {
-  rows: number
-  seed: number
-  minWidth: number
-  maxWidth: number
-  movePerRow: number
-  freq: number
-  notchChance: number
-}
-
-const DEFAULT_OBSTACLE_CONFIG: Omit<ObstacleGenerationConfig, 'rows' | 'seed'> = {
-  minWidth: 4,
-  maxWidth: 8,
-  movePerRow: 1,
-  freq: 0.12,
-  notchChance: 0.1,
-}
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -106,7 +82,13 @@ function getRowAlpha(rowZ: number, playerZ: number) {
   return lerp(1, TILE_PLAYER_FADE_MIN_ALPHA, fadeT)
 }
 
-const Platform: FC = () => {
+type Props = {
+  homeBitmap: HTMLImageElement | null
+  infoBitmaps: Array<HTMLImageElement | null>
+  obstacleBitmaps: Array<HTMLImageElement | null>
+}
+
+const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
   const gameStore = useGameStoreAPI()
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
@@ -162,37 +144,42 @@ const Platform: FC = () => {
   }
 
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
+    const bitmap = infoBitmaps[contentIndex] ?? null
+    if (!bitmap) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[Platform] Cannot insert info rows for index ${contentIndex} without a bitmap image`,
+        )
+      }
+      return
+    }
     const rows = generateInfoSectionRowData({
+      bitmap,
       contentIndex,
-      isInfoOnLeft: INFO_ZONES_CONTENT[contentIndex]?.isInfoOnLeft ?? true,
     })
     appendRowsWithIndices(rows)
   }
 
   function insertHomeRows() {
-    const rows = generateHomeSectionRowData()
+    const rows = generateHomeSectionRowData(homeBitmap)
+    if (!rows.length && process.env.NODE_ENV !== 'production') {
+      console.warn('[Platform] No home rows were generated from the bitmap')
+    }
     appendRowsWithIndices(rows)
   }
 
-  function getObstacleSectionRows(rows: number = OBSTACLE_SECTION_ROWS): RowData[] {
-    const config: ObstacleGenerationConfig = {
-      rows,
-      seed: Math.floor(Math.random() * 1_000_000),
-      ...DEFAULT_OBSTACLE_CONFIG,
+  function insertObstacleRows(bitmapIndex: number) {
+    const bitmap = obstacleBitmaps[bitmapIndex] ?? null
+    if (!bitmap) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[Platform] Cannot insert obstacle rows for index ${bitmapIndex} without a bitmap image`,
+        )
+      }
+      return
     }
-
-    const heights = generateObstacleHeights(config)
-    return heights.map((columnHeights, rowIndex) => ({
-      heights: columnHeights,
-      type: 'obstacles' as const,
-      isSectionStart: rowIndex === 0,
-      isSectionEnd: rowIndex === rows - 1,
-    }))
-  }
-
-  function insertObstacleRows(rows?: number) {
-    const blocks = getObstacleSectionRows(rows)
-    appendRowsWithIndices(blocks)
+    const rows = generateObstacleSectionRowData(bitmap)
+    appendRowsWithIndices(rows)
   }
 
   function insertCtaRows() {
@@ -201,6 +188,8 @@ const Platform: FC = () => {
   }
 
   useEffect(() => {
+    if (!homeBitmap || !infoBitmaps.length) return
+
     function setupInitialRowsAndInstances() {
       // Reset state
       rowsData.current = []
@@ -217,13 +206,13 @@ const Platform: FC = () => {
       pendingRingPlacements.current.clear()
 
       insertHomeRows()
-      insertObstacleRows(FIRST_OBSTACLE_SECTION_ROWS)
+      insertObstacleRows(0)
       insertInfoRows(0)
-      insertObstacleRows()
+      insertObstacleRows(1)
       insertInfoRows(1)
-      insertObstacleRows()
+      insertObstacleRows(2)
       insertInfoRows(2)
-      insertObstacleRows()
+      insertObstacleRows(3)
       insertCtaRows()
       setTotalRows(nextAbsoluteRowIndex.current)
 
@@ -284,7 +273,7 @@ const Platform: FC = () => {
 
     setupInitialRowsAndInstances()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick])
+  }, [resetPlatformTick, homeBitmap, infoBitmaps])
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA

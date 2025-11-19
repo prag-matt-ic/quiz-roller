@@ -1,53 +1,54 @@
-import {
-  colToX,
-  COLUMNS,
-  createEmptyRingPositions,
-  RingLayout,
-  type RowData,
-  SAFE_HEIGHT,
-  TILE_SIZE,
-} from '@/utils/tiles'
-import { roughenEdges } from './roughenEdges'
+import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
-
-const HOME_SECTION_ROWS = 16
-
-const HOME_ARROW_LINE_ROWS = 7
-const HOME_ARROW_HEAD_HALF_WIDTH = 2
-const HOME_ARROW_TRIANGLE_ROWS = HOME_ARROW_HEAD_HALF_WIDTH + 1
-const HOME_ARROW_LINE_START_ROW = 5
-const HOME_ARROW_CENTER_COLUMN = Math.floor(COLUMNS / 2)
+import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { applyBitmapRowFeatures } from './sectionLayoutFeatures'
 
 const HOME_HEADING_CENTER_ROW = 6
 const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
 const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_ROW) * TILE_SIZE
 const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
+const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-const HOME_RING_LAYOUT: RingLayout = {
-  2: [
-    Math.max(0, Math.floor(COLUMNS / 2) - 6),
-    Math.floor(COLUMNS / 2),
-    Math.min(COLUMNS - 1, Math.floor(COLUMNS / 2) + 6),
-  ],
-  8: [2, COLUMNS - 3],
-  12: [Math.floor(COLUMNS / 2) - 10, Math.floor(COLUMNS / 2) + 10],
+export function generateHomeSectionRowData(homeBitmap: HTMLImageElement | null): RowData[] {
+  if (!homeBitmap) {
+    if (IS_DEV_ENV) {
+      console.warn('[HomeSection] Cannot generate home rows without a bitmap image')
+    }
+    return []
+  }
+
+  try {
+    const layout = parseSectionBitmap(homeBitmap)
+    return buildRowsFromLayout(layout)
+  } catch (error) {
+    if (IS_DEV_ENV) {
+      console.warn('[HomeSection] Failed to parse home bitmap', error)
+    }
+    return []
+  }
 }
 
-export function generateHomeSectionRowData(): RowData[] {
-  const rows: RowData[] = new Array(HOME_SECTION_ROWS)
+function buildRowsFromLayout(layout: SectionBitmapLayout): RowData[] {
+  const rowCount = layout.rowCount
+  if (rowCount <= 0) return []
 
-  for (let rowIndex = 0; rowIndex < HOME_SECTION_ROWS; rowIndex++) {
-    const heights = new Array<number>(COLUMNS).fill(SAFE_HEIGHT)
+  const headingRowIndex = clampRowIndex(rowCount, HOME_HEADING_TRIGGER_ROW)
+
+  const rows: RowData[] = new Array(rowCount)
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const layoutRow = layout.rows[rowIndex]
+    const heights = [...layoutRow.heights]
 
     rows[rowIndex] = {
       heights,
       type: 'home',
       isSectionStart: rowIndex === 0,
-      isSectionEnd: rowIndex === HOME_SECTION_ROWS - 1,
+      isSectionEnd: rowIndex === rowCount - 1,
       isHighlighted: [],
     }
 
-    if (rowIndex === HOME_HEADING_TRIGGER_ROW) {
+    if (rowIndex === headingRowIndex) {
       rows[rowIndex].floatingHeadingPosition = [
         HOME_HEADING_X,
         HEADING_Y,
@@ -55,79 +56,15 @@ export function generateHomeSectionRowData(): RowData[] {
       ]
     }
 
-    applyRingColumns(rows[rowIndex], HOME_RING_LAYOUT[rowIndex])
+    applyBitmapRowFeatures(rows[rowIndex], layoutRow)
   }
-
-  applyBitmapArrowHighlight(rows)
-
-  // TODO: update this so that it can apply to rows (e.g start of home section) and not just columns.
-  roughenEdges({
-    rows,
-    seed: 1337,
-    protectRanges: [
-      {
-        startCol: Math.max(0, HOME_ARROW_CENTER_COLUMN - HOME_ARROW_HEAD_HALF_WIDTH),
-        endColExclusive: Math.min(
-          COLUMNS,
-          HOME_ARROW_CENTER_COLUMN + HOME_ARROW_HEAD_HALF_WIDTH + 1,
-        ),
-      },
-    ],
-    rowWindow: {
-      start: 1,
-      endExclusive: HOME_SECTION_ROWS - 1,
-    },
-    maxIndentColumns: 3,
-  })
 
   return rows
 }
 
-function applyBitmapArrowHighlight(rows: RowData[]) {
-  const startRow = clampRowIndex(rows, HOME_ARROW_LINE_START_ROW)
-  const endRowExclusive = Math.min(rows.length, startRow + HOME_ARROW_LINE_ROWS)
-  const headRow = endRowExclusive - 1
-
-  for (let rowIndex = startRow; rowIndex < endRowExclusive; rowIndex++) {
-    const highlight = fillHighlightArray(rows[rowIndex])
-    highlight[HOME_ARROW_CENTER_COLUMN] = 1
-  }
-
-  for (let offset = 0; offset < HOME_ARROW_TRIANGLE_ROWS; offset++) {
-    const rowIndex = headRow - offset
-    if (rowIndex < startRow || rowIndex < 0) break
-
-    const highlight = fillHighlightArray(rows[rowIndex])
-    const radius = Math.min(offset, HOME_ARROW_HEAD_HALF_WIDTH)
-    if (radius === 0) continue
-
-    const leftColumn = HOME_ARROW_CENTER_COLUMN - radius
-    const rightColumn = HOME_ARROW_CENTER_COLUMN + radius
-
-    if (leftColumn >= 0) highlight[leftColumn] = 1
-    if (rightColumn < COLUMNS) highlight[rightColumn] = 1
-  }
-}
-
-function applyRingColumns(row: RowData, columns?: number[]) {
-  if (!columns || columns.length === 0) return
-  row.ringPositions = createEmptyRingPositions()
-  columns.forEach((columnIndex) => {
-    if (columnIndex < 0 || columnIndex >= COLUMNS) return
-    row.ringPositions![columnIndex] = 1
-  })
-}
-
-function fillHighlightArray(row: RowData): number[] {
-  if (!row.isHighlighted || row.isHighlighted.length !== COLUMNS) {
-    row.isHighlighted = new Array(COLUMNS).fill(0)
-  }
-  return row.isHighlighted
-}
-
-function clampRowIndex(rows: RowData[], requestedIndex: number): number {
-  if (rows.length === 0) return 0
+function clampRowIndex(rowCount: number, requestedIndex: number): number {
+  if (rowCount === 0) return 0
   if (requestedIndex < 0) return 0
-  if (requestedIndex >= rows.length) return rows.length - 1
+  if (requestedIndex >= rowCount) return rowCount - 1
   return requestedIndex
 }

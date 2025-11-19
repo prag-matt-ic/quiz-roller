@@ -1,161 +1,165 @@
-import { colToX, COLUMNS, ON_TILE_Y, RowData, SAFE_HEIGHT, TILE_SIZE } from '@/utils/tiles'
-import { roughenEdges, type ProtectRange } from './roughenEdges'
+import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
+import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { applyBitmapRowFeatures, type InfoZonePlacement } from './sectionLayoutFeatures'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
 
-// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
-export const INFO_SECTION_ROWS = 16
+const INFO_HEADING_CENTER_ROW = 5
+const INFO_HEADING_TRIGGER_ROW = Math.ceil(INFO_HEADING_CENTER_ROW)
+const INFO_HEADING_RELATIVE_Z = (INFO_HEADING_TRIGGER_ROW - INFO_HEADING_CENTER_ROW) * TILE_SIZE
 
-export const INFO_ZONE_CENTER_ROW = 10
 const INFO_ZONE_COLS = 5
 const INFO_ZONE_ROWS = 5
 
-const RIGHT_INFO_ZONE_START_COLUMN = COLUMNS - INFO_ZONE_COLS - 2 // right side, one column from edge
-const RIGHT_INFO_ZONE_CENTER_COLUMN = RIGHT_INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
-const LEFT_INFO_ZONE_START_COLUMN = 2 // left side, one column from edge
-const LEFT_INFO_ZONE_CENTER_COLUMN = LEFT_INFO_ZONE_START_COLUMN + (INFO_ZONE_COLS - 1) / 2
-
+// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
-type InfoZone = {
+type InfoSectionConfig = {
+  bitmap: HTMLImageElement | null
   contentIndex: 0 | 1 | 2
-  isInfoOnLeft: boolean
 }
 
-export function generateInfoSectionRowData(config: InfoZone): RowData[] {
-  const { contentIndex, isInfoOnLeft } = config
+export function generateInfoSectionRowData(config: InfoSectionConfig): RowData[] {
+  const { bitmap, contentIndex } = config
 
-  // Start fully open, then carve out non-tile areas within tile rows
-  const heights: number[][] = Array.from({ length: INFO_SECTION_ROWS }, () =>
-    new Array<number>(COLUMNS).fill(SAFE_HEIGHT),
-  )
+  if (!bitmap) {
+    console.error('[InfoSection] Cannot generate info rows without a bitmap image')
+    return []
+  }
 
-  // Floating header appears at the top of the section
-  const floatingHeaderCenterRow = 5
-  const floatingHeaderTriggerRow = Math.ceil(floatingHeaderCenterRow)
-  const floatingHeaderZRelative =
-    (floatingHeaderTriggerRow - floatingHeaderCenterRow) * TILE_SIZE
+  try {
+    const layout = parseSectionBitmap(bitmap)
+    return buildRowsFromLayout(layout, contentIndex)
+  } catch (error) {
+    console.error('[InfoSection] Failed to parse info bitmap', error)
+    return []
+  }
+}
 
-  // Info zones appear at the same row
-  const infoZoneTriggerRow = Math.ceil(INFO_ZONE_CENTER_ROW)
-  const infoZoneZRelative = (infoZoneTriggerRow - INFO_ZONE_CENTER_ROW) * TILE_SIZE
+function buildRowsFromLayout(layout: SectionBitmapLayout, contentIndex: 0 | 1 | 2): RowData[] {
+  const rowCount = layout.rowCount
+  if (rowCount <= 0) return []
 
-  // Calculate highlight ranges for both zones using a loop
-  const zonePositions = [
-    { startColumn: LEFT_INFO_ZONE_START_COLUMN, centerColumn: LEFT_INFO_ZONE_CENTER_COLUMN },
-    { startColumn: RIGHT_INFO_ZONE_START_COLUMN, centerColumn: RIGHT_INFO_ZONE_CENTER_COLUMN },
-  ]
+  const headingRowIndex = clampRowIndex(rowCount, INFO_HEADING_TRIGGER_ROW)
+  const rows: RowData[] = new Array(rowCount)
+  const infoZonePlacementsByRow = computeInfoZonePlacements(layout)
 
-  const highlightData = zonePositions.map((zone) => {
-    const startColumn = clampRangeStart(zone.startColumn, INFO_ZONE_COLS, COLUMNS)
-    const endColumn = Math.min(COLUMNS, startColumn + INFO_ZONE_COLS)
-    const template =
-      endColumn > startColumn ? buildHighlightTemplate(startColumn, endColumn) : null
-    return { startColumn, endColumn, template }
-  })
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const layoutRow = layout.rows[rowIndex]
+    const heights = [...layoutRow.heights]
+    const infoPlacements = infoZonePlacementsByRow.get(rowIndex)
 
-  const protectedRanges: ProtectRange[] = []
-  const infoZoneHighlightStartRow = clampRangeStart(
-    Math.ceil(INFO_ZONE_CENTER_ROW - INFO_ZONE_ROWS / 2),
-    INFO_ZONE_ROWS,
-    INFO_SECTION_ROWS,
-  )
-  const infoZoneHighlightEndRow = Math.min(
-    INFO_SECTION_ROWS,
-    infoZoneHighlightStartRow + INFO_ZONE_ROWS,
-  )
-
-  // Add protected ranges for both zones
-  highlightData.forEach(({ startColumn, endColumn }) => {
-    if (endColumn > startColumn) {
-      protectedRanges.push({
-        startCol: startColumn,
-        endColExclusive: endColumn,
-      })
-    }
-  })
-
-  const rows: RowData[] = new Array(INFO_SECTION_ROWS)
-
-  for (let i = 0; i < INFO_SECTION_ROWS; i++) {
-    const isStart = i === 0
-    const isEnd = i === INFO_SECTION_ROWS - 1
-
-    rows[i] = {
-      heights: heights[i],
+    const row: RowData = {
+      heights,
       type: 'info',
-      isSectionStart: isStart,
-      isSectionEnd: isEnd,
+      isSectionStart: rowIndex === 0,
+      isSectionEnd: rowIndex === rowCount - 1,
       infoContentIndex: contentIndex,
+      isHighlighted: [],
     }
 
-    if (i === floatingHeaderTriggerRow) {
-      rows[i].floatingHeadingPosition = [
+    if (rowIndex === headingRowIndex) {
+      row.floatingHeadingPosition = [
         colToX(COLUMNS / 2 - 0.5),
         HEADING_Y,
-        floatingHeaderZRelative,
+        INFO_HEADING_RELATIVE_Z,
       ]
     }
 
-    if (i === infoZoneTriggerRow) {
-      // Index 0 = collectible zone, Index 1 = info zone
-      const collectiblePosition = isInfoOnLeft
-        ? RIGHT_INFO_ZONE_CENTER_COLUMN
-        : LEFT_INFO_ZONE_CENTER_COLUMN
-      const infoPosition = isInfoOnLeft
-        ? LEFT_INFO_ZONE_CENTER_COLUMN
-        : RIGHT_INFO_ZONE_CENTER_COLUMN
-
-      rows[i].collectiblePosition = [colToX(collectiblePosition), ON_TILE_Y, infoZoneZRelative]
-      rows[i].infoZonePositions = [[colToX(infoPosition), ON_TILE_Y, infoZoneZRelative]]
-    }
-
-    // Check if we should highlight on this row
-    const inCurrentRowRange = i >= infoZoneHighlightStartRow && i < infoZoneHighlightEndRow
-    if (inCurrentRowRange) {
-      const combinedHighlight = new Array<number>(COLUMNS).fill(0)
-
-      // Apply both zone highlights
-      highlightData.forEach(({ template }) => {
-        if (template !== null) {
-          for (let col = 0; col < COLUMNS; col++) {
-            combinedHighlight[col] = combinedHighlight[col] || template[col]
-          }
-        }
-      })
-
-      rows[i].isHighlighted = combinedHighlight
-    }
+    applyBitmapRowFeatures(row, layoutRow, infoPlacements)
+    rows[rowIndex] = row
   }
-  roughenEdges({
-    rows,
-    seed: 50 + contentIndex * 101,
-    protectRanges: protectedRanges,
-    rowWindow: {
-      start: 1,
-      endExclusive: INFO_SECTION_ROWS - 1,
-    },
-    maxIndentColumns: 3,
-  })
+
   return rows
 }
 
-function clampRangeStart(requestedStart: number, span: number, maxExclusive: number): number {
-  if (span >= maxExclusive) return 0
-  const minStart = 0
-  const maxStart = maxExclusive - span
-  if (requestedStart < minStart) return minStart
-  if (requestedStart > maxStart) return maxStart
-  return requestedStart
+function computeInfoZonePlacements(
+  layout: SectionBitmapLayout,
+): Map<number, InfoZonePlacement[]> {
+  const placementsByRow = new Map<number, InfoZonePlacement[]>()
+  const rowCount = layout.rowCount
+  if (rowCount <= 0) return placementsByRow
+
+  const infoColumnSets = layout.rows.map((row) => new Set(row.infoZoneColumns))
+  const visited = new Set<string>()
+  const keyFor = (row: number, column: number) => `${row}:${column}`
+  const NEIGHBOUR_OFFSETS: Array<[number, number]> = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ]
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const columns = layout.rows[rowIndex].infoZoneColumns
+    if (!columns.length) continue
+
+    for (const column of columns) {
+      const seedKey = keyFor(rowIndex, column)
+      if (visited.has(seedKey)) continue
+
+      const stack: Array<{ row: number; column: number }> = [{ row: rowIndex, column }]
+      const component: Array<{ row: number; column: number }> = []
+
+      while (stack.length > 0) {
+        const cell = stack.pop()!
+        const cellKey = keyFor(cell.row, cell.column)
+        if (visited.has(cellKey)) continue
+        visited.add(cellKey)
+        component.push(cell)
+
+        for (const [dRow, dColumn] of NEIGHBOUR_OFFSETS) {
+          const nextRow = cell.row + dRow
+          const nextColumn = cell.column + dColumn
+          if (nextRow < 0 || nextRow >= rowCount) continue
+          if (!infoColumnSets[nextRow].has(nextColumn)) continue
+          stack.push({ row: nextRow, column: nextColumn })
+        }
+      }
+
+      if (!component.length) continue
+
+      let minRow = Infinity
+      let maxRow = -Infinity
+      let minColumn = Infinity
+      let maxColumn = -Infinity
+      const rowsInComponent = new Set<number>()
+
+      for (const { row, column: col } of component) {
+        rowsInComponent.add(row)
+        if (row < minRow) minRow = row
+        if (row > maxRow) maxRow = row
+        if (col < minColumn) minColumn = col
+        if (col > maxColumn) maxColumn = col
+      }
+
+      const centerRow = Math.round((minRow + maxRow) / 2)
+      const centerColumn = Math.round((minColumn + maxColumn) / 2)
+
+      rowsInComponent.forEach((row) => {
+        const placements = placementsByRow.get(row) ?? []
+        placements.push({
+          columnIndex: centerColumn,
+          zOffset: (row - centerRow) * TILE_SIZE,
+        })
+        placementsByRow.set(row, placements)
+      })
+    }
+  }
+
+  placementsByRow.forEach((placements) => {
+    placements.sort((a, b) => a.columnIndex - b.columnIndex)
+  })
+
+  return placementsByRow
 }
 
-function buildHighlightTemplate(startColumn: number, endColumnExclusive: number): number[] {
-  const highlight = new Array<number>(COLUMNS).fill(0)
-  for (let columnIndex = startColumn; columnIndex < endColumnExclusive; columnIndex++) {
-    highlight[columnIndex] = 1
-  }
-  return highlight
+function clampRowIndex(rowCount: number, requestedIndex: number): number {
+  if (rowCount === 0) return 0
+  if (requestedIndex < 0) return 0
+  if (requestedIndex >= rowCount) return rowCount - 1
+  return requestedIndex
 }

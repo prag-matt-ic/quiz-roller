@@ -8,7 +8,6 @@ import { FC, type ReactNode } from 'react'
 type InfoContent = {
   heading: string
   infoZoneContent: ReactNode
-  isInfoOnLeft: boolean
 }
 
 export const INFO_ZONES_CONTENT: InfoContent[] = [
@@ -51,14 +50,12 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
         </Card>
       </>
     ),
-    isInfoOnLeft: true,
   },
   {
     heading: 'Senior Three.js developers supercharged with AI capabilities',
     infoZoneContent: <></>,
-    isInfoOnLeft: false,
   },
-  { heading: 'Heading third!', infoZoneContent: <></>, isInfoOnLeft: true },
+  { heading: 'Heading third!', infoZoneContent: <></> },
 ]
 
 const CollectibleHUDContent: FC<{

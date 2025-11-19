@@ -5,7 +5,7 @@ import { PerformanceMonitor, Stats, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense, useMemo } from 'react'
+import { type FC, Suspense, useEffect, useMemo, useState } from 'react'
 
 import Background from '@/components/background/Background'
 import Platform from '@/components/platform/Platform'
@@ -16,6 +16,10 @@ import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
+import homeTexture from '@/assets/platform/home.png'
+import infoTexture from '@/assets/platform/info-1.png'
+import obstacleTexture from '@/assets/platform/obstacles-1.png'
+import { loadHtmlImage } from '@/utils/loadImage'
 
 gsap.registerPlugin(useGSAP)
 
@@ -27,11 +31,45 @@ type Props = {
   isMobile: boolean
 }
 
+const INFO_BITMAP_TEXTURES = [infoTexture, infoTexture, infoTexture] // TODO: replace duplicates once dedicated info bitmaps are available
+const OBSTACLE_BITMAP_TEXTURES = [
+  obstacleTexture,
+  obstacleTexture,
+  obstacleTexture,
+  obstacleTexture,
+]
+
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
+  const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
+  const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
+  const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+    const sources = [
+      homeTexture.src,
+      ...INFO_BITMAP_TEXTURES.map((t) => t.src),
+      ...OBSTACLE_BITMAP_TEXTURES.map((t) => t.src),
+    ]
+
+    loadHtmlImage(sources).then((images) => {
+      if (!isMounted) return
+      const home = images[0]
+      const infos = images.slice(1, 1 + INFO_BITMAP_TEXTURES.length)
+      const obstacles = images.slice(1 + INFO_BITMAP_TEXTURES.length)
+      setHomeBitmap(home)
+      setInfoBitmaps(infos)
+      setObstaclesBitmaps(obstacles)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const dpr = useMemo<number>(() => {
     if (typeof window === 'undefined') return 1
@@ -75,7 +113,11 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
             {/* <Background /> */}
             <FloatingTiles />
             <OutOfBounds />
-            <Platform />
+            <Platform
+              homeBitmap={homeBitmap}
+              infoBitmaps={infoBitmaps}
+              obstacleBitmaps={obstaclesBitmaps}
+            />
             <Player />
           </Physics>
         </Suspense>

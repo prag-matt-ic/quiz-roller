@@ -7,7 +7,7 @@ import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
 import Collectibles from '@/components/ui/Collectibles'
 import ProgressBar from '@/components/ui/ProgressBar'
-import { useGameStore } from '../GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 
 gsap.registerPlugin(useGSAP)
 
@@ -38,7 +38,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       <Collectibles ref={collectibles} />
       <AudioToggle />
 
-      <div className="fixed top-10 right-20">{timeElapsed}</div>
+      <div className="fixed top-10 right-32">{timeElapsed}</div>
     </>
   )
 }
