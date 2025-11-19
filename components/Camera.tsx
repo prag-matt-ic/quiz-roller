@@ -2,7 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { type FC, useCallback, useRef } from 'react'
+import { type FC, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -42,15 +42,19 @@ export const CAMERA_CONFIG: Record<
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
-  const { input } = usePlayerInput()
+
+  const lastMovedBackward = useRef(false)
+
+  usePlayerInput((input) => {
+    if (input.down > 0) lastMovedBackward.current = true
+    else if (input.up > 0) lastMovedBackward.current = false
+  })
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
-  const onStageChange = useCallback((nextStage: Stage) => {
+  const stage = useStage((nextStage: Stage) => {
     if (!cameraControls.current) return
     cameraControls.current.zoomTo(CAMERA_CONFIG[nextStage].zoom, true)
-  }, [])
-
-  const stage = useStage(onStageChange)
+  })
 
   useFrame(() => {
     if (!cameraControls.current) return
@@ -64,8 +68,7 @@ const Camera: FC = () => {
       : CAMERA_CONFIG[stage.current].position.z
 
     // Adjust the look based on whether player is moving back or not
-    const moveBack = input.current.down > 0
-    zOffset += moveBack ? 2 : 0
+    zOffset += lastMovedBackward.current ? 4 : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
