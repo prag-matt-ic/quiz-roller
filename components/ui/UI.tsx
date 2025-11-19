@@ -1,6 +1,7 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
+import { RotateCcw, X } from 'lucide-react'
 import { type FC, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 
@@ -50,7 +51,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         {isSpeedRunMode ? 'End Speedroll' : 'Begin Speedroll'}
       </button>
 
-      <LiveTimeDisplay className="fixed top-5 font-mono text-4xl leading-none font-semibold" />
+      <LiveTimeDisplay className="border-red fixed top-2 border font-mono text-4xl leading-none font-semibold" />
 
       {isSpeedRunMode && <SpeedRunHUD onRestart={restartSpeedRun} onStop={stopSpeedRun} />}
     </>
@@ -72,31 +73,34 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
 
   return (
     <>
-      <section className="pointer-events-auto fixed inset-x-4 bottom-6 z-200">
-        <div className="mx-auto flex w-fit flex-col gap-3 rounded-xl bg-black/80 p-3 text-white backdrop-blur select-none">
+      <section className="pointer-events-auto fixed inset-x-4 bottom-0 z-200">
+        <div className="mx-auto flex w-fit flex-col gap-3 rounded-t-xl bg-black/80 p-3 text-white backdrop-blur select-none">
           <div className="flex items-center justify-between">
             <div
               className={twJoin('size-3', isShowingCountdown ? 'bg-amber-400' : 'bg-green-500')}
             />
-            <h3 className="text-xs tracking-[0.3em] text-white/70 uppercase">Speedrun</h3>
+            <h3 className="text-xs tracking-[0.3em] text-white/70 uppercase">Speedroll</h3>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-white/8 p-2">
-            <LiveTimeDisplay className="font-mono text-4xl leading-none font-semibold" />
-          </div>
-
-          <div className="flex justify-end gap-2">
+          <div className="flex h-12 gap-3">
             <button
               type="button"
-              className="rounded-full border bg-white px-3 py-1 text-sm font-semibold text-black transition hover:text-white"
-              onClick={onRestart}>
-              Restart
+              className="flex size-12 h-full items-center justify-center rounded bg-amber-400/50 text-white transition hover:bg-white/20"
+              onClick={onRestart}
+              title="Restart">
+              <RotateCcw size={24} />
             </button>
+
+            <div className="relative flex items-center overflow-hidden rounded-md bg-white/8 p-2">
+              <LiveTimeDisplay className="font-mono text-4xl leading-none font-semibold" />
+            </div>
+
             <button
               type="button"
-              className="rounded-full bg-white px-4 py-1 text-sm font-semibold text-black transition hover:bg-white/90"
-              onClick={onStop}>
-              Cancel
+              className="flex size-12 items-center justify-center rounded bg-red-600/50 text-white transition hover:bg-red-500/50"
+              onClick={onStop}
+              title="Cancel">
+              <X size={24} />
             </button>
           </div>
         </div>
@@ -105,6 +109,7 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
         in={isShowingCountdown}
         timeout={{ enter: 0, exit: 200 }}
         nodeRef={countdownContainer}
+        appear={true}
         onEnter={() => {
           gsap
             .timeline({

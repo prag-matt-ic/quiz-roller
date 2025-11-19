@@ -1,5 +1,5 @@
 'use client'
-import { type FC, type HTMLAttributes, Ref, useCallback, useRef } from 'react'
+import { type FC, useCallback, useRef } from 'react'
 
 import { useTime } from '@/hooks/useTime'
 import { useGameStore } from '../GameProvider'

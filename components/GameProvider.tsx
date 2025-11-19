@@ -165,7 +165,7 @@ const INITIAL_STATE: Pick<
   totalRows: 100,
   currentRow: 0,
   timeElapsed: 0,
-  isTiming: false,
+  isTiming: true,
   isSpeedRunMode: false,
 }
 
@@ -421,7 +421,6 @@ const Timer: FC = () => {
     if (!isTiming) return
 
     const intervalId = setInterval(() => {
-      console.log('updating time elapsed', { isSpeedRun })
       gameStoreAPI.setState((s) => ({
         timeElapsed: s.timeElapsed + interval,
       }))
