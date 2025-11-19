@@ -2,7 +2,7 @@ import {
   colToX,
   COLUMNS,
   createEmptyRingPositions,
-  ON_TILE_Y,
+  RingLayout,
   type RowData,
   SAFE_HEIGHT,
   TILE_SIZE,
@@ -11,10 +11,6 @@ import { roughenEdges } from './roughenEdges'
 import { HEADING_Y } from './floatingHeading'
 
 const HOME_SECTION_ROWS = 16
-
-const IMAGE_CENTER_ROW = 5
-const IMAGE_TRIGGER_ROW = IMAGE_CENTER_ROW
-const IMAGE_RELATIVE_Z = 0
 
 const HOME_ARROW_LINE_ROWS = 7
 const HOME_ARROW_HEAD_HALF_WIDTH = 2
@@ -27,24 +23,15 @@ const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
 const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_ROW) * TILE_SIZE
 const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
 
-const HOME_RING_LAYOUT = [
-  {
-    row: 2,
-    columns: [
-      Math.max(0, Math.floor(COLUMNS / 2) - 6),
-      Math.floor(COLUMNS / 2),
-      Math.min(COLUMNS - 1, Math.floor(COLUMNS / 2) + 6),
-    ],
-  },
-  {
-    row: 8,
-    columns: [2, COLUMNS - 3],
-  },
-  {
-    row: 12,
-    columns: [Math.floor(COLUMNS / 2) - 10, Math.floor(COLUMNS / 2) + 10],
-  },
-]
+const HOME_RING_LAYOUT: RingLayout = {
+  2: [
+    Math.max(0, Math.floor(COLUMNS / 2) - 6),
+    Math.floor(COLUMNS / 2),
+    Math.min(COLUMNS - 1, Math.floor(COLUMNS / 2) + 6),
+  ],
+  8: [2, COLUMNS - 3],
+  12: [Math.floor(COLUMNS / 2) - 10, Math.floor(COLUMNS / 2) + 10],
+}
 
 export function generateHomeSectionRowData(): RowData[] {
   const rows: RowData[] = new Array(HOME_SECTION_ROWS)
@@ -58,11 +45,6 @@ export function generateHomeSectionRowData(): RowData[] {
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === HOME_SECTION_ROWS - 1,
       isHighlighted: [],
-      ringPositions: createEmptyRingPositions(),
-    }
-
-    if (rowIndex === IMAGE_TRIGGER_ROW) {
-      rows[rowIndex].imagePosition = [colToX(COLUMNS / 2 - 0.5), ON_TILE_Y, IMAGE_RELATIVE_Z]
     }
 
     if (rowIndex === HOME_HEADING_TRIGGER_ROW) {
@@ -72,11 +54,13 @@ export function generateHomeSectionRowData(): RowData[] {
         HOME_HEADING_RELATIVE_Z,
       ]
     }
+
+    applyRingColumns(rows[rowIndex], HOME_RING_LAYOUT[rowIndex])
   }
 
   applyBitmapArrowHighlight(rows)
-  applyHomeRingLayout(rows)
 
+  // TODO: update this so that it can apply to rows (e.g start of home section) and not just columns.
   roughenEdges({
     rows,
     seed: 1337,
@@ -125,19 +109,12 @@ function applyBitmapArrowHighlight(rows: RowData[]) {
   }
 }
 
-function applyHomeRingLayout(rows: RowData[]) {
-  HOME_RING_LAYOUT.forEach(({ row, columns }) => {
-    if (row < 0 || row >= rows.length) return
-    const targetRow = rows[row]
-    if (!targetRow) return
-    if (!targetRow.ringPositions || targetRow.ringPositions.length !== COLUMNS) {
-      targetRow.ringPositions = createEmptyRingPositions()
-    }
-
-    columns.forEach((columnIndex) => {
-      if (columnIndex < 0 || columnIndex >= COLUMNS) return
-      targetRow.ringPositions![columnIndex] = 1
-    })
+function applyRingColumns(row: RowData, columns?: number[]) {
+  if (!columns || columns.length === 0) return
+  row.ringPositions = createEmptyRingPositions()
+  columns.forEach((columnIndex) => {
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    row.ringPositions![columnIndex] = 1
   })
 }
 

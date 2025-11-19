@@ -21,7 +21,6 @@ import {
 import {
   colToX,
   COLUMNS,
-  createEmptyRingPositions,
   EPSILON,
   clamp,
   TERRAIN_SPEED_UNITS,
@@ -64,7 +63,6 @@ const EMPTY_ROW_DATA: RowData = {
   isSectionStart: false,
   isSectionEnd: false,
   rowIndex: -1,
-  ringPositions: createEmptyRingPositions(),
 }
 
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
@@ -186,7 +184,6 @@ const Platform: FC = () => {
       type: 'obstacles' as const,
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === rows - 1,
-      ringPositions: createEmptyRingPositions(),
     }))
   }
 

@@ -58,6 +58,9 @@ export function lerp(a: number, b: number, t: number): number {
 
 export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty'
 
+// Row index to columns with rings
+export type RingLayout = Record<number, number[]>
+
 export type RingPositions = (0 | 1)[]
 
 export const createEmptyRingPositions = (): RingPositions =>

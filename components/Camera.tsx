@@ -36,6 +36,8 @@ export const CAMERA_CONFIG: Record<
   },
 }
 
+// TOOD: add subtle pointer offset to the camera position.
+
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
