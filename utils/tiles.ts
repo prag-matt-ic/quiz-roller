@@ -82,4 +82,5 @@ export type RowData = {
   infoZonePositions?: ([number, number, number] | null)[] // Info zones rendered on the platform
   collectiblePosition?: [number, number, number] // Collectibles rendered on the platform
   floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
+  ctaZonePosition?: [number, number, number] // CTA zone position for final stage
 }

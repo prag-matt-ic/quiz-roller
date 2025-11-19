@@ -28,8 +28,13 @@ export type InfoZoneUserData = {
   type: 'info-zone'
 }
 
+export type CtaZoneUserData = {
+  type: 'cta-zone'
+}
+
 export type RigidBodyUserData =
   | PlayerUserData
   | OutOfBoundsUserData
   | CollectibleUserData
   | InfoZoneUserData
+  | CtaZoneUserData

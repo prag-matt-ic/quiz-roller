@@ -7,6 +7,9 @@ import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
+import CTAElements, {
+  type CTAElementsHandle,
+} from '@/components/platform/cta/CTAElementsSection' // changed from lowercase and wont allow name CTAElements
 import RingElements, { type RingElementsHandle } from '@/components/platform/rings/Rings'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -37,6 +40,7 @@ import {
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { INFO_ZONES_CONTENT } from '@/resources/content'
+import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 
 // Type for obstacle generation configuration
 type ObstacleGenerationConfig = {
@@ -144,6 +148,7 @@ const Platform: FC = () => {
 
   const homeElements = useRef<HomeElementsHandle | null>(null)
   const infoElements = useRef<InfoElementsHandle | null>(null)
+  const ctaElements = useRef<CTAElementsHandle | null>(null)
   const ringElements = useRef<RingElementsHandle | null>(null)
   const pendingRingPlacements = useRef<Map<number, number>>(new Map())
 
@@ -192,6 +197,11 @@ const Platform: FC = () => {
     appendRowsWithIndices(blocks)
   }
 
+  function insertCtaRows() {
+    const rows = generateCtaSectionRowData()
+    appendRowsWithIndices(rows)
+  }
+
   useEffect(() => {
     function setupInitialRowsAndInstances() {
       // Reset state
@@ -216,8 +226,8 @@ const Platform: FC = () => {
       insertObstacleRows()
       insertInfoRows(2)
       insertObstacleRows()
+      insertCtaRows()
       setTotalRows(nextAbsoluteRowIndex.current)
-      // TODO: insert CTA Rows.
 
       const instances: InstancedRigidBodyProps[] = []
       const totalInstances = ROWS_RENDERED * COLUMNS
@@ -255,7 +265,7 @@ const Platform: FC = () => {
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
 
-          instanceVisibility.current[bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+          instanceVisibility.current[bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
           instanceSeed.current[bodyIndex] = Math.random()
           instanceIsHighlighted.current[bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
 
@@ -286,7 +296,7 @@ const Platform: FC = () => {
       const bodyIndex = rowIndex * COLUMNS + columnIndex
       const y = data.heights[columnIndex]
       yByBodyIndex.current[bodyIndex] = y
-      instanceVisibility.current![bodyIndex] = y === SAFE_HEIGHT ? 1 : 0
+      instanceVisibility.current![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
       instanceIsHighlighted.current![bodyIndex] = data.isHighlighted?.[columnIndex] ?? 0
     }
   }
@@ -312,6 +322,9 @@ const Platform: FC = () => {
       case 'home':
         homeElements.current?.hideElementsIfNeeded(row)
         break
+      case 'cta':
+        ctaElements.current?.hideElementsIfNeeded(row)
+        break
       default:
         break
     }
@@ -327,6 +340,9 @@ const Platform: FC = () => {
         break
       case 'home':
         homeElements.current?.positionElementsIfNeeded(row, rowZ)
+        break
+      case 'cta':
+        ctaElements.current?.positionElementsIfNeeded(row, rowZ)
         break
       default:
         break
@@ -543,7 +559,13 @@ const Platform: FC = () => {
   useGameFrame((_, delta) => {
     if (!hasInitialized.current) return [[]]
     if (!instancedTilesRef.current?.shader) return
-    if (!homeElements.current || !infoElements.current || !ringElements.current) return
+    if (
+      !homeElements.current ||
+      !infoElements.current ||
+      !ctaElements.current ||
+      !ringElements.current
+    )
+      return
 
     instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
 
@@ -554,6 +576,7 @@ const Platform: FC = () => {
     updateTiles(playerZ)
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
+    ctaElements.current.moveElements(zStep)
     ringElements.current.moveElements(zStep)
     if (pendingRingPlacements.current.size > 0) {
       flushPendingRingPlacements()
@@ -579,6 +602,9 @@ const Platform: FC = () => {
 
       {/* Info Section Elements */}
       <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />
+
+      {/* CTA Section Elements */}
+      <CTAElements ref={ctaElements} key={`${resetPlatformTick}-cta`} />
     </group>
   )
 }

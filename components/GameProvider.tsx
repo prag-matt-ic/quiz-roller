@@ -6,6 +6,7 @@ import {
   type PropsWithChildren,
   type ReactNode,
   useContext,
+  useEffect,
   useState,
 } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -44,6 +45,11 @@ export type HudIndicatorConfig = {
   autoDismissS?: number
 }
 export type RingIndex = [row: number, column: number]
+
+export type GameDataResults = {
+  totalTime: number
+  collectables: number
+}
 
 type GameState = {
   stage: Stage
@@ -87,6 +93,10 @@ type GameState = {
   resetPlatformTick: number
   resetPlayerTick: number
   goToStage: (stage: Stage) => void
+
+  finalTimeValue: number
+  isTimerActive: boolean
+  gameDataResults: GameDataResults | null
 }
 
 type GameStore = StoreApi<GameState>
@@ -118,6 +128,9 @@ const INITIAL_STATE: Pick<
   | 'totalRows'
   | 'currentRow'
   | 'collectedRings'
+  | 'finalTimeValue'
+  | 'isTimerActive'
+  | 'gameDataResults'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -143,6 +156,9 @@ const INITIAL_STATE: Pick<
   collectedRings: [],
   totalRows: 100,
   currentRow: 0,
+  finalTimeValue: 0,
+  isTimerActive: false,
+  gameDataResults: null,
 }
 
 const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) => void) => {
@@ -288,6 +304,9 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             paletteIndex: s.paletteIndex,
             resetPlatformTick: s.resetPlatformTick + 1,
             resetPlayerTick: s.resetPlayerTick + 1,
+            finalTimeValue: 0,
+            isTimerActive: false,
+            gameDataResults: null,
           }))
         },
 
@@ -317,7 +336,15 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           }
 
           if (newStage === Stage.CTA) {
-            set({ stage: Stage.CTA })
+            const state = get()
+            set({
+              stage: Stage.CTA,
+              isTimerActive: false,
+              gameDataResults: {
+                totalTime: state.finalTimeValue,
+                collectables: state.collectedCollectibles.length,
+              },
+            })
           }
         },
       }),
@@ -325,6 +352,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
         name: 'quizroller-page',
         partialize: (s) => ({
           paletteIndex: s.paletteIndex,
+          gameDataResults: s.gameDataResults,
         }),
         version: 1,
       },
@@ -338,6 +366,20 @@ export const GameProvider: FC<Props> = ({ children }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
   const [store] = useState<GameStore>(createGameStore(playSoundFX, stopSoundFX))
+
+  useEffect(() => {
+    const startTime = Date.now()
+    store.setState({ isTimerActive: true, finalTimeValue: 0 })
+
+    const interval = setInterval(() => {
+      const state = store.getState()
+      if (state.isTimerActive) {
+        store.setState({ finalTimeValue: Date.now() - startTime })
+      }
+    }, 1000) // update every second
+
+    return () => clearInterval(interval)
+  }, [store])
 
   return <GameContext value={store}>{children}</GameContext>
 }
