@@ -20,7 +20,8 @@ import homeTexture from '@/assets/platform/home.png'
 import info1Texture from '@/assets/platform/info-1.png'
 import info2Texture from '@/assets/platform/info-2.png'
 import info3Texture from '@/assets/platform/info-3.png'
-import obstacleTexture from '@/assets/platform/obstacles-1.png'
+import obstacle1Texture from '@/assets/platform/obstacles-1.png'
+import obstacle2Texture from '@/assets/platform/obstacles-2.png'
 import { loadHtmlImage } from '@/utils/loadImage'
 
 gsap.registerPlugin(useGSAP)
@@ -35,10 +36,10 @@ type Props = {
 
 const INFO_BITMAP_TEXTURES = [info1Texture.src, info2Texture.src, info3Texture.src] // TODO: replace duplicates once dedicated info bitmaps are available
 const OBSTACLE_BITMAP_TEXTURES = [
-  obstacleTexture.src,
-  obstacleTexture.src,
-  obstacleTexture.src,
-  obstacleTexture.src,
+  obstacle1Texture.src,
+  obstacle2Texture.src,
+  obstacle1Texture.src,
+  obstacle2Texture.src,
 ]
 
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
