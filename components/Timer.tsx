@@ -6,9 +6,12 @@ import { useGameStore, useGameStoreAPI } from './GameProvider'
 
 const Timer: FC = () => {
   const isSpeedRunTiming = useGameStore((s) => s.isSpeedRunTiming)
+  const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()
 
   useEffect(() => {
+    if (!_isHydrated) return
+
     let previous = Date.now()
     const intervalId = window.setInterval(() => {
       const now = Date.now()
@@ -20,10 +23,10 @@ const Timer: FC = () => {
     }, 1000)
 
     return () => window.clearInterval(intervalId)
-  }, [gameStoreAPI])
+  }, [gameStoreAPI, _isHydrated])
 
   useEffect(() => {
-    if (!isSpeedRunTiming) return
+    if (!isSpeedRunTiming || !_isHydrated) return
     let previous = performance.now()
 
     const intervalId = window.setInterval(() => {
@@ -36,7 +39,7 @@ const Timer: FC = () => {
     }, 10)
 
     return () => window.clearInterval(intervalId)
-  }, [isSpeedRunTiming, gameStoreAPI])
+  }, [isSpeedRunTiming, gameStoreAPI, _isHydrated])
 
   return null
 }

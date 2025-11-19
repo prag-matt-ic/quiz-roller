@@ -25,6 +25,9 @@ export const createGameStore = (
             totalTimeSeconds: s.totalTimeSeconds,
           }),
           version: 1,
+          onRehydrateStorage: () => (state) => {
+            state?.setHydrated()
+          },
         } as PersistOptions<GameStore, Pick<GameStore, 'paletteIndex' | 'totalTimeSeconds'>>,
       ),
     ),

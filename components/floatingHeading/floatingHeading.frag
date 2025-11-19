@@ -5,6 +5,7 @@ precision mediump int;
 
 varying mediump vec2 vMirroredUv;
 varying mediump float vPlayerFade;
+varying mediump float vCameraFade;
 
 uniform sampler2D uTexture;
 uniform float uOpacity;
@@ -29,7 +30,7 @@ void main() {
     noisyReveal = step(0.0, uOpacity);
   }
 
-  float alpha = texel.a * uOpacity * noisyReveal * vPlayerFade;
+  float alpha = texel.a * uOpacity * noisyReveal * vPlayerFade * vCameraFade;
 
   if (alpha <= ALPHA_EPSILON) discard;
 

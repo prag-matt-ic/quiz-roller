@@ -12,10 +12,14 @@ export const INITIAL_GAME_STATE = {
   currentRow: 0,
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
+  _isHydrated: false,
 }
 
 export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   ...INITIAL_GAME_STATE,
+  setHydrated: () => {
+    set({ _isHydrated: true })
+  },
   setInfoContentIndex: (index) => {
     set({ infoContentIndex: index })
   },

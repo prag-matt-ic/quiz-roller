@@ -37,6 +37,7 @@ type FloatingHeadingUniforms = {
   uOpacity: number
   uTime: number
   uPlayerXZ: Vector2
+  uCameraZ: number
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
@@ -44,6 +45,7 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uOpacity: 1,
   uTime: 0,
   uPlayerXZ: new Vector2(0, 0),
+  uCameraZ: 0,
 }
 
 const FloatingHeadingShader = shaderMaterial(
@@ -106,9 +108,9 @@ export const FloatingHeading: FC<Props> = ({
     () => {
       const tween = gsap.to(opacity.current, {
         value: isVisible ? 1 : 0,
-        duration: isVisible ? 2.0 : 0.6,
+        duration: isVisible ? 1.8 : 0.4,
         delay: isVisible ? 0.3 : 0,
-        ease: isVisible ? 'power2.out' : 'power2.inOut',
+        ease: isVisible ? 'power2.out' : 'power2.out',
         onUpdate: () => {
           if (!shaderRef.current) return
           shaderRef.current.uOpacity = opacity.current.value
@@ -130,9 +132,10 @@ export const FloatingHeading: FC<Props> = ({
     }
   }, [canvasState])
 
-  useGameFrame(({ clock }) => {
+  useGameFrame((state) => {
     if (!shaderRef.current) return
-    shaderRef.current.uTime = clock.elapsedTime
+    shaderRef.current.uTime = state.clock.elapsedTime
+    shaderRef.current.uCameraZ = state.camera.position.z
   })
 
   return (

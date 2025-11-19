@@ -1,7 +1,9 @@
 varying mediump vec2 vMirroredUv;
 varying mediump float vPlayerFade;
+varying mediump float vCameraFade;
 
 uniform vec2 uPlayerXZ;
+uniform float uCameraZ;
 
 const highp float PLAYER_FADE_INNER = 2.0;
 const highp float PLAYER_FADE_OUTER = 7.0;
@@ -16,6 +18,9 @@ void main() {
   highp vec2 offset = worldPosition.xz - uPlayerXZ;
   highp float distSq = dot(offset, offset);
   vPlayerFade = smoothstep(PLAYER_FADE_INNER_SQ, PLAYER_FADE_OUTER_SQ, distSq);
+
+  highp float distToCamera = uCameraZ - worldPosition.z;
+  vCameraFade = smoothstep(6.0, 8.0, distToCamera);
 
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

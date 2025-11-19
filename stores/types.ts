@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Vector3 } from 'three'
+import { Vector3, type Vector3Tuple } from 'three'
 import { type StateCreator } from 'zustand'
 import { CollectibleType } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
@@ -65,7 +65,7 @@ export interface PlayerSlice {
   onRingCollected: (indexes: RingIndex) => void
 
   resetPlayerTick: number
-  resetPlayer: () => void
+  resetPlayer: (position?: Vector3Tuple) => void
   stopConfirmation: () => void
   onOutOfBounds: () => void
 }
@@ -92,6 +92,9 @@ export interface GameSlice {
 
   resetPlatformTick: number
   resetGame: () => void
+
+  _isHydrated: boolean
+  setHydrated: () => void
 }
 
 export type GameStore = TimeSlice & PlayerSlice & GameSlice
