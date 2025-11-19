@@ -1,12 +1,10 @@
 'use client'
-import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { GemIcon, type LucideIcon } from 'lucide-react'
-import type { FC, ReactNode, RefObject } from 'react'
+import { GemIcon } from 'lucide-react'
+import type { FC, RefObject } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLLECTIBLE_HUD_CONTENT } from '@/resources/content'
+import { COLLECTIBLE_TYPES } from '@/model/schema'
 
 type Props = {
   ref: RefObject<HTMLDivElement | null>
@@ -23,8 +21,8 @@ const Collectibles: FC<Props> = ({ ref }) => {
       ref={ref}
       className="pointer-events-none fixed inset-0 z-100 flex flex-col items-center justify-center">
       <div className="absolute top-6 flex items-center gap-3">
-        {COLLECTIBLE_HUD_CONTENT.map((_, index) => {
-          const isCollected = collectedCollectibles.length > index
+        {COLLECTIBLE_TYPES.map((type, index) => {
+          const isCollected = collectedCollectibles.includes(type)
 
           return (
             <div key={`collectible-hud-${index}`}>

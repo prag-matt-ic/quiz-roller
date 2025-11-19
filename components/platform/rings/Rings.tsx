@@ -205,7 +205,7 @@ const RingElements: FC<Props> = ({ ref }) => {
               color={RING_COLOR}
               emissive={RING_EMISSIVE}
               emissiveIntensity={0.4}
-              metalness={0.2}
+              metalness={0.6}
               roughness={0.25}
             />
           </mesh>

@@ -8,7 +8,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import GemModel from '@/components/collectible/GemModel'
 import Particles from '@/components/collectible/particles/Particles'
-import { Collectible as CollectibleType, type CollectibleUserData } from '@/model/schema'
+import { CollectibleType, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
 import fragmentShader from './collectibleTile.frag'
@@ -52,26 +52,19 @@ type Props = {
   position: Vector3Tuple
   width: number
   height: number
-  contentIndex: number
+  type: CollectibleType
   isOutOfView: RefObject<boolean>
 }
 
-export const Collectible: FC<Props> = ({
-  ref,
-  position,
-  width,
-  height,
-  contentIndex,
-  isOutOfView,
-}) => {
-  const isCollected = useGameStore((s) => s.collectedCollectibles.includes(contentIndex))
+export const Collectible: FC<Props> = ({ ref, position, width, height, type, isOutOfView }) => {
+  const isCollected = useGameStore((s) => s.collectedCollectibles.includes(type))
   const paletteIndex = useGameStore((s) => s.paletteIndex)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
 
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
-  const isConfirming = useGameStore((s) => s.confirmingCollectible === contentIndex)
+  const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
 
   useGameFrame(({ clock }) => {
     if (!shader.current) return
@@ -98,10 +91,9 @@ export const Collectible: FC<Props> = ({
   const userData = useMemo<CollectibleUserData>(
     () => ({
       type: 'collectible',
-      collectible: CollectibleType.Gem,
-      index: contentIndex,
+      collectibleType: type,
     }),
-    [contentIndex],
+    [type],
   )
 
   return (

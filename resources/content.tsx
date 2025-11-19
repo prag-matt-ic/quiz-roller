@@ -1,6 +1,7 @@
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import { Credit } from '@/components/platform/home/Credit'
 import Card from '@/components/ui/Card'
+import { CollectibleType } from '@/model/schema'
 import { ArrowUpCircleIcon, CoinsIcon, LucideIcon } from 'lucide-react'
 import { FC, type ReactNode } from 'react'
 
@@ -60,7 +61,7 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
   { heading: 'Heading third!', infoZoneContent: <></>, isInfoOnLeft: true },
 ]
 
-const BonusContent: FC<{
+const CollectibleHUDContent: FC<{
   Icon: LucideIcon
   text: ReactNode
 }> = ({ Icon, text }) => {
@@ -68,31 +69,27 @@ const BonusContent: FC<{
     <div className="flex items-center gap-2 pr-2">
       <Icon strokeWidth={1.5} size={32} />
       <p className="block text-sm font-medium uppercase">
-        Bonus
+        Bonus Unlocked!
         <span className="block text-xl font-bold whitespace-nowrap uppercase">{text}</span>
       </p>
     </div>
   )
 }
 
-export const COLLECTIBLE_HUD_CONTENT: [
-  HudIndicatorConfig,
-  HudIndicatorConfig,
-  HudIndicatorConfig,
-] = [
-  {
+export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleType, HudIndicatorConfig> = {
+  [CollectibleType.Discount]: {
     autoDismissS: 6,
-    content: <BonusContent Icon={CoinsIcon} text="10% off your first project!" />,
+    content: <CollectibleHUDContent Icon={CoinsIcon} text="10% off your first project!" />,
   },
-  {
+  [CollectibleType.AI_Prompts]: {
     autoDismissS: 6,
-    content: <BonusContent Icon={CoinsIcon} text="Free 30 minute consultation!" />,
+    content: <CollectibleHUDContent Icon={CoinsIcon} text="Access to proprietary AI prompts" />,
   },
-  {
+  [CollectibleType.Consultation]: {
     autoDismissS: 6,
-    content: <BonusContent Icon={CoinsIcon} text="Access to proprietary AI prompts" />,
+    content: <CollectibleHUDContent Icon={CoinsIcon} text="Free 30 minute consultation!" />,
   },
-]
+}
 
 export const MOVE_HUD_INDICATOR: HudIndicatorConfig = {
   autoDismissS: 4,

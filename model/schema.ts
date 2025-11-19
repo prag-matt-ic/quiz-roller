@@ -11,16 +11,17 @@ export type ColourTileUserData = {
   paletteIndex: 0 | 1 | 2
 }
 
-export enum Collectible {
-  Coin = 'coin',
-  Gem = 'gem',
-  Bar = 'bar',
+export enum CollectibleType {
+  Discount = 'discount',
+  AI_Prompts = 'ai_prompts',
+  Consultation = 'consultation',
 }
+
+export const COLLECTIBLE_TYPES: CollectibleType[] = Object.values(CollectibleType)
 
 export type CollectibleUserData = {
   type: 'collectible'
-  collectible: Collectible
-  index: number
+  collectibleType: CollectibleType
 }
 
 export type InfoZoneUserData = {

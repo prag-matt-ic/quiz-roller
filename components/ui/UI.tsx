@@ -34,7 +34,6 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   return (
     <>
-      <Collectibles ref={collectibles} />
       <div className="fixed bottom-0 bg-white p-2 font-black text-black">
         Stage: {stage}
         <br />
@@ -42,6 +41,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       </div>
       <Controls isMobile={isMobile} />
       <ProgressBar />
+      <Collectibles ref={collectibles} />
       <AudioToggle />
     </>
   )

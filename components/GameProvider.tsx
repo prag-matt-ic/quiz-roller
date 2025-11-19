@@ -13,7 +13,8 @@ import { createStore, type StoreApi, useStore } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { type PlaySoundFX, SoundFX, useSoundStore } from '@/components/SoundProvider'
-import { MOVE_HUD_INDICATOR, COLLECTIBLE_HUD_CONTENT } from '@/resources/content'
+import { MOVE_HUD_INDICATOR, COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
+import { CollectibleType } from '@/model/schema'
 
 export enum Stage {
   HOME = 'home',
@@ -58,9 +59,9 @@ type GameState = {
   hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
-  confirmingCollectible: number | null // content index being confirmed
-  setConfirmingCollectible: (contentIndex: number | null) => void
-  collectedCollectibles: number[] // array of collected content indices
+  confirmingCollectible: CollectibleType | null
+  setConfirmingCollectible: (collectibleType: CollectibleType | null) => void
+  collectedCollectibles: CollectibleType[]
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -220,30 +221,30 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
           set({ hudIndicator: indicator })
         },
 
-        setConfirmingCollectible: (contentIndex) => {
+        setConfirmingCollectible: (collectibleType: CollectibleType | null) => {
           confirmationTween?.kill()
 
-          if (contentIndex === null) {
+          if (collectibleType === null) {
             cancelConfirmation(set)
             set({ confirmingCollectible: null })
             return
           }
 
           // Don't re-confirm already collected
-          if (get().collectedCollectibles.includes(contentIndex)) return
+          if (get().collectedCollectibles.includes(collectibleType)) return
 
           set({
-            confirmingCollectible: contentIndex,
+            confirmingCollectible: collectibleType,
             confirmationProgress: 0,
           })
 
           const onConfirmed = () => {
             const currentConfirming = get().confirmingCollectible
-            if (currentConfirming !== contentIndex) return
+            if (currentConfirming !== collectibleType) return
             set((s) => ({
-              collectedCollectibles: [...s.collectedCollectibles, contentIndex],
+              collectedCollectibles: [...s.collectedCollectibles, collectibleType],
               confirmingCollectible: null,
-              hudIndicator: COLLECTIBLE_HUD_CONTENT[currentConfirming],
+              hudIndicator: COLLECTIBLES_HUD_CONFIG[currentConfirming],
             }))
             playSoundFX(SoundFX.OPEN_INFO)
           }

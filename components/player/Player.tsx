@@ -173,7 +173,7 @@ const Player: FC = () => {
     if (!otherUserData) return
 
     if (otherUserData.type === 'collectible') {
-      setConfirmingCollectible(otherUserData.index)
+      setConfirmingCollectible(otherUserData.collectibleType)
       return
     }
 
@@ -188,9 +188,7 @@ const Player: FC = () => {
     if (!otherUserData) return
 
     if (otherUserData.type === 'collectible') {
-      if (confirmingCollectible === otherUserData.index) {
-        setConfirmingCollectible(null)
-      }
+      setConfirmingCollectible(null)
       return
     }
   }
