@@ -1,16 +1,23 @@
-import { COLUMNS, SAFE_HEIGHT, UNSAFE_HEIGHT } from '@/utils/tiles'
+import { COLUMNS, SAFE_HEIGHT, TILE_SIZE, UNSAFE_HEIGHT } from '@/utils/tiles'
 
 export type SectionBitmapRow = {
   heights: number[]
   ringColumns: number[]
   infoZoneColumns: number[]
-  collectibleColumn: number | null
+  collectibleColumns: number[]
+  infoZonePlacements?: BitmapPlacement[]
+  collectiblePlacement?: BitmapPlacement | null
   highlightColumns: number[]
 }
 
 export type SectionBitmapLayout = {
   rows: SectionBitmapRow[]
   rowCount: number
+}
+
+export type BitmapPlacement = {
+  columnIndex: number
+  zOffset: number
 }
 
 const COLOR = {
@@ -40,7 +47,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = imageHeight
-  const context = canvas.getContext('2d', { willReadFrequently: true })
+    const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) {
     throw new Error('Failed to initialise canvas context for section bitmap parsing')
   }
@@ -58,7 +65,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
     const ringColumns: number[] = []
     const infoZoneColumns: number[] = []
     const highlightColumns: number[] = []
-    let collectibleColumn: number | null = null
+    const collectibleColumns: number[] = []
 
     for (let column = 0; column < width; column++) {
       const pixelIndex = (srcRow * width + column) * 4
@@ -79,9 +86,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
       }
 
       if (isColor(r, g, b, COLOR.COLLECTIBLE)) {
-        if (collectibleColumn == null) {
-          collectibleColumn = column
-        }
+        collectibleColumns.push(column)
         highlightColumns.push(column)
       }
 
@@ -94,10 +99,19 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
       heights,
       ringColumns,
       infoZoneColumns,
-      collectibleColumn,
+      collectibleColumns,
       highlightColumns,
     }
   }
+
+  assignBitmapPlacements(rows, (row) => row.infoZoneColumns, (rowIndex, placements) => {
+    if (!placements.length) return
+    rows[rowIndex].infoZonePlacements = placements
+  })
+
+  assignBitmapPlacements(rows, (row) => row.collectibleColumns, (rowIndex, placements) => {
+    rows[rowIndex].collectiblePlacement = placements[0] ?? null
+  })
 
   // Release canvas resources promptly
   context.canvas.width = 0
@@ -107,4 +121,89 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
     rows,
     rowCount: rows.length,
   }
+}
+
+type ColumnsAccessor = (row: SectionBitmapRow) => number[]
+type PlacementAssigner = (rowIndex: number, placements: BitmapPlacement[]) => void
+
+function assignBitmapPlacements(
+  rows: SectionBitmapRow[],
+  getColumns: ColumnsAccessor,
+  assignPlacements: PlacementAssigner,
+) {
+  const rowCount = rows.length
+  if (rowCount === 0) return
+
+  const columnSets = rows.map((row) => new Set(getColumns(row)))
+  const visited = new Set<string>()
+  const placementsByRow = new Map<number, BitmapPlacement[]>()
+  const keyFor = (row: number, column: number) => `${row}:${column}`
+  const NEIGHBOUR_OFFSETS: Array<[number, number]> = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ]
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const columns = columnSets[rowIndex]
+    if (!columns.size) continue
+
+    columns.forEach((column) => {
+      const seedKey = keyFor(rowIndex, column)
+      if (visited.has(seedKey)) return
+
+      const stack: Array<{ row: number; column: number }> = [{ row: rowIndex, column }]
+      const component: Array<{ row: number; column: number }> = []
+
+      while (stack.length > 0) {
+        const cell = stack.pop()!
+        const cellKey = keyFor(cell.row, cell.column)
+        if (visited.has(cellKey)) continue
+        visited.add(cellKey)
+        component.push(cell)
+
+        for (const [dRow, dColumn] of NEIGHBOUR_OFFSETS) {
+          const nextRow = cell.row + dRow
+          if (nextRow < 0 || nextRow >= rowCount) continue
+          const nextColumn = cell.column + dColumn
+          if (!columnSets[nextRow].has(nextColumn)) continue
+          stack.push({ row: nextRow, column: nextColumn })
+        }
+      }
+
+      if (!component.length) return
+
+      let minRow = Infinity
+      let maxRow = -Infinity
+      let minColumn = Infinity
+      let maxColumn = -Infinity
+      const rowsInComponent = new Set<number>()
+
+      for (const { row, column: col } of component) {
+        rowsInComponent.add(row)
+        if (row < minRow) minRow = row
+        if (row > maxRow) maxRow = row
+        if (col < minColumn) minColumn = col
+        if (col > maxColumn) maxColumn = col
+      }
+
+      const centerRow = Math.round((minRow + maxRow) / 2)
+      const centerColumn = Math.round((minColumn + maxColumn) / 2)
+
+      rowsInComponent.forEach((row) => {
+        const placements = placementsByRow.get(row) ?? []
+        placements.push({
+          columnIndex: centerColumn,
+          zOffset: (row - centerRow) * TILE_SIZE,
+        })
+        placementsByRow.set(row, placements)
+      })
+    })
+  }
+
+  placementsByRow.forEach((placements, rowIndex) => {
+    placements.sort((a, b) => a.columnIndex - b.columnIndex)
+    assignPlacements(rowIndex, placements)
+  })
 }

@@ -17,7 +17,9 @@ import { Stage } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
 import homeTexture from '@/assets/platform/home.png'
-import infoTexture from '@/assets/platform/info-1.png'
+import info1Texture from '@/assets/platform/info-1.png'
+import info2Texture from '@/assets/platform/info-2.png'
+import info3Texture from '@/assets/platform/info-3.png'
 import obstacleTexture from '@/assets/platform/obstacles-1.png'
 import { loadHtmlImage } from '@/utils/loadImage'
 
@@ -31,12 +33,12 @@ type Props = {
   isMobile: boolean
 }
 
-const INFO_BITMAP_TEXTURES = [infoTexture, infoTexture, infoTexture] // TODO: replace duplicates once dedicated info bitmaps are available
+const INFO_BITMAP_TEXTURES = [info1Texture.src, info2Texture.src, info3Texture.src] // TODO: replace duplicates once dedicated info bitmaps are available
 const OBSTACLE_BITMAP_TEXTURES = [
-  obstacleTexture,
-  obstacleTexture,
-  obstacleTexture,
-  obstacleTexture,
+  obstacleTexture.src,
+  obstacleTexture.src,
+  obstacleTexture.src,
+  obstacleTexture.src,
 ]
 
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
@@ -50,21 +52,15 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
   useEffect(() => {
     let isMounted = true
-    const sources = [
-      homeTexture.src,
-      ...INFO_BITMAP_TEXTURES.map((t) => t.src),
-      ...OBSTACLE_BITMAP_TEXTURES.map((t) => t.src),
-    ]
 
-    loadHtmlImage(sources).then((images) => {
-      if (!isMounted) return
-      const home = images[0]
-      const infos = images.slice(1, 1 + INFO_BITMAP_TEXTURES.length)
-      const obstacles = images.slice(1 + INFO_BITMAP_TEXTURES.length)
-      setHomeBitmap(home)
-      setInfoBitmaps(infos)
-      setObstaclesBitmaps(obstacles)
-    })
+    loadHtmlImage([homeTexture.src, ...INFO_BITMAP_TEXTURES, ...OBSTACLE_BITMAP_TEXTURES]).then(
+      (images) => {
+        if (!isMounted) return
+        setHomeBitmap(images[0])
+        setInfoBitmaps(images.slice(1, 1 + INFO_BITMAP_TEXTURES.length))
+        setObstaclesBitmaps(images.slice(1 + INFO_BITMAP_TEXTURES.length))
+      },
+    )
 
     return () => {
       isMounted = false
@@ -111,6 +107,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Suspense>
           <Physics debug={isDebug} timeStep={physicsTimeStep}>
             {/* <Background /> */}
+
+            {/* TODO: drive the floating tiles using the row data/textures.. */}
             <FloatingTiles />
             <OutOfBounds />
             <Platform

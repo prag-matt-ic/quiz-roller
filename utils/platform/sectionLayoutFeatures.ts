@@ -7,19 +7,10 @@ import {
 } from '@/utils/tiles'
 import type { SectionBitmapRow } from './sectionBitmap'
 
-export type InfoZonePlacement = {
-  columnIndex: number
-  zOffset: number
-}
-
-export function applyBitmapRowFeatures(
-  row: RowData,
-  layoutRow: SectionBitmapRow,
-  infoZonePlacements?: InfoZonePlacement[],
-) {
+export function applyBitmapRowFeatures(row: RowData, layoutRow: SectionBitmapRow) {
   applyRingColumns(row, layoutRow.ringColumns)
-  applyInfoColumns(row, infoZonePlacements)
-  applyCollectibleColumn(row, layoutRow.collectibleColumn)
+  applyInfoColumns(row, layoutRow)
+  applyCollectibleColumn(row, layoutRow)
   applyHighlightColumns(row, layoutRow.highlightColumns)
 }
 
@@ -33,17 +24,36 @@ function applyRingColumns(row: RowData, columns?: number[]) {
   row.ringPositions = ringPositions
 }
 
-function applyInfoColumns(row: RowData, placements?: InfoZonePlacement[]) {
-  if (!placements || placements.length === 0) return
-  row.infoZonePositions = placements.map(({ columnIndex, zOffset }) => {
+function applyInfoColumns(row: RowData, layoutRow: SectionBitmapRow) {
+  const placements = layoutRow.infoZonePlacements
+  if (placements && placements.length > 0) {
+    row.infoZonePositions = placements.map(({ columnIndex, zOffset }) => {
+      if (columnIndex < 0 || columnIndex >= COLUMNS) return null
+      return [colToX(columnIndex), ON_TILE_Y, zOffset]
+    })
+    return
+  }
+
+  const columns = layoutRow.infoZoneColumns
+  if (!columns || columns.length === 0) return
+  row.infoZonePositions = columns.map((columnIndex) => {
     if (columnIndex < 0 || columnIndex >= COLUMNS) return null
-    return [colToX(columnIndex), ON_TILE_Y, zOffset]
+    return [colToX(columnIndex), ON_TILE_Y, 0]
   })
 }
 
-function applyCollectibleColumn(row: RowData, column: number | null) {
-  if (column == null || column < 0 || column >= COLUMNS) return
-  row.collectiblePosition = [colToX(column), ON_TILE_Y, 0]
+function applyCollectibleColumn(row: RowData, layoutRow: SectionBitmapRow) {
+  const placement = layoutRow.collectiblePlacement
+  if (placement) {
+    const { columnIndex, zOffset } = placement
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    row.collectiblePosition = [colToX(columnIndex), ON_TILE_Y, zOffset]
+    return
+  }
+
+  const fallbackColumn = layoutRow.collectibleColumns[0] ?? null
+  if (fallbackColumn == null || fallbackColumn < 0 || fallbackColumn >= COLUMNS) return
+  row.collectiblePosition = [colToX(fallbackColumn), ON_TILE_Y, 0]
 }
 
 function applyHighlightColumns(row: RowData, columns?: number[]) {
