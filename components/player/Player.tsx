@@ -31,6 +31,7 @@ import {
   TERRAIN_SPEED_UNITS,
 } from '@/utils/tiles'
 import { Marble } from '@/components/player/marble/Marble'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -204,7 +205,11 @@ const Player: FC = () => {
       position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
-      <BallCollider args={[PLAYER_RADIUS]} ref={ballColliderRef} />
+      <BallCollider
+        args={[PLAYER_RADIUS]}
+        ref={ballColliderRef}
+        collisionGroups={COLLISION_GROUPS.player}
+      />
       <Marble ref={sphereMeshRef} />
       <PlayerHUD />
     </RigidBody>

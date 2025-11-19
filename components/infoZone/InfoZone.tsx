@@ -25,6 +25,7 @@ import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
@@ -174,6 +175,7 @@ export const InfoZone: FC<Props> = ({
           friction={0}
           onIntersectionEnter={onIntersectionEnter}
           onIntersectionExit={onIntersectionExit}
+          collisionGroups={COLLISION_GROUPS.infoZoneSensor}
         />
         <mesh position={[0, 0, 0.01]} renderOrder={2}>
           <planeGeometry args={[width, height]} />

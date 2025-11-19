@@ -7,6 +7,7 @@ import { type FC, useCallback, useRef } from 'react'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
+import usePlayerInput from '@/hooks/usePlayerInput'
 
 const { ACTION } = CameraControlsImpl
 
@@ -41,6 +42,7 @@ export const CAMERA_CONFIG: Record<
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
+  const { input } = usePlayerInput()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
   const onStageChange = useCallback((nextStage: Stage) => {
@@ -53,19 +55,24 @@ const Camera: FC = () => {
   useFrame(() => {
     if (!cameraControls.current) return
     const lookAt = cameraLookAtPosition ?? playerPosition.current
+    // TODO: review and clean this up...
 
     // When looking at content, move camera backward to keep player visible
     const isLookingAway = !!cameraLookAtPosition
-    const zOffset = isLookingAway
+    let zOffset = isLookingAway
       ? CAMERA_CONFIG[stage.current].position.z + 4 // Move 4 units further back
       : CAMERA_CONFIG[stage.current].position.z
+
+    // Adjust the look based on whether player is moving back or not
+    const moveBack = input.current.down > 0
+    zOffset += moveBack ? 2 : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
       CAMERA_CONFIG[stage.current].position.y,
       playerPosition.current.z + zOffset,
       lookAt.x,
-      3.5,
+      3,
       lookAt.z,
       true,
     )

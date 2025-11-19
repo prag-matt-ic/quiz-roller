@@ -16,7 +16,9 @@ export enum SoundFX {
   OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
   OPEN_INFO = 'OPEN_INFO',
   CHANGE_COLOUR = 'CHANGE_COLOUR',
+  COIN_COLLECTED = 'COIN_COLLECTED',
 }
+// TODO: review audio..
 
 const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND]: '/audio/background.aac',
@@ -25,6 +27,7 @@ const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
+  [SoundFX.COIN_COLLECTED]: '/audio/coin.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>

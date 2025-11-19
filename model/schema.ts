@@ -6,9 +6,9 @@ export type OutOfBoundsUserData = {
   type: 'out-of-bounds'
 }
 
-export type ColourTileUserData = {
-  type: 'colour'
-  paletteIndex: 0 | 1 | 2
+export type RingUserData = {
+  type: 'ring'
+  slotIndex: number
 }
 
 export enum CollectibleType {
@@ -31,6 +31,5 @@ export type InfoZoneUserData = {
 export type RigidBodyUserData =
   | PlayerUserData
   | OutOfBoundsUserData
-  | ColourTileUserData
   | CollectibleUserData
   | InfoZoneUserData

@@ -15,6 +15,7 @@ import fragmentShader from './collectibleTile.frag'
 import { extend } from '@react-three/fiber'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 type TileShaderUniforms = {
   uConfirmingProgress: number
@@ -112,6 +113,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         sensor={true}
         mass={0}
         friction={0}
+        collisionGroups={COLLISION_GROUPS.collectibleSensor}
       />
 
       {/* Tile mesh: shader renders border */}

@@ -43,6 +43,7 @@ export type HudIndicatorConfig = {
   content: ReactNode
   autoDismissS?: number
 }
+export type RingIndex = [row: number, column: number]
 
 type GameState = {
   stage: Stage
@@ -62,6 +63,9 @@ type GameState = {
   confirmingCollectible: CollectibleType | null
   setConfirmingCollectible: (collectibleType: CollectibleType | null) => void
   collectedCollectibles: CollectibleType[]
+
+  collectedRings: RingIndex[]
+  onRingCollected: (indexes: RingIndex) => void
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -113,6 +117,7 @@ const INITIAL_STATE: Pick<
   | 'collectedCollectibles'
   | 'totalRows'
   | 'currentRow'
+  | 'collectedRings'
 > = {
   stage: Stage.HOME,
   infoContentIndex: 0,
@@ -135,6 +140,7 @@ const INITIAL_STATE: Pick<
   },
   confirmingCollectible: null,
   collectedCollectibles: [],
+  collectedRings: [],
   totalRows: 100,
   currentRow: 0,
 }
@@ -219,6 +225,17 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
 
         setHudIndicator: (indicator) => {
           set({ hudIndicator: indicator })
+        },
+
+        onRingCollected: (ringIndex: [number, number]) => {
+          const isAlreadyCollected = get().collectedRings.some(
+            (rc) => rc[0] === ringIndex[0] && rc[1] === ringIndex[1],
+          )
+          if (isAlreadyCollected) return
+          set((s) => ({
+            collectedRings: [...s.collectedRings, ringIndex],
+          }))
+          playSoundFX(SoundFX.COIN_COLLECTED)
         },
 
         setConfirmingCollectible: (collectibleType: CollectibleType | null) => {

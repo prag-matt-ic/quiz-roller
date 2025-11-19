@@ -14,6 +14,10 @@ export type SceneConfig = {
     segments: number
     isFlat: boolean
   }
+  ring: {
+    radialSegments: number
+    tubularSegments: number
+  }
   answerTile: {
     particleCount: number
   }
@@ -40,6 +44,7 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     player: { segments: 64, isFlat: false },
+    ring: { radialSegments: 12, tubularSegments: 24 },
     answerTile: { particleCount: 81 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
@@ -47,16 +52,18 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     background: { keyframes: 8, renderScale: 0.75 },
   },
   [SceneQuality.MEDIUM]: {
-    answerTile: { particleCount: 64 },
     player: { segments: 40, isFlat: false },
+    ring: { radialSegments: 8, tubularSegments: 16 },
+    answerTile: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 4, renderScale: 0.5 },
   },
   [SceneQuality.LOW]: {
-    answerTile: { particleCount: 36 },
     player: { segments: 24, isFlat: true },
+    ring: { radialSegments: 6, tubularSegments: 12 },
+    answerTile: { particleCount: 36 },
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },

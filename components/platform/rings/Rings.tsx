@@ -1,4 +1,9 @@
-import { RigidBody, type RapierRigidBody, BallCollider } from '@react-three/rapier'
+import {
+  RigidBody,
+  type RapierRigidBody,
+  BallCollider,
+  type IntersectionEnterHandler,
+} from '@react-three/rapier'
 import {
   type FC,
   useCallback,
@@ -16,17 +21,17 @@ import {
   type RowData,
 } from '@/utils/tiles'
 
+import type { RigidBodyUserData, RingUserData } from '@/model/schema'
+import { type RingIndex, useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+
 const MAX_RING_INSTANCES = 12
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
 const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
 const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
-
-type SlotAssignment = {
-  rowIndex: number
-  columnIndex: number
-}
 
 export type RingElementsHandle = {
   isReady: boolean
@@ -43,15 +48,17 @@ const RING_COLOR = '#ffe066'
 const RING_EMISSIVE = '#ffd43b'
 
 const RingElements: FC<Props> = ({ ref }) => {
+  const collectedRings = useGameStore((s) => s.collectedRings)
+  const onRingCollected = useGameStore((s) => s.onRingCollected)
+  const ringConfig = usePerformanceStore((s) => s.sceneConfig.ring)
+
   const rigidBodies = useRef<Array<RapierRigidBody | null>>(
     Array(MAX_RING_INSTANCES).fill(null),
   )
-  const slotAssignments = useRef<Array<SlotAssignment | null>>(
-    Array(MAX_RING_INSTANCES).fill(null),
-  )
+
+  const slotAssignments = useRef<(RingIndex | null)[]>(Array(MAX_RING_INSTANCES).fill(null))
   const rowToSlots = useRef<Map<number, number[]>>(new Map())
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const hasWarnedCapacity = useRef(false)
   const isReady = useRef(false)
 
   const setBodyTranslation = useCallback(
@@ -90,7 +97,7 @@ const RingElements: FC<Props> = ({ ref }) => {
       if (rowIndex < 0) return
       const existingSlot = slotAssignments.current.findIndex((assignment) => {
         if (!assignment) return false
-        return assignment.rowIndex === rowIndex && assignment.columnIndex === columnIndex
+        return assignment[0] === rowIndex && assignment[1] === columnIndex
       })
 
       const x = colToX(columnIndex)
@@ -105,16 +112,15 @@ const RingElements: FC<Props> = ({ ref }) => {
         (assignment) => assignment === null,
       )
       if (availableSlot === -1) {
-        if (!hasWarnedCapacity.current && IS_DEV_ENV) {
+        if (IS_DEV_ENV) {
           console.warn(
             '[RingElements] Exceeded ring pool capacity. Increase MAX_RING_INSTANCES.',
           )
-          hasWarnedCapacity.current = true
         }
         return
       }
 
-      slotAssignments.current[availableSlot] = { rowIndex, columnIndex }
+      slotAssignments.current[availableSlot] = [rowIndex, columnIndex]
       const slotsForRow = rowToSlots.current.get(rowIndex) ?? []
       slotsForRow.push(availableSlot)
       rowToSlots.current.set(rowIndex, slotsForRow)
@@ -184,33 +190,64 @@ const RingElements: FC<Props> = ({ ref }) => {
     isReady.current = true
   }, [])
 
+  const onIntersectionEnter: IntersectionEnterHandler = (event) => {
+    if (isReady.current === false) return
+    const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
+    if (!otherUserData) return
+    if (otherUserData.type !== 'player') return
+    const slotIndex = (event.target.rigidBodyObject?.userData as RingUserData).slotIndex
+    const indexes = slotAssignments.current[slotIndex]
+    if (!indexes) return
+    onRingCollected(indexes)
+  }
+
   return (
     <group>
-      {Array.from({ length: MAX_RING_INSTANCES }).map((_, index) => (
-        <RigidBody
-          key={`ring-slot-${index}`}
-          ref={(body) => {
-            rigidBodies.current[index] = body
-          }}
-          type="fixed"
-          canSleep={false}
-          position={HIDDEN_POSITION}
-          colliders={false}
-          friction={0}
-          restitution={0}>
-          <BallCollider args={[RING_MAJOR_RADIUS + RING_TUBE_RADIUS * 0.5]} sensor={true} />
-          <mesh>
-            <torusGeometry args={[RING_MAJOR_RADIUS, RING_TUBE_RADIUS, 16, 32]} />
-            <meshStandardMaterial
-              color={RING_COLOR}
-              emissive={RING_EMISSIVE}
-              emissiveIntensity={0.4}
-              metalness={0.6}
-              roughness={0.25}
+      {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
+        const isCollected = collectedRings.some((indexes) => {
+          return (
+            indexes[0] === slotAssignments.current[slotIndex]?.[0] &&
+            indexes[1] === slotAssignments.current[slotIndex]?.[1]
+          )
+        })
+        return (
+          <RigidBody
+            key={`ring-slot-${slotIndex}`}
+            ref={(body) => {
+              rigidBodies.current[slotIndex] = body
+            }}
+            type="dynamic"
+            canSleep={true}
+            position={HIDDEN_POSITION}
+            userData={{ type: 'ring', slotIndex: slotIndex } as RingUserData}
+            colliders={false}
+            gravityScale={0}>
+            <BallCollider
+              args={[RING_MAJOR_RADIUS + RING_TUBE_RADIUS * 0.5]}
+              sensor={true}
+              onIntersectionEnter={onIntersectionEnter}
+              collisionGroups={COLLISION_GROUPS.ringSensor}
             />
-          </mesh>
-        </RigidBody>
-      ))}
+            <mesh visible={!isCollected}>
+              <torusGeometry
+                args={[
+                  RING_MAJOR_RADIUS,
+                  RING_TUBE_RADIUS,
+                  ringConfig.radialSegments,
+                  ringConfig.tubularSegments,
+                ]}
+              />
+              <meshStandardMaterial
+                color={RING_COLOR}
+                emissive={RING_EMISSIVE}
+                emissiveIntensity={0.4}
+                metalness={0.6}
+                roughness={0.25}
+              />
+            </mesh>
+          </RigidBody>
+        )
+      })}
     </group>
   )
 }
