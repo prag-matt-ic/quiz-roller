@@ -1,5 +1,5 @@
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
-#pragma glslify: getColourFromPalette = require(../../palette.glsl)
+#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
 
 precision mediump float;
 

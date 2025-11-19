@@ -20,15 +20,15 @@ export const CAMERA_CONFIG: Record<
   }
 > = {
   [Stage.HOME]: {
-    position: { x: 0, y: 5, z: 8 },
+    position: { x: 0, y: 4, z: 8 },
     zoom: 1.0,
   },
   [Stage.INFO]: {
-    position: { x: 0, y: 5, z: 8 },
+    position: { x: 0, y: 4, z: 8 },
     zoom: 1.0,
   },
   [Stage.TERRAIN]: {
-    position: { x: 0, y: 9, z: 5 },
+    position: { x: 0, y: 7, z: 8 },
     zoom: 1.2,
   },
   [Stage.CTA]: {

@@ -34,7 +34,7 @@ export function generateInfoSectionRowData(config: InfoZone): RowData[] {
   )
 
   // Floating header appears at the top of the section
-  const floatingHeaderCenterRow = 3
+  const floatingHeaderCenterRow = 5
   const floatingHeaderTriggerRow = Math.ceil(floatingHeaderCenterRow)
   const floatingHeaderZRelative =
     (floatingHeaderTriggerRow - floatingHeaderCenterRow) * TILE_SIZE

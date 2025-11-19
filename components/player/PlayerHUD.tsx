@@ -2,7 +2,7 @@
 
 import { Html } from '@react-three/drei'
 import gsap from 'gsap'
-import { type FC, useCallback, useRef } from 'react'
+import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -16,6 +16,21 @@ const PlayerHUD: FC = () => {
   const paletteIndex = useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
+
+  const showBar = confirmingCollectible !== null
+  const showContent = !!hudIndicator
+  const show = showBar || showContent
+
+  const [isMounted, setIsMounted] = useState(show)
+  const showRef = useRef(show)
+
+  if (show && !isMounted) {
+    setIsMounted(true)
+  }
+
+  useEffect(() => {
+    showRef.current = show
+  }, [show])
 
   const setter = useCallback(
     (value: number) => gsap.quickSetter('#progress-bar', 'x', '%')(value),
@@ -71,9 +86,9 @@ const PlayerHUD: FC = () => {
     mode: 'oklch',
   })
 
-  const showBar = confirmingCollectible !== null
-  const showContent = !!hudIndicator
   const switchKey = `${showBar}-${showContent}`
+
+  if (!isMounted) return null
 
   return (
     <Html
@@ -89,6 +104,10 @@ const PlayerHUD: FC = () => {
           timeout={{ enter: 0, exit: 220 }}
           onEnter={onEnter}
           onExit={onExit}
+          onExited={() => {
+            if (showRef.current) return
+            setIsMounted(false)
+          }}
           appear={true}
           nodeRef={container}>
           {() => {

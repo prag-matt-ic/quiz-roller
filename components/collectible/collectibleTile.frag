@@ -1,14 +1,14 @@
 // AnswerTile fragment shader
-#pragma glslify: getColourFromPalette = require(../palette.glsl)
-#pragma glslify: sdBox = require(../sdBox.glsl)
-#pragma glslify: paintCorners = require(../infoZone/paintCorners.glsl)
-
 precision mediump float;
 precision mediump int;
 
+#pragma glslify: paintCorners = require(../../resources/glsl/paintCorners.glsl)
+#pragma glslify: getColourFromPalette = require(../../resources/glsl/palette.glsl)
+#pragma glslify: sdBox = require(../../resources/glsl/sdBox.glsl)
+
 uniform mediump int uPlayerPaletteIndex; // 0,1,2: selected palette
 uniform mediump float uConfirmingProgress;
-uniform mediump float uTileAspect; // width / height
+uniform mediump float uAspect; // width / height
 uniform mediump float uTilesX;
 uniform mediump float uTilesY;
 
@@ -18,12 +18,13 @@ varying mediump vec2 vHeightSpacePosition;
 const float BORDER_FRACTION = 0.06; // fraction of full height
 const float BORDER_WAVE_FREQUENCY = 3.0;
 const float BORDER_WAVE_OFFSET = 0.5;
-const float CORNER_BORDER_TILES = 0.12;
-const float CORNER_LENGTH_TILES = 0.45;
+
+const float BORDER_THICKNESS_TILES = 0.1; // thickness relative to a tile height
+const float CORNER_LENGTH_TILES = 0.5; // fraction of tile to extend from each corner
 
 void main() {
   const float halfHeight = 0.5;
-  float halfWidth = halfHeight * uTileAspect;
+  float halfWidth = halfHeight * uAspect;
   float thickness = BORDER_FRACTION * uConfirmingProgress;
   vec2 innerBoundsHeightSpace = vec2(halfWidth - thickness, halfHeight - thickness);
 
@@ -37,19 +38,19 @@ void main() {
   float paletteT = borderWave * BORDER_WAVE_OFFSET + BORDER_WAVE_OFFSET;
   vec3 borderColour = getColourFromPalette(uPlayerPaletteIndex, paletteT);
 
-  vec2 tileCounts = vec2(uTilesX, uTilesY);
-  float cornerMask = paintCorners(
+  float bracketMask = paintCorners(
     vHeightSpacePosition,
-    uTileAspect,
-    tileCounts,
-    CORNER_BORDER_TILES,
+    uAspect,
+    vec2(uTilesX, uTilesY),
+    BORDER_THICKNESS_TILES,
     CORNER_LENGTH_TILES
   );
+
   vec3 cornerColour = vec3(1.0);
 
   vec3 baseBorder = borderColour * borderMask;
-  vec3 finalColour = mix(baseBorder, cornerColour, cornerMask);
-  float finalAlpha = max(borderMask, cornerMask);
+  vec3 finalColour = mix(baseBorder, cornerColour, bracketMask);
+  float finalAlpha = max(borderMask, bracketMask);
 
   gl_FragColor = vec4(finalColour, finalAlpha);
 }

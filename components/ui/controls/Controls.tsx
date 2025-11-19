@@ -16,11 +16,11 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
   return (
     <div
       className={twJoin(
-        'flex h-10 w-12 items-center justify-center rounded-lg border border-black/50 bg-black/40 text-white',
-        isActive && 'bg-black/60',
+        'flex h-8 w-10 items-center justify-center rounded-md text-white',
+        isActive ? 'bg-black/50' : 'bg-black',
       )}>
       <Icon
-        className={twJoin('size-6 transition-transform duration-200', isActive && 'scale-110')}
+        className={twJoin('size-4 transition-transform duration-200', isActive && 'scale-110')}
         strokeWidth={2.5}
       />
     </div>
@@ -102,7 +102,7 @@ const Keys: FC = () => {
   }, [setPlayerInput])
 
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-4 z-1000 grid w-fit grid-cols-3 gap-1">
+    <aside className="pointer-events-none fixed right-4 bottom-3 z-1000 grid w-fit grid-cols-3 gap-0.5">
       <div />
       <Key Icon={ArrowUp} isActive={playerInput.up > 0} />
       <div />

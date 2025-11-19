@@ -1,5 +1,7 @@
 import { interactionGroups } from '@react-three/rapier'
 
+// https://rapier.rs/docs/user_guides/javascript/colliders/#active-collision-types
+
 const PLAYER_GROUP = 0
 const RING_GROUP = 1
 const COLLECTIBLE_GROUP = 2
