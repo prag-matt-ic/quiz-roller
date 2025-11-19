@@ -4,28 +4,39 @@ import { useGameStoreAPI } from '@/components/GameProvider'
 
 export type TimeChangeHandler = (elapsedSeconds: number) => void
 
-// Subscribes to the game time without causing React re-renders.
-// Consumers can read timeElapsed.current or respond to onChange events.
-export function useTime(onChange?: TimeChangeHandler) {
+type TimeSelector = (state: { totalTimeSeconds: number; speedRunTimeSeconds: number }) => number
+
+const selectTotalTime: TimeSelector = (state) => state.totalTimeSeconds
+const selectSpeedRunTime: TimeSelector = (state) => state.speedRunTimeSeconds
+
+function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler) {
   const gameStoreAPI = useGameStoreAPI()
-  const timeElapsed = useRef(gameStoreAPI.getState().timeElapsed)
+  const value = useRef(selector(gameStoreAPI.getState()))
 
   useEffect(() => {
-    onChange?.(timeElapsed.current)
+    onChange?.(value.current)
 
-    const unsubscribe = gameStoreAPI.subscribe(
-      (state) => state.timeElapsed,
-      (nextTime) => {
-        if (timeElapsed.current === nextTime) return
-        timeElapsed.current = nextTime
-        onChange?.(nextTime)
-      },
-    )
+    const unsubscribe = gameStoreAPI.subscribe(selector, (nextTime) => {
+      if (value.current === nextTime) return
+      value.current = nextTime
+      onChange?.(nextTime)
+    })
 
     return unsubscribe
-  }, [gameStoreAPI, onChange])
+  }, [gameStoreAPI, onChange, selector])
 
-  return { timeElapsed }
+  return value
+}
+
+// Subscribes to the total time spent in the experience (in seconds).
+export function useTime(onChange?: TimeChangeHandler) {
+  const totalTime = useTimeRef(selectTotalTime, onChange)
+  return { totalTime }
+}
+
+export function useSpeedRunTime(onChange?: TimeChangeHandler) {
+  const speedRunTime = useTimeRef(selectSpeedRunTime, onChange)
+  return { speedRunTime }
 }
 
 export default useTime

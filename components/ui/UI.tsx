@@ -67,7 +67,7 @@ type SpeedRunHUDProps = {
 
 const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
   const [isShowingCountdown, setIsShowingCountdown] = useState(true)
-  const setIsTiming = useGameStore((s) => s.setIsTiming)
+  const setIsSpeedRunTiming = useGameStore((s) => s.setIsSpeedRunTiming)
 
   const countdownContainer = useRef<HTMLDivElement>(null)
 
@@ -115,7 +115,7 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
             .timeline({
               onComplete: () => {
                 // Start the timer.
-                setIsTiming(true)
+                setIsSpeedRunTiming(true)
                 setIsShowingCountdown(false)
               },
             })

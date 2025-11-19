@@ -6,7 +6,6 @@ import {
   type PropsWithChildren,
   type ReactNode,
   useContext,
-  useEffect,
   useState,
 } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -91,10 +90,12 @@ type GameState = {
   resetPlayerTick: number
   goToStage: (stage: Stage) => void
 
-  timeElapsed: number
-  setTimeElapsed: (time: number) => void
-  isTiming: boolean
-  setIsTiming: (isTiming: boolean) => void
+  totalTimeSeconds: number
+  setTotalTimeSeconds: (seconds: number) => void
+  speedRunTimeSeconds: number
+  setSpeedRunTimeSeconds: (seconds: number) => void
+  isSpeedRunTiming: boolean
+  setIsSpeedRunTiming: (isTiming: boolean) => void
   isSpeedRunMode: boolean
   startSpeedRun: () => void
   stopSpeedRun: () => void
@@ -136,8 +137,9 @@ const INITIAL_STATE: Pick<
   | 'totalRows'
   | 'currentRow'
   | 'collectedRings'
-  | 'timeElapsed'
-  | 'isTiming'
+  | 'totalTimeSeconds'
+  | 'speedRunTimeSeconds'
+  | 'isSpeedRunTiming'
   | 'isSpeedRunMode'
 > = {
   stage: Stage.HOME,
@@ -164,8 +166,9 @@ const INITIAL_STATE: Pick<
   collectedRings: [],
   totalRows: 100,
   currentRow: 0,
-  timeElapsed: 0,
-  isTiming: true,
+  totalTimeSeconds: 0,
+  speedRunTimeSeconds: 0,
+  isSpeedRunTiming: false,
   isSpeedRunMode: false,
 }
 
@@ -222,8 +225,11 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
       persist(
         (set, get) => ({
           ...INITIAL_STATE,
-          setTimeElapsed: (time: number) => {
-            set({ timeElapsed: time })
+          setTotalTimeSeconds: (seconds: number) => {
+            set({ totalTimeSeconds: seconds })
+          },
+          setSpeedRunTimeSeconds: (seconds: number) => {
+            set({ speedRunTimeSeconds: seconds })
           },
           setPlayerInput(input) {
             set({ playerInput: input })
@@ -320,6 +326,7 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             confirmationTweenTarget.value = 0
             set((s) => ({
               ...INITIAL_STATE,
+              totalTimeSeconds: s.totalTimeSeconds,
               paletteIndex: s.paletteIndex,
               resetPlatformTick: s.resetPlatformTick + 1,
               resetPlayerTick: s.resetPlayerTick + 1,
@@ -356,19 +363,23 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
             }
           },
 
-          setIsTiming: (isTiming) => {
-            set({ isTiming })
+          setIsSpeedRunTiming: (isTiming) => {
+            set({ isSpeedRunTiming: isTiming })
           },
 
           startSpeedRun: () => {
             if (get().isSpeedRunMode) return
             get().resetGame()
-            set({ isSpeedRunMode: true, timeElapsed: 0, isTiming: false })
+            set({
+              isSpeedRunMode: true,
+              speedRunTimeSeconds: 0,
+              isSpeedRunTiming: false,
+            })
           },
 
           stopSpeedRun: () => {
             if (!get().isSpeedRunMode) return
-            set({ isSpeedRunMode: false, isTiming: false })
+            set({ isSpeedRunMode: false, isSpeedRunTiming: false })
             get().resetGame()
           },
 
@@ -378,7 +389,11 @@ const createGameStore = (playSoundFX: PlaySoundFX, stopSoundFX: (fx: SoundFX) =>
               return
             }
             get().resetGame()
-            set({ isSpeedRunMode: true, timeElapsed: 0, isTiming: false })
+            set({
+              isSpeedRunMode: true,
+              speedRunTimeSeconds: 0,
+              isSpeedRunTiming: false,
+            })
           },
         }),
         {
@@ -403,33 +418,8 @@ export const GameProvider: FC<Props> = ({ children }) => {
   return (
     <GameContext value={store}>
       {children}
-      <Timer />
     </GameContext>
   )
-}
-
-const Timer: FC = () => {
-  const isTiming = useGameStore((s) => s.isTiming)
-  const setIsTiming = useGameStore((s) => s.setIsTiming)
-  const isSpeedRun = useGameStore((s) => s.isSpeedRunMode)
-  const gameStoreAPI = useGameStoreAPI()
-
-  useEffect(() => {
-    const interval = isSpeedRun ? 100 : 1000
-
-    gameStoreAPI.setState({ timeElapsed: 0 })
-    if (!isTiming) return
-
-    const intervalId = setInterval(() => {
-      gameStoreAPI.setState((s) => ({
-        timeElapsed: s.timeElapsed + interval,
-      }))
-    }, interval) // update every second
-
-    return () => clearInterval(intervalId)
-  }, [setIsTiming, isTiming, isSpeedRun, gameStoreAPI])
-
-  return null
 }
 
 export function useGameStore<T>(selector: (state: GameState) => T): T {
