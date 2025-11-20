@@ -71,11 +71,6 @@ const warnVisibilityCoverageIfNeeded = (() => {
   }
 })()
 
-const logRowWrap = (_direction: 'forward' | 'backward', rowIndex: number, wraps: number) => {
-  if (!IS_DEV_ENV || wraps <= 0) return
-  // console.warn(`[Platform] Row ${rowIndex} ${action} ${wraps} wrap(s).`)
-}
-
 function getRowAlpha(rowZ: number, playerZ: number) {
   const dz = rowZ - playerZ
   const distSq = dz * dz
@@ -469,7 +464,6 @@ const Platform: FC<Props> = ({
 
     if (wrapsApplied > 0) {
       markInstanceAttributesDirty()
-      logRowWrap('forward', rowIndex, wrapsApplied)
     }
   }
 
@@ -489,7 +483,6 @@ const Platform: FC<Props> = ({
 
     if (wrapsApplied > 0) {
       markInstanceAttributesDirty()
-      logRowWrap('backward', rowIndex, wrapsApplied)
     }
   }
 
@@ -597,8 +590,8 @@ const Platform: FC<Props> = ({
   return (
     <group>
       <PlatformTiles
-        key={`${resetPlatformTick}-tiles`}
         ref={tilesHandle}
+        key={`${resetPlatformTick}-tiles`}
         onReadyChange={onTilesReadyChange}
       />
 
