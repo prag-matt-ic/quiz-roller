@@ -1,7 +1,12 @@
 'use server'
 import { z } from 'zod'
 import { headers } from 'next/headers'
-import { type SpeedRunDatabase, speedrunSchema, type SpeedRunSubmission } from '@/model/schema'
+import {
+  type SpeedRunDatabase,
+  SpeedRunDatabaseInsert,
+  speedrunDatabaseSchema,
+  type SpeedRunSubmission,
+} from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
 export async function getSpeedrunData() {
@@ -46,7 +51,7 @@ export async function submitSpeedrun({
     const country = headersList.get('x-vercel-ip-country') ?? 'GB'
     const flag = !!country ? getFlagEmoji(country) : null
 
-    const data: SpeedRunDatabase = {
+    const data: SpeedRunDatabaseInsert = {
       username,
       time,
       date,
@@ -58,7 +63,7 @@ export async function submitSpeedrun({
 
     console.warn('Submitting speedrun data:', data)
 
-    const validatedData = speedrunSchema.parse(data)
+    const validatedData = speedrunDatabaseSchema.parse(data)
     const sql = neon(process.env.DATABASE_URL!)
 
     // tagged template

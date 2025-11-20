@@ -52,7 +52,8 @@ export const speedRunSubmissionSchema = z.object({
   date: z.string(),
 })
 
-export const speedrunSchema = speedRunSubmissionSchema.extend({
+export const speedrunDatabaseSchema = speedRunSubmissionSchema.extend({
+  id: z.number(),
   ip: z.string(),
   country: z.string().length(2).nullable(),
   flag: z.string().nullable(),
@@ -60,4 +61,6 @@ export const speedrunSchema = speedRunSubmissionSchema.extend({
 
 export type SpeedRunSubmission = z.infer<typeof speedRunSubmissionSchema>
 
-export type SpeedRunDatabase = z.infer<typeof speedrunSchema>
+export type SpeedRunDatabaseInsert = Omit<SpeedRunDatabase, 'id'>
+
+export type SpeedRunDatabase = z.infer<typeof speedrunDatabaseSchema>
