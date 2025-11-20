@@ -33,7 +33,7 @@ export const EPSILON = {
 
 // Grid configuration
 export const COLUMNS = 33 // odd number so that there is a center column
-export const ROWS_RENDERED = 32
+export const ROWS_RENDERED = 31
 
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
