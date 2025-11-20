@@ -31,6 +31,7 @@ export type HudIndicatorConfig = {
 }
 
 export type RingIndex = [row: number, column: number]
+export type RingCollection = Record<string, true>
 
 export interface TimeSlice {
   totalTimeS: number // total time spent in the experience in seconds (persisted)
@@ -70,7 +71,7 @@ export type PlayerSlice = {
 
   collectedCollectibles: CollectibleType[]
 
-  collectedRings: RingIndex[]
+  collectedRings: RingCollection
   onRingCollected: (indexes: RingIndex) => void
 
   resetPlayerTick: number

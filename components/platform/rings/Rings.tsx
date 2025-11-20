@@ -33,6 +33,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import useGameFrame from '@/hooks/useGameFrame'
 import { Color } from 'three'
+import { makeRingKey } from '@/utils/rings'
 
 const MAX_RING_INSTANCES = 12
 const RING_MAJOR_RADIUS = 0.3
@@ -164,10 +165,11 @@ const RingElements: FC<Props> = ({ ref }) => {
 
       for (let columnIndex = 0; columnIndex < row.ringPositions.length; columnIndex++) {
         if (row.ringPositions[columnIndex] !== 1) continue
+        if (collectedRings[makeRingKey(rowIndex, columnIndex)]) continue
         ensureRingForColumn(rowIndex, columnIndex, rowZ)
       }
     },
-    [ensureRingForColumn],
+    [collectedRings, ensureRingForColumn],
   )
 
   const hideElementsIfNeeded = useCallback(
@@ -233,12 +235,12 @@ const RingElements: FC<Props> = ({ ref }) => {
   return (
     <group>
       {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
-        const isCollected = collectedRings.some((indexes) => {
-          return (
-            indexes[0] === slotAssignments.current[slotIndex]?.[0] &&
-            indexes[1] === slotAssignments.current[slotIndex]?.[1]
-          )
-        })
+        const assignedIndexes = slotAssignments.current[slotIndex]
+        const ringKey =
+          assignedIndexes != null
+            ? makeRingKey(assignedIndexes[0], assignedIndexes[1])
+            : null
+        const isCollected = ringKey ? Boolean(collectedRings[ringKey]) : false
         return (
           <RigidBody
             key={`ring-slot-${slotIndex}`}

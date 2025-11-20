@@ -4,7 +4,8 @@ import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX } from '@/components/SoundProvider'
 import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
 import { CollectibleType } from '@/model/schema'
-import { GameSliceCreator, PlayerSlice, SliceDeps } from './types'
+import { GameSliceCreator, PlayerSlice, SliceDeps, type RingIndex } from './types'
+import { ringIndexToKey } from '@/utils/rings'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 0]
 export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
@@ -33,7 +34,7 @@ export const INITIAL_PLAYER_STATE = {
   },
   confirmingCollectible: null,
   collectedCollectibles: [],
-  collectedRings: [],
+  collectedRings: {},
   confirmationProgress: 0,
   resetPlayerTick: 0,
 }
@@ -108,13 +109,14 @@ export const createPlayerSlice =
           },
         })
       },
-      onRingCollected: (ringIndex: [number, number]) => {
-        const isAlreadyCollected = get().collectedRings.some(
-          (rc) => rc[0] === ringIndex[0] && rc[1] === ringIndex[1],
-        )
-        if (isAlreadyCollected) return
+      onRingCollected: (ringIndex: RingIndex) => {
+        const ringKey = ringIndexToKey(ringIndex)
+        if (get().collectedRings[ringKey]) return
         set((s) => ({
-          collectedRings: [...s.collectedRings, ringIndex],
+          collectedRings: {
+            ...s.collectedRings,
+            [ringKey]: true,
+          },
         }))
         playSoundFX(SoundFX.COIN_COLLECTED)
       },

@@ -20,6 +20,7 @@ type Props = {
 const Collectibles: FC<Props> = ({ ref }) => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
   const collectedRings = useGameStore((s) => s.collectedRings)
+  const collectedRingCount = Object.keys(collectedRings).length
 
   // TODO: add a floating UI tooltip to each collectible icon - use Loopspeed nav for reference
 
@@ -31,9 +32,9 @@ const Collectibles: FC<Props> = ({ ref }) => {
       <div
         className={twJoin(
           'relative mr-2 flex aspect-square size-10 items-center justify-center rounded-full border text-center font-semibold',
-          collectedRings.length > 0 ? 'border-amber-400' : 'border-white/40',
+          collectedRingCount > 0 ? 'border-amber-400' : 'border-white/40',
         )}>
-        {collectedRings.length}
+        {collectedRingCount}
       </div>
 
       {COLLECTIBLE_TYPES.map((type, index) => {
