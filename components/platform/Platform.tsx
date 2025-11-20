@@ -226,11 +226,6 @@ const Platform: FC<Props> = ({
 
     const tiles = tilesHandle.current
 
-    console.log('[Platform] Initializing platform rows and tiles.', {
-      areTilesReady: readyState.tiles,
-      tiles,
-    })
-
     function setupInitialRowsAndTiles() {
       // Reset state
       rowsData.current = []
@@ -406,16 +401,6 @@ const Platform: FC<Props> = ({
     setInfoContentIndex(contentIndex)
   }
 
-  const logStageTransition = (nextStage: Stage, rowIndex: number, row: RowData) => {
-    if (!IS_DEV_ENV) return
-    const currentStage = stageRef.current
-    const rowZ = rowZByIndex.current[rowIndex]
-    const zDisplay = rowZ == null ? 'n/a' : rowZ.toFixed(2)
-    console.warn(
-      `[Platform] Stage ${currentStage} -> ${nextStage} via row ${rowIndex} (${row.type}) z=${zDisplay}`,
-    )
-  }
-
   function getRowIndexClosestToOrigin() {
     let bestIndex = -1
     let smallestAbsZ = Infinity
@@ -444,7 +429,6 @@ const Platform: FC<Props> = ({
 
     if (row.type === 'home') {
       if (stageRef.current !== Stage.HOME) {
-        logStageTransition(Stage.HOME, rowIndex, row)
         goToStage(Stage.HOME)
       }
       return
@@ -454,7 +438,6 @@ const Platform: FC<Props> = ({
       const contentIndex = row.infoContentIndex ?? 0
       setInfoContentIndex(contentIndex)
       if (stageRef.current !== Stage.INFO) {
-        logStageTransition(Stage.INFO, rowIndex, row)
         goToStage(Stage.INFO)
       }
       return
@@ -462,14 +445,12 @@ const Platform: FC<Props> = ({
 
     if (row.type === 'obstacles') {
       if (stageRef.current !== Stage.TERRAIN) {
-        logStageTransition(Stage.TERRAIN, rowIndex, row)
         goToStage(Stage.TERRAIN)
       }
       return
     }
 
     if (row.type === 'cta' && stageRef.current !== Stage.CTA) {
-      logStageTransition(Stage.CTA, rowIndex, row)
       goToStage(Stage.CTA)
     }
   }
