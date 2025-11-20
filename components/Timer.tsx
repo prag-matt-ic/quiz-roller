@@ -5,6 +5,7 @@ import { type FC, useEffect } from 'react'
 import { useGameStore, useGameStoreAPI } from './GameProvider'
 
 const Timer: FC = () => {
+  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const isSpeedRunTiming = useGameStore((s) => s.isSpeedRunTiming)
   const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()
@@ -18,7 +19,7 @@ const Timer: FC = () => {
       const deltaSeconds = (now - previous) / 1000
       previous = now
       gameStoreAPI.setState((s) => ({
-        totalTimeSeconds: s.totalTimeSeconds + deltaSeconds,
+        totalTimeS: s.totalTimeS + deltaSeconds,
       }))
     }, 1000)
 
@@ -26,20 +27,22 @@ const Timer: FC = () => {
   }, [gameStoreAPI, _isHydrated])
 
   useEffect(() => {
-    if (!isSpeedRunTiming || !_isHydrated) return
+    console.warn('Starting speed run timer', { isSpeedRunTiming, isSpeedRunMode })
+
+    if (!isSpeedRunMode || !isSpeedRunTiming) return
     let previous = performance.now()
 
     const intervalId = window.setInterval(() => {
       const now = performance.now()
-      const deltaSeconds = (now - previous) / 1000
+      const deltaCS = (now - previous) / 10
       previous = now
       gameStoreAPI.setState((s) => ({
-        speedRunTimeSeconds: s.speedRunTimeSeconds + deltaSeconds,
+        speedRunTimeCS: s.speedRunTimeCS + deltaCS,
       }))
     }, 10)
 
     return () => window.clearInterval(intervalId)
-  }, [isSpeedRunTiming, gameStoreAPI, _isHydrated])
+  }, [isSpeedRunMode, isSpeedRunTiming, gameStoreAPI])
 
   return null
 }

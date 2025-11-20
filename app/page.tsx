@@ -5,6 +5,7 @@ import LoadingOverlay from '@/components/loading/LoadingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
 import { SoundProvider } from '@/components/SoundProvider'
 import { GameProvider } from '@/components/GameProvider'
+import { submitSpeedrun } from './actions'
 
 const Main = dynamic(() => import('@/components/Main'))
 
@@ -21,7 +22,7 @@ export default async function Home(props: PageProps) {
     <>
       <main className="h-lvh w-full overflow-hidden">
         <SoundProvider>
-          <GameProvider>
+          <GameProvider submitSpeedRun={submitSpeedrun}>
             {/* <LoadingOverlay /> */}
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>

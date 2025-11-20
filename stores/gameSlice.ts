@@ -59,7 +59,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       ...INITIAL_TIME_STATE,
       ...INITIAL_PLAYER_STATE,
       playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
-      totalTimeSeconds: s.totalTimeSeconds,
+      totalTimeS: s.totalTimeS,
       paletteIndex: s.paletteIndex,
       resetPlatformTick: s.resetPlatformTick + 1,
       resetPlayerTick: s.resetPlayerTick + 1,

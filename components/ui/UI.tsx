@@ -41,6 +41,8 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <Controls isMobile={isMobile} />
       <ProgressBar />
+
+      {/* TODO: SwitchTransition between collectibles and speedrun   hud. */}
       <Collectibles ref={collectibles} />
       <AudioToggle />
 
@@ -50,8 +52,6 @@ const UI: FC<Props> = ({ isMobile }) => {
         onClick={isSpeedRunMode ? stopSpeedRun : startSpeedRun}>
         {isSpeedRunMode ? 'End Speedroll' : 'Begin Speedroll'}
       </button>
-
-      <LiveTimeDisplay className="border-red fixed top-2 border font-mono text-4xl leading-none font-semibold" />
 
       {isSpeedRunMode && <SpeedRunHUD onRestart={restartSpeedRun} onStop={stopSpeedRun} />}
     </>
@@ -68,8 +68,11 @@ type SpeedRunHUDProps = {
 const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
   const [isShowingCountdown, setIsShowingCountdown] = useState(true)
   const setIsSpeedRunTiming = useGameStore((s) => s.setIsSpeedRunTiming)
+  const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
 
   const countdownContainer = useRef<HTMLDivElement>(null)
+
+  // TODO: add name input, limit to 12 chars.
 
   return (
     <>
@@ -102,6 +105,10 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
               title="Cancel">
               <X size={24} />
             </button>
+
+            <button type="button" onClick={finishSpeedRun}>
+              FINISH!!!
+            </button>
           </div>
         </div>
       </section>
@@ -110,38 +117,38 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
         timeout={{ enter: 0, exit: 200 }}
         nodeRef={countdownContainer}
         appear={true}
-        onEnter={() => {
-          gsap
-            .timeline({
-              onComplete: () => {
-                // Start the timer.
-                setIsSpeedRunTiming(true)
-                setIsShowingCountdown(false)
-              },
-            })
-            .fromTo(countdownContainer.current, { opacity: 0 }, { opacity: 1 })
-            .set('#countdown-3', { opacity: 1 })
-            .to('#countdown-3-span', {
-              opacity: 0,
-              duration: 1.0,
-              ease: 'linear',
-            })
-            .set('#countdown-3', { opacity: 0 })
-            .set('#countdown-2', { opacity: 1 })
-            .to('#countdown-2-span', {
-              opacity: 0,
-              duration: 1.0,
-              ease: 'linear',
-            })
-            .set('#countdown-2', { opacity: 0 })
-            .set('#countdown-1', { opacity: 1 })
-            .to('#countdown-1-span', {
-              opacity: 0,
-              duration: 1.0,
-              ease: 'linear',
-            })
-            .set('#countdown-1', { opacity: 0 })
-        }}
+        // onEnter={() => {
+        //   gsap
+        //     .timeline({
+        //       onComplete: () => {
+        //         // Start the timer.
+        //         setIsSpeedRunTiming(true)
+        //         setIsShowingCountdown(false)
+        //       },
+        //     })
+        //     .fromTo(countdownContainer.current, { opacity: 0 }, { opacity: 1 })
+        //     .set('#countdown-3', { opacity: 1 })
+        //     .to('#countdown-3-span', {
+        //       opacity: 0,
+        //       duration: 1.0,
+        //       ease: 'linear',
+        //     })
+        //     .set('#countdown-3', { opacity: 0 })
+        //     .set('#countdown-2', { opacity: 1 })
+        //     .to('#countdown-2-span', {
+        //       opacity: 0,
+        //       duration: 1.0,
+        //       ease: 'linear',
+        //     })
+        //     .set('#countdown-2', { opacity: 0 })
+        //     .set('#countdown-1', { opacity: 1 })
+        //     .to('#countdown-1-span', {
+        //       opacity: 0,
+        //       duration: 1.0,
+        //       ease: 'linear',
+        //     })
+        //     .set('#countdown-1', { opacity: 0 })
+        // }}
         mountOnEnter
         unmountOnExit>
         {(status) => (
@@ -155,6 +162,14 @@ const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
               <CountdownNumber id="countdown-2" overlayId="countdown-2-span" number={2} />
               <CountdownNumber id="countdown-1" overlayId="countdown-1-span" number={1} />
             </div>
+            <button
+              className="pointer-events-auto z-10000 text-xl font-bold"
+              onClick={() => {
+                setIsShowingCountdown(false)
+                setIsSpeedRunTiming(true)
+              }}>
+              START
+            </button>
           </div>
         )}
       </Transition>

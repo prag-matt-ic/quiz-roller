@@ -1,7 +1,7 @@
 'use server'
 import { z } from 'zod'
 import { headers } from 'next/headers'
-import { speedrunSchema } from '@/model/schema'
+import { type SpeedRunDatabase, speedrunSchema, type SpeedRunSubmission } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
 export async function getSpeedrunData() {
@@ -22,39 +22,49 @@ export async function getSpeedrunData() {
   }
 }
 
-export async function submitSpeedrun(formData: FormData) {
+export async function submitSpeedrun({
+  username,
+  date,
+  time,
+  attempt = 1,
+}: SpeedRunSubmission) {
   try {
-    const name = formData.get('name') as string
-    const timeElapsed = formData.get('time') as string
-
     const headersList = await headers()
 
-    const ip =
-      headersList.get('x-forwarded-for')?.split(',')[0].trim() || // proxies
-      headersList.get('x-real-ip') || // Nginx
-      headersList.get('cf-connecting-ip') || // Cloudflare
-      '127.0.0.1' // local
+    // TODO: figure out how to use geolocation form vercel functions...
 
-    const country =
-      headersList.get('cf-ipcountry') || // Cloudflare
-      headersList.get('x-vercel-ip-country') || // Vercel
-      null // local
-
-    const data = {
-      name,
-      time: parseFloat(timeElapsed),
-      date: new Date().toISOString(),
-      ip,
-      country,
+    const getFlagEmoji = (countryCode: string) => {
+      const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map((char) => 127397 + char.charCodeAt(0))
+      return String.fromCodePoint(...codePoints)
     }
+
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
+    const country = headersList.get('x-vercel-ip-country') ?? 'GB'
+    const flag = !!country ? getFlagEmoji(country) : null
+
+    const data: SpeedRunDatabase = {
+      username,
+      time,
+      date,
+      ip,
+      country: country ?? null,
+      attempt,
+      flag: flag ?? null,
+    }
+
+    console.warn('Submitting speedrun data:', data)
 
     const validatedData = speedrunSchema.parse(data)
     const sql = neon(process.env.DATABASE_URL!)
 
     // tagged template
+    // TODO: Rename this table.
     await sql`
-      INSERT INTO speedruns (name, time, date, ip, country) 
-      VALUES (${validatedData.name}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country})
+      INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt) 
+      VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt})
     `
     return { success: true }
   } catch (error) {

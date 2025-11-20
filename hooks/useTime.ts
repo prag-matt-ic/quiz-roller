@@ -4,10 +4,10 @@ import { useGameStoreAPI } from '@/components/GameProvider'
 
 export type TimeChangeHandler = (elapsedSeconds: number) => void
 
-type TimeSelector = (state: { totalTimeSeconds: number; speedRunTimeSeconds: number }) => number
+type TimeSelector = (state: { totalTimeS: number; speedRunTimeCS: number }) => number
 
-const selectTotalTime: TimeSelector = (state) => state.totalTimeSeconds
-const selectSpeedRunTime: TimeSelector = (state) => state.speedRunTimeSeconds
+const selectTotalTime: TimeSelector = (state) => state.totalTimeS
+const selectSpeedRunTime: TimeSelector = (state) => state.speedRunTimeCS / 100
 
 function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler) {
   const gameStoreAPI = useGameStoreAPI()

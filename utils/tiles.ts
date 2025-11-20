@@ -56,7 +56,7 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
-export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty'
+export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty' | 'speed-run-finish'
 
 // Row index to columns with rings
 export type RingLayout = Record<number, number[]>
@@ -83,4 +83,5 @@ export type RowData = {
   collectiblePosition?: [number, number, number] // Collectibles rendered on the platform
   floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
   ctaZonePosition?: [number, number, number] // CTA zone position for final stage
+  finishLinePosition?: [number, number, number] // Finish line position
 }

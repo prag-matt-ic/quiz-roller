@@ -15,6 +15,7 @@ import useStage from '@/hooks/useStage'
 import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
 import { generateObstacleSectionRowData } from '@/utils/platform/obstaclesSection'
 import { generateInfoSectionRowData } from '@/utils/platform/infoSection'
+import { generateSpeedRunSectionRowData } from '@/utils/platform/speedRunSection'
 import {
   colToX,
   COLUMNS,
@@ -86,15 +87,24 @@ type Props = {
   homeBitmap: HTMLImageElement | null
   infoBitmaps: Array<HTMLImageElement | null>
   obstacleBitmaps: Array<HTMLImageElement | null>
+  speedRunBitmap: HTMLImageElement | null
+  ctaBitmap: HTMLImageElement | null
 }
 
-const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
+const Platform: FC<Props> = ({
+  homeBitmap,
+  infoBitmaps,
+  obstacleBitmaps,
+  speedRunBitmap,
+  ctaBitmap,
+}) => {
   const gameStore = useGameStoreAPI()
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
   const setTotalRows = useGameStore((s) => s.setTotalRows)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
+  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
@@ -175,7 +185,12 @@ const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
   }
 
   function insertCtaRows() {
-    const rows = generateCtaSectionRowData()
+    const rows = generateCtaSectionRowData(ctaBitmap)
+    appendRowsWithIndices(rows)
+  }
+
+  function insertSpeedRunRows() {
+    const rows = generateSpeedRunSectionRowData(speedRunBitmap)
     appendRowsWithIndices(rows)
   }
 
@@ -199,13 +214,19 @@ const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
 
       insertHomeRows()
       insertObstacleRows(0)
-      insertInfoRows(0)
-      insertObstacleRows(1)
-      insertInfoRows(1)
-      insertObstacleRows(2)
-      insertInfoRows(2)
-      insertObstacleRows(3)
-      insertCtaRows()
+
+      if (!isSpeedRunMode) {
+        insertInfoRows(0)
+        insertObstacleRows(1)
+        insertInfoRows(1)
+        insertObstacleRows(2)
+        insertInfoRows(2)
+        insertObstacleRows(3)
+        insertCtaRows()
+      } else {
+        insertSpeedRunRows()
+      }
+
       setTotalRows(nextAbsoluteRowIndex.current)
 
       const instances: InstancedRigidBodyProps[] = []
@@ -265,7 +286,7 @@ const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
 
     setupInitialRowsAndInstances()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, homeBitmap, infoBitmaps])
+  }, [resetPlatformTick, homeBitmap, infoBitmaps, speedRunBitmap, ctaBitmap])
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA
@@ -584,8 +605,10 @@ const Platform: FC<Props> = ({ homeBitmap, infoBitmaps, obstacleBitmaps }) => {
       {/* Info Section Elements */}
       <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />
 
-      {/* CTA Section Elements */}
+      {/* If not speed-run: Show CTA Section */}
       <CTAElements ref={ctaElements} key={`${resetPlatformTick}-cta`} />
+
+      {/* If speed-run: Show Speed Run Elements */}
     </group>
   )
 }

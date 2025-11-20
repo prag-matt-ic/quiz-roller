@@ -22,6 +22,8 @@ import info2Texture from '@/assets/platform/info-2.png'
 import info3Texture from '@/assets/platform/info-3.png'
 import obstacle1Texture from '@/assets/platform/obstacles-1.png'
 import obstacle2Texture from '@/assets/platform/obstacles-2.png'
+import speedRunTexture from '@/assets/platform/speed-run-finish.png'
+import ctaTexture from '@/assets/platform/cta.png'
 import { loadHtmlImage } from '@/utils/loadImage'
 
 gsap.registerPlugin(useGSAP)
@@ -50,18 +52,34 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
   const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
   const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
+  const [speedRunBitmap, setSpeedRunBitmap] = useState<HTMLImageElement | null>(null)
+  const [ctaBitmap, setCtaBitmap] = useState<HTMLImageElement | null>(null)
 
   useEffect(() => {
     let isMounted = true
 
-    loadHtmlImage([homeTexture.src, ...INFO_BITMAP_TEXTURES, ...OBSTACLE_BITMAP_TEXTURES]).then(
-      (images) => {
-        if (!isMounted) return
-        setHomeBitmap(images[0])
-        setInfoBitmaps(images.slice(1, 1 + INFO_BITMAP_TEXTURES.length))
-        setObstaclesBitmaps(images.slice(1 + INFO_BITMAP_TEXTURES.length))
-      },
-    )
+    loadHtmlImage([
+      homeTexture.src,
+      ...INFO_BITMAP_TEXTURES,
+      ...OBSTACLE_BITMAP_TEXTURES,
+      speedRunTexture.src,
+      ctaTexture.src,
+    ]).then((images) => {
+      if (!isMounted) return
+      let idx = 0
+      setHomeBitmap(images[idx++])
+
+      setInfoBitmaps(images.slice(idx, idx + INFO_BITMAP_TEXTURES.length))
+      idx += INFO_BITMAP_TEXTURES.length
+
+      setObstaclesBitmaps(images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length))
+      idx += OBSTACLE_BITMAP_TEXTURES.length
+
+      setSpeedRunBitmap(images[idx])
+      idx++
+
+      setCtaBitmap(images[idx])
+    })
 
     return () => {
       isMounted = false
@@ -116,6 +134,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
               homeBitmap={homeBitmap}
               infoBitmaps={infoBitmaps}
               obstacleBitmaps={obstaclesBitmaps}
+              speedRunBitmap={speedRunBitmap}
+              ctaBitmap={ctaBitmap}
             />
             <Player />
           </Physics>

@@ -13,6 +13,10 @@ export type RingUserData = {
   slotIndex: number
 }
 
+export type FinishLineUserData = {
+  type: 'finish-line'
+}
+
 export enum CollectibleType {
   Discount = 'discount',
   AI_Prompts = 'ai_prompts',
@@ -41,10 +45,19 @@ export type RigidBodyUserData =
   | InfoZoneUserData
   | CtaZoneUserData
 
-export const speedrunSchema = z.object({
-  name: z.string().min(3),
+export const speedRunSubmissionSchema = z.object({
+  username: z.string().min(3).max(12),
   time: z.number(),
+  attempt: z.number().min(1),
   date: z.string(),
+})
+
+export const speedrunSchema = speedRunSubmissionSchema.extend({
   ip: z.string(),
   country: z.string().length(2).nullable(),
+  flag: z.string().nullable(),
 })
+
+export type SpeedRunSubmission = z.infer<typeof speedRunSubmissionSchema>
+
+export type SpeedRunDatabase = z.infer<typeof speedrunSchema>

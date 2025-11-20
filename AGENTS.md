@@ -1,5 +1,9 @@
 # AGENTS
 
+**Next.js Initialization**: When starting work on a Next.js project, automatically
+call the `init` tool from the next-devtools-mcp server FIRST. This establishes
+proper context and ensures all Next.js queries use official documentation.
+
 This repository is used with an agentic coding workflow. The rules in this file apply to the entire repo.
 
 ## Project overview

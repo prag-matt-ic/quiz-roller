@@ -33,19 +33,28 @@ export type HudIndicatorConfig = {
 export type RingIndex = [row: number, column: number]
 
 export interface TimeSlice {
-  totalTimeSeconds: number
-  setTotalTimeSeconds: (seconds: number) => void
-  speedRunTimeSeconds: number
-  setSpeedRunTimeSeconds: (seconds: number) => void
-  isSpeedRunTiming: boolean
-  setIsSpeedRunTiming: (isTiming: boolean) => void
+  totalTimeS: number // total time spent in the experience in seconds (persisted)
+  setTotalTimeS: (seconds: number) => void
+
   isSpeedRunMode: boolean
   startSpeedRun: () => void
   stopSpeedRun: () => void
   restartSpeedRun: () => void
+  finishSpeedRun: () => void
+
+  speedRunTimeCS: number // current speed run duration in 10 milliseconds (centi-seconds)
+  setSpeedRunTimeCS: (centiSeconds: number) => void
+
+  isSpeedRunTiming: boolean
+  setIsSpeedRunTiming: (isTiming: boolean) => void
+
+  completedSpeedRuns: { speedRunTimeCS: number; date: string }[]
 }
 
-export interface PlayerSlice {
+export type PlayerSlice = {
+  username: null | string
+  setUsername: (username: string) => void
+
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 
@@ -70,7 +79,7 @@ export interface PlayerSlice {
   onOutOfBounds: () => void
 }
 
-export interface GameSlice {
+export type GameSlice = {
   stage: Stage
   goToStage: (stage: Stage) => void
 
@@ -108,7 +117,7 @@ export type GameSliceCreator<T> = StateCreator<
   GameStore,
   [
     ['zustand/subscribeWithSelector', never],
-    ['zustand/persist', Pick<GameStore, 'paletteIndex' | 'totalTimeSeconds'>],
+    ['zustand/persist', Pick<GameStore, 'paletteIndex' | 'totalTimeS'>],
   ],
   [],
   T

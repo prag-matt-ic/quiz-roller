@@ -44,6 +44,7 @@ export function applyBitmapRowFeatures(row: RowData, layoutRow: SectionBitmapRow
   applyRingColumns(row, layoutRow.ringColumns)
   applyInfoColumns(row, layoutRow)
   applyCollectibleColumn(row, layoutRow)
+  applyFinishLineColumn(row, layoutRow)
   applyHighlightColumns(row, layoutRow.highlightColumns)
 }
 
@@ -89,6 +90,20 @@ function applyCollectibleColumn(row: RowData, layoutRow: SectionBitmapRow) {
   row.collectiblePosition = [colToX(fallbackColumn), ON_TILE_Y, 0]
 }
 
+function applyFinishLineColumn(row: RowData, layoutRow: SectionBitmapRow) {
+  const placement = layoutRow.finishLinePlacement
+  if (placement) {
+    const { columnIndex, zOffset } = placement
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    row.finishLinePosition = [colToX(columnIndex), ON_TILE_Y, zOffset]
+    return
+  }
+
+  const fallbackColumn = layoutRow.finishLineColumns[0] ?? null
+  if (fallbackColumn == null || fallbackColumn < 0 || fallbackColumn >= COLUMNS) return
+  row.finishLinePosition = [colToX(fallbackColumn), ON_TILE_Y, 0]
+}
+
 function applyHighlightColumns(row: RowData, columns?: number[]) {
   if (!columns || columns.length === 0) return
   const highlights = row.isHighlighted ?? []
@@ -97,4 +112,11 @@ function applyHighlightColumns(row: RowData, columns?: number[]) {
     highlights[columnIndex] = 1
   })
   row.isHighlighted = highlights
+}
+
+export function clampRowIndex(rowCount: number, requestedIndex: number): number {
+  if (rowCount === 0) return 0
+  if (requestedIndex < 0) return 0
+  if (requestedIndex >= rowCount) return rowCount - 1
+  return requestedIndex
 }

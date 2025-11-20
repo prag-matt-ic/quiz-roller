@@ -1,7 +1,7 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
 import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
-import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
+import { buildRowsFromLayout as buildGenericRows, clampRowIndex } from './sectionLayoutFeatures'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
 export const OBSTACLE_SECTION_ROWS = 48
@@ -52,11 +52,4 @@ function buildRowsFromLayout(layout: SectionBitmapLayout, contentIndex: 0 | 1 | 
 
     return extra
   })
-}
-
-function clampRowIndex(rowCount: number, requestedIndex: number): number {
-  if (rowCount === 0) return 0
-  if (requestedIndex < 0) return 0
-  if (requestedIndex >= rowCount) return rowCount - 1
-  return requestedIndex
 }

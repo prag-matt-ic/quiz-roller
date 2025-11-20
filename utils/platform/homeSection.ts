@@ -1,7 +1,7 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
 import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
-import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
+import { buildRowsFromLayout as buildGenericRows, clampRowIndex } from './sectionLayoutFeatures'
 
 const HOME_HEADING_CENTER_ROW = 6
 const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
@@ -33,11 +33,4 @@ function buildRowsFromLayout(layout: SectionBitmapLayout): RowData[] {
     }
     return {}
   })
-}
-
-function clampRowIndex(rowCount: number, requestedIndex: number): number {
-  if (rowCount === 0) return 0
-  if (requestedIndex < 0) return 0
-  if (requestedIndex >= rowCount) return rowCount - 1
-  return requestedIndex
 }

@@ -5,30 +5,34 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
+import { SpeedRunSubmission } from '@/model/schema'
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
+  submitSpeedRun: (data: SpeedRunSubmission) => void,
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
       persist(
         (...a) => ({
-          ...createTimeSlice(...a),
+          ...createTimeSlice(submitSpeedRun)(...a),
           ...createPlayerSlice({ playSoundFX, stopSoundFX })(...a),
           ...createGameSlice(...a),
         }),
         {
           name: 'quizroller-page',
           partialize: (s) => ({
+            username: s.username,
             paletteIndex: s.paletteIndex,
-            totalTimeSeconds: s.totalTimeSeconds,
+            totalTimeS: s.totalTimeS,
           }),
           version: 1,
           onRehydrateStorage: () => (state) => {
+            console.log('Rehydrating store...')
             state?.setHydrated()
           },
-        } as PersistOptions<GameStore, Pick<GameStore, 'paletteIndex' | 'totalTimeSeconds'>>,
+        } as PersistOptions<GameStore, Pick<GameStore, 'paletteIndex' | 'totalTimeS'>>,
       ),
     ),
   )

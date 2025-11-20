@@ -5,8 +5,10 @@ export type SectionBitmapRow = {
   ringColumns: number[]
   infoZoneColumns: number[]
   collectibleColumns: number[]
+  finishLineColumns: number[]
   infoZonePlacements?: BitmapPlacement[]
   collectiblePlacement?: BitmapPlacement | null
+  finishLinePlacement?: BitmapPlacement | null
   highlightColumns: number[]
 }
 
@@ -26,6 +28,7 @@ const COLOR = {
   INFO: [0, 255, 0] as const,
   COLLECTIBLE: [0, 0, 255] as const,
   HIGHLIGHT: [0, 255, 255] as const,
+  FINISH_LINE: [255, 255, 0] as const,
 }
 
 const isColor = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
@@ -47,7 +50,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = imageHeight
-    const context = canvas.getContext('2d', { willReadFrequently: true })
+  const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) {
     throw new Error('Failed to initialise canvas context for section bitmap parsing')
   }
@@ -66,6 +69,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
     const infoZoneColumns: number[] = []
     const highlightColumns: number[] = []
     const collectibleColumns: number[] = []
+    const finishLineColumns: number[] = []
 
     for (let column = 0; column < width; column++) {
       const pixelIndex = (srcRow * width + column) * 4
@@ -90,6 +94,10 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
         highlightColumns.push(column)
       }
 
+      if (isColor(r, g, b, COLOR.FINISH_LINE)) {
+        finishLineColumns.push(column)
+      }
+
       if (isColor(r, g, b, COLOR.HIGHLIGHT)) {
         highlightColumns.push(column)
       }
@@ -100,18 +108,35 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
       ringColumns,
       infoZoneColumns,
       collectibleColumns,
+      finishLineColumns,
       highlightColumns,
     }
   }
 
-  assignBitmapPlacements(rows, (row) => row.infoZoneColumns, (rowIndex, placements) => {
-    if (!placements.length) return
-    rows[rowIndex].infoZonePlacements = placements
-  })
+  assignBitmapPlacements(
+    rows,
+    (row) => row.infoZoneColumns,
+    (rowIndex, placements) => {
+      if (!placements.length) return
+      rows[rowIndex].infoZonePlacements = placements
+    },
+  )
 
-  assignBitmapPlacements(rows, (row) => row.collectibleColumns, (rowIndex, placements) => {
-    rows[rowIndex].collectiblePlacement = placements[0] ?? null
-  })
+  assignBitmapPlacements(
+    rows,
+    (row) => row.collectibleColumns,
+    (rowIndex, placements) => {
+      rows[rowIndex].collectiblePlacement = placements[0] ?? null
+    },
+  )
+
+  assignBitmapPlacements(
+    rows,
+    (row) => row.finishLineColumns,
+    (rowIndex, placements) => {
+      rows[rowIndex].finishLinePlacement = placements[0] ?? null
+    },
+  )
 
   // Release canvas resources promptly
   context.canvas.width = 0
