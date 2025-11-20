@@ -27,17 +27,28 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
   )
 }
 
-const Keys: FC = () => {
+function useControls() {
+  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const isSpeedRunOverlay = useGameStore(
     (s) => s.speedRunStage === 'username' || s.speedRunStage === 'countdown',
   )
-  const playerInput = useGameStore((s) => s.playerInput)
+  const disableInput = isSpeedRunMode && isSpeedRunOverlay
+
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 
+  return {
+    disableInput,
+    setPlayerInput,
+  }
+}
+
+const Keys: FC = () => {
+  const { disableInput, setPlayerInput } = useControls()
+  const playerInput = useGameStore((s) => s.playerInput)
   const input = useRef<PlayerInput>(playerInput)
 
   useEffect(() => {
-    if (isSpeedRunOverlay) return
+    if (disableInput) return
 
     const updateInput = (key: keyof PlayerInput, value: number) => {
       if (input.current[key] === value) return
@@ -104,7 +115,7 @@ const Keys: FC = () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [isSpeedRunOverlay, setPlayerInput])
+  }, [disableInput, setPlayerInput])
 
   return (
     <aside className="pointer-events-none fixed right-4 bottom-3 z-1000 grid w-fit grid-cols-3 gap-0.5">
@@ -128,13 +139,12 @@ const Controls: FC<Props> = ({ isMobile }) => {
 }
 
 const Stick: FC = () => {
-  const isSpeedRunCountdown = useGameStore((s) => s.speedRunStage === 'countdown')
-  const setPlayerInput = useGameStore((s) => s.setPlayerInput)
+  const { disableInput, setPlayerInput } = useControls()
   const JOYSTICK_LEVELS = 10
 
   const onJoystickMove = useCallback(
     (e: OnJoystickMove) => {
-      if (isSpeedRunCountdown) return
+      if (disableInput) return
       setPlayerInput({
         up: e.leveledY > 0 ? Math.min(e.leveledY / JOYSTICK_LEVELS, 1) : 0,
         down: e.leveledY < 0 ? Math.min(-e.leveledY / JOYSTICK_LEVELS, 1) : 0,
@@ -142,7 +152,7 @@ const Stick: FC = () => {
         right: e.leveledX > 0 ? Math.min(e.leveledX / JOYSTICK_LEVELS, 1) : 0,
       })
     },
-    [isSpeedRunCountdown, setPlayerInput],
+    [disableInput, setPlayerInput],
   )
 
   return (
