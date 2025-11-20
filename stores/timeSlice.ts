@@ -69,6 +69,7 @@ export const createTimeSlice =
           speedRunStage: 'leaderboard',
         }))
       } catch (error) {
+        // TODO: handle showing the error with some UI - maybe a toast?
         console.error('Error submitting speedrun:', error)
         set({ speedRunStage: 'leaderboard' })
       }

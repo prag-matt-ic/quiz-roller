@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { headers } from 'next/headers'
 import {
+  type SpeedRunDatabase,
   type SpeedRunDatabaseInsert,
   speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
@@ -10,18 +11,17 @@ import {
 } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
-export async function getSpeedrunData() {
+export async function getSpeedrunData(): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
-
+    // TODO: add an index to the table on time for performance
     const speedruns = await sql`
-      SELECT username, time, date, country, flag
+      SELECT id, username, time, date, ip, country, flag, attempt
       FROM "quizroller_speedrun" 
       ORDER BY time ASC
       LIMIT 10
     `
-
-    return speedruns
+    return speedrunDatabaseSchema.array().parse(speedruns)
   } catch (error) {
     console.error('Error fetching speedruns:', error)
     return []

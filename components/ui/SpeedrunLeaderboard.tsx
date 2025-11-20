@@ -1,26 +1,19 @@
 'use client'
 import { type FC, Fragment, useEffect, useState } from 'react'
 import { getSpeedrunData } from '@/app/actions'
-
-// TODO: import the type from the schema rather than redefining it here
-type SpeedrunEntry = {
-  username: string
-  time: number
-  country: string | null
-  flag: string | null
-}
+import type { SpeedRunDatabase } from '@/model/schema'
 
 export const SpeedrunLeaderboard: FC = () => {
-  const [speedruns, setSpeedruns] = useState<SpeedrunEntry[]>([])
-  const [loading, setLoading] = useState(true) // TODO: booleans should be named isLoading
+  const [speedruns, setSpeedruns] = useState<SpeedRunDatabase[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
 
     getSpeedrunData().then((data) => {
       if (mounted) {
-        setSpeedruns(data as SpeedrunEntry[])
-        setLoading(false)
+        setSpeedruns(data)
+        setIsLoading(false)
       }
     })
 
@@ -29,12 +22,12 @@ export const SpeedrunLeaderboard: FC = () => {
     }
   }, [])
 
-  if (loading) {
+  if (isLoading) {
     return <div className="w-full text-center">Loading...</div>
   }
 
   // TODO: highlight the current user's entries if present
-
+  // TODO: create a skeleton loader for the leaderboard - same grid but with animated placeholders
   return (
     <div className="fixed top-32 left-0 w-sm max-w-full border-2 border-red-600">
       <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2">
