@@ -6,7 +6,7 @@ import { useGameStore, useGameStoreAPI } from './GameProvider'
 
 const Timer: FC = () => {
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
-  const isSpeedRunTiming = useGameStore((s) => s.isSpeedRunTiming)
+  const isSpeedRunTiming = useGameStore((s) => s.speedRunStage === 'running')
   const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()
 

@@ -27,7 +27,8 @@ export async function submitSpeedrun({
   date,
   time,
   attempt = 1,
-}: SpeedRunSubmission) {
+  // TODO: move  Promise<SpeedRunDatabase | null> into a type in the schema and use in the time store setup...
+}: SpeedRunSubmission): Promise<SpeedRunDatabase | null> {
   try {
     const headersList = await headers()
 
@@ -62,23 +63,19 @@ export async function submitSpeedrun({
 
     // tagged template
     // TODO: Rename this table.
-    await sql`
+    const result = await sql`
       INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt) 
       VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt})
     `
-    return { success: true }
+
+    console.log('Speedrun submitted successfully:', result)
+    return validatedData
   } catch (error) {
     console.error('Error submitting speedrun:', error)
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: 'Validation failed: ' + error.issues.map((e) => e.message).join(', '),
-      }
+      return null
     }
-    return {
-      success: false,
-      error: 'Failed to submit speedrun',
-    }
+    return null
   }
 }

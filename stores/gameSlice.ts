@@ -52,12 +52,14 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       set({ stage: Stage.CTA })
     }
   },
-  resetGame: () => {
+  resetGame: ({ isSpeedRunMode, speedRunStage }) => {
     get().stopConfirmation()
     set((s) => ({
       ...INITIAL_GAME_STATE,
       ...INITIAL_TIME_STATE,
       ...INITIAL_PLAYER_STATE,
+      isSpeedRunMode,
+      speedRunStage: speedRunStage ?? s.speedRunStage,
       playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
       totalTimeS: s.totalTimeS,
       paletteIndex: s.paletteIndex,

@@ -111,7 +111,7 @@ const PerformanceDebug: FC = () => {
         ))}
       </SelectRow>
       <button
-        onClick={resetGame}
+        onClick={() => resetGame({ isSpeedRunMode: false })}
         className="w-full rounded bg-red-800 p-1 text-xs font-semibold text-white">
         Reset Game
       </button>

@@ -1,5 +1,5 @@
 'use client'
-import { Circle, GemIcon } from 'lucide-react'
+import { GemIcon } from 'lucide-react'
 import { useState, type FC, type RefObject } from 'react'
 import { twJoin } from 'tailwind-merge'
 import {
@@ -13,21 +13,13 @@ import {
 import { useGameStore } from '@/components/GameProvider'
 import { COLLECTIBLE_TYPES } from '@/model/schema'
 
-type Props = {
-  ref: RefObject<HTMLDivElement | null>
-}
-
-const Collectibles: FC<Props> = ({ ref }) => {
+const Collectibles: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
   const collectedRings = useGameStore((s) => s.collectedRings)
   const collectedRingCount = Object.keys(collectedRings).length
 
-  // TODO: add a floating UI tooltip to each collectible icon - use Loopspeed nav for reference
-
   return (
-    <section
-      ref={ref}
-      className="pointer-events-none fixed inset-x-0 top-0 z-100 flex items-center justify-center gap-2 p-6 opacity-0">
+    <>
       {/* Rings/Coins */}
       <div
         className={twJoin(
@@ -36,13 +28,13 @@ const Collectibles: FC<Props> = ({ ref }) => {
         )}>
         {collectedRingCount}
       </div>
-
+      {/* Collectibles */}
       {COLLECTIBLE_TYPES.map((type, index) => {
         return (
           <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(type)} />
         )
       })}
-    </section>
+    </>
   )
 }
 
@@ -80,7 +72,7 @@ const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
           data-status={status}
           {...getFloatingProps()}
           className={twJoin(
-            'border-teal-light/15 absolute z-50 flex w-fit origin-top flex-col gap-5 overflow-hidden rounded-xl border bg-black p-6 whitespace-nowrap',
+            'absolute z-50 flex w-fit origin-top flex-col gap-5 overflow-hidden rounded-xl border bg-black p-6 whitespace-nowrap',
             // Transition states
             'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
             'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',

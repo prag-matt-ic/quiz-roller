@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { Vector3, type Vector3Tuple } from 'three'
 import { type StateCreator } from 'zustand'
-import { CollectibleType } from '@/model/schema'
+import { CollectibleType, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
 
 export enum Stage {
@@ -33,23 +33,24 @@ export type HudIndicatorConfig = {
 export type RingIndex = [row: number, column: number]
 export type RingCollection = Record<string, true>
 
-export interface TimeSlice {
+export type SpeedRunStage = 'username' | 'countdown' | 'running' | 'submitting' | 'leaderboard'
+
+export type TimeSlice = {
   totalTimeS: number // total time spent in the experience in seconds (persisted)
   setTotalTimeS: (seconds: number) => void
 
   isSpeedRunMode: boolean
-  startSpeedRun: () => void
+  speedRunStage: SpeedRunStage
+  setSpeedRunStage: (stage: SpeedRunStage) => void
+  startSpeedRun: () => void // Sets mode, sets status to countdown
+  onCountdownComplete: () => void // sets status to running
+  finishSpeedRun: () => void // sets status to finished, submits speedrun and shows leaderboard
   stopSpeedRun: () => void
-  restartSpeedRun: () => void
-  finishSpeedRun: () => void
 
   speedRunTimeCS: number // current speed run duration in 10 milliseconds (centi-seconds)
   setSpeedRunTimeCS: (centiSeconds: number) => void
 
-  isSpeedRunTiming: boolean
-  setIsSpeedRunTiming: (isTiming: boolean) => void
-
-  completedSpeedRuns: { speedRunTimeCS: number; date: string }[]
+  completedSpeedRuns: SpeedRunDatabase[]
 }
 
 export type PlayerSlice = {
@@ -101,7 +102,13 @@ export type GameSlice = {
   setCameraLookAtPosition: (pos: Vector3 | null) => void
 
   resetPlatformTick: number
-  resetGame: () => void
+  resetGame: ({
+    isSpeedRunMode,
+    speedRunStage,
+  }: {
+    isSpeedRunMode: boolean
+    speedRunStage?: SpeedRunStage
+  }) => void
 
   _isHydrated: boolean
   setHydrated: () => void
@@ -114,9 +121,4 @@ export type SliceDeps = {
   stopSoundFX: (fx: SoundFX) => void
 }
 
-export type GameSliceCreator<T> = StateCreator<
-  GameStore,
-  [['zustand/persist', unknown]],
-  [],
-  T
->
+export type GameSliceCreator<T> = StateCreator<GameStore, [['zustand/persist', unknown]], [], T>

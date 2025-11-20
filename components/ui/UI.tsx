@@ -2,15 +2,15 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { RotateCcw, X } from 'lucide-react'
-import { type FC, Suspense, useRef, useState } from 'react'
-import { Transition } from 'react-transition-group'
+import { type FC, Ref, Suspense, useRef } from 'react'
+import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 
 import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
 import Collectibles from '@/components/ui/Collectibles'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
-import { LiveTimeDisplay } from './TimeDisplay'
+import { SpeedRunTimeDisplay } from './TimeDisplay'
 import { twJoin } from 'tailwind-merge'
 import { SpeedrunLeaderboard } from './SpeedrunLeaderboard'
 
@@ -21,179 +21,248 @@ type Props = {
 }
 
 const UI: FC<Props> = ({ isMobile }) => {
-  const collectibles = useRef<HTMLDivElement>(null)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
-  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
-  const restartSpeedRun = useGameStore((s) => s.restartSpeedRun)
 
-  useGSAP(
-    () => {
-      gsap.fromTo(
-        collectibles.current,
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.4, delay: 2, ease: 'power2.out' },
-      )
-    },
-    { dependencies: [] },
-  )
+  const speedRunStatus = useGameStore((s) => s.speedRunStage)
+
+  const showLeaderboard = isSpeedRunMode && speedRunStatus === 'leaderboard'
+  const showSpeedRunOverlay =
+    isSpeedRunMode && ['countdown', 'username'].includes(speedRunStatus)
+
+  const infoContainer = useRef<HTMLDivElement>(null)
+  const speedRunOverlay = useRef<HTMLDivElement>(null)
 
   return (
     <>
       <Controls isMobile={isMobile} />
       <ProgressBar />
-      <Suspense fallback={<div>Loading...</div>}>
-        {' '}
-        {/* spinning gem loader? */}
-        <SpeedrunLeaderboard />
-      </Suspense>
 
-      {/* TODO: SwitchTransition between collectibles and speedrun   hud. */}
-      <Collectibles ref={collectibles} />
+      {/* TODO: skeleton table with flashing loading state. Export the skeleton from SpeedrunLeaderboard, using same width, grid layout etc. */}
+      {showLeaderboard && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <SpeedrunLeaderboard />
+        </Suspense>
+      )}
+
+      {/* Top Info */}
+      <SwitchTransition>
+        <Transition
+          key={isSpeedRunMode ? 'timer' : 'collectibles'}
+          timeout={{ enter: 0, exit: 240 }}
+          appear={true}
+          nodeRef={infoContainer}>
+          {(status: TransitionStatus) => {
+            return (
+              <section
+                ref={infoContainer}
+                className={twJoin(
+                  'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-center justify-center gap-2 border p-6 opacity-0 transition-opacity duration-200',
+                  status === 'exiting' && 'opacity-0',
+                  status === 'entering' && 'opacity-100',
+                  status === 'entered' && 'opacity-100',
+                )}>
+                {isSpeedRunMode ? <SpeedrunTimer /> : <Collectibles />}
+              </section>
+            )
+          }}
+        </Transition>
+      </SwitchTransition>
+
       <AudioToggle />
 
       <button
         type="button"
-        className="pointer-events-auto fixed top-6 right-6 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30"
-        onClick={isSpeedRunMode ? stopSpeedRun : startSpeedRun}>
-        {isSpeedRunMode ? 'End Speedroll' : 'Begin Speedroll'}
+        className="pointer-events-auto fixed top-6 right-24 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30"
+        onClick={startSpeedRun}>
+        Start Speedrun
       </button>
 
-      {isSpeedRunMode && <SpeedRunHUD onRestart={restartSpeedRun} onStop={stopSpeedRun} />}
+      <Transition
+        in={showSpeedRunOverlay}
+        timeout={{ enter: 0, exit: 240 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={speedRunOverlay}>
+        {(status) => <SpeedrunOverlay ref={speedRunOverlay} transitionStatus={status} />}
+      </Transition>
+
+      {isSpeedRunMode && speedRunStatus === 'running' && <SpeedRunControls />}
     </>
   )
 }
 
 export default UI
 
-type SpeedRunHUDProps = {
-  onRestart: () => void
-  onStop: () => void
-}
-
-const SpeedRunHUD: FC<SpeedRunHUDProps> = ({ onRestart, onStop }) => {
-  const [isShowingCountdown, setIsShowingCountdown] = useState(true)
-  const setIsSpeedRunTiming = useGameStore((s) => s.setIsSpeedRunTiming)
-  const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
-
-  const countdownContainer = useRef<HTMLDivElement>(null)
-
-  // TODO: add name input, limit to 12 chars.
-
+const SpeedrunTimer: FC = () => {
+  const speedRunStatus = useGameStore((s) => s.speedRunStage)
+  const isAmber = speedRunStatus === 'countdown' || speedRunStatus === 'username'
+  const isFinished = speedRunStatus === 'submitting' || speedRunStatus === 'leaderboard'
   return (
-    <>
-      <section className="pointer-events-auto fixed inset-x-4 bottom-0 z-200">
-        <div className="mx-auto flex w-fit flex-col gap-3 rounded-t-xl bg-black/80 p-3 text-white backdrop-blur select-none">
-          <div className="flex items-center justify-between">
-            <div
-              className={twJoin('size-3', isShowingCountdown ? 'bg-amber-400' : 'bg-green-500')}
-            />
-            <h3 className="text-xs tracking-[0.3em] text-white/70 uppercase">Speedroll</h3>
-          </div>
-
-          <div className="flex h-12 gap-3">
-            <button
-              type="button"
-              className="flex size-12 h-full items-center justify-center rounded bg-amber-400/50 text-white transition hover:bg-white/20"
-              onClick={onRestart}
-              title="Restart">
-              <RotateCcw size={24} />
-            </button>
-
-            <div className="relative flex items-center overflow-hidden rounded-md bg-white/8 p-2">
-              <LiveTimeDisplay className="font-mono text-4xl leading-none font-semibold" />
-            </div>
-
-            <button
-              type="button"
-              className="flex size-12 items-center justify-center rounded bg-red-600/50 text-white transition hover:bg-red-500/50"
-              onClick={onStop}
-              title="Cancel">
-              <X size={24} />
-            </button>
-
-            <button type="button" onClick={finishSpeedRun}>
-              FINISH!!!
-            </button>
-          </div>
-        </div>
-      </section>
-      <Transition
-        in={isShowingCountdown}
-        timeout={{ enter: 0, exit: 200 }}
-        nodeRef={countdownContainer}
-        appear={true}
-        // onEnter={() => {
-        //   gsap
-        //     .timeline({
-        //       onComplete: () => {
-        //         // Start the timer.
-        //         setIsSpeedRunTiming(true)
-        //         setIsShowingCountdown(false)
-        //       },
-        //     })
-        //     .fromTo(countdownContainer.current, { opacity: 0 }, { opacity: 1 })
-        //     .set('#countdown-3', { opacity: 1 })
-        //     .to('#countdown-3-span', {
-        //       opacity: 0,
-        //       duration: 1.0,
-        //       ease: 'linear',
-        //     })
-        //     .set('#countdown-3', { opacity: 0 })
-        //     .set('#countdown-2', { opacity: 1 })
-        //     .to('#countdown-2-span', {
-        //       opacity: 0,
-        //       duration: 1.0,
-        //       ease: 'linear',
-        //     })
-        //     .set('#countdown-2', { opacity: 0 })
-        //     .set('#countdown-1', { opacity: 1 })
-        //     .to('#countdown-1-span', {
-        //       opacity: 0,
-        //       duration: 1.0,
-        //       ease: 'linear',
-        //     })
-        //     .set('#countdown-1', { opacity: 0 })
-        // }}
-        mountOnEnter
-        unmountOnExit>
-        {(status) => (
-          <div
-            ref={countdownContainer}
-            data-status={status}
-            className="fixed inset-0 z-100 flex size-full flex-col items-center justify-center gap-6 bg-black/90 text-center backdrop-blur-sm">
-            <span className="text-3xl font-semibold">GET READY</span>
-            <div className="relative flex items-center justify-center p-10">
-              <CountdownNumber id="countdown-3" overlayId="countdown-3-span" number={3} />
-              <CountdownNumber id="countdown-2" overlayId="countdown-2-span" number={2} />
-              <CountdownNumber id="countdown-1" overlayId="countdown-1-span" number={1} />
-            </div>
-            <button
-              className="pointer-events-auto z-10000 text-xl font-bold"
-              onClick={() => {
-                setIsShowingCountdown(false)
-                setIsSpeedRunTiming(true)
-              }}>
-              START
-            </button>
-          </div>
-        )}
-      </Transition>
-    </>
+    <div className="flex flex-col items-center gap-2 overflow-hidden">
+      <div className="flex items-center gap-3">
+        <div
+          className={twJoin(
+            'size-2.5',
+            isAmber ? 'bg-amber-400' : isFinished ? 'bg-white' : 'bg-green-500',
+          )}
+        />
+        <h2 className="text-xs tracking-widest text-white/60 uppercase">Speedroll</h2>
+      </div>
+      <SpeedRunTimeDisplay className="font-mono text-4xl leading-none font-semibold tracking-tight sm:text-5xl" />
+    </div>
   )
 }
 
-const CountdownNumber: FC<{ id: string; overlayId: string; number: number }> = ({
-  id,
-  overlayId,
-  number,
-}) => {
+const SpeedRunControls: FC = () => {
+  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
+  const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
+  return (
+    <div className="fixed bottom-0 left-0 mx-auto flex justify-center select-none">
+      <div className="flex gap-3 rounded-t-xl bg-black/80 p-3">
+        <button
+          type="button"
+          className="flex size-12 items-center justify-center rounded bg-red-500/50 text-white transition hover:bg-red-500/70"
+          onClick={stopSpeedRun}
+          title="Cancel">
+          <X size={28} strokeWidth={2} />
+        </button>
+
+        <button
+          type="button"
+          className="flex size-12 h-full items-center justify-center rounded bg-amber-400/50 text-white transition hover:bg-amber-400/70"
+          onClick={startSpeedRun}
+          title="Restart">
+          <RotateCcw size={28} strokeWidth={2} />
+        </button>
+
+        <button type="button" onClick={finishSpeedRun}>
+          FINISH!!!
+        </button>
+      </div>
+    </div>
+  )
+}
+
+type SpeedrunOverlayProps = {
+  ref: Ref<HTMLDivElement>
+  transitionStatus: TransitionStatus
+}
+
+// Overlay handles the countdown and name input if needed.
+const SpeedrunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatus }) => {
+  const username = useGameStore((s) => s.username)
+  const setSpeedRunStage = useGameStore((s) => s.setSpeedRunStage)
+  const speedRunStage = useGameStore((s) => s.speedRunStage)
+  const setUsername = useGameStore((s) => s.setUsername)
+
+  const onCountdownComplete = useGameStore((s) => s.onCountdownComplete)
+
+  const showUsernameInput = speedRunStage === 'username'
+  const showCountdown = speedRunStage === 'countdown'
+  const switchKey = `${showUsernameInput}-${showCountdown}`
+
+  const contentContainer = useRef<HTMLDivElement>(null)
+
+  function animateCountdown() {
+    gsap
+      .timeline({
+        defaults: { ease: 'linear' },
+        onComplete: () => {
+          onCountdownComplete()
+        },
+      })
+      .set('#countdown-3', { opacity: 1 })
+      .to('#countdown-3', {
+        opacity: 0,
+        duration: 1.0,
+      })
+      .set('#countdown-2', { opacity: 1 })
+      .to('#countdown-2', {
+        opacity: 0,
+        duration: 1.0,
+      })
+      .set('#countdown-1', { opacity: 1 })
+      .to('#countdown-1', {
+        opacity: 0,
+        duration: 1.0,
+      })
+  }
+
+  const usernameInput = useRef<HTMLInputElement>(null)
+
+  const onContentEnter = () => {
+    if (showCountdown) {
+      animateCountdown()
+    } else {
+      // focus the input
+      setTimeout(() => {
+        usernameInput.current?.focus()
+      }, 50)
+    }
+  }
+
+  const countdown = (
+    <div className="relative flex items-center justify-center">
+      <CountdownNumber id="countdown-3" number={3} />
+      <CountdownNumber id="countdown-2" number={2} />
+      <CountdownNumber id="countdown-1" number={1} />
+    </div>
+  )
+
+  const usernameForm = (
+    <input
+      ref={usernameInput}
+      id="username-input"
+      className="bg-black px-4 py-3 text-left text-3xl font-bold outline-none placeholder:text-white/60 focus:ring focus:ring-amber-400"
+      maxLength={12}
+      defaultValue={username ?? ''}
+      placeholder="enter a username"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          const value = e.currentTarget.value.trim()
+          if (!value) return
+          if (value.length === 0) return
+          setUsername(value)
+          setSpeedRunStage('countdown')
+        }
+      }}
+    />
+  )
+
+  return (
+    <div
+      ref={ref}
+      className={twJoin(
+        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-black/97 transition-opacity duration-200',
+        transitionStatus === 'entered' && 'opacity-100',
+        transitionStatus === 'exiting' && 'opacity-0',
+        transitionStatus === 'exited' && 'opacity-0',
+      )}>
+      <SwitchTransition>
+        <Transition
+          key={switchKey}
+          timeout={{ enter: 0, exit: 200 }}
+          nodeRef={contentContainer}
+          appear={true}
+          onEnter={onContentEnter}
+          mountOnEnter
+          unmountOnExit>
+          {(status) => (
+            <div ref={contentContainer}>{showCountdown ? countdown : usernameForm}</div>
+          )}
+        </Transition>
+      </SwitchTransition>
+    </div>
+  )
+}
+
+const CountdownNumber: FC<{ id: string; number: number }> = ({ id, number }) => {
   return (
     <div id={id} className="absolute text-[120px] font-black opacity-0">
-      <span className="relative opacity-10">3</span>
-      <span id={overlayId} className="absolute inset-0 opacity-100">
-        {number}
-      </span>
+      {number}
     </div>
   )
 }

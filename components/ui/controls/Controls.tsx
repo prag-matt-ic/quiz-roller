@@ -28,12 +28,17 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
 }
 
 const Keys: FC = () => {
+  const isSpeedRunOverlay = useGameStore(
+    (s) => s.speedRunStage === 'username' || s.speedRunStage === 'countdown',
+  )
   const playerInput = useGameStore((s) => s.playerInput)
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 
   const input = useRef<PlayerInput>(playerInput)
 
   useEffect(() => {
+    if (isSpeedRunOverlay) return
+
     const updateInput = (key: keyof PlayerInput, value: number) => {
       if (input.current[key] === value) return
       const nextInput = { ...input.current, [key]: value }
@@ -99,7 +104,7 @@ const Keys: FC = () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [setPlayerInput])
+  }, [isSpeedRunOverlay, setPlayerInput])
 
   return (
     <aside className="pointer-events-none fixed right-4 bottom-3 z-1000 grid w-fit grid-cols-3 gap-0.5">
@@ -123,11 +128,13 @@ const Controls: FC<Props> = ({ isMobile }) => {
 }
 
 const Stick: FC = () => {
+  const isSpeedRunCountdown = useGameStore((s) => s.speedRunStage === 'countdown')
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
   const JOYSTICK_LEVELS = 10
 
   const onJoystickMove = useCallback(
     (e: OnJoystickMove) => {
+      if (isSpeedRunCountdown) return
       setPlayerInput({
         up: e.leveledY > 0 ? Math.min(e.leveledY / JOYSTICK_LEVELS, 1) : 0,
         down: e.leveledY < 0 ? Math.min(-e.leveledY / JOYSTICK_LEVELS, 1) : 0,
@@ -135,7 +142,7 @@ const Stick: FC = () => {
         right: e.leveledX > 0 ? Math.min(e.leveledX / JOYSTICK_LEVELS, 1) : 0,
       })
     },
-    [setPlayerInput],
+    [isSpeedRunCountdown, setPlayerInput],
   )
 
   return (

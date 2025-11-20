@@ -5,12 +5,12 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
-import { SpeedRunSubmission } from '@/model/schema'
+import { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
-  submitSpeedRun: (data: SpeedRunSubmission) => void,
+  submitSpeedRun: (data: SpeedRunSubmission) => Promise<SpeedRunDatabase | null>,
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
@@ -29,7 +29,6 @@ export const createGameStore = (
           }),
           version: 1,
           onRehydrateStorage: () => (state) => {
-            console.log('Rehydrating store...')
             state?.setHydrated()
           },
         } as PersistOptions<

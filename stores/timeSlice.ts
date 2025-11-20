@@ -1,16 +1,21 @@
-import type { GameSliceCreator, TimeSlice } from './types'
-import { SpeedRunSubmission } from '@/model/schema'
+import type { GameSliceCreator, SpeedRunStage, TimeSlice } from './types'
+import { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
 
-export const INITIAL_TIME_STATE = {
+export const INITIAL_TIME_STATE: Pick<
+  TimeSlice,
+  'totalTimeS' | 'speedRunTimeCS' | 'isSpeedRunMode' | 'completedSpeedRuns' | 'speedRunStage'
+> = {
   totalTimeS: 0,
   speedRunTimeCS: 0,
-  isSpeedRunTiming: false,
   isSpeedRunMode: false,
   completedSpeedRuns: [],
+  speedRunStage: 'username',
 }
 
 export const createTimeSlice =
-  (submitSpeedRun: (data: SpeedRunSubmission) => void): GameSliceCreator<TimeSlice> =>
+  (
+    submitSpeedRun: (data: SpeedRunSubmission) => Promise<SpeedRunDatabase | null>,
+  ): GameSliceCreator<TimeSlice> =>
   (set, get) => ({
     ...INITIAL_TIME_STATE,
     setTotalTimeS: (seconds: number) => {
@@ -19,38 +24,31 @@ export const createTimeSlice =
     setSpeedRunTimeCS: (centiSeconds: number) => {
       set({ speedRunTimeCS: centiSeconds })
     },
-    setIsSpeedRunTiming: (isTiming) => {
-      set({ isSpeedRunTiming: isTiming })
+    setSpeedRunStage: (stage: SpeedRunStage) => {
+      set({ speedRunStage: stage })
     },
     startSpeedRun: () => {
-      if (get().isSpeedRunMode) return
-      get().resetGame()
+      const { username, resetGame } = get()
+      console.warn('Starting speedrun...', { username })
+      resetGame({ isSpeedRunMode: true, speedRunStage: !!username ? 'countdown' : 'username' })
+    },
+    onCountdownComplete: () => {
       set({
-        isSpeedRunMode: true,
-        speedRunTimeCS: 0,
-        isSpeedRunTiming: false,
+        speedRunStage: 'running',
       })
     },
     stopSpeedRun: () => {
       if (!get().isSpeedRunMode) return
-      set({ isSpeedRunMode: false, isSpeedRunTiming: false })
-      get().resetGame()
+      get().resetGame({ isSpeedRunMode: false })
     },
-    restartSpeedRun: () => {
-      if (!get().isSpeedRunMode) {
-        get().startSpeedRun()
-        return
-      }
-      get().resetGame()
-      set({
-        isSpeedRunMode: true,
-        speedRunTimeCS: 0,
-        isSpeedRunTiming: false,
-      })
-    },
-    finishSpeedRun: () => {
+    finishSpeedRun: async () => {
       const { speedRunTimeCS, username, completedSpeedRuns } = get()
+
+      console.warn('Finishing speedrun...', { username, speedRunTimeCS })
+
       if (!username) return
+
+      set({ speedRunStage: 'submitting' })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
 
@@ -61,14 +59,18 @@ export const createTimeSlice =
         date: new Date().toISOString(),
       }
 
-      submitSpeedRun(submission)
-
-      set((state) => ({
-        completedSpeedRuns: [
-          ...state.completedSpeedRuns,
-          { speedRunTimeCS, date: submission.date },
-        ],
-        isSpeedRunTiming: false,
-      }))
+      try {
+        console.log('Submitting speedrun...', submission)
+        const result = await submitSpeedRun(submission)
+        if (!result) throw new Error('Submission failed')
+        console.log('Speedrun submitted successfully:', result)
+        set((state) => ({
+          completedSpeedRuns: [...state.completedSpeedRuns, result],
+          speedRunStage: 'leaderboard',
+        }))
+      } catch (error) {
+        console.error('Error submitting speedrun:', error)
+        set({ speedRunStage: 'leaderboard' })
+      }
     },
   })

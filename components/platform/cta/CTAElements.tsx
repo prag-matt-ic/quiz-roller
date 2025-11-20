@@ -5,7 +5,7 @@ import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaSection'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { Trophy } from 'lucide-react'
-import TimeDisplay from '@/components/ui/TimeDisplay'
+import CTATimeDisplay from '@/components/ui/TimeDisplay'
 import Card from '@/components/ui/Card'
 
 export type CTAElementsHandle = {
@@ -82,7 +82,7 @@ const CTAElements: FC<Props> = ({ ref }) => {
         infoContainerClassName="w-[328px] sm:w-[450px]"
         Icon={Trophy}>
         <Card className="w-full md:col-span-5" paletteIndex={0}>
-          <TimeDisplay />
+          <CTATimeDisplay />
         </Card>
       </InfoZone>
     </>

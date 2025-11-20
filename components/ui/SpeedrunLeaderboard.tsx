@@ -1,7 +1,8 @@
 'use client'
-import { type FC, useEffect, useState } from 'react'
+import { type FC, Fragment, useEffect, useState } from 'react'
 import { getSpeedrunData } from '@/app/actions'
 
+// TODO: import the type from the schema rather than redefining it here
 type SpeedrunEntry = {
   username: string
   time: number
@@ -11,7 +12,7 @@ type SpeedrunEntry = {
 
 export const SpeedrunLeaderboard: FC = () => {
   const [speedruns, setSpeedruns] = useState<SpeedrunEntry[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // TODO: booleans should be named isLoading
 
   useEffect(() => {
     let mounted = true
@@ -32,8 +33,10 @@ export const SpeedrunLeaderboard: FC = () => {
     return <div className="w-full text-center">Loading...</div>
   }
 
+  // TODO: highlight the current user's entries if present
+
   return (
-    <div className="absolute top-20 left-8 w-1/2 border-2 border-red-600 px-4 py-2">
+    <div className="fixed top-32 left-0 w-sm max-w-full border-2 border-red-600">
       <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2">
         {/* Header */}
         <div className="text-center font-bold">#</div>
@@ -45,14 +48,14 @@ export const SpeedrunLeaderboard: FC = () => {
 
         {/* Rows */}
         {speedruns.map((entry, index) => (
-          <>
+          <Fragment key={index}>
             <div className="text-center font-semibold">{index + 1}</div>
             <div className="">{entry.username}</div>
             <div className="text-right tabular-nums">{entry.time.toFixed(2)}s</div>
             <div className="text-center">{entry.flag || '-'}</div>
             <div className="">{entry.country || '?'}</div>
-            <div className="col-span-full h-px bg-gray-300" />
-          </>
+            <div className="col-span-full h-px bg-gray-300/20" />
+          </Fragment>
         ))}
       </div>
     </div>

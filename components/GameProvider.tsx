@@ -4,7 +4,7 @@ import { useStore } from 'zustand'
 import { useSoundStore } from '@/components/SoundProvider'
 import { createGameStore } from '@/stores/createGameStore'
 import { GameStore } from '@/stores/types'
-import { SpeedRunSubmission } from '@/model/schema'
+import { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
 
 // Re-export types for backward compatibility
 export {
@@ -20,7 +20,7 @@ export { PLAYER_INITIAL_POSITION, PLAYER_INITIAL_POSITION_VEC3 } from '@/stores/
 const GameContext = createContext<ReturnType<typeof createGameStore>>(undefined!)
 
 type Props = PropsWithChildren<{
-  submitSpeedRun: (data: SpeedRunSubmission) => void
+  submitSpeedRun: (data: SpeedRunSubmission) => Promise<SpeedRunDatabase | null>
 }>
 
 export const GameProvider: FC<Props> = ({ children, submitSpeedRun }) => {
