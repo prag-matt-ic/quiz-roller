@@ -57,7 +57,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   }, [maxDPR])
 
   const { homeBitmap, infoBitmaps, obstaclesBitmaps, speedRunBitmap, ctaBitmap } =
-    usePlatformBitmaps()
+    usePlatformLayout()
 
   return (
     <Canvas
@@ -113,13 +113,17 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
 export default Game
 
-function usePlatformBitmaps() {
+function usePlatformLayout() {
   const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
   const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
   const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
   const [speedRunBitmap, setSpeedRunBitmap] = useState<HTMLImageElement | null>(null)
   const [ctaBitmap, setCtaBitmap] = useState<HTMLImageElement | null>(null)
 
+  // TODO: rework this so that 'parseSectionBitmap' is called here, and the resulting  'SectionBitmapLayout' is set into state.
+  // Then pass the layout data into Platform instead of the raw bitmap.
+  // This will be more performant as the bitmap parsing will only happen once.
+  // This will also allow the layout data to be used inside floating tiles - so their positions can fill the void areas.
   useEffect(() => {
     let isMounted = true
 
