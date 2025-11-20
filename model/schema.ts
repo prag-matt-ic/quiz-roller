@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export type PlayerUserData = {
   type: 'player'
 }
@@ -38,3 +40,11 @@ export type RigidBodyUserData =
   | CollectibleUserData
   | InfoZoneUserData
   | CtaZoneUserData
+
+export const speedrunSchema = z.object({
+  name: z.string().min(3),
+  time: z.number(),
+  date: z.string(),
+  ip: z.string(),
+  country: z.string().length(2).nullable(),
+})
