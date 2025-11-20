@@ -2,6 +2,7 @@ import { RapierRigidBody } from '@react-three/rapier'
 import {
   type FC,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   type RefObject,
@@ -28,6 +29,7 @@ export type InfoElementsHandle = {
 
 type Props = {
   ref: RefObject<InfoElementsHandle | null>
+  onReadyChange: (isReady: boolean) => void
 }
 
 const INITIAL_INFO_POSITION = {
@@ -35,7 +37,7 @@ const INITIAL_INFO_POSITION = {
   Z: -999,
 } as const
 
-const InfoElements: FC<Props> = ({ ref }) => {
+const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 }) // reusable object for translations
 
   const heading = useRef<Mesh>(null)
@@ -146,6 +148,13 @@ const InfoElements: FC<Props> = ({ ref }) => {
       hideElementsIfNeeded,
     }
   }, [moveElements, positionElementsIfNeeded, hideElementsIfNeeded])
+
+  useEffect(() => {
+    onReadyChange(true)
+    return () => {
+      onReadyChange(false)
+    }
+  }, [onReadyChange])
 
   return (
     <>

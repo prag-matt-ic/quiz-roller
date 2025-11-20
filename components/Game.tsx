@@ -49,48 +49,15 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
-  const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
-  const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
-  const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
-  const [speedRunBitmap, setSpeedRunBitmap] = useState<HTMLImageElement | null>(null)
-  const [ctaBitmap, setCtaBitmap] = useState<HTMLImageElement | null>(null)
-
-  useEffect(() => {
-    let isMounted = true
-
-    loadHtmlImage([
-      homeTexture.src,
-      ...INFO_BITMAP_TEXTURES,
-      ...OBSTACLE_BITMAP_TEXTURES,
-      speedRunTexture.src,
-      ctaTexture.src,
-    ]).then((images) => {
-      if (!isMounted) return
-      let idx = 0
-      setHomeBitmap(images[idx++])
-
-      setInfoBitmaps(images.slice(idx, idx + INFO_BITMAP_TEXTURES.length))
-      idx += INFO_BITMAP_TEXTURES.length
-
-      setObstaclesBitmaps(images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length))
-      idx += OBSTACLE_BITMAP_TEXTURES.length
-
-      setSpeedRunBitmap(images[idx])
-      idx++
-
-      setCtaBitmap(images[idx])
-    })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   const dpr = useMemo<number>(() => {
     if (typeof window === 'undefined') return 1
     if (!!maxDPR) return Math.min(window.devicePixelRatio ?? 1, maxDPR)
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
+
+  const { homeBitmap, infoBitmaps, obstaclesBitmaps, speedRunBitmap, ctaBitmap } =
+    usePlatformBitmaps()
 
   return (
     <Canvas
@@ -109,7 +76,6 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       gl={{
         alpha: false,
         antialias: !isMobile,
-        toneMappingExposure: 0.2,
         powerPreference: 'high-performance',
       }}>
       <PerformanceMonitor
@@ -146,3 +112,43 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 }
 
 export default Game
+
+function usePlatformBitmaps() {
+  const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
+  const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
+  const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
+  const [speedRunBitmap, setSpeedRunBitmap] = useState<HTMLImageElement | null>(null)
+  const [ctaBitmap, setCtaBitmap] = useState<HTMLImageElement | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    loadHtmlImage([
+      homeTexture.src,
+      ...INFO_BITMAP_TEXTURES,
+      ...OBSTACLE_BITMAP_TEXTURES,
+      speedRunTexture.src,
+      ctaTexture.src,
+    ]).then((images) => {
+      if (!isMounted) return
+      let idx = 0
+      setHomeBitmap(images[idx++])
+
+      setInfoBitmaps(images.slice(idx, idx + INFO_BITMAP_TEXTURES.length))
+      idx += INFO_BITMAP_TEXTURES.length
+
+      setObstaclesBitmaps(images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length))
+      idx += OBSTACLE_BITMAP_TEXTURES.length
+
+      setSpeedRunBitmap(images[idx])
+      idx++
+
+      setCtaBitmap(images[idx])
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+  return { homeBitmap, infoBitmaps, obstaclesBitmaps, speedRunBitmap, ctaBitmap }
+}

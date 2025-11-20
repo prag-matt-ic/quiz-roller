@@ -1,14 +1,14 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, useEffect, useRef, useState } from 'react'
+import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 
 import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
-import { PlatformTiles, type InstancedTilesHandle } from '@/components/platform/tiles/Tiles'
+import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import CTAElements, { type CTAElementsHandle } from '@/components/platform/cta/CTAElements' // changed from lowercase and wont allow name CTAElements
-import RingElements, { type RingElementsHandle } from '@/components/platform/rings/Rings'
+import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
@@ -100,6 +100,8 @@ const Platform: FC<Props> = ({
 }) => {
   const gameStore = useGameStoreAPI()
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
+  const isPlatformReady = useGameStore((s) => s.isPlatformReady)
+  const setPlatformReady = useGameStore((s) => s.setPlatformReady)
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
   const setTotalRows = useGameStore((s) => s.setTotalRows)
@@ -110,10 +112,6 @@ const Platform: FC<Props> = ({
   const { input: playerInput } = usePlayerInput()
   const { playerPosition } = usePlayerPosition()
 
-  const instancedTilesRef = useRef<InstancedTilesHandle>(null)
-  const [tileInstances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
-  const hasInitialized = useRef(false)
-
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
   const baseZByRow = useRef<number[]>([])
@@ -123,11 +121,6 @@ const Platform: FC<Props> = ({
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
 
-  // Per-instance GPU attributes
-  const instanceSeed = useRef<Float32Array | null>(null)
-  const instanceVisibility = useRef<Float32Array | null>(null)
-  const instanceIsHighlighted = useRef<Float32Array | null>(null)
-
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Precomputed row sequence
@@ -136,11 +129,39 @@ const Platform: FC<Props> = ({
   const activeRowsData = useRef<RowData[]>([])
   const nextAbsoluteRowIndex = useRef(0)
 
+  const tilesHandle = useRef<TilesHandle | null>(null)
   const homeElements = useRef<HomeElementsHandle | null>(null)
   const infoElements = useRef<InfoElementsHandle | null>(null)
   const ctaElements = useRef<CTAElementsHandle | null>(null)
-  const ringElements = useRef<RingElementsHandle | null>(null)
-  const pendingRingPlacements = useRef<Map<number, number>>(new Map())
+  const ringsHandle = useRef<RingsHandle | null>(null)
+
+  const [readyState, setReadyState] = useState({
+    tiles: false,
+    rings: false,
+    home: false,
+    info: false,
+    cta: false,
+  })
+
+  const onTilesReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, tiles: isReady }))
+  }, [])
+
+  const onRingsReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, rings: isReady }))
+  }, [])
+
+  const onHomeElementsReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, home: isReady }))
+  }, [])
+
+  const onInfoElementsReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, info: isReady }))
+  }, [])
+
+  const onCtaElementsReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, cta: isReady }))
+  }, [])
 
   const appendRowsWithIndices = (rows: RowData[]) => {
     // Ensures rows have absolute rowIndex assigned
@@ -195,9 +216,22 @@ const Platform: FC<Props> = ({
   }
 
   useEffect(() => {
-    if (!homeBitmap || !infoBitmaps.length) return
+    if (!homeBitmap || !infoBitmaps.length) return // TODO: add a check for all bitmaps.
+    if (Object.values(readyState).some((v) => v === false)) return
 
-    function setupInitialRowsAndInstances() {
+    if (!tilesHandle.current) {
+      console.error('[Platform] Missing tiles handle when initializing platform.')
+      return
+    }
+
+    const tiles = tilesHandle.current
+
+    console.log('[Platform] Initializing platform rows and tiles.', {
+      areTilesReady: readyState.tiles,
+      tiles,
+    })
+
+    function setupInitialRowsAndTiles() {
       // Reset state
       rowsData.current = []
       nextAbsoluteRowIndex.current = 0
@@ -210,7 +244,6 @@ const Platform: FC<Props> = ({
       xByBodyIndex.current = []
       yByBodyIndex.current = []
       currentScrollPosition.current = 0
-      pendingRingPlacements.current.clear()
 
       insertHomeRows()
       insertObstacleRows(0)
@@ -229,11 +262,7 @@ const Platform: FC<Props> = ({
 
       setTotalRows(nextAbsoluteRowIndex.current)
 
-      const instances: InstancedRigidBodyProps[] = []
-      const totalInstances = ROWS_RENDERED * COLUMNS
-      instanceVisibility.current = new Float32Array(totalInstances)
-      instanceSeed.current = new Float32Array(totalInstances)
-      instanceIsHighlighted.current = new Float32Array(totalInstances)
+      const tileInstances: InstancedRigidBodyProps[] = []
 
       const playerZ = playerPosition.current.z
       const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
@@ -248,6 +277,15 @@ const Platform: FC<Props> = ({
       warnVisibilityCoverageIfNeeded()
 
       let nextRowZ = nextStartZ
+
+      const tilesVisibility = tiles.visibilityData
+      const tilesSeed = tiles.seedData
+      const tilesHighlighted = tiles.highlightedData
+
+      if (!tilesVisibility || !tilesSeed || !tilesHighlighted) {
+        console.error('[Platform] Missing tile instance attributes data.')
+        return
+      }
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
         const rowData = rowsData.current[rowIndex] ?? EMPTY_ROW_DATA
@@ -265,11 +303,11 @@ const Platform: FC<Props> = ({
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
 
-          instanceVisibility.current[bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
-          instanceSeed.current[bodyIndex] = Math.random()
-          instanceIsHighlighted.current[bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
+          tilesVisibility![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
+          tilesSeed![bodyIndex] = Math.random()
+          tilesHighlighted![bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
 
-          instances.push({
+          tileInstances.push({
             key: `tile-${rowIndex}-${columnIndex}`,
             position: [x, y, z],
             userData: { type: 'tile', rowIndex, colIndex: columnIndex },
@@ -279,42 +317,45 @@ const Platform: FC<Props> = ({
         nextRowZ -= TILE_SIZE
       }
 
-      setTileInstances(instances)
-      hasInitialized.current = true
+      tiles.setTileInstances(tileInstances)
+      setPlatformReady(true)
       nextRowDataIndex.current = ROWS_RENDERED
+      markInstanceAttributesDirty()
     }
 
-    setupInitialRowsAndInstances()
+    setupInitialRowsAndTiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, homeBitmap, infoBitmaps, speedRunBitmap, ctaBitmap])
+  }, [resetPlatformTick, homeBitmap, infoBitmaps, speedRunBitmap, ctaBitmap, readyState])
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA
+    const visibilityData = tilesHandle.current?.visibilityData
+    const highlightedData = tilesHandle.current?.highlightedData
+    if (!visibilityData || !highlightedData) return
     activeRowsData.current[rowIndex] = data
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
       const bodyIndex = rowIndex * COLUMNS + columnIndex
       const y = data.heights[columnIndex]
       yByBodyIndex.current[bodyIndex] = y
-      instanceVisibility.current![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
-      instanceIsHighlighted.current![bodyIndex] = data.isHighlighted?.[columnIndex] ?? 0
+      visibilityData[bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
+      highlightedData[bodyIndex] = data.isHighlighted?.[columnIndex] ?? 0
     }
   }
 
   function markInstanceAttributesDirty() {
-    if (instancedTilesRef.current?.visibilityAttribute) {
-      instancedTilesRef.current.visibilityAttribute.needsUpdate = true
+    if (tilesHandle.current?.visibilityAttribute) {
+      tilesHandle.current.visibilityAttribute.needsUpdate = true
     }
-    if (instancedTilesRef.current?.isHighlightedAttribute) {
-      instancedTilesRef.current.isHighlightedAttribute.needsUpdate = true
+    if (tilesHandle.current?.highlightedAttribute) {
+      tilesHandle.current.highlightedAttribute.needsUpdate = true
     }
   }
 
   function hideRowDecorations(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    pendingRingPlacements.current.delete(rowIndex)
-    ringElements.current?.hideElementsIfNeeded(row)
+    ringsHandle.current?.hideElementsIfNeeded(row)
     switch (row.type) {
       case 'info':
         infoElements.current?.hideElementsIfNeeded(row)
@@ -350,23 +391,8 @@ const Platform: FC<Props> = ({
   }
 
   const positionRingElements = (row: RowData, rowZ: number, rowIndex: number) => {
-    if (!ringElements.current?.isReady) {
-      pendingRingPlacements.current.set(rowIndex, rowZ)
-      return
-    }
-    ringElements.current.positionElementsIfNeeded(row, rowZ)
-    pendingRingPlacements.current.delete(rowIndex)
-  }
-
-  const flushPendingRingPlacements = () => {
-    if (!ringElements.current?.isReady) return
-    const entries = Array.from(pendingRingPlacements.current.entries())
-    for (const [rowIndexKey, rowZ] of entries) {
-      const row = activeRowsData.current[rowIndexKey]
-      if (!row) continue
-      ringElements.current.positionElementsIfNeeded(row, rowZ)
-      pendingRingPlacements.current.delete(rowIndexKey)
-    }
+    if (!ringsHandle.current) return
+    ringsHandle.current.positionElementsIfNeeded(row, rowZ)
   }
 
   function setInfoContentIndexForVisibleRow(rowIndex: number) {
@@ -488,7 +514,7 @@ const Platform: FC<Props> = ({
 
   function updateRowPositions(rowIndex: number, rowZ: number) {
     const firstBodyIndex = rowIndex * COLUMNS
-    const rigidBodies = instancedTilesRef.current?.rigidBodies
+    const rigidBodies = tilesHandle.current?.rigidBodies
     if (!rigidBodies) return
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
@@ -505,7 +531,7 @@ const Platform: FC<Props> = ({
   }
 
   function updateTiles(playerZ: number) {
-    if (!instancedTilesRef.current?.rigidBodies) return
+    if (!tilesHandle.current?.rigidBodies) return
     const cycleDistance = ROW_CYCLE_DISTANCE
     const maxZ = playerZ + ROW_VISIBILITY_HALF_SPAN
     const minZ = playerZ - ROW_VISIBILITY_HALF_SPAN
@@ -557,17 +583,17 @@ const Platform: FC<Props> = ({
   }
 
   useGameFrame((_, delta) => {
-    if (!hasInitialized.current) return
-    if (!instancedTilesRef.current?.shader) return
+    if (!isPlatformReady) return
+    if (!tilesHandle.current?.shader) return
     if (
       !homeElements.current ||
       !infoElements.current ||
       !ctaElements.current ||
-      !ringElements.current
+      !ringsHandle.current
     )
       return
 
-    instancedTilesRef.current.shader.uScrollZ = currentScrollPosition.current
+    tilesHandle.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
 
@@ -576,37 +602,48 @@ const Platform: FC<Props> = ({
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
 
-    if (pendingRingPlacements.current.size > 0) flushPendingRingPlacements()
-
     if (zStep === 0) return
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
     ctaElements.current.moveElements(zStep)
-    ringElements.current.moveElements(zStep)
+    ringsHandle.current.moveElements(zStep)
   })
 
-  if (!tileInstances.length) return null
+  useEffect(() => {
+    setPlatformReady(false)
+  }, [resetPlatformTick, setPlatformReady])
 
   return (
     <group>
       <PlatformTiles
-        ref={instancedTilesRef}
-        instances={tileInstances}
-        instanceVisibility={instanceVisibility.current!}
-        instanceSeed={instanceSeed.current!}
-        instanceIsHighlighted={instanceIsHighlighted.current!}
+        key={`${resetPlatformTick}-tiles`}
+        ref={tilesHandle}
+        onReadyChange={onTilesReadyChange}
       />
 
-      <RingElements ref={ringElements} key={`${resetPlatformTick}-rings`} />
+      <Rings
+        ref={ringsHandle}
+        key={`${resetPlatformTick}-rings`}
+        onReadyChange={onRingsReadyChange}
+      />
 
-      {/* Home Elements */}
-      <HomeElements ref={homeElements} key={`${resetPlatformTick}-home`} />
+      <HomeElements
+        ref={homeElements}
+        key={`${resetPlatformTick}-home`}
+        onReadyChange={onHomeElementsReadyChange}
+      />
 
-      {/* Info Section Elements */}
-      <InfoElements ref={infoElements} key={`${resetPlatformTick}-info`} />
+      <InfoElements
+        ref={infoElements}
+        key={`${resetPlatformTick}-info`}
+        onReadyChange={onInfoElementsReadyChange}
+      />
 
-      {/* If not speed-run: Show CTA Section */}
-      <CTAElements ref={ctaElements} key={`${resetPlatformTick}-cta`} />
+      <CTAElements
+        ref={ctaElements}
+        key={`${resetPlatformTick}-cta`}
+        onReadyChange={onCtaElementsReadyChange}
+      />
 
       {/* If speed-run: Show Speed Run Elements */}
     </group>

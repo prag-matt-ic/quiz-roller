@@ -34,6 +34,7 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import useGameFrame from '@/hooks/useGameFrame'
 import { Color } from 'three'
 import { makeRingKey } from '@/utils/rings'
+import { extend } from '@react-three/fiber'
 
 const MAX_RING_INSTANCES = 12
 const RING_MAJOR_RADIUS = 0.3
@@ -42,15 +43,10 @@ const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
 const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-export type RingElementsHandle = {
-  isReady: boolean
+export type RingsHandle = {
   moveElements: (zStep: number) => void
   positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
   hideElementsIfNeeded: (row: RowData | undefined) => void
-}
-
-type Props = {
-  ref: RefObject<RingElementsHandle | null>
 }
 
 type RingUniforms = {
@@ -65,18 +61,19 @@ const DEFAULT_UNIFORMS: RingUniforms = {
   uEmissive: new Color('#ffd43b'),
 }
 
-const RingMaterialShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
+const RingsShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
 
-const RingElements: FC<Props> = ({ ref }) => {
+const RingsShaderMaterial = extend(RingsShader)
+
+type Props = {
+  ref: RefObject<RingsHandle | null>
+  onReadyChange: (isReady: boolean) => void
+}
+
+const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   const collectedRings = useGameStore((s) => s.collectedRings)
   const onRingCollected = useGameStore((s) => s.onRingCollected)
   const ringConfig = usePerformanceStore((s) => s.sceneConfig.ring)
-
-  const material = useMemo(() => new RingMaterialShader(), [])
-
-  useEffect(() => {
-    return () => material.dispose()
-  }, [material])
 
   const rigidBodies = useRef<Array<RapierRigidBody | null>>(
     Array(MAX_RING_INSTANCES).fill(null),
@@ -85,7 +82,6 @@ const RingElements: FC<Props> = ({ ref }) => {
   const slotAssignments = useRef<(RingIndex | null)[]>(Array(MAX_RING_INSTANCES).fill(null))
   const rowToSlots = useRef<Map<number, number[]>>(new Map())
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const isReady = useRef(false)
 
   const setBodyTranslation = useCallback(
     (slotIndex: number, x: number, y: number, z: number) => {
@@ -203,9 +199,6 @@ const RingElements: FC<Props> = ({ ref }) => {
   useImperativeHandle(
     ref,
     () => ({
-      get isReady() {
-        return isReady.current
-      },
       moveElements,
       positionElementsIfNeeded,
       hideElementsIfNeeded,
@@ -214,11 +207,13 @@ const RingElements: FC<Props> = ({ ref }) => {
   )
 
   useEffect(() => {
-    isReady.current = true
-  }, [])
+    onReadyChange(true)
+    return () => {
+      onReadyChange(false)
+    }
+  }, [onReadyChange])
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
-    if (isReady.current === false) return
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
     if (otherUserData.type !== 'player') return
@@ -228,18 +223,21 @@ const RingElements: FC<Props> = ({ ref }) => {
     onRingCollected(indexes)
   }
 
-  useGameFrame((_, delta) => {
-    material.uniforms.uTime.value += delta
+  const ringsShader = useRef<typeof RingsShaderMaterial & RingUniforms>(null)
+
+  useGameFrame(({ clock }) => {
+    if (!ringsShader.current) return
+    ringsShader.current.uTime = clock.elapsedTime
   })
+
+  const slots = slotAssignments.current
 
   return (
     <group>
       {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
-        const assignedIndexes = slotAssignments.current[slotIndex]
+        const assignedIndexes = slots[slotIndex]
         const ringKey =
-          assignedIndexes != null
-            ? makeRingKey(assignedIndexes[0], assignedIndexes[1])
-            : null
+          assignedIndexes != null ? makeRingKey(assignedIndexes[0], assignedIndexes[1]) : null
         const isCollected = ringKey ? Boolean(collectedRings[ringKey]) : false
         return (
           <RigidBody
@@ -259,7 +257,7 @@ const RingElements: FC<Props> = ({ ref }) => {
               onIntersectionEnter={onIntersectionEnter}
               collisionGroups={COLLISION_GROUPS.ringSensor}
             />
-            <mesh visible={!isCollected} material={material}>
+            <mesh visible={!isCollected}>
               <torusGeometry
                 args={[
                   RING_MAJOR_RADIUS,
@@ -267,6 +265,11 @@ const RingElements: FC<Props> = ({ ref }) => {
                   ringConfig.radialSegments,
                   ringConfig.tubularSegments,
                 ]}
+              />
+              <RingsShaderMaterial
+                ref={ringsShader}
+                key={RingsShader.key}
+                {...DEFAULT_UNIFORMS}
               />
             </mesh>
           </RigidBody>
@@ -276,4 +279,4 @@ const RingElements: FC<Props> = ({ ref }) => {
   )
 }
 
-export default RingElements
+export default Rings

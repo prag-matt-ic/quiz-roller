@@ -5,6 +5,7 @@ import {
   useRef,
   type RefObject,
   useState,
+  useEffect,
 } from 'react'
 import { Mesh } from 'three'
 
@@ -20,12 +21,13 @@ export type HomeElementsHandle = {
 
 type Props = {
   ref: RefObject<HomeElementsHandle | null>
+  onReadyChange: (isReady: boolean) => void
 }
 
 const HOME_HEADING_TEXT = 'From scroll-driven storytelling to fully interactive worlds'
 const HIDDEN_HEADING_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
-const HomeElements: FC<Props> = ({ ref }) => {
+const HomeElements: FC<Props> = ({ ref, onReadyChange }) => {
   const heading = useRef<Mesh>(null)
   const [isHeadingVisible, setHeadingVisible] = useState(false)
 
@@ -68,6 +70,13 @@ const HomeElements: FC<Props> = ({ ref }) => {
       hideElementsIfNeeded,
     }
   }, [moveElements, positionElementsIfNeeded, hideElementsIfNeeded])
+
+  useEffect(() => {
+    onReadyChange(true)
+    return () => {
+      onReadyChange(false)
+    }
+  }, [onReadyChange])
 
   return (
     <>

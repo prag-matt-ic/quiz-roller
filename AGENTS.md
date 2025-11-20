@@ -75,13 +75,9 @@ Avoid derived state in the store – compute derived values (like isRunning) in 
 
 ## Architecture & Core Systems
 
-### State Management
-
-The game uses Zustand wrapped in a React context (stores/GameProvider.tsx) to hold global game state. Keyboard input is handled separately in stores/useInputStore.ts. Time is managed by the useTimeSubscription hook, which synchronises GSAP animations with the game state. GSAP handles time scaling and visual effects; avoid storing animation state in React.
-
 ### Physics & collision
 
-Physics are powered by Rapier.
+Physics are powered by Rapier (React version)
 
 ### Performance patterns
 

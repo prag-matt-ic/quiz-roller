@@ -51,7 +51,7 @@ const UI: FC<Props> = ({ isMobile }) => {
               <section
                 ref={infoContainer}
                 className={twJoin(
-                  'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-center justify-center gap-2 border p-6 opacity-0 transition-opacity duration-200',
+                  'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-center justify-center gap-2 p-6 opacity-0 transition-opacity duration-200',
                   status === 'exiting' && 'opacity-0',
                   status === 'entering' && 'opacity-100',
                   status === 'entered' && 'opacity-100',

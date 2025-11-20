@@ -102,6 +102,8 @@ export type GameSlice = {
   setCameraLookAtPosition: (pos: Vector3 | null) => void
 
   resetPlatformTick: number
+  isPlatformReady: boolean
+  setPlatformReady: (isReady: boolean) => void
   resetGame: ({
     isSpeedRunMode,
     speedRunStage,

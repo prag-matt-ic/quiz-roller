@@ -1,5 +1,12 @@
 import { RapierRigidBody } from '@react-three/rapier'
-import { type FC, useCallback, useImperativeHandle, useRef, type RefObject } from 'react'
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type RefObject,
+} from 'react'
 
 import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaSection'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
@@ -16,9 +23,10 @@ export type CTAElementsHandle = {
 
 type Props = {
   ref: RefObject<CTAElementsHandle | null>
+  onReadyChange: (isReady: boolean) => void
 }
 
-const CTAElements: FC<Props> = ({ ref }) => {
+const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const ctaZone = useRef<RapierRigidBody>(null)
 
@@ -70,6 +78,13 @@ const CTAElements: FC<Props> = ({ ref }) => {
     }),
     [moveElements, positionElementsIfNeeded, hideElementsIfNeeded],
   )
+
+  useEffect(() => {
+    onReadyChange(true)
+    return () => {
+      onReadyChange(false)
+    }
+  }, [onReadyChange])
 
   return (
     <>

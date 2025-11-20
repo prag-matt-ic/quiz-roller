@@ -12,6 +12,7 @@ export const INITIAL_GAME_STATE = {
   currentRow: 0,
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
+  isPlatformReady: false,
   _isHydrated: false,
 }
 
@@ -34,6 +35,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   setCameraLookAtPosition: (cameraLookAtPosition) => {
     set({ cameraLookAtPosition })
+  },
+  setPlatformReady: (isPlatformReady) => {
+    set({ isPlatformReady })
   },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {
@@ -63,6 +67,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
       totalTimeS: s.totalTimeS,
       paletteIndex: s.paletteIndex,
+      isPlatformReady: false,
       resetPlatformTick: s.resetPlatformTick + 1,
       resetPlayerTick: s.resetPlayerTick + 1,
     }))

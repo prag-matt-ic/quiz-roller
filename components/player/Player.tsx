@@ -57,7 +57,7 @@ const Player: FC = () => {
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
-  const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
+  const isPlatformReady = useGameStore((s) => s.isPlatformReady)
 
   const { controllerRef, input } = usePlayerController()
 
@@ -79,6 +79,7 @@ const Player: FC = () => {
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   useEffect(() => {
+    if (!isPlatformReady) return
     if (resetPlayerTick === 0) return
     const body = bodyRef.current
     if (!body) return
@@ -91,10 +92,7 @@ const Player: FC = () => {
       },
       true,
     )
-    body.setLinvel({ x: 0, y: 0, z: 0 }, true)
-    body.setAngvel({ x: 0, y: 0, z: 0 }, true)
-    body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true)
-  }, [resetPlayerTick])
+  }, [isPlatformReady, resetPlayerTick])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -164,7 +162,9 @@ const Player: FC = () => {
     })
 
     // Update global player position in store (immutable update)
+
     setPlayerPosition(nextPosition.current)
+
     const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
     setEdgeWarningIntensities(edgeWarnings)
   })
