@@ -14,7 +14,7 @@ export const createGameStore = (
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
-      persist(
+      persist<GameStore, [], [], Pick<GameStore, 'username' | 'paletteIndex' | 'totalTimeS'>>(
         (...a) => ({
           ...createTimeSlice(submitSpeedRun)(...a),
           ...createPlayerSlice({ playSoundFX, stopSoundFX })(...a),
@@ -32,7 +32,10 @@ export const createGameStore = (
             console.log('Rehydrating store...')
             state?.setHydrated()
           },
-        } as PersistOptions<GameStore, Pick<GameStore, 'paletteIndex' | 'totalTimeS'>>,
+        } as PersistOptions<
+          GameStore,
+          Pick<GameStore, 'username' | 'paletteIndex' | 'totalTimeS'>
+        >,
       ),
     ),
   )

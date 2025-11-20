@@ -115,10 +115,7 @@ export type SliceDeps = {
 
 export type GameSliceCreator<T> = StateCreator<
   GameStore,
-  [
-    ['zustand/subscribeWithSelector', never],
-    ['zustand/persist', Pick<GameStore, 'paletteIndex' | 'totalTimeS'>],
-  ],
+  [['zustand/persist', unknown]],
   [],
   T
 >
