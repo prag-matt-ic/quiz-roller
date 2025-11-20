@@ -19,7 +19,6 @@ const COLLECTIBLE_DURATION_S = 1.0
 const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
 
 export const INITIAL_PLAYER_STATE = {
-  username: null,
   playerInput: {
     up: 0,
     down: 0,
@@ -87,6 +86,7 @@ export const createPlayerSlice =
 
     return {
       ...INITIAL_PLAYER_STATE,
+      username: null,
       setUsername: (username: string) => {
         set({ username })
       },

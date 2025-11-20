@@ -5,7 +5,7 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
-import { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
+import type { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
@@ -28,8 +28,14 @@ export const createGameStore = (
             totalTimeS: s.totalTimeS,
           }),
           version: 1,
-          onRehydrateStorage: () => (state) => {
-            state?.setHydrated()
+          onRehydrateStorage: (state) => {
+            return (state, error) => {
+              if (!!error) {
+                console.error('an error happened during hydration', error)
+              } else {
+                state?.setHydrated()
+              }
+            }
           },
         } as PersistOptions<
           GameStore,
