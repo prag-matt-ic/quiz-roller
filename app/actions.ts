@@ -9,16 +9,16 @@ export async function getSpeedrunData() {
     const sql = neon(process.env.DATABASE_URL!)
 
     const speedruns = await sql`
-      SELECT name, time, date, country 
-      FROM speedruns 
+      SELECT username, time, date, country, flag
+      FROM "quizroller_speedrun" 
       ORDER BY time ASC
       LIMIT 10
     `
 
-    return { success: true, data: speedruns }
+    return speedruns
   } catch (error) {
     console.error('Error fetching speedruns:', error)
-    return { success: false, error: 'Failed to fetch speedruns' }
+    return []
   }
 }
 

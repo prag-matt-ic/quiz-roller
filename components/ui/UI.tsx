@@ -2,7 +2,7 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { RotateCcw, X } from 'lucide-react'
-import { type FC, useRef, useState } from 'react'
+import { type FC, Suspense, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 
 import AudioToggle from '@/components/ui/AudioToggle'
@@ -12,6 +12,7 @@ import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
 import { LiveTimeDisplay } from './TimeDisplay'
 import { twJoin } from 'tailwind-merge'
+import { SpeedrunLeaderboard } from './SpeedrunLeaderboard'
 
 gsap.registerPlugin(useGSAP)
 
@@ -41,6 +42,11 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <Controls isMobile={isMobile} />
       <ProgressBar />
+      <Suspense fallback={<div>Loading...</div>}>
+        {' '}
+        {/* spinning gem loader? */}
+        <SpeedrunLeaderboard />
+      </Suspense>
 
       {/* TODO: SwitchTransition between collectibles and speedrun   hud. */}
       <Collectibles ref={collectibles} />
