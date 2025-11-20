@@ -1,5 +1,5 @@
 import type { GameSliceCreator, SpeedRunStage, TimeSlice } from './types'
-import { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
+import type { SpeedRunSubmission, SubmitSpeedRunResponse } from '@/model/schema'
 
 export const INITIAL_TIME_STATE: Pick<
   TimeSlice,
@@ -14,7 +14,7 @@ export const INITIAL_TIME_STATE: Pick<
 
 export const createTimeSlice =
   (
-    submitSpeedRun: (data: SpeedRunSubmission) => Promise<SpeedRunDatabase | null>,
+    submitSpeedRun: (data: SpeedRunSubmission) => SubmitSpeedRunResponse,
   ): GameSliceCreator<TimeSlice> =>
   (set, get) => ({
     ...INITIAL_TIME_STATE,

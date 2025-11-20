@@ -2,10 +2,11 @@
 import { z } from 'zod'
 import { headers } from 'next/headers'
 import {
-  type SpeedRunDatabase,
-  SpeedRunDatabaseInsert,
+  type SpeedRunDatabaseInsert,
+  speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
   type SpeedRunSubmission,
+  type SubmitSpeedRunResponse,
 } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
@@ -32,8 +33,7 @@ export async function submitSpeedrun({
   date,
   time,
   attempt = 1,
-  // TODO: move  Promise<SpeedRunDatabase | null> into a type in the schema and use in the time store setup...
-}: SpeedRunSubmission): Promise<SpeedRunDatabase | null> {
+}: SpeedRunSubmission): SubmitSpeedRunResponse {
   try {
     const headersList = await headers()
 
@@ -63,24 +63,26 @@ export async function submitSpeedrun({
 
     console.warn('Submitting speedrun data:', data)
 
-    const validatedData = speedrunDatabaseSchema.parse(data)
+    const validatedData = speedrunDatabaseInsertSchema.parse(data)
     const sql = neon(process.env.DATABASE_URL!)
 
-    // tagged template
     // TODO: Rename this table.
-    const result = await sql`
+    const insert = await sql`
       INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt) 
       VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt})
+      RETURNING id, username, time, date, ip, country, flag, attempt
     `
+    if (!insert || insert.length === 0) throw new Error('No data returned from insert')
 
-    console.log('Speedrun submitted successfully:', result)
-    return validatedData
+    const parsedInsert = speedrunDatabaseSchema.parse(insert[0])
+
+    return parsedInsert
   } catch (error) {
     console.error('Error submitting speedrun:', error)
 
-    if (error instanceof z.ZodError) {
-      return null
-    }
+    // TODO: handle returning an error and showing it in the UI with a toast or similar
+
+    if (error instanceof z.ZodError) return null
     return null
   }
 }

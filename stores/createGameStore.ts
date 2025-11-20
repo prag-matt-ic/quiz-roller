@@ -5,12 +5,12 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
-import type { SpeedRunDatabase, SpeedRunSubmission } from '@/model/schema'
+import type { SpeedRunSubmission, SubmitSpeedRunResponse } from '@/model/schema'
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
-  submitSpeedRun: (data: SpeedRunSubmission) => Promise<SpeedRunDatabase | null>,
+  submitSpeedRun: (data: SpeedRunSubmission) => SubmitSpeedRunResponse,
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(

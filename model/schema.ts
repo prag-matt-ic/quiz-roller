@@ -45,22 +45,36 @@ export type RigidBodyUserData =
   | InfoZoneUserData
   | CtaZoneUserData
 
+const isoDateStringSchema = z
+  .string()
+  .refine((value) => !Number.isNaN(Date.parse(value)), 'Invalid date string')
+
+const databaseDateSchema = isoDateStringSchema.or(
+  z.date().transform((date) => date.toISOString()),
+)
+
 export const speedRunSubmissionSchema = z.object({
   username: z.string().min(3).max(12),
   time: z.number(),
   attempt: z.number().min(1),
-  date: z.string(),
+  date: isoDateStringSchema,
 })
 
-export const speedrunDatabaseSchema = speedRunSubmissionSchema.extend({
-  id: z.number(),
+export const speedrunDatabaseInsertSchema = speedRunSubmissionSchema.extend({
   ip: z.string(),
   country: z.string().length(2).nullable(),
   flag: z.string().nullable(),
 })
 
+export const speedrunDatabaseSchema = speedrunDatabaseInsertSchema.extend({
+  id: z.number(),
+  date: databaseDateSchema,
+})
+
 export type SpeedRunSubmission = z.infer<typeof speedRunSubmissionSchema>
 
-export type SpeedRunDatabaseInsert = Omit<SpeedRunDatabase, 'id'>
+export type SpeedRunDatabaseInsert = z.infer<typeof speedrunDatabaseInsertSchema>
 
 export type SpeedRunDatabase = z.infer<typeof speedrunDatabaseSchema>
+
+export type SubmitSpeedRunResponse = Promise<SpeedRunDatabase | null>
