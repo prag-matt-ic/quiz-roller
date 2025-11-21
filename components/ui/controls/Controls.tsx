@@ -4,7 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Move, type LucideIcon } from
 import { useCallback, useEffect, useRef, type FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 
-import { PlayerInput, useGameStore } from '@/components/GameProvider'
+import { type PlayerInput, useGameStore } from '@/components/GameProvider'
 import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick'
 import { SpeedRunStage } from '@/stores/types'
 

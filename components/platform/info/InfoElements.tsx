@@ -54,7 +54,8 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
 
     // TODO: this is called too frequently. If it's positioned it doesn't need re-positioning.
     // The movemment logic should handle it after that.
-    console.log('[InfoElements] positionElementsIfNeeded', { row, rowZ })
+    if (process.env.NODE_ENV === 'development')
+      console.warn('[InfoElements] positionElementsIfNeeded', { row, rowZ })
 
     // Check for floating heading position
     const floatingHeadingPosition = row.floatingHeadingPosition

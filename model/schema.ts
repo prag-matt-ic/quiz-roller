@@ -13,10 +13,6 @@ export type RingUserData = {
   slotIndex: number
 }
 
-export type FinishLineUserData = {
-  type: 'finish-line'
-}
-
 export enum CollectibleType {
   Discount = 'discount',
   AI_Prompts = 'ai_prompts',
@@ -36,6 +32,10 @@ export type InfoZoneUserData = {
 
 export type CtaZoneUserData = {
   type: 'cta-zone'
+}
+
+export type FinishLineUserData = {
+  type: 'finish-line'
 }
 
 export type RigidBodyUserData =

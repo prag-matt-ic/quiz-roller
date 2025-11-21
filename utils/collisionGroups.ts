@@ -16,4 +16,6 @@ export const COLLISION_GROUPS = {
   collectibleSensor: interactionGroups([COLLECTIBLE_GROUP], [PLAYER_GROUP]),
   // Info zones should stay isolated from other sensors too.
   infoZoneSensor: interactionGroups([INFO_ZONE_GROUP], [PLAYER_GROUP]),
+  // Finish line should only react to the player.
+  finishLineSensor: interactionGroups([INFO_ZONE_GROUP], [PLAYER_GROUP]),
 } as const

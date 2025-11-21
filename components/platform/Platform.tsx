@@ -36,6 +36,7 @@ import {
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
+import SpeedRunElements, { SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -126,10 +127,11 @@ const Platform: FC<Props> = ({
   const nextAbsoluteRowIndex = useRef(0)
 
   const tilesHandle = useRef<TilesHandle | null>(null)
+  const ringsHandle = useRef<RingsHandle | null>(null)
   const homeElements = useRef<HomeElementsHandle | null>(null)
   const infoElements = useRef<InfoElementsHandle | null>(null)
   const ctaElements = useRef<CTAElementsHandle | null>(null)
-  const ringsHandle = useRef<RingsHandle | null>(null)
+  const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
 
   const [readyState, setReadyState] = useState({
     tiles: false,
@@ -137,6 +139,7 @@ const Platform: FC<Props> = ({
     home: false,
     info: false,
     cta: false,
+    speedRun: false,
   })
 
   const onTilesReadyChange = useCallback((isReady: boolean) => {
@@ -157,6 +160,10 @@ const Platform: FC<Props> = ({
 
   const onCtaElementsReadyChange = useCallback((isReady: boolean) => {
     setReadyState((prev) => ({ ...prev, cta: isReady }))
+  }, [])
+
+  const onSpeedRunElementsReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, speedRun: isReady }))
   }, [])
 
   const appendRowsWithIndices = (rows: RowData[]) => {
@@ -217,7 +224,14 @@ const Platform: FC<Props> = ({
 
   useEffect(() => {
     if (!hasAllLayouts) return
-    if (Object.values(readyState).some((v) => v === false)) return
+
+    const areElementsReady = Object.entries(readyState).every(([key, value]) => {
+      if (isSpeedRunMode && key === 'cta') return true
+      if (!isSpeedRunMode && key === 'speedRun') return true
+      return value
+    })
+
+    if (!areElementsReady) return
 
     if (!tilesHandle.current) {
       console.error('[Platform] Missing tiles handle when initializing platform.')
@@ -361,6 +375,9 @@ const Platform: FC<Props> = ({
       case 'cta':
         ctaElements.current?.hideElementsIfNeeded(row)
         break
+      case 'speed-run-finish':
+        speedRunElements.current?.hideElementsIfNeeded(row)
+        break
       default:
         break
     }
@@ -379,6 +396,9 @@ const Platform: FC<Props> = ({
         break
       case 'cta':
         ctaElements.current?.positionElementsIfNeeded(row, rowZ)
+        break
+      case 'speed-run-finish':
+        speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
         break
       default:
         break
@@ -447,6 +467,12 @@ const Platform: FC<Props> = ({
 
     if (row.type === 'cta' && stageRef.current !== Stage.CTA) {
       goToStage(Stage.CTA)
+      return
+    }
+
+    if (row.type === 'speed-run-finish' && stageRef.current !== Stage.CTA) {
+      goToStage(Stage.CTA)
+      return
     }
   }
 
@@ -559,13 +585,9 @@ const Platform: FC<Props> = ({
   useGameFrame((_, delta) => {
     if (!isPlatformReady) return
     if (!tilesHandle.current?.shader) return
-    if (
-      !homeElements.current ||
-      !infoElements.current ||
-      !ctaElements.current ||
-      !ringsHandle.current
-    )
-      return
+    if (!homeElements.current || !infoElements.current || !ringsHandle.current) return
+    if (!isSpeedRunMode && !ctaElements.current) return
+    if (isSpeedRunMode && !speedRunElements.current) return
 
     tilesHandle.current.shader.uScrollZ = currentScrollPosition.current
 
@@ -580,7 +602,11 @@ const Platform: FC<Props> = ({
     ringsHandle.current.moveElements(zStep)
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
-    ctaElements.current.moveElements(zStep)
+    if (isSpeedRunMode) {
+      speedRunElements.current?.moveElements(zStep)
+    } else {
+      ctaElements.current?.moveElements(zStep)
+    }
   })
 
   useEffect(() => {
@@ -613,13 +639,21 @@ const Platform: FC<Props> = ({
         onReadyChange={onInfoElementsReadyChange}
       />
 
-      <CTAElements
-        ref={ctaElements}
-        key={`${resetPlatformTick}-cta`}
-        onReadyChange={onCtaElementsReadyChange}
-      />
+      {!isSpeedRunMode && (
+        <CTAElements
+          ref={ctaElements}
+          key={`${resetPlatformTick}-cta`}
+          onReadyChange={onCtaElementsReadyChange}
+        />
+      )}
 
-      {/* If speed-run: Show Speed Run Elements */}
+      {isSpeedRunMode && (
+        <SpeedRunElements
+          ref={speedRunElements}
+          key={`${resetPlatformTick}-speedRun`}
+          onReadyChange={onSpeedRunElementsReadyChange}
+        />
+      )}
     </group>
   )
 }

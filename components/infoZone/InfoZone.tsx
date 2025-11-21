@@ -23,7 +23,7 @@ import { Vector3, type Vector3Tuple } from 'three'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
-import { type RigidBodyUserData } from '@/model/schema'
+import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
@@ -146,7 +146,7 @@ export const InfoZone: FC<Props> = ({
     })
   })
 
-  const userData: RigidBodyUserData = {
+  const userData: InfoZoneUserData = {
     type: 'info-zone',
   }
 
