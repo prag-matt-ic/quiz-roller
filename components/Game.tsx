@@ -25,6 +25,7 @@ import obstacle2Texture from '@/assets/platform/obstacles-2.png'
 import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import { loadHtmlImage } from '@/utils/loadImage'
+import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 
 gsap.registerPlugin(useGSAP)
 
@@ -56,7 +57,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const { homeBitmap, infoBitmaps, obstaclesBitmaps, speedRunBitmap, ctaBitmap } =
+  const { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout } =
     usePlatformLayout()
 
   return (
@@ -97,11 +98,11 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
             <FloatingTiles />
             <OutOfBounds />
             <Platform
-              homeBitmap={homeBitmap}
-              infoBitmaps={infoBitmaps}
-              obstacleBitmaps={obstaclesBitmaps}
-              speedRunBitmap={speedRunBitmap}
-              ctaBitmap={ctaBitmap}
+              homeLayout={homeLayout}
+              infoLayouts={infoLayouts}
+              obstacleLayouts={obstacleLayouts}
+              speedRunLayout={speedRunLayout}
+              ctaLayout={ctaLayout}
             />
             <Player />
           </Physics>
@@ -114,18 +115,27 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 export default Game
 
 function usePlatformLayout() {
-  const [homeBitmap, setHomeBitmap] = useState<HTMLImageElement | null>(null)
-  const [obstaclesBitmaps, setObstaclesBitmaps] = useState<(HTMLImageElement | null)[]>([])
-  const [infoBitmaps, setInfoBitmaps] = useState<(HTMLImageElement | null)[]>([])
-  const [speedRunBitmap, setSpeedRunBitmap] = useState<HTMLImageElement | null>(null)
-  const [ctaBitmap, setCtaBitmap] = useState<HTMLImageElement | null>(null)
+  const [homeLayout, setHomeLayout] = useState<SectionBitmapLayout | null>(null)
+  const [obstacleLayouts, setObstacleLayouts] = useState<Array<SectionBitmapLayout | null>>([])
+  const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
+  const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
+  const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
 
-  // TODO: rework this so that 'parseSectionBitmap' is called here, and the resulting  'SectionBitmapLayout' is set into state.
-  // Then pass the layout data into Platform instead of the raw bitmap.
-  // This will be more performant as the bitmap parsing will only happen once.
-  // This will also allow the layout data to be used inside floating tiles - so their positions can fill the void areas.
   useEffect(() => {
     let isMounted = true
+
+    const imageToLayout = (
+      image: HTMLImageElement | null,
+      label: string,
+    ): SectionBitmapLayout | null => {
+      if (!image) return null
+      try {
+        return parseSectionBitmap(image)
+      } catch (error) {
+        console.error(`[Game] Failed to parse ${label} bitmap`, error)
+        return null
+      }
+    }
 
     loadHtmlImage([
       homeTexture.src,
@@ -136,23 +146,32 @@ function usePlatformLayout() {
     ]).then((images) => {
       if (!isMounted) return
       let idx = 0
-      setHomeBitmap(images[idx++])
 
-      setInfoBitmaps(images.slice(idx, idx + INFO_BITMAP_TEXTURES.length))
+      setHomeLayout(imageToLayout(images[idx++], 'home'))
+
+      const infoImages = images.slice(idx, idx + INFO_BITMAP_TEXTURES.length)
+      setInfoLayouts(
+        infoImages.map((image, layoutIndex) => imageToLayout(image, `info-${layoutIndex}`)),
+      )
       idx += INFO_BITMAP_TEXTURES.length
 
-      setObstaclesBitmaps(images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length))
+      const obstacleImages = images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length)
+      setObstacleLayouts(
+        obstacleImages.map((image, layoutIndex) =>
+          imageToLayout(image, `obstacle-${layoutIndex}`),
+        ),
+      )
       idx += OBSTACLE_BITMAP_TEXTURES.length
 
-      setSpeedRunBitmap(images[idx])
+      setSpeedRunLayout(imageToLayout(images[idx], 'speed-run'))
       idx++
 
-      setCtaBitmap(images[idx])
+      setCtaLayout(imageToLayout(images[idx], 'cta'))
     })
 
     return () => {
       isMounted = false
     }
   }, [])
-  return { homeBitmap, infoBitmaps, obstaclesBitmaps, speedRunBitmap, ctaBitmap }
+  return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout }
 }

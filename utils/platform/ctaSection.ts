@@ -1,5 +1,5 @@
 import { colToX, COLUMNS, ON_TILE_Y, type RowData, TILE_SIZE } from '@/utils/tiles'
-import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { type SectionBitmapLayout } from './sectionBitmap'
 import { buildRowsFromLayout as buildGenericRows, clampRowIndex } from './sectionLayoutFeatures'
 
 const CTA_ZONE_COLS = 7
@@ -17,14 +17,13 @@ const CTA_ZONE_X = colToX(CTA_ZONE_CENTER_COLUMN)
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-export function generateCtaSectionRowData(bitmap: HTMLImageElement | null): RowData[] {
+export function generateCtaSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
-    if (!bitmap) throw new Error('No bitmap provided')
-    const layout = parseSectionBitmap(bitmap)
+    if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
     if (IS_DEV_ENV) {
-      console.warn('[CtaSection] Failed to parse cta bitmap', error)
+      console.warn('[CtaSection] Failed to build CTA section rows', error)
     }
     return []
   }

@@ -7,11 +7,7 @@ function loadSingleHtmlImage(src: string): Promise<HTMLImageElement> {
   }
 
   const cached = pendingLoads.get(src)
-  if (cached) return cached
-
-  if (typeof window === 'undefined') {
-    return Promise.reject(new Error(`Cannot load image "${src}" on the server`))
-  }
+  if (!!cached) return cached
 
   const promise = new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
@@ -42,9 +38,7 @@ export function loadHtmlImage(
     return Promise.all(
       input.map((src) =>
         loadSingleHtmlImage(src).catch((error) => {
-          if (process.env.NODE_ENV !== 'production') {
-            console.warn(`[loadHtmlImage] Failed to load texture "${src}"`, error)
-          }
+          console.warn(`Failed to load texture "${src}"`, error)
           return null
         }),
       ),

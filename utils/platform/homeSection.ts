@@ -1,6 +1,6 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
-import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { type SectionBitmapLayout } from './sectionBitmap'
 import { buildRowsFromLayout as buildGenericRows, clampRowIndex } from './sectionLayoutFeatures'
 
 const HOME_HEADING_CENTER_ROW = 6
@@ -9,14 +9,13 @@ const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_
 const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-export function generateHomeSectionRowData(homeBitmap: HTMLImageElement | null): RowData[] {
+export function generateHomeSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
-    if (!homeBitmap) throw new Error('No bitmap provided')
-    const layout = parseSectionBitmap(homeBitmap)
+    if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
     if (IS_DEV_ENV) {
-      console.warn('[HomeSection] Failed to parse home bitmap', error)
+      console.warn('[HomeSection] Failed to build home section rows', error)
     }
     return []
   }

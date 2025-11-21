@@ -35,6 +35,7 @@ import {
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
+import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -79,19 +80,19 @@ function getRowAlpha(rowZ: number, playerZ: number) {
 }
 
 type Props = {
-  homeBitmap: HTMLImageElement | null
-  infoBitmaps: Array<HTMLImageElement | null>
-  obstacleBitmaps: Array<HTMLImageElement | null>
-  speedRunBitmap: HTMLImageElement | null
-  ctaBitmap: HTMLImageElement | null
+  homeLayout: SectionBitmapLayout | null
+  infoLayouts: Array<SectionBitmapLayout | null>
+  obstacleLayouts: Array<SectionBitmapLayout | null>
+  speedRunLayout: SectionBitmapLayout | null
+  ctaLayout: SectionBitmapLayout | null
 }
 
 const Platform: FC<Props> = ({
-  homeBitmap,
-  infoBitmaps,
-  obstacleBitmaps,
-  speedRunBitmap,
-  ctaBitmap,
+  homeLayout,
+  infoLayouts,
+  obstacleLayouts,
+  speedRunLayout,
+  ctaLayout,
 }) => {
   const gameStore = useGameStoreAPI()
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
@@ -170,48 +171,52 @@ const Platform: FC<Props> = ({
   }
 
   function insertInfoRows(contentIndex: 0 | 1 | 2) {
-    const bitmap = infoBitmaps[contentIndex] ?? null
-    if (!bitmap) {
+    const layout = infoLayouts[contentIndex] ?? null
+    if (!layout) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn(
-          `[Platform] Cannot insert info rows for index ${contentIndex} without a bitmap image`,
+          `[Platform] Cannot insert info rows for index ${contentIndex} without layout data`,
         )
       }
       return
     }
     const rows = generateInfoSectionRowData({
-      bitmap,
+      layout,
       contentIndex,
     })
     appendRowsWithIndices(rows)
   }
 
   function insertHomeRows() {
-    const rows = generateHomeSectionRowData(homeBitmap)
-    if (!rows.length && process.env.NODE_ENV !== 'production') {
-      console.warn('[Platform] No home rows were generated from the bitmap')
-    }
+    const rows = generateHomeSectionRowData(homeLayout)
     appendRowsWithIndices(rows)
   }
 
   function insertObstacleRows(bitmapIndex: number) {
-    const bitmap = obstacleBitmaps[bitmapIndex] ?? null
-    const rows = generateObstacleSectionRowData(bitmap)
+    const layout = obstacleLayouts[bitmapIndex] ?? null
+    const rows = generateObstacleSectionRowData(layout)
     appendRowsWithIndices(rows)
   }
 
   function insertCtaRows() {
-    const rows = generateCtaSectionRowData(ctaBitmap)
+    const rows = generateCtaSectionRowData(ctaLayout)
     appendRowsWithIndices(rows)
   }
 
   function insertSpeedRunRows() {
-    const rows = generateSpeedRunSectionRowData(speedRunBitmap)
+    const rows = generateSpeedRunSectionRowData(speedRunLayout)
     appendRowsWithIndices(rows)
   }
 
+  const hasAllLayouts =
+    !!homeLayout &&
+    !!infoLayouts.length &&
+    !!obstacleLayouts.length &&
+    !!speedRunLayout &&
+    !!ctaLayout
+
   useEffect(() => {
-    if (!homeBitmap || !infoBitmaps.length) return // TODO: add a check for all bitmaps.
+    if (!hasAllLayouts) return
     if (Object.values(readyState).some((v) => v === false)) return
 
     if (!tilesHandle.current) {
@@ -315,7 +320,7 @@ const Platform: FC<Props> = ({
 
     setupInitialRowsAndTiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, homeBitmap, infoBitmaps, speedRunBitmap, ctaBitmap, readyState])
+  }, [resetPlatformTick, hasAllLayouts, readyState])
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA
@@ -364,7 +369,7 @@ const Platform: FC<Props> = ({
   function positionRowDecorations(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    positionRingElements(row, rowZ, rowIndex)
+    ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
     switch (row.type) {
       case 'info':
         infoElements.current?.positionElementsIfNeeded(row, rowZ)
@@ -378,11 +383,6 @@ const Platform: FC<Props> = ({
       default:
         break
     }
-  }
-
-  const positionRingElements = (row: RowData, rowZ: number, rowIndex: number) => {
-    if (!ringsHandle.current) return
-    ringsHandle.current.positionElementsIfNeeded(row, rowZ)
   }
 
   function setInfoContentIndexForVisibleRow(rowIndex: number) {
@@ -486,7 +486,7 @@ const Platform: FC<Props> = ({
     }
   }
 
-  function updateRowPositions(rowIndex: number, rowZ: number) {
+  function setTileTranslations(rowIndex: number, rowZ: number) {
     const firstBodyIndex = rowIndex * COLUMNS
     const rigidBodies = tilesHandle.current?.rigidBodies
     if (!rigidBodies) return
@@ -500,7 +500,7 @@ const Platform: FC<Props> = ({
       const baseY = yByBodyIndex.current[bodyIndex]
       translation.current.y = baseY
       translation.current.z = rowZ
-      body.setTranslation(translation.current, true)
+      body.setTranslation(translation.current, false)
     }
   }
 
@@ -532,7 +532,7 @@ const Platform: FC<Props> = ({
       }
       wrapCountByRow.current[rowIndex] = wraps
 
-      updateRowPositions(rowIndex, rowZ)
+      setTileTranslations(rowIndex, rowZ)
       rowZByIndex.current[rowIndex] = rowZ
 
       const wasVisible = rowIsVisible.current[rowIndex] === true
@@ -577,10 +577,10 @@ const Platform: FC<Props> = ({
     updateTiles(playerZ)
 
     if (zStep === 0) return
+    ringsHandle.current.moveElements(zStep)
     infoElements.current.moveElements(zStep)
     homeElements.current.moveElements(zStep)
     ctaElements.current.moveElements(zStep)
-    ringsHandle.current.moveElements(zStep)
   })
 
   useEffect(() => {

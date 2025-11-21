@@ -52,6 +52,10 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
     if (!row) return
     if (row.type !== 'info') return
 
+    // TODO: this is called too frequently. If it's positioned it doesn't need re-positioning.
+    // The movemment logic should handle it after that.
+    console.log('[InfoElements] positionElementsIfNeeded', { row, rowZ })
+
     // Check for floating heading position
     const floatingHeadingPosition = row.floatingHeadingPosition
     if (!!floatingHeadingPosition) {

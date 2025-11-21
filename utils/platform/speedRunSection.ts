@@ -1,17 +1,16 @@
 import { type RowData } from '@/utils/tiles'
-import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { type SectionBitmapLayout } from './sectionBitmap'
 import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-export function generateSpeedRunSectionRowData(bitmap: HTMLImageElement | null): RowData[] {
+export function generateSpeedRunSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
-    if (!bitmap) throw new Error('No bitmap provided')
-    const layout = parseSectionBitmap(bitmap)
+    if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
     if (IS_DEV_ENV) {
-      console.warn('[SpeedRunSection] Failed to parse speed run bitmap', error)
+      console.warn('[SpeedRunSection] Failed to build speed run section rows', error)
     }
     return []
   }

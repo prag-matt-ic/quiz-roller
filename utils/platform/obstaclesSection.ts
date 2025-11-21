@@ -1,17 +1,16 @@
 import { type RowData } from '@/utils/tiles'
-import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { type SectionBitmapLayout } from './sectionBitmap'
 import { buildRowsFromLayout as buildGenericRows } from './sectionLayoutFeatures'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
-export function generateObstacleSectionRowData(bitmap: HTMLImageElement | null): RowData[] {
+export function generateObstacleSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
-    if (!bitmap) throw new Error('No bitmap provided')
-    const layout = parseSectionBitmap(bitmap)
+    if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
     if (IS_DEV_ENV) {
-      console.warn('[ObstaclesSection] Failed to parse obstacle bitmap', error)
+      console.warn('[ObstaclesSection] Failed to build obstacle section rows', error)
     }
     return []
   }

@@ -89,8 +89,6 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
 
-  console.log({ tileAspect, tilesX, tilesY })
-
   const userData = useMemo<CollectibleUserData>(
     () => ({
       type: 'collectible',

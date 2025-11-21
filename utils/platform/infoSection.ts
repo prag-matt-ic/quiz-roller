@@ -1,6 +1,6 @@
 import { colToX, COLUMNS, type RowData, TILE_SIZE } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
-import { parseSectionBitmap, type SectionBitmapLayout } from './sectionBitmap'
+import { type SectionBitmapLayout } from './sectionBitmap'
 import { buildRowsFromLayout as buildGenericRows, clampRowIndex } from './sectionLayoutFeatures'
 
 export const FIRST_OBSTACLE_SECTION_ROWS = 16
@@ -18,18 +18,17 @@ export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 
 type InfoSectionConfig = {
-  bitmap: HTMLImageElement | null
+  layout: SectionBitmapLayout | null
   contentIndex: 0 | 1 | 2
 }
 
 export function generateInfoSectionRowData(config: InfoSectionConfig): RowData[] {
-  const { bitmap, contentIndex } = config
+  const { layout, contentIndex } = config
   try {
-    if (!bitmap) throw new Error('No bitmap provided')
-    const layout = parseSectionBitmap(bitmap)
+    if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout, contentIndex)
   } catch (error) {
-    console.error('[InfoSection] Failed to parse info bitmap', error)
+    console.error('[InfoSection] Failed to build info section rows', error)
     return []
   }
 }
