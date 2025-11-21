@@ -25,7 +25,7 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
 
-  const showLeaderboard = isSpeedRunMode && speedRunStatus === 'leaderboard'
+  const showLeaderboard = isSpeedRunMode && speedRunStatus === 'leaderboard' 
   const showSpeedRunOverlay =
     isSpeedRunMode && ['countdown', 'username'].includes(speedRunStatus)
 
@@ -38,6 +38,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       <ProgressBar />
 
       {showLeaderboard && <SpeedrunLeaderboard />}
+      <SpeedrunLeaderboard />
 
       {/* Top Info */}
       <SwitchTransition>
