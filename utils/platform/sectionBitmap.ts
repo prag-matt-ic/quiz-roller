@@ -2,6 +2,7 @@ import { COLUMNS, SAFE_HEIGHT, TILE_SIZE, UNSAFE_HEIGHT } from '@/utils/tiles'
 
 export type SectionBitmapRow = {
   heights: number[]
+  highlightColumns: number[]
   ringColumns: number[]
   infoZoneColumns: number[]
   collectibleColumns: number[]
@@ -9,7 +10,6 @@ export type SectionBitmapRow = {
   infoZonePlacements?: BitmapPlacement[]
   collectiblePlacement?: BitmapPlacement | null
   finishLinePlacement?: BitmapPlacement | null
-  highlightColumns: number[]
 }
 
 export type SectionBitmapLayout = {
