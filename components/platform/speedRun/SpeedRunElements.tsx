@@ -1,10 +1,4 @@
-import {
-  CuboidCollider,
-  type IntersectionEnterHandler,
-  type IntersectionExitHandler,
-  RapierRigidBody,
-  RigidBody,
-} from '@react-three/rapier'
+import { CuboidCollider, type IntersectionEnterHandler, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import {
   type FC,
   useCallback,
@@ -113,12 +107,6 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
     lookAtInfo()
   }
 
-  const onIntersectionExit: IntersectionExitHandler = (event) => {
-    const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
-    if (!otherUserData) return
-    if (otherUserData.type !== 'player') return
-  }
-
   const userData: FinishLineUserData = {
     type: 'finish-line',
   }
@@ -148,10 +136,9 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
           mass={0}
           friction={0}
           onIntersectionEnter={onIntersectionEnter}
-          onIntersectionExit={onIntersectionExit}
           collisionGroups={COLLISION_GROUPS.finishLineSensor}
         />
-        <mesh position={[0, 0, 0.01]} renderOrder={2}>
+        <mesh position={[0, 0, 0.02]} renderOrder={2}>
           <planeGeometry args={[width, height]} />
           <meshBasicMaterial color="red" transparent={true} opacity={1} />
         </mesh>

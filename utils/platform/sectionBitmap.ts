@@ -213,7 +213,7 @@ function assignBitmapPlacements(
         if (col > maxColumn) maxColumn = col
       }
 
-      const centerRow = Math.round((minRow + maxRow) / 2)
+      const centerRow = (minRow + maxRow) * 0.5
       const centerColumn = Math.round((minColumn + maxColumn) / 2)
 
       rowsInComponent.forEach((row) => {
