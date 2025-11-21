@@ -21,7 +21,7 @@ type Props = React.ComponentProps<'group'>
 
 const GemModel: FC<Props> = ({ ...props }) => {
   const groupRef = useRef<THREE.Group>(null!)
-  const { nodes } = useGLTF('/models/gem.gltf') as unknown as GLTFResult
+  const { nodes } = useGLTF('/models/gem-1.gltf') as unknown as GLTFResult
 
   const firstNode = nodes.scene || nodes[Object.keys(nodes)[0]]
 
@@ -74,4 +74,4 @@ const GemModel: FC<Props> = ({ ...props }) => {
 
 export default GemModel
 
-useGLTF.preload('/models/gem.gltf')
+useGLTF.preload('/models/gem-1.gltf')
