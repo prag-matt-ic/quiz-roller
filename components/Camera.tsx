@@ -11,33 +11,24 @@ import usePlayerInput from '@/hooks/usePlayerInput'
 
 const { ACTION } = CameraControlsImpl
 
-// TODO: simplify to match requirements below.
-export const CAMERA_CONFIG: Record<
-  Stage,
-  {
-    position: { x: number; y: number; z: number }
-    zoom: number
-  }
-> = {
-  [Stage.HOME]: {
-    position: { x: 0, y: 4, z: 8 },
-    zoom: 1.0,
-  },
-  [Stage.INFO]: {
-    position: { x: 0, y: 4, z: 8 },
-    zoom: 1.0,
-  },
-  [Stage.TERRAIN]: {
-    position: { x: 0, y: 7, z: 8 },
-    zoom: 1.2,
-  },
-  [Stage.CTA]: {
-    position: { x: 0, y: 7, z: 8 },
-    zoom: 1.5,
-  },
+type StageCameraPosition = {
+  y: number
+  z: number
 }
 
-// TOOD: add subtle pointer offset to the camera position.
+export const CAMERA_POSITION_FOR_STAGE: Record<Stage, StageCameraPosition> = {
+  [Stage.HOME]: { y: 4, z: 8 },
+  [Stage.INFO]: { y: 4, z: 8 },
+  [Stage.TERRAIN]: { y: 7, z: 8 },
+  [Stage.CTA]: { y: 7, z: 8 },
+}
+
+export const CAMERA_ZOOM_FOR_STAGE: Record<Stage, number> = {
+  [Stage.HOME]: 1.0,
+  [Stage.INFO]: 1.0,
+  [Stage.TERRAIN]: 1.2,
+  [Stage.CTA]: 1.5,
+}
 
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
@@ -53,26 +44,25 @@ const Camera: FC = () => {
 
   const stage = useStage((nextStage: Stage) => {
     if (!cameraControls.current) return
-    cameraControls.current.zoomTo(CAMERA_CONFIG[nextStage].zoom, true)
+    cameraControls.current.zoomTo(CAMERA_ZOOM_FOR_STAGE[nextStage], true)
   })
+
+  const hasLookAtPosition = !!cameraLookAtPosition
 
   useFrame(() => {
     if (!cameraControls.current) return
     const lookAt = cameraLookAtPosition ?? playerPosition.current
-    // TODO: review and clean this up...
 
     // When looking at content, move camera backward to keep player visible
-    const isLookingAway = !!cameraLookAtPosition
-    let zOffset = isLookingAway
-      ? CAMERA_CONFIG[stage.current].position.z + 4 // Move 4 units further back
-      : CAMERA_CONFIG[stage.current].position.z
+    const stageCameraPosition = CAMERA_POSITION_FOR_STAGE[stage.current]
+    let zOffset = hasLookAtPosition ? stageCameraPosition.z + 4 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not
     zOffset += lastMovedBackward.current ? 4 : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
-      CAMERA_CONFIG[stage.current].position.y,
+      stageCameraPosition.y,
       zOffset,
       lookAt.x,
       3,

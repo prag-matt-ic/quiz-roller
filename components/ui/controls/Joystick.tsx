@@ -160,6 +160,7 @@ export const useJoystick = ({
 
       cancelRaf()
       window.removeEventListener('pointermove', handlePointerMove)
+      // eslint-disable-next-line react-hooks/immutability
       window.removeEventListener('pointerup', handlePointerUp)
       window.removeEventListener('pointercancel', handlePointerUp)
 

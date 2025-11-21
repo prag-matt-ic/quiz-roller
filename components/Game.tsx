@@ -11,7 +11,7 @@ import Background from '@/components/background/Background'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
 
-import Camera, { CAMERA_CONFIG } from './Camera'
+import Camera, { CAMERA_POSITION_FOR_STAGE } from './Camera'
 import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
@@ -30,7 +30,12 @@ import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/s
 gsap.registerPlugin(useGSAP)
 
 // Start at the intro sweep position to avoid a jump before animation
-const INITIAL_CAMERA_POSITION = CAMERA_CONFIG[Stage.HOME].position
+const HOME_CAMERA_POSITION = CAMERA_POSITION_FOR_STAGE[Stage.HOME]
+const INITIAL_CAMERA_POSITION = {
+  x: 0,
+  y: HOME_CAMERA_POSITION.y,
+  z: HOME_CAMERA_POSITION.z,
+}
 
 type Props = {
   isDebug: boolean

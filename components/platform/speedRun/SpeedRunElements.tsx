@@ -97,12 +97,7 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
-      <FinishLine
-        ref={finishLine}
-        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        width={width}
-        height={height}
-      />
+      <FinishLine ref={finishLine} width={width} height={height} />
     </>
   )
 }
