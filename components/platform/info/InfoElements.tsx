@@ -46,50 +46,60 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
   const isCollectibleOutOfView = useRef(true)
   const infoZone = useRef<RapierRigidBody>(null)
   const contentIndex = useGameStore((s) => s.infoContentIndex) // Content index is set in Platform when the info section row is raised.
+  const headingRowIndex = useRef<number | null>(null)
+  const collectibleRowIndex = useRef<number | null>(null)
+  const infoZoneRowIndex = useRef<number | null>(null)
 
   // Called when the row is raised
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
     if (row.type !== 'info') return
+    if (!heading.current || !collectible.current || !infoZone.current) return
+    const absoluteRowIndex = row.rowIndex as number
 
-    // TODO: this is called too frequently. If it's positioned it doesn't need re-positioning.
-    // The movemment logic should handle it after that.
+    // TODO: Clean up the positioning logic
     if (process.env.NODE_ENV === 'development')
       console.warn('[InfoElements] positionElementsIfNeeded', { row, rowZ })
 
     // Check for floating heading position
     const floatingHeadingPosition = row.floatingHeadingPosition
     if (!!floatingHeadingPosition) {
-      const newZ = rowZ + floatingHeadingPosition[2]
-
-      if (heading.current) {
+      if (headingRowIndex.current !== absoluteRowIndex) {
+        const newZ = rowZ + floatingHeadingPosition[2]
         heading.current.position.set(
           floatingHeadingPosition[0],
           floatingHeadingPosition[1],
           newZ,
         )
+        headingRowIndex.current = absoluteRowIndex
       }
       setHeadingVisible(true)
     }
 
     // Check for info zone positions
     const collectiblePos = row.collectiblePosition
-    if (collectiblePos && collectible.current) {
-      const newZ = rowZ + collectiblePos[2]
-      translation.current.x = collectiblePos[0]
-      translation.current.y = collectiblePos[1]
-      translation.current.z = newZ
-      collectible.current.setTranslation(translation.current, true)
+    if (!!collectiblePos) {
+      if (collectibleRowIndex.current !== absoluteRowIndex) {
+        const newZ = rowZ + collectiblePos[2]
+        translation.current.x = collectiblePos[0]
+        translation.current.y = collectiblePos[1]
+        translation.current.z = newZ
+        collectible.current.setTranslation(translation.current, true)
+        collectibleRowIndex.current = absoluteRowIndex
+      }
       isCollectibleOutOfView.current = false
     }
 
     const infoZonePos = row.infoZonePositions?.find((pos) => !!pos)
-    if (infoZonePos && infoZone.current) {
-      const newZ = rowZ + infoZonePos[2]
-      translation.current.x = infoZonePos[0]
-      translation.current.y = infoZonePos[1]
-      translation.current.z = newZ
-      infoZone.current.setTranslation(translation.current, true)
+    if (!!infoZonePos) {
+      if (infoZoneRowIndex.current !== absoluteRowIndex) {
+        const newZ = rowZ + infoZonePos[2]
+        translation.current.x = infoZonePos[0]
+        translation.current.y = infoZonePos[1]
+        translation.current.z = newZ
+        infoZone.current.setTranslation(translation.current, true)
+        infoZoneRowIndex.current = absoluteRowIndex
+      }
     }
   }, [])
 
@@ -104,6 +114,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
 
     if (shouldHideHeading) {
       setHeadingVisible(false)
+      headingRowIndex.current = null
     }
 
     if (shouldHideCollectible && collectible.current) {
@@ -111,22 +122,24 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       translation.current.y = HIDE_POSITION_Y
       collectible.current.setTranslation(translation.current, true)
       isCollectibleOutOfView.current = true
+      collectibleRowIndex.current = null
     }
 
     if (shouldHideInfoZone && infoZone.current) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)
+      infoZoneRowIndex.current = null
     }
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
-    if (!!heading.current) {
+    if (headingRowIndex.current != null && !!heading.current) {
       heading.current.position.z += zStep
     }
 
     // Move collectible
-    if (!!collectible.current) {
+    if (collectibleRowIndex.current != null && !!collectible.current) {
       const currentTranslation = collectible.current.translation()
       const newZ = currentTranslation.z + zStep
       translation.current.x = currentTranslation.x
@@ -136,7 +149,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
     }
 
     // Move info zone
-    if (!!infoZone.current) {
+    if (infoZoneRowIndex.current != null && !!infoZone.current) {
       const currentTranslation = infoZone.current.translation()
       const newZ = currentTranslation.z + zStep
       translation.current.x = currentTranslation.x

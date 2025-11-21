@@ -29,35 +29,44 @@ const HIDDEN_HEADING_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, H
 
 const HomeElements: FC<Props> = ({ ref, onReadyChange }) => {
   const heading = useRef<Mesh>(null)
+  const positionedRowIndex = useRef<number | null>(null)
   const [isHeadingVisible, setHeadingVisible] = useState(false)
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
     if (row.type !== 'home') return
+    if (!heading.current) return
+
     const floatingHeadingPosition = row.floatingHeadingPosition
     if (!floatingHeadingPosition) return
+    const absoluteRowIndex = row.rowIndex as number
+    if (positionedRowIndex.current === absoluteRowIndex) return
 
-    if (heading.current) {
-      heading.current.position.set(
-        floatingHeadingPosition[0],
-        floatingHeadingPosition[1],
-        floatingHeadingPosition[2] + rowZ,
-      )
-    }
+    heading.current.position.set(
+      floatingHeadingPosition[0],
+      floatingHeadingPosition[1],
+      floatingHeadingPosition[2] + rowZ,
+    )
 
+    positionedRowIndex.current = absoluteRowIndex
     setHeadingVisible(true)
   }, [])
 
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
     if (!row) return
     if (row.type !== 'home') return
+    if (!heading.current) return
+
     const shouldHideHeading = !!row.floatingHeadingPosition
     if (!shouldHideHeading) return
 
     setHeadingVisible(false)
+    positionedRowIndex.current = null
+    heading.current.position.set(...HIDDEN_HEADING_POSITION)
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
+    if (positionedRowIndex.current == null) return
     if (heading.current) {
       heading.current.position.z += zStep
     }

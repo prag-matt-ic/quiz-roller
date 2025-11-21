@@ -1,4 +1,4 @@
-import { CuboidCollider, type IntersectionEnterHandler, RapierRigidBody, RigidBody } from '@react-three/rapier'
+import { RapierRigidBody } from '@react-three/rapier'
 import {
   type FC,
   useCallback,
@@ -10,10 +10,7 @@ import {
 
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, TILE_SIZE, type RowData } from '@/utils/tiles'
 
-import { type RigidBodyUserData, type FinishLineUserData } from '@/model/schema'
-import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import { useGameStore } from '@/components/GameProvider'
+import FinishLine from './FinishLine'
 
 export type SpeedRunElementsHandle = {
   moveElements: (zStep: number) => void
@@ -30,11 +27,13 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 })
   const finishLine = useRef<RapierRigidBody>(null)
 
-  const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
+  const positionedRowIndex = useRef<number | null>(null)
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
     if (row.type !== 'speed-run-finish') return
+    const absoluteRowIndex = row.rowIndex as number
+    if (positionedRowIndex.current === absoluteRowIndex) return
 
     const finishLinePos = row.finishLinePosition
     if (!!finishLinePos && finishLine.current) {
@@ -43,6 +42,7 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
       translation.current.y = finishLinePos[1]
       translation.current.z = newZ
       finishLine.current.setTranslation(translation.current, true)
+      positionedRowIndex.current = absoluteRowIndex
     }
   }, [])
 
@@ -57,10 +57,12 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
       translation.current.y = HIDE_POSITION_Y
       translation.current.z = HIDE_POSITION_Z
       finishLine.current.setTranslation(translation.current, true)
+      positionedRowIndex.current = null
     }
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
+    if (positionedRowIndex.current == null) return
     if (!!finishLine.current) {
       const currentTranslation = finishLine.current.translation()
       const newZ = currentTranslation.z + zStep
@@ -88,29 +90,6 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
     }
   }, [onReadyChange])
 
-  const lookAtInfo = () => {
-    // if (!ref || !ref.current) return
-    // const currentTranslation = ref.current.translation()
-    // const targetPosition = new Vector3(
-    //   currentTranslation.x - infoPositionOffset[0],
-    //   currentTranslation.y - infoPositionOffset[1],
-    //   currentTranslation.z - infoPositionOffset[2],
-    // )
-    // setCameraLookAtPosition(targetPosition)
-  }
-
-  const onIntersectionEnter: IntersectionEnterHandler = (event) => {
-    const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
-    if (!otherUserData) return
-    if (otherUserData.type !== 'player') return
-    finishSpeedRun()
-    lookAtInfo()
-  }
-
-  const userData: FinishLineUserData = {
-    type: 'finish-line',
-  }
-
   const FINISH_LINE_WIDTH = 7 * TILE_SIZE
   const FINISH_LINE_HEIGHT = 4 * TILE_SIZE
   const width = FINISH_LINE_WIDTH
@@ -118,31 +97,12 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
-      {/* Finish Line */}
-      <RigidBody
+      <FinishLine
         ref={finishLine}
-        // KEEP DYNAMIC
-        type="dynamic"
-        gravityScale={0}
-        friction={0}
-        mass={0}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        colliders={false}
-        userData={userData}>
-        <CuboidCollider
-          args={[width / 2, height / 2, PLAYER_RADIUS * 2]}
-          sensor={true}
-          mass={0}
-          friction={0}
-          onIntersectionEnter={onIntersectionEnter}
-          collisionGroups={COLLISION_GROUPS.finishLineSensor}
-        />
-        <mesh position={[0, 0, 0.02]} renderOrder={2}>
-          <planeGeometry args={[width, height]} />
-          <meshBasicMaterial color="red" transparent={true} opacity={1} />
-        </mesh>
-      </RigidBody>
+        width={width}
+        height={height}
+      />
     </>
   )
 }

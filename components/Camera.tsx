@@ -32,8 +32,8 @@ export const CAMERA_CONFIG: Record<
     zoom: 1.2,
   },
   [Stage.CTA]: {
-    position: { x: 6, y: 12, z: 8 },
-    zoom: 0.8,
+    position: { x: 0, y: 7, z: 8 },
+    zoom: 1.5,
   },
 }
 
