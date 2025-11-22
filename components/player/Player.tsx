@@ -59,11 +59,11 @@ const Player: FC = () => {
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
 
-  const isRespawning = useGameStore((s) => s.isRespawning)
   const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
   const setIsRespawning = useGameStore((s) => s.setIsRespawning)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
+  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const gameStoreAPI = useGameStoreAPI()
 
   const { controllerRef, input } = usePlayerController()
@@ -93,7 +93,7 @@ const Player: FC = () => {
 
     function calculateSafeXForPlayerReset(): number {
       const state = gameStoreAPI.getState()
-      const { rowsData, currentRow, playerWorldPosition } = state
+      const { rowsData, currentRow } = state
 
       if (!rowsData.length) {
         return PLAYER_INITIAL_POSITION[0]
@@ -108,14 +108,23 @@ const Player: FC = () => {
         return PLAYER_INITIAL_POSITION[0]
       }
 
-      const maxColumnIndex = Math.min(rowData.heights.length, COLUMNS) - 1
-      const estimatedColumnFromPlayerX = Math.round(
-        playerWorldPosition.x / TILE_SIZE + COLUMNS / 2 - 0.5,
-      )
-      const preferredColumn = Math.min(
-        Math.max(estimatedColumnFromPlayerX, 0),
-        Math.max(maxColumnIndex, 0),
-      )
+      const availableColumns = Math.min(rowData.heights.length, COLUMNS)
+      if (availableColumns <= 0) {
+        return PLAYER_INITIAL_POSITION[0]
+      }
+
+      const maxColumnIndex = availableColumns - 1
+
+      let preferredColumn = 0
+      let smallestAbsX = Infinity
+      for (let columnIndex = 0; columnIndex < availableColumns; columnIndex++) {
+        const columnX = colToX(columnIndex)
+        const absX = Math.abs(columnX)
+        if (absX < smallestAbsX) {
+          smallestAbsX = absX
+          preferredColumn = columnIndex
+        }
+      }
 
       const isColumnRaised = (columnIndex: number) => {
         const height = rowData.heights[columnIndex]
@@ -236,6 +245,13 @@ const Player: FC = () => {
     setEdgeWarningIntensities(edgeWarnings)
   })
 
+  useEffect(() => {
+    // Handle initial player respawn
+    if (!isPlatformReady) return
+    if (respawnPlayerTick !== 0) return
+    respawnPlayer()
+  }, [isPlatformReady, respawnPlayer, respawnPlayerTick])
+
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
@@ -262,6 +278,10 @@ const Player: FC = () => {
   }
 
   const userData: PlayerUserData = { type: 'player' }
+
+  if (!isPlatformReady) {
+    return null
+  }
 
   return (
     <RigidBody
