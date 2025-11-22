@@ -14,7 +14,7 @@ import { neon } from '@neondatabase/serverless'
 export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
-    // TODO: add an index to the table on time for performance
+    // TODO: Theo: add an index to the table on time for performance - ask AI best type of index for this data.
     const speedruns = await sql`
       SELECT id, username, time, date, ip, country, flag, attempt
       FROM "quizroller_speedrun" 
