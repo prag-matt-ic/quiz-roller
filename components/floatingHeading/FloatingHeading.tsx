@@ -37,6 +37,7 @@ type FloatingHeadingUniforms = {
   uOpacity: number
   uTime: number
   uPlayerXZ: Vector2
+  uHeadingCenterXZ: Vector2
   uCameraZ: number
 }
 
@@ -45,6 +46,7 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uOpacity: 1,
   uTime: 0,
   uPlayerXZ: new Vector2(0, 0),
+  uHeadingCenterXZ: new Vector2(0, 0),
   uCameraZ: 0,
 }
 
@@ -66,6 +68,7 @@ export const FloatingHeading: FC<Props> = ({
   ref,
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
+  const tmpWorldPosition = useRef(new Vector3())
 
   const onPlayerPosition = (newPosition: Vector3) => {
     if (!shaderRef.current) return
@@ -136,6 +139,15 @@ export const FloatingHeading: FC<Props> = ({
     if (!shaderRef.current) return
     shaderRef.current.uTime = state.clock.elapsedTime
     shaderRef.current.uCameraZ = state.camera.position.z
+
+    const mesh = ref?.current
+    if (mesh) {
+      mesh.getWorldPosition(tmpWorldPosition.current)
+      shaderRef.current.uHeadingCenterXZ.set(
+        tmpWorldPosition.current.x,
+        tmpWorldPosition.current.z,
+      )
+    }
   })
 
   return (
