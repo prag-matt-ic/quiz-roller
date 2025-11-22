@@ -6,7 +6,7 @@ import { SwitchTransition, Transition, type TransitionStatus } from 'react-trans
 
 import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
-import Collectibles from '@/components/ui/Collectibles'
+import CollectiblesUI from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
@@ -58,7 +58,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                   status === 'entering' && 'opacity-100',
                   status === 'entered' && 'opacity-100',
                 )}>
-                {isSpeedRunMode ? <SpeedRunTimer /> : <Collectibles />}
+                {isSpeedRunMode ? <SpeedRunTimer /> : <CollectiblesUI />}
               </section>
             )
           }}

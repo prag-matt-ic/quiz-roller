@@ -34,7 +34,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import useGameFrame from '@/hooks/useGameFrame'
 import { Color } from 'three'
-import { makeRingKey } from '@/utils/rings'
+import { getRingKey } from '@/utils/rings'
 import { extend } from '@react-three/fiber'
 
 const MAX_RING_INSTANCES = 12
@@ -162,7 +162,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
 
       for (let columnIndex = 0; columnIndex < row.ringPositions.length; columnIndex++) {
         if (row.ringPositions[columnIndex] !== 1) continue
-        if (collectedRings[makeRingKey(rowIndex, columnIndex)]) continue
+        if (collectedRings[getRingKey(rowIndex, columnIndex)]) continue
         ensureRingForColumn(rowIndex, columnIndex, rowZ)
       }
     },
@@ -238,7 +238,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
       {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
         const assignedIndexes = slots[slotIndex]
         const ringKey =
-          assignedIndexes != null ? makeRingKey(assignedIndexes[0], assignedIndexes[1]) : null
+          assignedIndexes != null ? getRingKey(assignedIndexes[0], assignedIndexes[1]) : null
         const isCollected = ringKey ? Boolean(collectedRings[ringKey]) : false
         return (
           <RigidBody
