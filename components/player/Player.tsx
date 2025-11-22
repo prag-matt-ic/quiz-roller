@@ -76,7 +76,6 @@ const Player: FC = () => {
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
   const playerVelocity = useRef(new Vector3())
-  const terrainVelocity = useRef(new Vector3())
   const terrainDisplacement = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
@@ -184,6 +183,7 @@ const Player: FC = () => {
     // Resolve player input into a clamped direction vector
     const inputDirectionX = input.current.right - input.current.left
     const inputDirectionZ = input.current.down - input.current.up
+    const platformScrollDirection = input.current.up - input.current.down
     const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ)
 
     // Calculate desired movement including gravity
@@ -206,13 +206,8 @@ const Player: FC = () => {
 
     const correctedMovement = controllerRef.current.computedMovement()
 
-    // TODO: simplify this now that the terrain/platform moves in sync with the player
-    calculateTerrainVelocity(0, terrainVelocity.current)
-
-    // Terrain conveyor only moves along +Z/-Z, zero out lateral components to avoid drift
-    terrainDisplacement.current.copy(terrainVelocity.current).multiplyScalar(deltaTime)
-    terrainDisplacement.current.x = 0
-    terrainDisplacement.current.y = 0
+    // Platform scroll input shifts the ground underneath the player; capture that displacement
+    terrainDisplacement.current.set(0, 0, platformScrollDirection * TERRAIN_SPEED_UNITS * deltaTime)
 
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
@@ -223,7 +218,11 @@ const Player: FC = () => {
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
     // Calculate physics for rolling animation
-    frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
+    frameDisplacement.current.set(
+      correctedMovement.x,
+      correctedMovement.y,
+      correctedMovement.z - terrainDisplacement.current.z,
+    )
 
     calculatePlayerVelocity(frameDisplacement.current, deltaTime, playerVelocity.current)
     playerVelocity.current.y = 0
@@ -341,15 +340,6 @@ function calculatePlayerVelocity(
   targetVelocity: Vector3,
 ): void {
   targetVelocity.copy(displacement).divideScalar(Math.max(deltaTime, EPSILON.SMALL))
-}
-
-function calculateTerrainVelocity(
-  terrainSpeedNormalized: number,
-  targetVelocity: Vector3,
-): void {
-  const terrainSpeedUnits = terrainSpeedNormalized * TERRAIN_SPEED_UNITS
-  // Terrain moving forward means ground flows toward +Z
-  targetVelocity.set(0, 0, -terrainSpeedUnits)
 }
 
 function applyRollingPhysics({
