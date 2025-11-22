@@ -140,14 +140,14 @@ export const FloatingHeading: FC<Props> = ({
     shaderRef.current.uTime = state.clock.elapsedTime
     shaderRef.current.uCameraZ = state.camera.position.z
 
+    if (!isVisible) return
     const mesh = ref?.current
-    if (mesh) {
-      mesh.getWorldPosition(tmpWorldPosition.current)
-      shaderRef.current.uHeadingCenterXZ.set(
-        tmpWorldPosition.current.x,
-        tmpWorldPosition.current.z,
-      )
-    }
+    if (!mesh) return
+    mesh.getWorldPosition(tmpWorldPosition.current)
+    shaderRef.current.uHeadingCenterXZ.set(
+      tmpWorldPosition.current.x,
+      tmpWorldPosition.current.z,
+    )
   })
 
   return (
