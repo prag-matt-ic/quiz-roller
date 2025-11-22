@@ -21,7 +21,7 @@ void main() {
   vec3 vNormal = normalize(normalMatrix * n);
 
   // Simple directional light (normalized vec3(0.5, 0.8, 0.5))
-  const vec3 lightDir = vec3(0.4685, 0.7496, 0.4685);
+  const vec3 lightDir = vec3(0.46, 0.8, 0.5);
   float diff = max(dot(vNormal, lightDir), 0.0);
   
   // Ambient + Diffuse

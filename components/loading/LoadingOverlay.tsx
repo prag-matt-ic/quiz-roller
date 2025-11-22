@@ -17,14 +17,14 @@ const LoadingOverlay: FC = () => {
   const [isExiting, setIsExiting] = useState(false)
 
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
-  const resetPlayer = useGameStore((s) => s.resetPlayer)
+  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
 
   const isReady = !active && progress >= 100
 
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
     setIsExiting(true)
-    resetPlayer()
+    respawnPlayer()
   }
 
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {

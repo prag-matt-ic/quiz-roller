@@ -23,7 +23,7 @@ import {
   clamp,
   TERRAIN_SPEED_UNITS,
   lerp,
-  RowData,
+  type RowData,
   ROWS_RENDERED,
   SAFE_HEIGHT,
   TILE_PLAYER_FADE_FULL_RADIUS,
@@ -43,7 +43,7 @@ const EMPTY_ROW_DATA: RowData = {
   type: 'empty',
   isSectionStart: false,
   isSectionEnd: false,
-  rowIndex: -1,
+  rowIndex: 10000,
 }
 
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
@@ -104,6 +104,7 @@ const Platform: FC<Props> = ({
   const setTotalRows = useGameStore((s) => s.setTotalRows)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+  const setRowsData = useGameStore((s) => s.setRowsData)
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
@@ -121,7 +122,7 @@ const Platform: FC<Props> = ({
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Precomputed row sequence
-  const rowsData = useRef<RowData[]>([])
+  const rowsDataRef = useRef<RowData[]>(gameStore.getState().rowsData ?? [])
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
   const nextAbsoluteRowIndex = useRef(0)
@@ -173,7 +174,7 @@ const Platform: FC<Props> = ({
       const row = rows[i]
       row.rowIndex = nextAbsoluteRowIndex.current
       nextAbsoluteRowIndex.current++
-      rowsData.current.push(row)
+      rowsDataRef.current.push(row)
     }
   }
 
@@ -242,7 +243,7 @@ const Platform: FC<Props> = ({
 
     function setupInitialRowsAndTiles() {
       // Reset state
-      rowsData.current = []
+      rowsDataRef.current = []
       nextAbsoluteRowIndex.current = 0
       nextRowDataIndex.current = 0
       activeRowsData.current = []
@@ -269,6 +270,7 @@ const Platform: FC<Props> = ({
         insertSpeedRunRows()
       }
 
+      setRowsData(rowsDataRef.current)
       setTotalRows(nextAbsoluteRowIndex.current)
 
       const tileInstances: InstancedRigidBodyProps[] = []
@@ -297,7 +299,7 @@ const Platform: FC<Props> = ({
       }
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-        const rowData = rowsData.current[rowIndex] ?? EMPTY_ROW_DATA
+        const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
         activeRowsData.current[rowIndex] = rowData
         baseZByRow.current[rowIndex] = nextRowZ
         rowZByIndex.current[rowIndex] = nextRowZ
@@ -483,7 +485,7 @@ const Platform: FC<Props> = ({
     for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
       hideRowDecorations(rowIndex)
       rowIsVisible.current[rowIndex] = false
-      const newRowData = rowsData.current[nextRowDataIndex.current] ?? EMPTY_ROW_DATA
+      const newRowData = rowsDataRef.current[nextRowDataIndex.current] ?? EMPTY_ROW_DATA
       updateInstanceAttributesForRow(rowIndex, newRowData)
       nextRowDataIndex.current++
     }
@@ -503,7 +505,7 @@ const Platform: FC<Props> = ({
       nextRowDataIndex.current = Math.max(0, nextRowDataIndex.current - 1)
       const earliestRowIndex = nextRowDataIndex.current - ROWS_RENDERED
       const newRowData =
-        earliestRowIndex >= 0 ? rowsData.current[earliestRowIndex] : EMPTY_ROW_DATA
+        earliestRowIndex >= 0 ? rowsDataRef.current[earliestRowIndex] : EMPTY_ROW_DATA
       updateInstanceAttributesForRow(rowIndex, newRowData)
     }
 

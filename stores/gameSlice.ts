@@ -2,6 +2,7 @@ import { MOVE_HUD_INDICATOR } from '@/resources/content'
 import { GameSlice, GameSliceCreator, Stage } from './types'
 import { INITIAL_TIME_STATE } from './timeSlice'
 import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
+import type { RowData } from '@/utils/tiles'
 
 export const INITIAL_GAME_STATE = {
   stage: Stage.HOME,
@@ -13,6 +14,7 @@ export const INITIAL_GAME_STATE = {
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
   isPlatformReady: false,
+  rowsData: [] as RowData[],
   _isHydrated: false,
 }
 
@@ -38,6 +40,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   setPlatformReady: (isPlatformReady) => {
     set({ isPlatformReady })
+  },
+  setRowsData: (rowsData) => {
+    set({ rowsData })
   },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {
@@ -69,7 +74,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       paletteIndex: s.paletteIndex,
       isPlatformReady: false,
       resetPlatformTick: s.resetPlatformTick + 1,
-      resetPlayerTick: s.resetPlayerTick + 1,
+      respawnPlayerTick: s.respawnPlayerTick + 1,
     }))
   },
 })

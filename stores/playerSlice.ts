@@ -35,7 +35,8 @@ export const INITIAL_PLAYER_STATE = {
   collectedCollectibles: [],
   collectedRings: {},
   confirmationProgress: 0,
-  resetPlayerTick: 0,
+  respawnPlayerTick: 0,
+  isRespawning: false,
 }
 
 export const createPlayerSlice =
@@ -153,10 +154,13 @@ export const createPlayerSlice =
 
         startConfirmation(onConfirmed, COLLECTIBLE_DURATION_S)
       },
-      resetPlayer: () => {
+      setIsRespawning: (isRespawning: boolean) => {
+        set({ isRespawning })
+      },
+      respawnPlayer: () => {
         set((s) => ({
-          playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
-          resetPlayerTick: s.resetPlayerTick + 1,
+          isRespawning: true,
+          respawnPlayerTick: s.respawnPlayerTick + 1,
         }))
       },
       stopConfirmation: () => {
@@ -166,7 +170,7 @@ export const createPlayerSlice =
       },
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
-        get().resetPlayer()
+        get().respawnPlayer()
       },
     }
   }

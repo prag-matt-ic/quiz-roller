@@ -3,6 +3,7 @@ import { Vector3, type Vector3Tuple } from 'three'
 import { type StateCreator } from 'zustand'
 import { CollectibleType, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
+import type { RowData } from '@/utils/tiles'
 
 export enum Stage {
   HOME = 'home',
@@ -75,8 +76,10 @@ export type PlayerSlice = {
   collectedRings: RingCollection
   onRingCollected: (indexes: RingIndex) => void
 
-  resetPlayerTick: number
-  resetPlayer: (position?: Vector3Tuple) => void
+  respawnPlayerTick: number
+  isRespawning: boolean
+  setIsRespawning: (isRespawning: boolean) => void
+  respawnPlayer: () => void
   stopConfirmation: () => void
   onOutOfBounds: () => void
 }
@@ -104,6 +107,8 @@ export type GameSlice = {
   resetPlatformTick: number
   isPlatformReady: boolean
   setPlatformReady: (isReady: boolean) => void
+  rowsData: RowData[]
+  setRowsData: (rows: RowData[]) => void
   resetGame: ({
     isSpeedRunMode,
     speedRunStage,

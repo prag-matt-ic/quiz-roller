@@ -33,7 +33,9 @@ function useControls() {
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const DISABLED_STAGES: SpeedRunStage[] = ['username', 'countdown', 'leaderboard']
   const isDisabledStage = DISABLED_STAGES.includes(speedRunStage || '')
-  const disableInput = isSpeedRunMode && isDisabledStage
+  const isRespawningPlayer = useGameStore((s) => s.isRespawning)
+
+  const disableInput = isRespawningPlayer || (isSpeedRunMode && isDisabledStage)
 
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 
@@ -49,7 +51,11 @@ const Keys: FC = () => {
   const input = useRef<PlayerInput>(playerInput)
 
   useEffect(() => {
-    if (disableInput) return
+    if (disableInput) {
+      setPlayerInput({ up: 0, down: 0, left: 0, right: 0 })
+      input.current = { up: 0, down: 0, left: 0, right: 0 }
+      return
+    }
 
     const updateInput = (key: keyof PlayerInput, value: number) => {
       if (input.current[key] === value) return

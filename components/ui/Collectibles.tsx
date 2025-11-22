@@ -54,7 +54,10 @@ const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
 
   return (
     <>
-      <div ref={refs.setReference} {...getReferenceProps()} className="pointer-events-auto">
+      <div
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className="pointer-events-auto border">
         <GemIcon
           size={40}
           strokeWidth={1}
@@ -72,7 +75,7 @@ const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
           data-status={status}
           {...getFloatingProps()}
           className={twJoin(
-            'absolute z-50 flex w-fit origin-top flex-col gap-5 overflow-hidden rounded-xl border bg-black p-6 whitespace-nowrap',
+            'absolute z-50 flex w-sm flex-col gap-5 overflow-hidden rounded-xl border bg-black p-6 whitespace-nowrap',
             // Transition states
             'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
             'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',

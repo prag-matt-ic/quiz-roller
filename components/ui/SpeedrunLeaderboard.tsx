@@ -42,57 +42,56 @@ export const SpeedrunLeaderboard: FC = () => {
   return (
     <section className="fixed top-32 left-1/2 w-2xl max-w-full -translate-x-1/2 rounded-lg bg-black/50 px-8 py-4">
       <div className="mb-2 flex w-full items-center justify-between border-b border-white/50 px-2 py-4">
-        <Trophy className="text-leaderboard" />
+        <Trophy className="text-leaderboard" strokeWidth={1.5} />
         <h1 className="text-center text-3xl uppercase">Global Leaderboard</h1>
-        <Trophy className="text-leaderboard" />
+        <Trophy className="text-leaderboard" strokeWidth={1.5} />
       </div>
-      <div className="mt-1 grid grid-cols-[auto_2fr_1fr_0.5fr] rounded-lg bg-black px-4">
+      <section className="mt-1 grid grid-cols-[auto_2fr_1fr_0.5fr] rounded-lg bg-black px-4">
         {/* Header */}
-        <h4 className="ml-2 flex w-7 justify-center">#</h4>
-        <h4 className="px-2 text-left">Username</h4>
-        <h4 className="px-2 text-center">Time</h4>
-        <h4 className="px-2 text-center">Flag</h4>
-        <div className="col-span-full my-2 h-px border-b border-white/50" />
+        <header className="col-span-full grid grid-cols-subgrid py-4 text-sm">
+          <h4 className="ml-2 flex w-7 justify-center">#</h4>
+          <h4 className="px-2 text-left">Username</h4>
+          <h4 className="px-2 text-center">Time</h4>
+        </header>
 
         {/* Rows */}
-        <div className="col-span-full w-full border-2 border-red-600">
-          {speedruns.map((entry, index) => {
-            const isCurrentUserId = completedSpeedrunIds.includes(entry.id)
-            const isCurrentUsername = username && entry.username === username
-            const isCurrentUser = isCurrentUserId || isCurrentUsername
-            const isTopThree = index < 3
-            return (
-              <section
-                key={entry.id}
-                className={twJoin(
-                  'mb-2 grid grid-cols-[auto_2fr_1fr_0.5fr] items-center rounded outline',
-                  isCurrentUser ? 'text-leaderboard outline-leaderboard' : 'outline-white/50',
-                  isTopThree ? 'h-12' : 'h-8',
-                )}>
-                {isTopThree ? (
-                  <Medal position={index} />
-                ) : (
-                  <div className="ml-2 flex w-7 items-center justify-center">{index + 1}.</div>
-                )}
+        {speedruns.map((entry, index) => {
+          const isCurrentUserId = completedSpeedrunIds.includes(entry.id)
+          // Username isnt unique so we should just match by records we know they own.
+          // const isCurrentUsername = username && entry.username === username
+          const isCurrentUser = isCurrentUserId // || isCurrentUsername
+          const isTopThree = index < 3
+          return (
+            <section
+              key={entry.id}
+              className={twJoin(
+                'col-span-full mb-2 grid grid-cols-subgrid items-center rounded outline select-none',
+                isCurrentUser ? 'text-leaderboard outline-leaderboard' : 'outline-white/30',
+                isTopThree ? 'h-12' : 'h-10',
+              )}>
+              {isTopThree ? (
+                <Medal position={index} />
+              ) : (
+                <div className="ml-2 flex w-7 items-center justify-center">{index + 1}.</div>
+              )}
 
-                <h4
-                  className={twJoin(
-                    'flex items-center px-2 text-left uppercase',
-                    isTopThree ? 'text-lg' : 'text-base',
-                  )}>
-                  {entry.username}
-                </h4>
-                <div className="flex items-center justify-center px-2 text-center tabular-nums">
-                  {entry.time.toFixed(2)}s
-                </div>
-                <div className="flex items-center justify-center px-2 text-center">
-                  {entry.flag || '-'}
-                </div>
-              </section>
-            )
-          })}
-        </div>
-      </div>
+              <h4
+                className={twJoin(
+                  'flex items-center px-2 text-left uppercase',
+                  isTopThree ? 'text-lg' : 'text-base',
+                )}>
+                {entry.username}
+              </h4>
+              <div className="flex items-center justify-center px-2 text-center font-mono text-xl tabular-nums">
+                {entry.time.toFixed(2)}s
+              </div>
+              <div className="flex items-center justify-center px-2 text-center text-2xl">
+                {entry.flag ?? '?'}
+              </div>
+            </section>
+          )
+        })}
+      </section>
     </section>
   )
 }
@@ -108,7 +107,7 @@ const Medal: FC<{ position: number }> = ({ position }) => {
         height="32"
         viewBox="0 0 24 24"
         fill="none"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
         className={twJoin('absolute inset-0', medalColours[position])}>

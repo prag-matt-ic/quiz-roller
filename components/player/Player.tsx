@@ -16,6 +16,7 @@ import {
   type EdgeWarningIntensities,
   PLAYER_INITIAL_POSITION,
   useGameStore,
+  useGameStoreAPI,
 } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -29,6 +30,8 @@ import {
   EPSILON,
   PLAYER_MOVE_UNITS,
   TERRAIN_SPEED_UNITS,
+  SAFE_HEIGHT,
+  colToX,
 } from '@/utils/tiles'
 import { Marble } from '@/components/player/marble/Marble'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
@@ -55,9 +58,13 @@ const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
-  const resetPlayerTick = useGameStore((s) => s.resetPlayerTick)
+
+  const isRespawning = useGameStore((s) => s.isRespawning)
+  const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
+  const setIsRespawning = useGameStore((s) => s.setIsRespawning)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
+  const gameStoreAPI = useGameStoreAPI()
 
   const { controllerRef, input } = usePlayerController()
 
@@ -80,19 +87,76 @@ const Player: FC = () => {
 
   useEffect(() => {
     if (!isPlatformReady) return
-    if (resetPlayerTick === 0) return
+    if (respawnPlayerTick === 0) return
     const body = bodyRef.current
     if (!body) return
-    // hard reset transform & motion
+
+    function calculateSafeXForPlayerReset(): number {
+      const state = gameStoreAPI.getState()
+      const { rowsData, currentRow, playerWorldPosition } = state
+
+      if (!rowsData.length) {
+        return PLAYER_INITIAL_POSITION[0]
+      }
+
+      const clampedRowIndex = Math.min(
+        Math.max(currentRow, 0),
+        Math.max(rowsData.length - 1, 0),
+      )
+      const rowData = rowsData[clampedRowIndex]
+      if (!rowData || !rowData.heights?.length) {
+        return PLAYER_INITIAL_POSITION[0]
+      }
+
+      const maxColumnIndex = Math.min(rowData.heights.length, COLUMNS) - 1
+      const estimatedColumnFromPlayerX = Math.round(
+        playerWorldPosition.x / TILE_SIZE + COLUMNS / 2 - 0.5,
+      )
+      const preferredColumn = Math.min(
+        Math.max(estimatedColumnFromPlayerX, 0),
+        Math.max(maxColumnIndex, 0),
+      )
+
+      const isColumnRaised = (columnIndex: number) => {
+        const height = rowData.heights[columnIndex]
+        return typeof height === 'number' && height >= SAFE_HEIGHT - EPSILON.TINY
+      }
+
+      if (isColumnRaised(preferredColumn)) {
+        return colToX(preferredColumn)
+      }
+
+      for (let offset = 1; offset <= maxColumnIndex; offset++) {
+        const leftColumn = preferredColumn - offset
+        if (leftColumn >= 0 && isColumnRaised(leftColumn)) {
+          return colToX(leftColumn)
+        }
+
+        const rightColumn = preferredColumn + offset
+        if (rightColumn <= maxColumnIndex && isColumnRaised(rightColumn)) {
+          return colToX(rightColumn)
+        }
+      }
+
+      return PLAYER_INITIAL_POSITION[0]
+    }
+
+    // Reset position, player drops in from Y height to land on the surface.
     body.setTranslation(
       {
-        x: PLAYER_INITIAL_POSITION[0],
+        x: calculateSafeXForPlayerReset(),
         y: PLAYER_INITIAL_POSITION[1],
         z: PLAYER_INITIAL_POSITION[2],
       },
       true,
     )
-  }, [isPlatformReady, resetPlayerTick])
+
+    const clearRespawnTimeout = setTimeout(() => {
+      setIsRespawning(false)
+    }, 420)
+
+    return () => clearTimeout(clearRespawnTimeout)
+  }, [gameStoreAPI, isPlatformReady, respawnPlayerTick, setIsRespawning])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -103,6 +167,10 @@ const Player: FC = () => {
       !controllerRef.current
     )
       return
+
+    const currentPosition = bodyRef.current.translation()
+
+    // if (currentPosition.y > 1.0 ) return
 
     // Resolve player input into a clamped direction vector
     const inputDirectionX = input.current.right - input.current.left
@@ -128,7 +196,6 @@ const Player: FC = () => {
     )
 
     const correctedMovement = controllerRef.current.computedMovement()
-    const currentPosition = bodyRef.current.translation()
 
     // TODO: simplify this now that the terrain/platform moves in sync with the player
     calculateTerrainVelocity(0, terrainVelocity.current)
