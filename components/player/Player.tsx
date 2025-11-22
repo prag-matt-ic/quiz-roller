@@ -223,6 +223,11 @@ const Player: FC = () => {
       correctedMovement.y,
       correctedMovement.z - terrainDisplacement.current.z,
     )
+    const maxFrameDistance = PLAYER_MOVE_UNITS * deltaTime
+    const frameDistance = frameDisplacement.current.length()
+    if (frameDistance > maxFrameDistance && frameDistance > EPSILON.SMALL) {
+      frameDisplacement.current.multiplyScalar(maxFrameDistance / frameDistance)
+    }
 
     calculatePlayerVelocity(frameDisplacement.current, deltaTime, playerVelocity.current)
     playerVelocity.current.y = 0
