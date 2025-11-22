@@ -34,7 +34,7 @@ export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true 
   }, [count])
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/40 p-4 pb-12">
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
       <LeaderboardTable isLoading={isLoading} speedRuns={speedRuns} count={count} />
       {showButtons && (
         <div className="flex gap-2">
