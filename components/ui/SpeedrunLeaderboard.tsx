@@ -6,6 +6,7 @@ import { getSpeedrunData } from '@/app/actions'
 import type { SpeedRunDatabase } from '@/model/schema'
 import { useGameStore } from '@/components/GameProvider'
 import { Trophy } from 'lucide-react'
+import Button from './Button'
 
 type Props = {
   count?: number
@@ -15,6 +16,7 @@ type Props = {
 export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
+  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
   useEffect(() => {
     let isMounted = true
@@ -34,7 +36,13 @@ export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true 
   return (
     <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/40 p-4 pb-12">
       <LeaderboardTable isLoading={isLoading} speedRuns={speedRuns} count={count} />
-      {showButtons && <div>Restart | Share</div>}
+      {showButtons && (
+        <div className="flex gap-2">
+          <Button color="light" variant="primary" onClick={startSpeedRun}>
+            Restart
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
