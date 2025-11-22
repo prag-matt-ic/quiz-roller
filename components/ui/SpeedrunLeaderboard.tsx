@@ -7,11 +7,14 @@ import type { SpeedRunDatabase } from '@/model/schema'
 import { useGameStore } from '@/components/GameProvider'
 import { Trophy } from 'lucide-react'
 
-export const SpeedrunLeaderboard: FC = () => {
+type Props = {
+  count?: number
+}
+
+export const SpeedrunLeaderboard: FC<Props> = ({ count = 10 }) => {
   const [speedruns, setSpeedruns] = useState<SpeedRunDatabase[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const username = useGameStore((s) => s.username)
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
   const completedSpeedrunIds = useMemo(
     () => completedSpeedruns.map((run) => run.id),
@@ -19,80 +22,75 @@ export const SpeedrunLeaderboard: FC = () => {
   )
 
   useEffect(() => {
-    let mounted = true
+    let isMounted = true
 
-    getSpeedrunData().then((data) => {
-      if (mounted) {
+    getSpeedrunData(count).then((data) => {
+      if (isMounted) {
         setSpeedruns(data)
         setIsLoading(false)
       }
     })
 
     return () => {
-      mounted = false
+      isMounted = false
     }
-  }, [])
+  }, [count])
 
   if (isLoading) {
     return <div className="w-full text-center">Loading...</div>
   }
 
-  // TODO: highlight the current user's entries if present
-  // TODO: create a skeleton loader for the leaderboard - same grid but with animated placeholders
+  // TODO: create a skeleton loader for the leaderboard rows - same grid but with animated placeholders
   return (
-    <section className="fixed top-32 left-1/2 w-2xl max-w-full -translate-x-1/2 rounded-lg bg-black/50 px-8 py-4">
-      <div className="mb-2 flex w-full items-center justify-between border-b border-white/50 px-2 py-4">
-        <Trophy className="text-leaderboard" strokeWidth={1.5} />
-        <h1 className="text-center text-3xl uppercase">Global Leaderboard</h1>
-        <Trophy className="text-leaderboard" strokeWidth={1.5} />
-      </div>
-      <section className="mt-1 grid grid-cols-[auto_2fr_1fr_0.5fr] rounded-lg bg-black px-4">
-        {/* Header */}
-        <header className="col-span-full grid grid-cols-subgrid py-4 text-sm">
-          <h4 className="ml-2 flex w-7 justify-center">#</h4>
-          <h4 className="px-2 text-left">Username</h4>
-          <h4 className="px-2 text-center">Time</h4>
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-4 pb-12">
+      <section className="w-full max-w-xl">
+        <header className="flex w-full items-center justify-between px-3 py-5">
+          <Trophy className="text-leaderboard" strokeWidth={1.5} />
+          <h1 className="text-center text-2xl uppercase">Global Leaderboard</h1>
+          <Trophy className="text-leaderboard" strokeWidth={1.5} />
         </header>
-
-        {/* Rows */}
-        {speedruns.map((entry, index) => {
-          const isCurrentUserId = completedSpeedrunIds.includes(entry.id)
-          // Username isnt unique so we should just match by records we know they own.
-          // const isCurrentUsername = username && entry.username === username
-          const isCurrentUser = isCurrentUserId // || isCurrentUsername
-          const isTopThree = index < 3
-          return (
-            <section
-              key={entry.id}
-              className={twJoin(
-                'col-span-full mb-2 grid grid-cols-subgrid items-center rounded outline select-none',
-                isCurrentUser ? 'text-leaderboard outline-leaderboard' : 'outline-white/30',
-                isTopThree ? 'h-12' : 'h-10',
-              )}>
-              {isTopThree ? (
-                <Medal position={index} />
-              ) : (
-                <div className="ml-2 flex w-7 items-center justify-center">{index + 1}.</div>
-              )}
-
-              <h4
+        <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] rounded bg-black shadow-2xl shadow-[#000]">
+          {/* Rows */}
+          {speedruns.map((entry, index) => {
+            const isCurrentUser = completedSpeedrunIds.includes(entry.id)
+            // Username isnt unique so we should just match by records we know they own.
+            // const isCurrentUsername = username && entry.username === username
+            const isTopThree = index < 3
+            return (
+              <div
+                key={entry.id}
                 className={twJoin(
-                  'flex items-center px-2 text-left uppercase',
-                  isTopThree ? 'text-lg' : 'text-base',
+                  'col-span-full grid grid-cols-subgrid items-center border-b border-white/12 px-3 select-none last-of-type:border-0',
+                  isCurrentUser ? 'text-leaderboard bg-leaderboard/8' : 'outline-white/30',
+                  isTopThree ? 'h-14' : 'h-11',
                 )}>
-                {entry.username}
-              </h4>
-              <div className="flex items-center justify-center px-2 text-center font-mono text-xl tabular-nums">
-                {entry.time.toFixed(2)}s
+                {isTopThree ? (
+                  <Medal position={index} />
+                ) : (
+                  <div className="flex w-full items-center justify-center pl-1 text-center">
+                    {index + 1}.
+                  </div>
+                )}
+
+                <h4
+                  className={twJoin(
+                    'flex items-center px-2 text-left uppercase',
+                    isTopThree ? 'text-lg' : 'text-base',
+                  )}>
+                  {entry.username}
+                </h4>
+                <div className="flex items-center justify-center px-2 text-center font-mono text-xl tabular-nums">
+                  {entry.time.toFixed(2)}s
+                </div>
+                <div className="flex items-center justify-center px-2 text-center text-2xl font-bold">
+                  {entry.flag ?? '?'}
+                </div>
               </div>
-              <div className="flex items-center justify-center px-2 text-center text-2xl">
-                {entry.flag ?? '?'}
-              </div>
-            </section>
-          )
-        })}
+            )
+          })}
+        </div>
       </section>
-    </section>
+    </div>
   )
 }
 

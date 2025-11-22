@@ -11,7 +11,7 @@ import {
 } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
-export async function getSpeedrunData(): Promise<SpeedRunDatabase[]> {
+export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     // TODO: add an index to the table on time for performance
@@ -19,7 +19,7 @@ export async function getSpeedrunData(): Promise<SpeedRunDatabase[]> {
       SELECT id, username, time, date, ip, country, flag, attempt
       FROM "quizroller_speedrun" 
       ORDER BY time ASC
-      LIMIT 10
+      LIMIT ${count}
     `
     return speedrunDatabaseSchema.array().parse(speedruns)
   } catch (error) {

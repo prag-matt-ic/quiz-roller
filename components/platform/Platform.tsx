@@ -122,7 +122,7 @@ const Platform: FC<Props> = ({
   const translation = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
   // Precomputed row sequence
-  const rowsDataRef = useRef<RowData[]>(gameStore.getState().rowsData ?? [])
+  const rowsDataRef = useRef<RowData[]>([])
   const nextRowDataIndex = useRef(0)
   const activeRowsData = useRef<RowData[]>([])
   const nextAbsoluteRowIndex = useRef(0)
