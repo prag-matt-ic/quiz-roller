@@ -26,6 +26,7 @@ export const createGameStore = (
             username: s.username,
             paletteIndex: s.paletteIndex,
             totalTimeS: s.totalTimeS,
+            completedSpeedRuns: s.completedSpeedRuns,
           }),
           version: 1,
           onRehydrateStorage: (state) => {

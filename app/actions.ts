@@ -75,6 +75,7 @@ export async function insertSpeedRun({
     if (!insert || insert.length === 0) throw new Error('No data returned from insert')
 
     const parsedInsert = speedrunDatabaseSchema.parse(insert[0])
+    console.log('Inserted speedrun:', parsedInsert)
 
     return parsedInsert
   } catch (error) {

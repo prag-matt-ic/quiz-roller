@@ -43,15 +43,11 @@ export const createTimeSlice =
     },
     finishSpeedRun: async () => {
       const { speedRunTimeCS, username, completedSpeedRuns } = get()
-
-      console.warn('Finishing speedrun...', { username, speedRunTimeCS })
-
       if (!username) return
 
       set({ speedRunStage: 'submitting' })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
-
       const submission: SpeedRunSubmission = {
         username,
         time: timeInSeconds,
@@ -60,17 +56,15 @@ export const createTimeSlice =
       }
 
       try {
-        console.log('Submitting speedrun...', submission)
         const result = await insertSpeedRun(submission)
-        if (!result) throw new Error('Submission failed')
-        console.log('Speedrun submitted successfully:', result)
+        if (!result) throw new Error('Inserting speedrun returned null')
         set((state) => ({
           completedSpeedRuns: [...state.completedSpeedRuns, result],
           speedRunStage: 'leaderboard',
         }))
       } catch (error) {
         // TODO: handle showing the error with some UI - maybe a toast?
-        console.error('Error submitting speedrun:', error)
+        console.error('Error inserting speedrun:', error)
         set({ speedRunStage: 'leaderboard' })
       }
     },
