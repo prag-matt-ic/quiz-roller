@@ -2,6 +2,7 @@
 #pragma glslify: fractalNoise = require(../helpers/fractalNoise.glsl)
 #pragma glslify: vignette = require(../helpers/vignette.glsl)
 #pragma glslify: worley2D = require(../helpers/worley2D.glsl)
+#pragma glslify: applyGradientBand = require(../helpers/applyGradientBand.glsl)
 
 uniform float uTime;
 uniform vec2 uResolution;
@@ -49,45 +50,9 @@ vec3 cosinePalette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return a + b * cos(6.283185 * (c * t + d));
 }
 
-vec3 getClampedColour(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
+vec3 sampleClampedPalette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
     return clamp(cosinePalette(clamp(t, 0.0, 1.0), a, b, c, d), 0.0, 1.0);
 }
-
-vec3 applyGradientOverlay(vec3 baseColor, vec2 uv, vec3 a, vec3 b, vec3 c, vec3 d) {
-    // Linear gradient band overlay (50% width, 20% height, centered)
-    const float bandWidth = 0.4;
-    const float bandHeight = 0.12;
-    const float bandStartX = 0.5 - bandWidth * 0.5;
-    const float bandEndX = 0.5 + bandWidth * 0.5;
-    const float bandStartY = 0.5 - bandHeight * 0.5;
-    const float bandEndY = 0.5 + bandHeight * 0.5;
-
-    float linearT = (uv.x - bandStartX) / bandWidth;
-    vec3 linearColour = getClampedColour(linearT, a, b, c, d);
-
-    float insideX = step(bandStartX, uv.x) * step(uv.x, bandEndX);
-    float insideY = step(bandStartY, uv.y) * step(uv.y, bandEndY);
-    float bandMask = insideX * insideY;
-
-    // White border outline with resolution-aware thickness
-    const float pixelBorder = 2.0;
-    float borderThicknessX = pixelBorder / max(uResolution.x, 1.0);
-    float borderThicknessY = pixelBorder / max(uResolution.y, 1.0);
-
-    float expandedInsideY = step(bandStartY - borderThicknessY, uv.y) * step(uv.y, bandEndY + borderThicknessY);
-    float expandedInsideX = step(bandStartX - borderThicknessX, uv.x) * step(uv.x, bandEndX + borderThicknessX);
-
-    bool onLeftBorder = abs(uv.x - bandStartX) <= borderThicknessX && expandedInsideY > 0.5;
-    bool onRightBorder = abs(uv.x - bandEndX) <= borderThicknessX && expandedInsideY > 0.5;
-    bool onBottomBorder = abs(uv.y - bandStartY) <= borderThicknessY && expandedInsideX > 0.5;
-    bool onTopBorder = abs(uv.y - bandEndY) <= borderThicknessY && expandedInsideX > 0.5;
-    float borderMask = (onLeftBorder || onRightBorder || onBottomBorder || onTopBorder) ? 1.0 : 0.0;
-
-    vec3 color = mix(baseColor, linearColour, bandMask);
-    color = mix(color, vec3(1.0), borderMask);
-    return color;
-}
-
 
 void main() {
     vec2 uv = vUv;
@@ -103,8 +68,7 @@ void main() {
     vec2 offsetUv = centeredUv - offset;
 
     // Distance from center (modified by offset)
-    float dist = length(offsetUv) * 0.8;
-
+    float dist = length(offsetUv);
 
     // Layer 1: Fractal noise for organic base
     vec2 noiseUv = uv * aspectScale;
@@ -126,9 +90,9 @@ void main() {
     
     // Combine distance gradient with layered noises
     float t = dist + fbm * uFbmMix + (grain - 0.5) * uGrainMix + worleyPattern * uWorleyMix;
-    
-    // Get color from dynamic cosine palette
-    vec3 color = cosinePalette(t, uA, uB, uC, uD) * uSampleWeight;
+
+    // Get color from dynamic cosine palette (clamp sample to palette bounds)
+    vec3 color = sampleClampedPalette(t, uA, uB, uC, uD) * uSampleWeight;
     
     // Apply dark vignette (controlled by uniforms)
     float vignetteAmount = vignette(centeredUv, uVignetteStrength, uVignetteRadius, uVignetteSmoothness, true);
@@ -139,7 +103,7 @@ void main() {
 
     // Apply gradient overlay if enabled
     if (uShowGradientOverlay) {
-        color = applyGradientOverlay(color, vUv, uA, uB, uC, uD);
+        color = applyGradientBand(color, vUv, uResolution, uA, uB, uC, uD);
     }
 
     gl_FragColor = vec4(color, 1.0);

@@ -5,7 +5,6 @@
 #pragma glslify: darkVignette = require(../dev/colourTexture/helpers/darkVignette.glsl)
 #pragma glslify: worley2D = require(../dev/colourTexture/helpers/worley2D.glsl)
 
-
 uniform float uTime;
 uniform vec2 uResolution;
 uniform float uSeed;

@@ -68,9 +68,9 @@ export const INITIAL_COLOUR_TEXTURE_UNIFORMS: ColourTextureShaderUniforms = {
   uFbmGain: 0.6,
   uFbmMix: 0.28,
   // Vignette defaults
-  uVignetteStrength: 0.4,
-  uVignetteRadius: 0.44,
-  uVignetteSmoothness: 0.53,
+  uVignetteStrength: 0.0,
+  uVignetteRadius: 0.5,
+  uVignetteSmoothness: 0.5,
   // Worley Noise defaults
   uWorleyScale: 0.5,
   uWorleyJitter: 0.0,

@@ -94,7 +94,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         {/* <OrbitControls /> */}
         <Camera />
         {isDebug && <Stats />}
-        <Background />
+        {/* <Background /> */}
         <Suspense>
           <Physics debug={isDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />

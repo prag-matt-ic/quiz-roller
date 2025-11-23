@@ -649,10 +649,10 @@ const ColourTextureContent: FC = () => {
       </section>
 
       {/* Preview Section */}
-      <section className="relative min-h-[360px]">
+      <section className="relative flex items-center justify-center overflow-hidden bg-[#000]">
         <Canvas
-          orthographic
-          className="absolute! inset-0 size-full!"
+          orthographic={true}
+          className="absolute! aspect-square! h-full w-auto! max-w-full"
           camera={{
             position: [0, 0, 1],
             near: 0.01,
