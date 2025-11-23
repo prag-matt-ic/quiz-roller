@@ -12,6 +12,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
 import { SpeedrunLeaderboard } from './SpeedrunLeaderboard'
 import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
+import { FlagIcon } from 'lucide-react'
 
 gsap.registerPlugin(useGSAP)
 
@@ -69,9 +70,9 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       <button
         type="button"
-        className="pointer-events-auto fixed top-6 right-24 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/30"
+        className="pointer-events-auto fixed top-6 right-24 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white uppercase backdrop-blur transition hover:bg-white/30"
         onClick={startSpeedRun}>
-        Start Speedrun
+        <FlagIcon className="mr-2 inline-block" size={20} /> Speedrun
       </button>
 
       <Transition

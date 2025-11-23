@@ -118,6 +118,7 @@ const Platform: FC<Props> = ({
   const baseZByRow = useRef<number[]>([])
   const wrapCountByRow = useRef<number[]>([])
   const rowZByIndex = useRef<number[]>([])
+  const rowBaseWithoutScroll = useRef<number[]>([])
   const rowIsVisible = useRef<boolean[]>([])
   const xByBodyIndex = useRef<number[]>([])
   const yByBodyIndex = useRef<number[]>([])
@@ -259,6 +260,7 @@ const Platform: FC<Props> = ({
       baseZByRow.current = []
       wrapCountByRow.current = []
       rowZByIndex.current = []
+      rowBaseWithoutScroll.current = []
       rowIsVisible.current = []
       xByBodyIndex.current = []
       yByBodyIndex.current = []
@@ -312,6 +314,7 @@ const Platform: FC<Props> = ({
       activeRowsData.current[rowIndex] = rowData
       baseZByRow.current[rowIndex] = nextRowZ
       rowZByIndex.current[rowIndex] = nextRowZ
+      rowBaseWithoutScroll.current[rowIndex] = nextRowZ
       wrapCountByRow.current[rowIndex] = 0
       rowIsVisible.current[rowIndex] = false
       floatingTilesHandle.current?.setRowData(rowIndex, rowData)
@@ -339,7 +342,8 @@ const Platform: FC<Props> = ({
       }
 
       tiles.setTileInstances(tileInstances)
-      floatingTilesHandle.current?.setRowWorldPositions(rowZByIndex.current)
+      floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
+      floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
       setPlatformReady(true)
       nextRowDataIndex.current = ROWS_RENDERED
       markInstanceAttributesDirty()
@@ -549,6 +553,7 @@ const Platform: FC<Props> = ({
     const cycleDistance = ROW_CYCLE_DISTANCE
     const maxZ = playerZ + ROW_VISIBILITY_HALF_SPAN
     const minZ = playerZ - ROW_VISIBILITY_HALF_SPAN
+    let rowBasesChanged = false
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
       let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
@@ -574,6 +579,11 @@ const Platform: FC<Props> = ({
 
       setTileTranslations(rowIndex, rowZ)
       rowZByIndex.current[rowIndex] = rowZ
+      const rowBase = rowZ - currentScrollPosition.current
+      if (rowBaseWithoutScroll.current[rowIndex] !== rowBase) {
+        rowBaseWithoutScroll.current[rowIndex] = rowBase
+        rowBasesChanged = true
+      }
 
       const wasVisible = rowIsVisible.current[rowIndex] === true
       const rowAlpha = getRowAlpha(rowZ, playerZ)
@@ -595,7 +605,9 @@ const Platform: FC<Props> = ({
       updateCurrentRowState(stageRowIndex)
     }
 
-    floatingTilesHandle.current?.setRowWorldPositions(rowZByIndex.current)
+    if (rowBasesChanged) {
+      floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
+    }
   }
 
   useGameFrame((_, delta) => {
@@ -613,6 +625,7 @@ const Platform: FC<Props> = ({
     currentScrollPosition.current += zStep
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
+    floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
     floatingTilesHandle.current?.step(delta)
 
     if (zStep === 0) return

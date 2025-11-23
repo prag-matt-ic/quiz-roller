@@ -10,6 +10,7 @@ uniform float uYMax;
 uniform float uZFadeStart;
 uniform float uZFadeEnd;
 uniform float uCameraZ;
+uniform float uScrollZ;
 
 attribute vec2 textureUv;
 
@@ -41,7 +42,7 @@ void main() {
   float offset = (jitter - 0.5) * COLUMN_JITTER_RANGE * uTileSize;
 
   float worldX = columnToWorldX(columnIndex, offset, uGridCols, uTileSize);
-  float worldZ = sampleRowWorldZ(rowIndex, uRowCount);
+  float worldZ = sampleRowWorldZ(rowIndex, uRowCount) + uScrollZ;
 
   vec3 instancePosition = vec3(worldX, y, worldZ);
   vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz + instancePosition;

@@ -53,6 +53,7 @@ type FloatingTilesUniforms = {
   uZFadeEnd: number
   uCameraZ: number
   uRowCount: number
+  uScrollZ: number
 }
 
 const EXTRA_SIDE_COLUMNS = 5
@@ -81,6 +82,7 @@ const INITIAL_FLOATING_TILE_UNIFORMS: FloatingTilesUniforms = {
   uZFadeEnd: Z_FADE_END,
   uCameraZ: 0,
   uRowCount: ROWS_RENDERED,
+  uScrollZ: 0,
 }
 
 const CustomFloatingTilesMaterial = shaderMaterial(
@@ -93,6 +95,7 @@ const FloatingTilesMaterial = extend(CustomFloatingTilesMaterial)
 export type FloatingTilesHandle = {
   setRowData: (rowIndex: number, rowData: RowData | null) => void
   setRowWorldPositions: (rowPositions: number[]) => void
+  setScrollOffset: (scrollZ: number) => void
   step: (delta: number) => void
   reset: () => void
 }
@@ -365,6 +368,7 @@ const FloatingTiles = forwardRef<FloatingTilesHandle, FloatingTilesProps>(
       materialRef.current.uZFadeEnd = Z_FADE_END
       materialRef.current.uRowCount = ROWS_RENDERED
       materialRef.current.uRowWorldPositions = rowPositionsTextureRef.current ?? null
+      materialRef.current.uScrollZ = 0
     }, [paletteIndex])
 
     const updateRowMask = useCallback(
@@ -481,6 +485,10 @@ const FloatingTiles = forwardRef<FloatingTilesHandle, FloatingTilesProps>(
         setRowWorldPositions: (positions) => {
           if (isDisabled) return
           updateRowWorldPositions(positions)
+        },
+        setScrollOffset: (scrollZ) => {
+          if (isDisabled || !materialRef.current) return
+          materialRef.current.uScrollZ = scrollZ
         },
         step: (delta) => {
           if (isDisabled) return
