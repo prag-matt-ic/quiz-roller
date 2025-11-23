@@ -3,7 +3,7 @@ import { extend } from '@react-three/fiber'
 import { Texture, Vector4 } from 'three'
 
 import cyclingFragment from './cyclingBackground.frag'
-import backgroundVertex from '@/components/textureGenerator/shaders/background.vert'
+import backgroundVertex from '../background.vert'
 
 export type CyclingBackgroundUniforms = {
   uTextureA: Texture | null

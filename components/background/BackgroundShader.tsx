@@ -1,5 +1,4 @@
 import { shaderMaterial } from '@react-three/drei'
-import { extend } from '@react-three/fiber'
 import { Vector2 } from 'three'
 
 import backgroundFragment from './background.frag'
@@ -61,7 +60,7 @@ export const INITIAL_BACKGROUND_UNIFORMS: BackgroundShaderUniforms = {
   uWorleyMix: 0.0,
 }
 
-export const TextureShader = shaderMaterial(
+export const BackgroundShader = shaderMaterial(
   INITIAL_BACKGROUND_UNIFORMS,
   backgroundVertex,
   backgroundFragment,

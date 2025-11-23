@@ -1,8 +1,10 @@
-#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
-#pragma glslify: grainyNoise = require(../helpers/grainyNoise.glsl)
-#pragma glslify: fractalNoise = require(../helpers/fractalNoise.glsl)
-#pragma glslify: darkVignette = require(../helpers/darkVignette.glsl)
-#pragma glslify: worley2D = require(../helpers/worley2D.glsl)
+#pragma glslify: getColourFromPalette = require(../../resources/glsl/palette.glsl)
+
+#pragma glslify: grainyNoise = require(../dev/colourTexture/helpers/grainyNoise.glsl)
+#pragma glslify: fractalNoise = require(../dev/colourTexture/helpers/fractalNoise.glsl)
+#pragma glslify: darkVignette = require(../dev/colourTexture/helpers/darkVignette.glsl)
+#pragma glslify: worley2D = require(../dev/colourTexture/helpers/worley2D.glsl)
+
 
 uniform float uTime;
 uniform vec2 uResolution;
