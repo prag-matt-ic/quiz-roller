@@ -1,18 +1,16 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { PerformanceMonitor, Stats, OrbitControls } from '@react-three/drei'
+import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
 import { type FC, Suspense, useEffect, useMemo, useState } from 'react'
 
-import Background from '@/components/background/Background'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
 
 import Camera, { CAMERA_POSITION_FOR_STAGE } from './Camera'
-import FloatingTiles from './floatingTiles/FloatingTiles'
 import { Stage } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
@@ -92,15 +90,13 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         onDecline={() => onPerformanceChange(false)}
         flipflops={2}>
         <ambientLight intensity={1.0} />
-        {/* <OrbitControls /> */}
-        <Camera />
+        <OrbitControls />
+        {/* <Camera /> */}
         {isDebug && <Stats />}
         <Suspense>
           <Physics debug={isDebug} timeStep={physicsTimeStep}>
             {/* <Background /> */}
 
-            {/* TODO: drive the floating tiles using the row data/textures.. */}
-            <FloatingTiles />
             <OutOfBounds />
             <Platform
               homeLayout={homeLayout}

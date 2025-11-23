@@ -26,7 +26,6 @@ type Props = PropsWithChildren<{
 export const GameProvider: FC<Props> = ({ children, submitSpeedRun }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
-  // TODO: pass into the store: submitSpeedRun
   const [store] = useState(() => createGameStore(playSoundFX, stopSoundFX, submitSpeedRun))
 
   return <GameContext value={store}>{children}</GameContext>

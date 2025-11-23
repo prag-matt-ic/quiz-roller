@@ -19,7 +19,7 @@ type StageCameraPosition = {
 export const CAMERA_POSITION_FOR_STAGE: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 8 },
   [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.TERRAIN]: { y: 7, z: 8 },
+  [Stage.TERRAIN]: { y: 9, z: 4 },
   [Stage.CTA]: { y: 7, z: 8 },
 }
 

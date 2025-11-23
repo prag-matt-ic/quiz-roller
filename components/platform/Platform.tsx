@@ -9,6 +9,9 @@ import InfoElements, { type InfoElementsHandle } from '@/components/platform/inf
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import CTAElements, { type CTAElementsHandle } from '@/components/platform/cta/CTAElements' // changed from lowercase and wont allow name CTAElements
 import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
+import FloatingTiles, {
+  type FloatingTilesHandle,
+} from '@/components/floatingTiles/FloatingTiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
@@ -133,6 +136,7 @@ const Platform: FC<Props> = ({
   const infoElements = useRef<InfoElementsHandle | null>(null)
   const ctaElements = useRef<CTAElementsHandle | null>(null)
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
+  const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
   const [readyState, setReadyState] = useState({
     tiles: false,
@@ -141,6 +145,7 @@ const Platform: FC<Props> = ({
     info: false,
     cta: false,
     speedRun: false,
+    floatingTiles: false,
   })
 
   const onTilesReadyChange = useCallback((isReady: boolean) => {
@@ -165,6 +170,10 @@ const Platform: FC<Props> = ({
 
   const onSpeedRunElementsReadyChange = useCallback((isReady: boolean) => {
     setReadyState((prev) => ({ ...prev, speedRun: isReady }))
+  }, [])
+
+  const onFloatingTilesReadyChange = useCallback((isReady: boolean) => {
+    setReadyState((prev) => ({ ...prev, floatingTiles: isReady }))
   }, [])
 
   const appendRowsWithIndices = (rows: RowData[]) => {
@@ -299,17 +308,18 @@ const Platform: FC<Props> = ({
       }
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-        const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
-        activeRowsData.current[rowIndex] = rowData
-        baseZByRow.current[rowIndex] = nextRowZ
-        rowZByIndex.current[rowIndex] = nextRowZ
-        wrapCountByRow.current[rowIndex] = 0
-        rowIsVisible.current[rowIndex] = false
+      const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
+      activeRowsData.current[rowIndex] = rowData
+      baseZByRow.current[rowIndex] = nextRowZ
+      rowZByIndex.current[rowIndex] = nextRowZ
+      wrapCountByRow.current[rowIndex] = 0
+      rowIsVisible.current[rowIndex] = false
+      floatingTilesHandle.current?.setRowData(rowIndex, rowData)
 
-        for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-          const x = colToX(columnIndex)
-          const z = nextRowZ
-          const y = rowData.heights[columnIndex]
+      for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+        const x = colToX(columnIndex)
+        const z = nextRowZ
+        const y = rowData.heights[columnIndex]
           const bodyIndex = rowIndex * COLUMNS + columnIndex
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y
@@ -329,6 +339,7 @@ const Platform: FC<Props> = ({
       }
 
       tiles.setTileInstances(tileInstances)
+      floatingTilesHandle.current?.setRowWorldPositions(rowZByIndex.current)
       setPlatformReady(true)
       nextRowDataIndex.current = ROWS_RENDERED
       markInstanceAttributesDirty()
@@ -344,6 +355,7 @@ const Platform: FC<Props> = ({
     const highlightedData = tilesHandle.current?.highlightedData
     if (!visibilityData || !highlightedData) return
     activeRowsData.current[rowIndex] = data
+    floatingTilesHandle.current?.setRowData(rowIndex, data)
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
       const bodyIndex = rowIndex * COLUMNS + columnIndex
@@ -582,6 +594,8 @@ const Platform: FC<Props> = ({
       applyStageForRow(stageRowIndex)
       updateCurrentRowState(stageRowIndex)
     }
+
+    floatingTilesHandle.current?.setRowWorldPositions(rowZByIndex.current)
   }
 
   useGameFrame((_, delta) => {
@@ -599,6 +613,7 @@ const Platform: FC<Props> = ({
     currentScrollPosition.current += zStep
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
+    floatingTilesHandle.current?.step(delta)
 
     if (zStep === 0) return
     ringsHandle.current.moveElements(zStep)
@@ -613,6 +628,7 @@ const Platform: FC<Props> = ({
 
   useEffect(() => {
     setPlatformReady(false)
+    floatingTilesHandle.current?.reset()
   }, [resetPlatformTick, setPlatformReady])
 
   return (
@@ -621,6 +637,12 @@ const Platform: FC<Props> = ({
         ref={tilesHandle}
         key={`${resetPlatformTick}-tiles`}
         onReadyChange={onTilesReadyChange}
+      />
+
+      <FloatingTiles
+        ref={floatingTilesHandle}
+        key={`${resetPlatformTick}-floatingTiles`}
+        onReadyChange={onFloatingTilesReadyChange}
       />
 
       <Rings
