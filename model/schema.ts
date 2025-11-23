@@ -77,4 +77,4 @@ export type SpeedRunDatabaseInsert = z.infer<typeof speedrunDatabaseInsertSchema
 
 export type SpeedRunDatabase = z.infer<typeof speedrunDatabaseSchema>
 
-export type SubmitSpeedRunResponse = Promise<SpeedRunDatabase | null>
+export type InsertSpeedRunResponse = Promise<SpeedRunDatabase | null>

@@ -17,6 +17,7 @@ export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true 
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
 
   useEffect(() => {
     let isMounted = true
@@ -37,9 +38,12 @@ export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true 
     <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
       <LeaderboardTable isLoading={isLoading} speedRuns={speedRuns} count={count} />
       {showButtons && (
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <Button color="light" variant="primary" onClick={startSpeedRun}>
-            Restart
+            Retry
+          </Button>
+          <Button color="light" variant="secondary" onClick={stopSpeedRun}>
+            Finish
           </Button>
         </div>
       )}

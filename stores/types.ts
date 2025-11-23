@@ -96,8 +96,9 @@ export type GameSlice = {
   hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
+  rowsData: RowData[]
+  setRowsData: (rows: RowData[]) => void
   totalRows: number
-  setTotalRows: (rows: number) => void
   currentRow: number
   setCurrentRow: (row: number) => void
 
@@ -105,10 +106,10 @@ export type GameSlice = {
   setCameraLookAtPosition: (pos: Vector3 | null) => void
 
   resetPlatformTick: number
+
   isPlatformReady: boolean
   setPlatformReady: (isReady: boolean) => void
-  rowsData: RowData[]
-  setRowsData: (rows: RowData[]) => void
+
   resetGame: ({
     isSpeedRunMode,
     speedRunStage,

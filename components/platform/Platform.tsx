@@ -104,7 +104,6 @@ const Platform: FC<Props> = ({
   const setPlatformReady = useGameStore((s) => s.setPlatformReady)
   const goToStage = useGameStore((s) => s.goToStage)
   const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
-  const setTotalRows = useGameStore((s) => s.setTotalRows)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const setRowsData = useGameStore((s) => s.setRowsData)
@@ -268,22 +267,19 @@ const Platform: FC<Props> = ({
 
       insertHomeRows()
       insertObstacleRows(0)
-
+      insertInfoRows(0)
+      insertObstacleRows(1)
+      insertInfoRows(1)
+      insertObstacleRows(2)
+      insertInfoRows(2)
+      insertObstacleRows(3)
       if (!isSpeedRunMode) {
-        insertInfoRows(0)
-        insertObstacleRows(1)
-        insertInfoRows(1)
-        insertObstacleRows(2)
-        insertInfoRows(2)
-        insertObstacleRows(3)
         insertCtaRows()
       } else {
         insertSpeedRunRows()
       }
 
       setRowsData(rowsDataRef.current)
-      setTotalRows(nextAbsoluteRowIndex.current)
-
       const tileInstances: InstancedRigidBodyProps[] = []
 
       const playerZ = playerPosition.current.z
@@ -310,19 +306,19 @@ const Platform: FC<Props> = ({
       }
 
       for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-      const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
-      activeRowsData.current[rowIndex] = rowData
-      baseZByRow.current[rowIndex] = nextRowZ
-      rowZByIndex.current[rowIndex] = nextRowZ
-      rowBaseWithoutScroll.current[rowIndex] = nextRowZ
-      wrapCountByRow.current[rowIndex] = 0
-      rowIsVisible.current[rowIndex] = false
-      floatingTilesHandle.current?.setRowData(rowIndex, rowData)
+        const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
+        activeRowsData.current[rowIndex] = rowData
+        baseZByRow.current[rowIndex] = nextRowZ
+        rowZByIndex.current[rowIndex] = nextRowZ
+        rowBaseWithoutScroll.current[rowIndex] = nextRowZ
+        wrapCountByRow.current[rowIndex] = 0
+        rowIsVisible.current[rowIndex] = false
+        floatingTilesHandle.current?.setRowData(rowIndex, rowData)
 
-      for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-        const x = colToX(columnIndex)
-        const z = nextRowZ
-        const y = rowData.heights[columnIndex]
+        for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+          const x = colToX(columnIndex)
+          const z = nextRowZ
+          const y = rowData.heights[columnIndex]
           const bodyIndex = rowIndex * COLUMNS + columnIndex
           xByBodyIndex.current[bodyIndex] = x
           yByBodyIndex.current[bodyIndex] = y

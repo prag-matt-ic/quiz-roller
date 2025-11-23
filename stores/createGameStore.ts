@@ -5,18 +5,18 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
-import type { SpeedRunSubmission, SubmitSpeedRunResponse } from '@/model/schema'
+import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
-  submitSpeedRun: (data: SpeedRunSubmission) => SubmitSpeedRunResponse,
+  insertSpeedRun: (data: SpeedRunSubmission) => InsertSpeedRunResponse,
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
       persist<GameStore, [], [], Pick<GameStore, 'username' | 'paletteIndex' | 'totalTimeS'>>(
         (...a) => ({
-          ...createTimeSlice(submitSpeedRun)(...a),
+          ...createTimeSlice(insertSpeedRun)(...a),
           ...createPlayerSlice({ playSoundFX, stopSoundFX })(...a),
           ...createGameSlice(...a),
         }),

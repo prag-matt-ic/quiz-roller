@@ -7,7 +7,7 @@ import {
   speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
   type SpeedRunSubmission,
-  type SubmitSpeedRunResponse,
+  type InsertSpeedRunResponse,
 } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
@@ -28,12 +28,12 @@ export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]
   }
 }
 
-export async function submitSpeedrun({
+export async function insertSpeedRun({
   username,
   date,
   time,
   attempt = 1,
-}: SpeedRunSubmission): SubmitSpeedRunResponse {
+}: SpeedRunSubmission): InsertSpeedRunResponse {
   try {
     const headersList = await headers()
 
@@ -84,5 +84,20 @@ export async function submitSpeedrun({
 
     if (error instanceof z.ZodError) return null
     return null
+  }
+}
+
+export async function deleteAllSpeedRuns(): Promise<number> {
+  try {
+    const sql = neon(process.env.DATABASE_URL!)
+    const deletedRows = await sql`
+      DELETE FROM "quizroller_speedrun"
+      RETURNING id
+    `
+    console.warn('Deleted speedrun rows:', deletedRows.length)
+    return deletedRows.length
+  } catch (error) {
+    console.error('Error resetting speedruns:', error)
+    return 0
   }
 }

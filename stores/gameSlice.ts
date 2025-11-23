@@ -29,9 +29,6 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   setHudIndicator: (indicator) => {
     set({ hudIndicator: indicator })
   },
-  setTotalRows: (totalRows) => {
-    set({ totalRows })
-  },
   setCurrentRow: (currentRow) => {
     set({ currentRow })
   },
@@ -42,21 +39,18 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     set({ isPlatformReady })
   },
   setRowsData: (rowsData) => {
-    set({ rowsData })
+    set({ rowsData, totalRows: rowsData.length })
   },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {
       set({ stage: Stage.HOME })
     }
-
     if (newStage === Stage.INFO) {
       set({ stage: Stage.INFO })
     }
-
     if (newStage === Stage.TERRAIN) {
       set({ stage: Stage.TERRAIN })
     }
-
     if (newStage === Stage.CTA) {
       set({ stage: Stage.CTA })
     }

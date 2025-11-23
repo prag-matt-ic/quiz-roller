@@ -1,5 +1,5 @@
 import type { GameSliceCreator, SpeedRunStage, TimeSlice } from './types'
-import type { SpeedRunSubmission, SubmitSpeedRunResponse } from '@/model/schema'
+import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
 export const INITIAL_TIME_STATE: Pick<
   TimeSlice,
@@ -14,7 +14,7 @@ export const INITIAL_TIME_STATE: Pick<
 
 export const createTimeSlice =
   (
-    submitSpeedRun: (data: SpeedRunSubmission) => SubmitSpeedRunResponse,
+    insertSpeedRun: (data: SpeedRunSubmission) => InsertSpeedRunResponse,
   ): GameSliceCreator<TimeSlice> =>
   (set, get) => ({
     ...INITIAL_TIME_STATE,
@@ -61,7 +61,7 @@ export const createTimeSlice =
 
       try {
         console.log('Submitting speedrun...', submission)
-        const result = await submitSpeedRun(submission)
+        const result = await insertSpeedRun(submission)
         if (!result) throw new Error('Submission failed')
         console.log('Speedrun submitted successfully:', result)
         set((state) => ({

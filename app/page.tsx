@@ -5,7 +5,7 @@ import LoadingOverlay from '@/components/loading/LoadingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
 import { SoundProvider } from '@/components/SoundProvider'
 import { GameProvider } from '@/components/GameProvider'
-import { submitSpeedrun } from './actions'
+import { deleteAllSpeedRuns, insertSpeedRun } from './actions'
 
 const Main = dynamic(() => import('@/components/Main'))
 
@@ -22,12 +22,17 @@ export default async function Home(props: PageProps) {
     <>
       <main className="h-lvh w-full overflow-hidden">
         <SoundProvider>
-          <GameProvider submitSpeedRun={submitSpeedrun}>
+          <GameProvider insertSpeedRun={insertSpeedRun}>
             {/* <LoadingOverlay /> */}
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>
         </SoundProvider>
       </main>
+      {/* <button
+        onClick={deleteAllSpeedRuns}
+        className="fixed bottom-4 left-4 z-50 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700">
+        Clear data
+      </button> */}
       <StructuredData />
     </>
   )
