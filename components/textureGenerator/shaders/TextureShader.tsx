@@ -61,12 +61,8 @@ export const INITIAL_BACKGROUND_UNIFORMS: BackgroundShaderUniforms = {
   uWorleyMix: 0.0,
 }
 
-const TextureShaderMaterialImpl = shaderMaterial(
+export const TextureShader = shaderMaterial(
   INITIAL_BACKGROUND_UNIFORMS,
   backgroundVertex,
   backgroundFragment,
 )
-
-extend({ TextureShaderMaterial: TextureShaderMaterialImpl })
-
-export const TextureShaderMaterial = TextureShaderMaterialImpl

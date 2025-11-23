@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import { type FC } from 'react'
 
-import LoadingOverlay from '@/components/loading/LoadingOverlay'
+// import LoadingOverlay from '@/components/ui/LoadingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
 import { SoundProvider } from '@/components/SoundProvider'
 import { GameProvider } from '@/components/GameProvider'

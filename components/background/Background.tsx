@@ -18,7 +18,7 @@ import {
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import { TextureShaderMaterial } from '@/components/textureGenerator/shaders/TextureShader'
+import { TextureShader } from '@/components/textureGenerator/shaders/TextureShader'
 import { CyclingBackgroundMaterial } from '@/components/background/shaders/CyclingBackgroundMaterial'
 import { TRANSPARENT_TEXTURE } from '@/hooks/useTextCanvas'
 import {
@@ -42,7 +42,7 @@ const FULLSCREEN_CAMERA_BOUNDS = {
   far: 1,
 } as const
 
-type BackgroundMaterialInstance = InstanceType<typeof TextureShaderMaterial>
+type BackgroundMaterialInstance = InstanceType<typeof TextureShader>
 type CyclingBackgroundMaterialInstance = InstanceType<typeof CyclingBackgroundMaterial>
 
 type Dimensions = {
@@ -329,7 +329,7 @@ const Background: FC = () => {
   useEffect(() => {
     const generatorScene = new Scene()
     const generatorCamera = createFullscreenCamera()
-    const generatorMaterial = new TextureShaderMaterial()
+    const generatorMaterial = new TextureShader()
     const generatorGeometry = createFullscreenGeometry()
     const generatorMesh = new Mesh(generatorGeometry, generatorMaterial)
     generatorMesh.frustumCulled = false

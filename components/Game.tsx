@@ -24,6 +24,7 @@ import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import { loadHtmlImage } from '@/utils/loadImage'
 import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
+import Background from './background/Background'
 
 gsap.registerPlugin(useGSAP)
 
@@ -93,10 +94,9 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         {/* <OrbitControls /> */}
         <Camera />
         {isDebug && <Stats />}
+        <Background />
         <Suspense>
           <Physics debug={isDebug} timeStep={physicsTimeStep}>
-            {/* <Background /> */}
-
             <OutOfBounds />
             <Platform
               homeLayout={homeLayout}

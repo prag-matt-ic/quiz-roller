@@ -88,6 +88,10 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
+      {/* TODO: introduce new InfoProjection element.
+      // There is a trigger zone which works simiar to InfoZone but instead of showing a popup it presents the element in 3D space behind the zone.
+        // You roll into it, and the camera position changes to look at the info.
+    */}
       <InfoZone
         key="cta-zone"
         ref={ctaZone}

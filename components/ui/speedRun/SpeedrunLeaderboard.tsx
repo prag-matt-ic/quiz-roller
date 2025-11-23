@@ -6,7 +6,7 @@ import { getSpeedrunData } from '@/app/actions'
 import type { SpeedRunDatabase } from '@/model/schema'
 import { useGameStore } from '@/components/GameProvider'
 import { Trophy } from 'lucide-react'
-import Button from './Button'
+import Button from '../Button'
 
 type Props = {
   count?: number

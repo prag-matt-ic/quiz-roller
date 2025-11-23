@@ -10,7 +10,7 @@ import CollectiblesUI from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
-import { SpeedrunLeaderboard } from './SpeedrunLeaderboard'
+import { SpeedrunLeaderboard } from './speedRun/SpeedrunLeaderboard'
 import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
 import { FlagIcon } from 'lucide-react'
 
