@@ -10,6 +10,7 @@ varying mediump float vCameraFade;
 uniform sampler2D uTexture;
 uniform float uOpacity;
 uniform float uTime;
+uniform float uEnableNoise;
 
 const float ALPHA_EPSILON = 0.001;
 const float NOISE_SCALE = 0.5;
@@ -21,7 +22,7 @@ void main() {
   if (texel.a <= ALPHA_EPSILON) discard;
 
   float noisyReveal;
-  if (uOpacity > 0.0 && uOpacity < 1.0) {
+  if (uEnableNoise > 0.5 && uOpacity > 0.0 && uOpacity < 1.0) {
     float timeOffset = uTime * NOISE_SPEED;
     vec2 noiseSampleUv = vMirroredUv * NOISE_SCALE + vec2(timeOffset, -timeOffset);
     float noiseValue = noise2d(noiseSampleUv) * 0.5 + 0.5;

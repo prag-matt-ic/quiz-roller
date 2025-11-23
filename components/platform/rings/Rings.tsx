@@ -32,16 +32,25 @@ import { type RingIndex, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import useGameFrame from '@/hooks/useGameFrame'
-import { Color } from 'three'
+import { Color, type ShaderMaterial } from 'three'
 import { getRingKey } from '@/utils/rings'
 import { extend } from '@react-three/fiber'
 
-const MAX_RING_INSTANCES = 12
+const MAX_RING_INSTANCES = 10
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
 const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
 const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
+const RAND_SEED_X = 12.98
+const RAND_SEED_Y = 43758.54
+const TAU = Math.PI * 2
+
+const hashSlotIndex = (slotIndex: number): number => {
+  const seed = slotIndex + 1
+  const raw = Math.sin(seed * RAND_SEED_X) * RAND_SEED_Y
+  return raw - Math.floor(raw)
+}
 
 export type RingsHandle = {
   moveElements: (zStep: number) => void
@@ -53,12 +62,16 @@ type RingUniforms = {
   uTime: number
   uColor: Color
   uEmissive: Color
+  uRotationSpeed: number
+  uRotationPhase: number
 }
 
 const DEFAULT_UNIFORMS: RingUniforms = {
   uTime: 0,
   uColor: new Color('#ffe066'),
   uEmissive: new Color('#ffd43b'),
+  uRotationSpeed: 1,
+  uRotationPhase: 0,
 }
 
 const RingsShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
@@ -223,11 +236,18 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     onRingCollected(indexes)
   }
 
-  const ringsShader = useRef<typeof RingsShaderMaterial & RingUniforms>(null)
+  const ringMaterials = useRef<Array<(ShaderMaterial & RingUniforms) | null>>(
+    Array(MAX_RING_INSTANCES).fill(null),
+  )
 
   useGameFrame(({ clock }) => {
-    if (!ringsShader.current) return
-    ringsShader.current.uTime = clock.elapsedTime
+    const time = clock.elapsedTime
+    const materials = ringMaterials.current
+    for (let index = 0; index < materials.length; index++) {
+      const material = materials[index]
+      if (!material) continue
+      material.uTime = time
+    }
   })
 
   const slots = slotAssignments.current
@@ -239,6 +259,9 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
         const ringKey =
           assignedIndexes != null ? getRingKey(assignedIndexes[0], assignedIndexes[1]) : null
         const isCollected = ringKey ? Boolean(collectedRings[ringKey]) : false
+        const baseSeed = hashSlotIndex(slotIndex)
+        const rotationSpeed = 0.6 + baseSeed * 0.7
+        const rotationPhase = baseSeed * TAU
         return (
           <RigidBody
             key={`ring-slot-${slotIndex}`}
@@ -267,9 +290,13 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
                 ]}
               />
               <RingsShaderMaterial
-                ref={ringsShader}
+                ref={(material) => {
+                  ringMaterials.current[slotIndex] = material
+                }}
                 key={RingsShader.key}
                 {...DEFAULT_UNIFORMS}
+                uRotationSpeed={rotationSpeed}
+                uRotationPhase={rotationPhase}
               />
             </mesh>
           </RigidBody>

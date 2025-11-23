@@ -16,6 +16,7 @@ import {
 
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useGameFrame from '@/hooks/useGameFrame'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 import fragmentShader from './floatingHeading.frag'
 import vertexShader from './floatingHeading.vert'
@@ -39,6 +40,8 @@ type FloatingHeadingUniforms = {
   uPlayerXZ: Vector2
   uHeadingCenterXZ: Vector2
   uCameraZ: number
+  uEnableRotation: number
+  uEnableNoise: number
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
@@ -48,6 +51,8 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uPlayerXZ: new Vector2(0, 0),
   uHeadingCenterXZ: new Vector2(0, 0),
   uCameraZ: 0,
+  uEnableRotation: 1,
+  uEnableNoise: 1,
 }
 
 const FloatingHeadingShader = shaderMaterial(
@@ -69,6 +74,7 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
+  const { shouldRotate, useNoise } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
 
   const onPlayerPosition = (newPosition: Vector3) => {
     if (!shaderRef.current) return
@@ -137,10 +143,12 @@ export const FloatingHeading: FC<Props> = ({
 
   useGameFrame((state) => {
     if (!shaderRef.current) return
-    shaderRef.current.uTime = state.clock.elapsedTime
+    if (useNoise) {
+      shaderRef.current.uTime = state.clock.elapsedTime
+    }
     shaderRef.current.uCameraZ = state.camera.position.z
 
-    if (!isVisible) return
+    if (!isVisible || !shouldRotate) return
     const mesh = ref?.current
     if (!mesh) return
     mesh.getWorldPosition(tmpWorldPosition.current)
@@ -152,7 +160,7 @@ export const FloatingHeading: FC<Props> = ({
 
   return (
     <Suspense fallback={null}>
-      <mesh ref={ref} position={position} rotation={[0, Math.PI / 2, 0]}>
+      <mesh ref={ref} position={position} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
         <cylinderGeometry
           args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]}
         />
@@ -161,8 +169,10 @@ export const FloatingHeading: FC<Props> = ({
           ref={shaderRef}
           uOpacity={0}
           uTime={0}
+          uEnableRotation={shouldRotate ? 1 : 0}
+          uEnableNoise={useNoise ? 1 : 0}
           transparent={true}
-          depthTest={true}
+          depthTest={false}
           depthWrite={false}
           toneMapped={false}
           side={BackSide}

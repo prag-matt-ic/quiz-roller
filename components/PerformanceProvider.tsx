@@ -34,6 +34,10 @@ export type SceneConfig = {
     keyframes: 1 | 4 | 8
     renderScale: number
   }
+  floatingHeading: {
+    shouldRotate: boolean
+    useNoise: boolean
+  }
 }
 
 const logPerformanceDebug = (...payload: unknown[]) => {
@@ -50,6 +54,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 8, renderScale: 0.75 },
+    floatingHeading: { shouldRotate: true, useNoise: true },
   },
   [SceneQuality.MEDIUM]: {
     player: { segments: 40, isFlat: false },
@@ -59,6 +64,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 4, renderScale: 0.5 },
+    floatingHeading: { shouldRotate: false, useNoise: true },
   },
   [SceneQuality.LOW]: {
     player: { segments: 24, isFlat: true },
@@ -68,6 +74,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     background: { keyframes: 1, renderScale: 0.25 },
+    floatingHeading: { shouldRotate: false, useNoise: false },
   },
 }
 
