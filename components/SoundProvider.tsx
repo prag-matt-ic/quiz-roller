@@ -213,7 +213,7 @@ const createSoundStore = () => {
       try {
         await startPlayback()
       } catch (err) {
-        console.warn(`[SoundProvider] Failed to play ${fx}`, err)
+        console.error(`[SoundProvider] Failed to play ${fx}`, err)
       }
     },
 

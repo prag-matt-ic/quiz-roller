@@ -15,16 +15,12 @@ const CTA_ZONE_TRIGGER_ROW = Math.ceil(CTA_ZONE_CENTER_ROW)
 const CTA_ZONE_RELATIVE_Z = (CTA_ZONE_TRIGGER_ROW - CTA_ZONE_CENTER_ROW) * TILE_SIZE
 const CTA_ZONE_X = colToX(CTA_ZONE_CENTER_COLUMN)
 
-const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
-
 export function generateCtaSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
     if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
-    if (IS_DEV_ENV) {
-      console.warn('[CtaSection] Failed to build CTA section rows', error)
-    }
+    console.error('[CtaSection] Failed to build CTA section rows', error)
     return []
   }
 }

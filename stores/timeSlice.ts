@@ -29,7 +29,6 @@ export const createTimeSlice =
     },
     startSpeedRun: () => {
       const { username, resetGame } = get()
-      console.warn('Starting speedrun...', { username })
       resetGame({ isSpeedRunMode: true, speedRunStage: !!username ? 'countdown' : 'username' })
     },
     onCountdownComplete: () => {

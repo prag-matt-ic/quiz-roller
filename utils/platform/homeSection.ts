@@ -7,16 +7,13 @@ const HOME_HEADING_CENTER_ROW = 6
 const HOME_HEADING_TRIGGER_ROW = Math.ceil(HOME_HEADING_CENTER_ROW)
 const HOME_HEADING_RELATIVE_Z = (HOME_HEADING_TRIGGER_ROW - HOME_HEADING_CENTER_ROW) * TILE_SIZE
 const HOME_HEADING_X = colToX(COLUMNS / 2 - 0.5)
-const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 export function generateHomeSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
     if (!layout) throw new Error('No layout provided')
     return buildRowsFromLayout(layout)
   } catch (error) {
-    if (IS_DEV_ENV) {
-      console.warn('[HomeSection] Failed to build home section rows', error)
-    }
+    console.error('[HomeSection] Failed to build home section rows', error)
     return []
   }
 }

@@ -1,4 +1,4 @@
-#pragma glslify: getColourFromPalette = require(../../palette.glsl)
+#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
 #pragma glslify: grainyNoise = require(../helpers/grainyNoise.glsl)
 #pragma glslify: fractalNoise = require(../helpers/fractalNoise.glsl)
 #pragma glslify: darkVignette = require(../helpers/darkVignette.glsl)
@@ -73,8 +73,8 @@ void main() {
     vec3 color = getColourFromPalette(uPaletteIndex, t) * uSampleWeight;
     
     // Blend with dark grey for atmospheric effect
-    vec3 darkGrey = vec3(0.01, 0.01, 0.01);
-    color = mix(darkGrey, color, 0.9);
+    vec3 darkGrey = vec3(0.0, 0.0, 0.0);
+    color = mix(darkGrey, color, 0.16);
     
     // Apply dark vignette (controlled by uniforms)
     float vignetteAmount = darkVignette(centeredUv, uVignetteStrength);

@@ -57,10 +57,6 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
     if (!heading.current || !collectible.current || !infoZone.current) return
     const absoluteRowIndex = row.rowIndex as number
 
-    // TODO: Clean up the positioning logic
-    if (process.env.NODE_ENV === 'development')
-      console.warn('[InfoElements] positionElementsIfNeeded', { row, rowZ })
-
     // Check for floating heading position
     const floatingHeadingPosition = row.floatingHeadingPosition
     if (!!floatingHeadingPosition) {
