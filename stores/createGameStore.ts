@@ -7,6 +7,11 @@ import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
 import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
+type PersistedStore = Pick<
+  GameStore,
+  'username' | 'paletteIndex' | 'totalTimeS' | 'completedSpeedRuns'
+>
+
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
@@ -14,7 +19,7 @@ export const createGameStore = (
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
-      persist<GameStore, [], [], Pick<GameStore, 'username' | 'paletteIndex' | 'totalTimeS'>>(
+      persist<GameStore, [], [], PersistedStore>(
         (...a) => ({
           ...createTimeSlice(insertSpeedRun)(...a),
           ...createPlayerSlice({ playSoundFX, stopSoundFX })(...a),
@@ -22,12 +27,13 @@ export const createGameStore = (
         }),
         {
           name: 'quizroller-page',
-          partialize: (s) => ({
-            username: s.username,
-            paletteIndex: s.paletteIndex,
-            totalTimeS: s.totalTimeS,
-            completedSpeedRuns: s.completedSpeedRuns,
-          }),
+          partialize: (s) =>
+            ({
+              username: s.username,
+              paletteIndex: s.paletteIndex,
+              totalTimeS: s.totalTimeS,
+              completedSpeedRuns: s.completedSpeedRuns,
+            }) as PersistedStore,
           version: 1,
           onRehydrateStorage: (state) => {
             return (state, error) => {
@@ -38,10 +44,7 @@ export const createGameStore = (
               }
             }
           },
-        } as PersistOptions<
-          GameStore,
-          Pick<GameStore, 'username' | 'paletteIndex' | 'totalTimeS'>
-        >,
+        } as PersistOptions<GameStore, PersistedStore>,
       ),
     ),
   )
