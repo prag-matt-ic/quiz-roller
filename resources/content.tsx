@@ -28,11 +28,10 @@ type InfoContent = {
 export const INFO_ZONES_CONTENT: InfoContent[] = [
   {
     heading: 'We help teams bring 3D to the browser without the bloat',
-    infoZoneContainerClassName:
-      'grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4',
+    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
-        <Card className="w-full md:col-span-5" paletteIndex={0}>
+        <Card className="w-full" paletteIndex={0}>
           <h2 className="info-header">About</h2>
           <p className="paragraph-sm max-w-md">
             Quizroller is a proof of concept developed to showcase the potential of 3D web
@@ -43,34 +42,12 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
             graphics.
           </p>
         </Card>
-
-        <Card className="w-full md:col-span-3" paletteIndex={0}>
-          <h2 className="info-header">Partnerships</h2>
-          <p className="paragraph-sm">
-            Interested in launching your own immersive learning experience?
-            <br />
-            <br />
-            <a href="mailto:pragmattic.ltd@gmail.com" className="underline underline-offset-2">
-              Let&apos;s chat!
-            </a>
-          </p>
-        </Card>
-
-        <Card className="w-full md:col-span-2" paletteIndex={0}>
-          <h2 className="info-header">Credits</h2>
-          <Credit
-            role="Lead Developer"
-            name="Matthew Frawley"
-            url="https://github.com/prag-matt-ic"
-          />
-          <Credit role="Support" name="Theo Walton" url="https://github.com/Void-vlk" />
-        </Card>
       </>
     ),
   },
   {
     heading: 'Senior Three.js developers supercharged with AI capabilities',
-    infoZoneContainerClassName: 'grid w-[328px] sm:w-168 grid-cols-1 gap-3',
+    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
         <Card className="w-full" paletteIndex={0}>
@@ -89,7 +66,7 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
   },
   {
     heading: 'Heading third!',
-    infoZoneContainerClassName: 'grid w-[328px] sm:w-168 grid-cols-1 gap-3',
+    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
         <Card className="w-full" paletteIndex={0}>
