@@ -9,17 +9,16 @@ import { Trophy } from 'lucide-react'
 import Button from '../Button'
 
 type Props = {
-  count?: number
   showButtons?: boolean
 }
 
-export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true }) => {
+export const SpeedrunLeaderboard: FC<Props> = ({ showButtons = true }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
 
   return (
     <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
-      <LeaderboardTable count={count} />
+      <LeaderboardTable count={10} />
       {showButtons && (
         <div className="flex gap-4">
           <Button color="light" variant="primary" onClick={startSpeedRun}>
