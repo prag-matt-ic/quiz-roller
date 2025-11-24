@@ -61,7 +61,7 @@ const Camera: FC = () => {
 
     // When looking at content, move camera backward to keep player visible
     const stageCameraPosition = CAMERA_POSITION_FOR_STAGE[stage.current]
-    let zOffset = hasLookAtPosition ? stageCameraPosition.z + 4 : stageCameraPosition.z
+    let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not
     zOffset += lastMovedBackward.current ? 4 : 0
