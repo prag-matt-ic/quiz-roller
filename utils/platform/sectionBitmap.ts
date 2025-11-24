@@ -15,6 +15,7 @@ export type SectionBitmapRow = {
 export type SectionBitmapLayout = {
   rows: SectionBitmapRow[]
   rowCount: number
+  totalRingsCount: number
 }
 
 export type BitmapPlacement = {
@@ -142,9 +143,12 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
   context.canvas.width = 0
   context.canvas.height = 0
 
+  const totalRingsCount = rows.reduce((count, row) => count + row.ringColumns.length, 0)
+
   return {
     rows,
     rowCount: rows.length,
+    totalRingsCount,
   }
 }
 

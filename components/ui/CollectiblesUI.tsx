@@ -18,19 +18,21 @@ import { COLLECTIBLE_TYPES } from '@/model/schema'
 const CollectiblesUI: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
   const collectedRings = useGameStore((s) => s.collectedRings)
+  const totalRingsCount = useGameStore((s) => s.totalRingsCount)
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
     <>
       {/* Rings/Coins */}
-      <div
-        className={twJoin(
-          'relative mr-2 flex aspect-square size-10 items-center justify-center rounded-full border text-center font-semibold',
-          collectedRingCount > 0 ? 'border-amber-400' : 'border-white/40',
-        )}>
-        {collectedRingCount}
-        {/* TODO: display total rings count here: / {totalRingsCount} */}
-      </div>
+      {totalRingsCount > 0 && (
+        <div
+          className={twJoin(
+            'relative mr-2 flex aspect-square h-10 w-18 items-center justify-center rounded-full border text-center font-semibold',
+            collectedRingCount > 0 ? 'border-amber-400' : 'border-white/40',
+          )}>
+          {collectedRingCount} / {totalRingsCount}
+        </div>
+      )}
       {/* Collectibles */}
       {COLLECTIBLE_TYPES.map((type, index) => {
         return (
