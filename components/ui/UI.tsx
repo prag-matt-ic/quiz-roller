@@ -22,9 +22,12 @@ type Props = {
 
 const UI: FC<Props> = ({ isMobile }) => {
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+  const speedRunStatus = useGameStore((s) => s.speedRunStage)
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
-  const speedRunStatus = useGameStore((s) => s.speedRunStage)
+  const infoContainer = useRef<HTMLDivElement>(null)
+  const speedRunOverlay = useRef<HTMLDivElement>(null)
+  const leaderboardOverlay = useRef<HTMLDivElement>(null)
 
   const showSpeedRunOverlay =
     isSpeedRunMode && ['countdown', 'username'].includes(speedRunStatus)
@@ -32,15 +35,10 @@ const UI: FC<Props> = ({ isMobile }) => {
   const showLeaderboardOverlay =
     isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
 
-  const infoContainer = useRef<HTMLDivElement>(null)
-  const speedRunOverlay = useRef<HTMLDivElement>(null)
-
   return (
     <>
-      <Controls isMobile={isMobile} />
       <ProgressBar />
-
-      {showLeaderboardOverlay && <LeaderboardOverlay />}
+      <Controls isMobile={isMobile} />
 
       {/* Top Info */}
       <SwitchTransition>
@@ -76,6 +74,9 @@ const UI: FC<Props> = ({ isMobile }) => {
         Start Speedroll
       </button>
 
+      {isSpeedRunMode && speedRunStatus === 'running' && <SpeedRunControls />}
+
+      {/* Fullscreen overlays */}
       <Transition
         in={showSpeedRunOverlay}
         timeout={{ enter: 0, exit: 240 }}
@@ -85,7 +86,14 @@ const UI: FC<Props> = ({ isMobile }) => {
         {(status) => <SpeedRunOverlay ref={speedRunOverlay} transitionStatus={status} />}
       </Transition>
 
-      {isSpeedRunMode && speedRunStatus === 'running' && <SpeedRunControls />}
+      <Transition
+        in={showLeaderboardOverlay}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={leaderboardOverlay}>
+        {(status) => <LeaderboardOverlay ref={leaderboardOverlay} transitionStatus={status} />}
+      </Transition>
     </>
   )
 }

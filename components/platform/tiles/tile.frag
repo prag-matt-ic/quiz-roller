@@ -20,10 +20,10 @@ varying mediump vec2 vUv;
 const float HIGHLIGHTED_MIX_MIN = 0.12;
 const float HIGHLIGHTED_MIX_MAX = 0.24;
 
-const float REGULAR_MIX = 0.42;
-const float DARKEN_FACTOR = 0.5;
+const float REGULAR_MIX = 0.5;
+const float DARKEN_FACTOR = 0.4;
 const float UP_THRESHOLD = 0.5;
-const float HIGHLIGHT_MIX = 0.66;
+const float HIGHLIGHT_MIX = 0.85;
 const vec3 WHITE = vec3(1.0);
 
 void main() {

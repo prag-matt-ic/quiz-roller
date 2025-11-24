@@ -4,32 +4,41 @@ import { type FC } from 'react'
 import { useGameStore } from '@/components/GameProvider'
 import Button from '../Button'
 import { LeaderboardTable, useLeaderboardTableData } from './LeaderboardTable'
+import { type TransitionStatus } from 'react-transition-group'
+import { twJoin } from 'tailwind-merge'
 
 type Props = {
-  showButtons?: boolean
+  ref: React.RefObject<HTMLDivElement | null>
+  transitionStatus: TransitionStatus
 }
 
 // Fullscreen overlay version of the table shown at the end of a speedrun in the UI.
 
-export const LeaderboardOverlay: FC<Props> = ({ showButtons = true }) => {
+export const LeaderboardOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
   const tableData = useLeaderboardTableData(10)
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/95 px-4 pb-12">
+    <div
+      ref={ref}
+      className={twJoin(
+        'fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/95 px-4 pb-12 transition-opacity duration-300 ease-out',
+        transitionStatus === 'entering' && 'opacity-0',
+        transitionStatus === 'entered' && 'opacity-100',
+        transitionStatus === 'exiting' && 'opacity-0',
+      )}>
       {/* Table needs to be kept simple (e.g no access to the game store from within it otherwise it breaks in CTAELEMENTs) */}
       <LeaderboardTable {...tableData} />
-      {showButtons && (
-        <div className="flex gap-4">
-          <Button color="light" variant="primary" onClick={startSpeedRun}>
-            Retry
-          </Button>
-          <Button color="light" variant="secondary" onClick={stopSpeedRun}>
-            Finish
-          </Button>
-        </div>
-      )}
+
+      <div className="flex gap-4">
+        <Button color="light" variant="primary" onClick={startSpeedRun}>
+          Retry
+        </Button>
+        <Button color="light" variant="secondary" onClick={stopSpeedRun}>
+          Finish
+        </Button>
+      </div>
     </div>
   )
 }

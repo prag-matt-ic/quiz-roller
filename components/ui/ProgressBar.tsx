@@ -35,11 +35,11 @@ const ProgressBar: FC = () => {
   return (
     <div className="fixed right-0 z-100 h-full w-1.5 overflow-hidden bg-black">
       <div
-        className="absolute bottom-0 h-full w-1.5 bg-amber-500 transition-transform duration-100 ease-linear"
+        ref={barRef}
+        className="absolute bottom-0 h-full w-1.5 bg-amber-600 transition-transform duration-100 ease-linear"
         style={{
           transform: 'translate3d(0,100%,0)',
         }}
-        ref={barRef}
       />
     </div>
   )

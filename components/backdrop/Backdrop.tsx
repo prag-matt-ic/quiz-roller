@@ -9,19 +9,19 @@ import { TILE_SIZE } from '@/utils/tiles'
 
 import fragmentShader from '@/components/backdrop/backdrop.frag'
 import vertexShader from '@/components/backdrop/backdrop.vert'
-import backdrop from '@/assets/textures/backdrop/backdrop.webp'
+import backdrop from '@/assets/textures/backdrop/bg-1.webp'
 
-const BACKDROP_SEGMENT_COUNT = 8
+const BACKDROP_SEGMENT_COUNT = 6
 const BACKDROP_FLOOR_RATIO = 1
 const BACKDROP_WIDTH_TILES = 80
 const BACKDROP_DEPTH_TILES = 20
-const BACKDROP_HEIGHT = 40
+const BACKDROP_HEIGHT = 28
 const BACKDROP_WIDTH = TILE_SIZE * BACKDROP_WIDTH_TILES
 const BACKDROP_DEPTH = TILE_SIZE * BACKDROP_DEPTH_TILES
 const BACKDROP_POSITION: [number, number, number] = [0, -5, -14]
 const BACKDROP_ROTATION: [number, number, number] = [-Math.PI / 2, 0, Math.PI / 2]
-const BACKDROP_DARKNESS = 0.8
-const BACKDROP_EDGE_FADE = 0.2
+const BACKDROP_DARKNESS = 0.4
+const BACKDROP_EDGE_FADE = 0.16
 
 type BackdropShaderUniforms = {
   uBackdrop: Texture | null
@@ -44,7 +44,6 @@ const easeInExpo = (value: number) =>
 
 const Backdrop: FC = () => {
   const backdropColour = useTexture(backdrop.src)
-  console.log('Backdrop rendering...')
   const geometryRef = useRef<PlaneGeometry | null>(null)
 
   useLayoutEffect(() => {
@@ -91,10 +90,13 @@ const Backdrop: FC = () => {
 
     // Log the optimal aspect ratio for the texture
     // This helps in preparing the texture image with the correct dimensions to avoid stretching
-    console.warn(
-      'Backdrop Texture Optimal Aspect Ratio (Width / ArcLength):',
-      BACKDROP_WIDTH / totalArcLength,
-    )
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        'Backdrop Texture Optimal Aspect Ratio (Width / ArcLength):',
+        BACKDROP_WIDTH / totalArcLength,
+      )
+      // CURRENT: 1.325
+    }
     for (let x = 0; x <= segmentCount; x++) {
       const v = arcLengths[x] / totalArcLength
       for (let y = 0; y <= segmentCount; y++) {

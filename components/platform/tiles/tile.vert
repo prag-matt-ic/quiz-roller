@@ -16,7 +16,7 @@ const float TILE_FADE_ROTATE_MAX = 0.3;
 const float AXIS_EPSILON = 0.001;
 
 float hashFloat(float n) {
-  return fract(sin(n) * 43758.5453123);
+  return fract(sin(n) * 43758.5453);
 }
 
 vec3 rotateWithTrig(vec3 v, vec3 axis, float sinAngle, float cosAngle) {
@@ -64,7 +64,7 @@ void main() {
   // Apply per-instance tilt based on fade, but keep highlighted tiles steady
   float highlightMask = step(0.5, isHighlighted);
   float fadeAmount = (1.0 - radialAlpha) * (1.0 - highlightMask);
-  vec2 axisSeeds = vec2(hashFloat(seed * 3.173), hashFloat(seed * 7.921));
+  vec2 axisSeeds = vec2(hashFloat(seed * 3.17), hashFloat(seed * 7.92));
   vec3 tiltAxis = vec3(axisSeeds.x - 0.5, 0.0, axisSeeds.y - 0.5);
   float axisLength = max(length(tiltAxis), AXIS_EPSILON);
   tiltAxis /= axisLength;

@@ -63,6 +63,8 @@ type Props = PropsWithChildren<{
   infoContentHtmlProps?: HtmlProps
 }>
 
+const iconPositionOffset: Vector3Tuple = [0, 0, 1]
+
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
@@ -84,7 +86,6 @@ export const InfoZone: FC<Props> = ({
   const [showInfo, setShowInfo] = useState(alwaysShowInfo)
   const iconContainer = useRef<HTMLDivElement>(null)
   const infoContainer = useRef<HTMLDivElement>(null)
-  const iconPositionOffset: Vector3Tuple = [0, 0, 1]
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
@@ -218,7 +219,7 @@ export const InfoZone: FC<Props> = ({
               <div
                 ref={iconContainer}
                 className="flex items-center justify-center overflow-hidden rounded-full bg-black p-2 sm:p-3">
-                <Icon strokeWidth={1.75} className="text-teal-accent size-9 sm:size-11" />
+                <Icon strokeWidth={1.5} className="size-6 text-amber-300 sm:size-10" />
               </div>
             </Transition>
           </Html>
