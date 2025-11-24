@@ -54,7 +54,6 @@ export async function getSpeedrunPosition(id: number): Promise<{
     `
 
     if (!result || result.length === 0) return null
-
     const run = speedrunDatabaseSchema.parse(result[0])
     const position = result[0].position as number
     return { run, position }

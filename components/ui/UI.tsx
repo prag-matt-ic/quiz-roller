@@ -29,7 +29,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const showSpeedRunOverlay =
     isSpeedRunMode && ['countdown', 'username'].includes(speedRunStatus)
 
-  const showLeaderboard =
+  const showLeaderboardOverlay =
     isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
 
   const infoContainer = useRef<HTMLDivElement>(null)
@@ -40,7 +40,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       <Controls isMobile={isMobile} />
       <ProgressBar />
 
-      {showLeaderboard && <LeaderboardOverlay />}
+      {showLeaderboardOverlay && <LeaderboardOverlay />}
 
       {/* Top Info */}
       <SwitchTransition>

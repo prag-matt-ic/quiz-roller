@@ -149,52 +149,49 @@ function usePlatformLayout() {
       ctaTexture.src,
     ]).then((images) => {
       if (!isMounted) return
-      let idx = 0
+      let index = 0
 
-      setHomeLayout(imageToLayout(images[idx++], 'home'))
+      const homeLayout = imageToLayout(images[index], 'home')
+      index++
 
-      const infoImages = images.slice(idx, idx + INFO_BITMAP_TEXTURES.length)
-      setInfoLayouts(
-        infoImages.map((image, layoutIndex) => imageToLayout(image, `info-${layoutIndex}`)),
+      const infoImages = images.slice(index, index + INFO_BITMAP_TEXTURES.length)
+      const infoLayouts = infoImages.map((image, layoutIndex) =>
+        imageToLayout(image, `info-${layoutIndex}`),
       )
-      idx += INFO_BITMAP_TEXTURES.length
+      index += INFO_BITMAP_TEXTURES.length
 
-      const obstacleImages = images.slice(idx, idx + OBSTACLE_BITMAP_TEXTURES.length)
-      setObstacleLayouts(
-        obstacleImages.map((image, layoutIndex) =>
-          imageToLayout(image, `obstacle-${layoutIndex}`),
-        ),
+      const obstacleImages = images.slice(index, index + OBSTACLE_BITMAP_TEXTURES.length)
+      const obstacleLayouts = obstacleImages.map((image, layoutIndex) =>
+        imageToLayout(image, `obstacle-${layoutIndex}`),
       )
-      idx += OBSTACLE_BITMAP_TEXTURES.length
+      index += OBSTACLE_BITMAP_TEXTURES.length
 
-      setSpeedRunLayout(imageToLayout(images[idx], 'speed-run'))
-      idx++
+      const speedRunLayout = imageToLayout(images[index], 'speed-run')
+      index++
 
-      setCtaLayout(imageToLayout(images[idx], 'cta'))
+      const ctaLayout = imageToLayout(images[index], 'cta')
+
+      const totalRings = [
+        homeLayout,
+        ...infoLayouts,
+        ...obstacleLayouts,
+        speedRunLayout,
+        ctaLayout,
+      ].reduce((sum, layout) => sum + (layout?.totalRingsCount ?? 0), 0)
+
+      // Set layouts into state
+      setHomeLayout(homeLayout)
+      setInfoLayouts(infoLayouts)
+      setObstacleLayouts(obstacleLayouts)
+      setSpeedRunLayout(speedRunLayout)
+      setCtaLayout(ctaLayout)
+      setTotalRingsCount(totalRings)
     })
 
     return () => {
       isMounted = false
     }
-  }, [])
-
-  useEffect(() => {
-    if (
-      !homeLayout ||
-      !infoLayouts.length ||
-      !obstacleLayouts.length ||
-      !speedRunLayout ||
-      !ctaLayout
-    )
-      return
-
-    const totalRings = [homeLayout, ...infoLayouts, ...obstacleLayouts].reduce(
-      (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
-      0,
-    )
-
-    setTotalRingsCount(totalRings)
-  }, [homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, setTotalRingsCount])
+  }, [setTotalRingsCount])
 
   return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout }
 }

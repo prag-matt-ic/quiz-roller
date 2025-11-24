@@ -1,6 +1,6 @@
 'use client'
 import { type FC, type RefObject, useLayoutEffect, useRef } from 'react'
-import { useGameStore } from '../GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 
 const HtmlPortal: FC = () => {
   const setHtmlPortal = useGameStore((s) => s.setHtmlPortal)
