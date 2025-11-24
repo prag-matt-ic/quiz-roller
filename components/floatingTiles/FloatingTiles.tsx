@@ -419,10 +419,17 @@ const FloatingTiles = forwardRef<FloatingTilesHandle, FloatingTilesProps>(
 
         if (maskChanged) {
           spawnMaskTextureRef.current!.needsUpdate = true
-          rebuildSpawnableCells()
+          // Performance optimization:
+          // We do NOT call rebuildSpawnableCells() here.
+          // That function iterates the entire grid to find spawn locations for new particles.
+          // However, the particle system only spawns new particles when they "die" (reset),
+          // which is handled by the GPU shader logic or the initial seed.
+          // The spawnMaskTexture is updated for the GPU to use, but we don't need to
+          // burn CPU cycles updating the JS-side list of spawnable cells during the game loop.
+          // rebuildSpawnableCells();
         }
       },
-      [rebuildSpawnableCells, rowColumnSpawnable, spawnMaskData],
+      [rowColumnSpawnable, spawnMaskData], // Removed rebuildSpawnableCells from dependency array
     )
 
     const updateRowWorldPositions = useCallback(
