@@ -6,7 +6,6 @@ import { createGameStore } from '@/stores/createGameStore'
 import type { GameStore } from '@/stores/types'
 import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
-// Re-export types for backward compatibility
 export {
   Stage,
   type EdgeWarningIntensities,
@@ -27,7 +26,6 @@ export const GameProvider: FC<Props> = ({ children, insertSpeedRun }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
   const [store] = useState(() => createGameStore(playSoundFX, stopSoundFX, insertSpeedRun))
-
   return <GameContext value={store}>{children}</GameContext>
 }
 

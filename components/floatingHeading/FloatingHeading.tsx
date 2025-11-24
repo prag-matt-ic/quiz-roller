@@ -3,7 +3,7 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
-import { FC, type RefObject, Suspense, useEffect, useMemo, useRef } from 'react'
+import { type FC, type RefObject, Suspense, useEffect, useMemo, useRef } from 'react'
 import { BackSide, Mesh, Vector2, Vector3, type Texture, type Vector3Tuple } from 'three'
 import { useGSAP } from '@gsap/react'
 

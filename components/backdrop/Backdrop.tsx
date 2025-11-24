@@ -103,7 +103,6 @@ const Backdrop: FC = () => {
         uv.setXY(index, u, v)
       }
     }
-
     position.needsUpdate = true
     uv.needsUpdate = true
     geometry.computeVertexNormals()

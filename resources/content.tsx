@@ -1,5 +1,4 @@
 import { type HudIndicatorConfig } from '@/components/GameProvider'
-import { Credit } from '@/components/platform/home/Credit'
 import Card from '@/components/ui/Card'
 import { CollectibleType } from '@/model/schema'
 import { ArrowUpCircleIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'

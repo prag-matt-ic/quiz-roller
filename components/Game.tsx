@@ -26,7 +26,6 @@ import ctaTexture from '@/assets/platform/cta.png'
 import { loadHtmlImage } from '@/utils/loadImage'
 import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import Backdrop from './backdrop/Backdrop'
-// import Background from './background/Background'
 
 gsap.registerPlugin(useGSAP)
 
