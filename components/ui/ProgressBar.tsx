@@ -33,10 +33,10 @@ const ProgressBar: FC = () => {
   }, [gameStoreAPI])
 
   return (
-    <div className="fixed right-0 z-100 h-full w-1.5 overflow-hidden bg-black">
+    <div className="fixed right-0 z-100 h-full w-1 overflow-hidden bg-black">
       <div
         ref={barRef}
-        className="absolute bottom-0 h-full w-1.5 bg-amber-600 transition-transform duration-100 ease-linear"
+        className="absolute bottom-0 h-full w-1 bg-white transition-transform duration-100 ease-linear"
         style={{
           transform: 'translate3d(0,100%,0)',
         }}
