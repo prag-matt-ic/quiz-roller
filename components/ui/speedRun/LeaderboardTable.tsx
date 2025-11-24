@@ -93,8 +93,10 @@ export const LeaderboardTable: FC<TableProps> = ({
   return (
     <section className="w-full max-w-xl">
       <header className="flex w-full px-3 py-5">
-        <h2 className="w-full text-center text-2xl font-bold uppercase">
-          Speed Roll Leaderboard
+        <h2 className="w-full text-center text-2xl tracking-wider uppercase">
+          <span className="font-semibold italic opacity-65 blur-[1px]">Speedroll</span>
+          <br />
+          <span className="font-bold">Leaderboard</span>
         </h2>
       </header>
       <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4">
