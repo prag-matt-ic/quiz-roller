@@ -86,10 +86,10 @@ export const LeaderboardTable: FC<TableProps> = ({
 
   return (
     <section className="w-full max-w-xl">
-      <header className="flex w-full items-center justify-between px-3 py-5">
-        <TrophyIcon className="text-leaderboard" strokeWidth={1.5} />
-        <h2 className="text-center text-2xl uppercase">Global Leaderboard</h2>
-        <TrophyIcon className="text-leaderboard" strokeWidth={1.5} />
+      <header className="flex w-full px-3 py-5">
+        <h2 className="w-full text-center text-2xl font-bold uppercase">
+          Speedrun Leaderboard
+        </h2>
       </header>
       <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4">
         {isLoading
