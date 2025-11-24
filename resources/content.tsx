@@ -2,17 +2,34 @@ import { type HudIndicatorConfig } from '@/components/GameProvider'
 import { Credit } from '@/components/platform/home/Credit'
 import Card from '@/components/ui/Card'
 import { CollectibleType } from '@/model/schema'
-import { ArrowUpCircleIcon, CoinsIcon, LucideIcon } from 'lucide-react'
-import { FC, type ReactNode } from 'react'
+import { ArrowUpCircleIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
+import { type FC, type ReactNode } from 'react'
 
 type InfoContent = {
   heading: string
+  infoZoneContainerClassName?: string
   infoZoneContent: ReactNode
 }
+
+// badges: [
+//   {
+//     label: 'Stand out',
+//     Icon: HeartIcon,
+//   },
+//   {
+//     label: 'Boost engagement and conversions',
+//     Icon: TrendingUp,
+//   },
+//   {
+//     label: 'Optimised experiences',
+//     Icon: CircleGauge,
+//   },
 
 export const INFO_ZONES_CONTENT: InfoContent[] = [
   {
     heading: 'We help teams bring 3D to the browser without the bloat',
+    infoZoneContainerClassName:
+      'grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4',
     infoZoneContent: (
       <>
         <Card className="w-full md:col-span-5" paletteIndex={0}>
@@ -53,9 +70,39 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
   },
   {
     heading: 'Senior Three.js developers supercharged with AI capabilities',
-    infoZoneContent: <></>,
+    infoZoneContainerClassName: 'grid w-[328px] sm:w-168 grid-cols-1 gap-3',
+    infoZoneContent: (
+      <>
+        <Card className="w-full" paletteIndex={0}>
+          <h2 className="info-header">Placeholder</h2>
+          <p className="paragraph-sm max-w-md">
+            Quizroller is a proof of concept developed to showcase the potential of 3D web
+            experiences for educational purposes.
+            <br />
+            <br />
+            It&apos;s built using React Three Fiber, Rapier physics and WebGL for immersive
+            graphics.
+          </p>
+        </Card>
+      </>
+    ),
   },
-  { heading: 'Heading third!', infoZoneContent: <></> },
+  {
+    heading: 'Heading third!',
+    infoZoneContainerClassName: 'grid w-[328px] sm:w-168 grid-cols-1 gap-3',
+    infoZoneContent: (
+      <>
+        <Card className="w-full" paletteIndex={0}>
+          <h2 className="info-header">Placeholder</h2>
+          <p className="paragraph-sm max-w-md">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          </p>
+        </Card>
+      </>
+    ),
+  },
 ]
 
 const CollectibleHUDContent: FC<{
@@ -80,7 +127,7 @@ export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleType, HudIndicatorConfig
   },
   [CollectibleType.AI_Prompts]: {
     autoDismissS: 6,
-    content: <CollectibleHUDContent Icon={CoinsIcon} text="Access to proprietary AI prompts" />,
+    content: <CollectibleHUDContent Icon={BotIcon} text="Access to proprietary AI prompts" />,
   },
   [CollectibleType.Consultation]: {
     autoDismissS: 6,

@@ -6,10 +6,15 @@ vec3 palette(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d) {
     return a + b * cos(6.283185 * (c * t + d));
 }
 
-const vec3 PALETTE_PURPLE_GOLD_A = vec3(0.5, 0.5, 0.5);
-const vec3 PALETTE_PURPLE_GOLD_B = vec3(0.5, 0.5, 0.5);
-const vec3 PALETTE_PURPLE_GOLD_C = vec3(1.0, 0.7, 0.4);
-const vec3 PALETTE_PURPLE_GOLD_D = vec3(0.0, 0.15, 0.20);
+vec3 a = vec3(0.210, 0.520, 0.542);
+vec3 b = vec3(0.735, 0.400, 0.400);
+vec3 c = vec3(0.615, 1.020, 1.070);
+vec3 d = vec3(0.359, 0.275, 0.260);
+
+const vec3 PALETTE_PURPLE_GOLD_A = vec3(0.210, 0.520, 0.542);
+const vec3 PALETTE_PURPLE_GOLD_B = vec3(0.735, 0.400, 0.400);
+const vec3 PALETTE_PURPLE_GOLD_C = vec3(0.615, 1.020, 1.070);
+const vec3 PALETTE_PURPLE_GOLD_D = vec3(0.359, 0.275, 0.260);
 
 const vec3 PALETTE_YELLOW_GREEN_A = vec3(0.5, 0.5, 0.5);
 const vec3 PALETTE_YELLOW_GREEN_B = vec3(0.5, 0.5, 0.5);

@@ -4,6 +4,7 @@ import { type StateCreator } from 'zustand'
 import { CollectibleType, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
 import type { RowData } from '@/utils/tiles'
+import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 export enum Stage {
   HOME = 'home',
@@ -91,7 +92,7 @@ export type GameSlice = {
   infoContentIndex: number
   setInfoContentIndex: (index: number) => void
 
-  paletteIndex: 0 | 1 | 2
+  paletteConfig: CosinePaletteParams
 
   hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void

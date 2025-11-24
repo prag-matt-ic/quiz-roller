@@ -59,7 +59,7 @@ type FloatingTilesUniforms = {
 const EXTRA_SIDE_COLUMNS = 5
 const GRID_COLS = COLUMNS + EXTRA_SIDE_COLUMNS * 2
 const GRID_OFFSET = EXTRA_SIDE_COLUMNS
-const TILE_THICKNESS = 0.2
+const TILE_THICKNESS = 0.1
 const BOX_SIZE_SCALE = 0.5
 const Y_MIN = -8
 const Y_MAX = 8
@@ -129,7 +129,7 @@ const createRowPositionsTexture = (data: Float32Array) => {
 const FloatingTiles = forwardRef<FloatingTilesHandle, FloatingTilesProps>(
   ({ onReadyChange }, ref) => {
     const count = usePerformanceStore((s) => s.sceneConfig.floatingTiles.instanceCount)
-    const paletteIndex = useGameStore((s) => s.paletteIndex)
+    const paletteIndex = 1 // useGameStore((s) => s.paletteIndex)
     const renderer = useThree((state) => state.gl)
     const camera = useThree((state) => state.camera)
 

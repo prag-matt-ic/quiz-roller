@@ -1,4 +1,4 @@
-#pragma glslify: getColourFromPalette = require(../../resources/glsl/palette.glsl)
+#pragma glslify: palette = require(../../resources/glsl/palette.glsl)
 
 #pragma glslify: grainyNoise = require(../dev/colourTexture/helpers/grainyNoise.glsl)
 #pragma glslify: fractalNoise = require(../dev/colourTexture/helpers/fractalNoise.glsl)
@@ -8,7 +8,10 @@
 uniform float uTime;
 uniform vec2 uResolution;
 uniform float uSeed;
-uniform int uPaletteIndex;
+uniform vec3 uA;
+uniform vec3 uB;
+uniform vec3 uC;
+uniform vec3 uD;
 uniform float uSampleWeight;
 
 // Grainy Noise uniforms
@@ -71,7 +74,7 @@ void main() {
     float t = dist + fbm * uFbmMix + (grain - 0.5) * uGrainMix;
     
     // Get color from palette
-    vec3 color = getColourFromPalette(uPaletteIndex, t) * uSampleWeight;
+    vec3 color = palette(t, uA, uB, uC, uD) * uSampleWeight;
     
     // Blend with dark grey for atmospheric effect
     vec3 darkGrey = vec3(0.0, 0.0, 0.0);

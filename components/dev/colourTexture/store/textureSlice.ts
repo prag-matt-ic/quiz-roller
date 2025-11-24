@@ -4,7 +4,7 @@ import { INITIAL_COLOUR_TEXTURE_UNIFORMS } from '@/components/dev/colourTexture/
 
 import type { ColourTextureStore, TextureConfigState, TextureSlice } from './types'
 
-const createInitialConfig = (): TextureConfigState => ({
+export const createInitialTextureConfig = (): TextureConfigState => ({
   grainScale: INITIAL_COLOUR_TEXTURE_UNIFORMS.uGrainScale,
   grainAmplitude: INITIAL_COLOUR_TEXTURE_UNIFORMS.uGrainAmplitude,
   grainMix: INITIAL_COLOUR_TEXTURE_UNIFORMS.uGrainMix,
@@ -23,6 +23,7 @@ const createInitialConfig = (): TextureConfigState => ({
   worleyMix: INITIAL_COLOUR_TEXTURE_UNIFORMS.uWorleyMix,
   blackMix: INITIAL_COLOUR_TEXTURE_UNIFORMS.uBlackMix,
   showGradientOverlay: INITIAL_COLOUR_TEXTURE_UNIFORMS.uShowGradientOverlay,
+  gradientRange: INITIAL_COLOUR_TEXTURE_UNIFORMS.uGradientRange,
   originX: INITIAL_COLOUR_TEXTURE_UNIFORMS.uOriginOffset.x,
   originY: INITIAL_COLOUR_TEXTURE_UNIFORMS.uOriginOffset.y,
 })
@@ -33,7 +34,7 @@ export const createTextureSlice: StateCreator<
   [],
   TextureSlice
 > = (set) => ({
-  config: createInitialConfig(),
+  config: createInitialTextureConfig(),
   updateConfig: (key, value) =>
     set((state) => ({
       config: {

@@ -56,8 +56,11 @@ export const createColourSlice: StateCreator<
   [],
   ColourSlice
 > = (set, get) => ({
+  name: 'My Gradient',
   hex: DEFAULT_HEX,
   params: DEFAULT_PALETTE_PARAMS,
+  userColours: [],
+  setName: (name: string) => set({ name }),
   setHex: (value: string) => set({ hex: value }),
   seedFromHex: () => {
     const hex = get().hex
@@ -75,5 +78,35 @@ export const createColourSlice: StateCreator<
         },
       }
     })
+  },
+  saveUserColour: () => {
+    const state = get()
+    const newColour = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      name: state.name,
+      hex: state.hex,
+      params: state.params,
+      config: state.config,
+    }
+    set((state) => ({
+      userColours: [newColour, ...state.userColours],
+    }))
+  },
+  loadUserColour: (id: string) => {
+    const colour = get().userColours.find((c) => c.id === id)
+    if (colour) {
+      set({
+        name: colour.name,
+        hex: colour.hex,
+        params: colour.params,
+        config: colour.config,
+      })
+    }
+  },
+  deleteUserColour: (id: string) => {
+    set((state) => ({
+      userColours: state.userColours.filter((c) => c.id !== id),
+    }))
   },
 })

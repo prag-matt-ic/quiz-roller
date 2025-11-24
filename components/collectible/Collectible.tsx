@@ -59,7 +59,7 @@ type Props = {
 
 export const Collectible: FC<Props> = ({ ref, position, width, height, type, isOutOfView }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(type))
-  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
 

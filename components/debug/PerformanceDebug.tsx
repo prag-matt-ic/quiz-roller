@@ -40,7 +40,6 @@ const PerformanceDebug: FC = () => {
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
   const resetGame = useGameStore((s) => s.resetGame)
 
-  const paletteIndex = useGameStore((s) => s.paletteIndex)
   const gameStoreApi = useGameStoreAPI()
 
   // const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -96,7 +95,7 @@ const PerformanceDebug: FC = () => {
           </option>
         ))}
       </SelectRow>
-      <SelectRow
+      {/* <SelectRow
         id="performance-debug-palette-index"
         label="Palette"
         value={paletteIndex.toString()}
@@ -109,7 +108,7 @@ const PerformanceDebug: FC = () => {
             {index}
           </option>
         ))}
-      </SelectRow>
+      </SelectRow> */}
       <button
         onClick={() => resetGame({ isSpeedRunMode: false })}
         className="w-full rounded bg-red-800 p-1 text-xs font-semibold text-white">

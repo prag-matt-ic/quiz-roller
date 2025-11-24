@@ -25,6 +25,7 @@ import {
   useBackgroundStore,
   type BackgroundShaderConfig,
 } from '@/components/BackgroundProvider'
+import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 const MAX_POOL_SIZE = 8
 const SAMPLE_TIME_STEP = 2.0
@@ -93,13 +94,13 @@ const computeRenderDimensions = ({
 const configureGeneratorMaterial = ({
   material,
   shaderConfig,
-  paletteIndex,
+  paletteConfig,
   resolution,
   baseSize,
 }: {
   material: BackgroundMaterialInstance
   shaderConfig: BackgroundShaderConfig
-  paletteIndex: number
+  paletteConfig: CosinePaletteParams
   resolution: Vector2
   baseSize: Dimensions
 }): void => {
@@ -113,7 +114,10 @@ const configureGeneratorMaterial = ({
   material.uFbmLacunarity = shaderConfig.fbmLacunarity
   material.uFbmGain = shaderConfig.fbmGain
   material.uFbmMix = shaderConfig.fbmEnabled ? shaderConfig.fbmMix : 0
-  material.uPaletteIndex = paletteIndex
+  material.uA.set(...paletteConfig.a)
+  material.uB.set(...paletteConfig.b)
+  material.uC.set(...paletteConfig.c)
+  material.uD.set(...paletteConfig.d)
 }
 
 const ensureTextureTarget = ({
@@ -277,7 +281,7 @@ const Background: FC = () => {
   const gl = useThree((state) => state.gl)
   const scene = useThree((state) => state.scene)
   const size = useThree((state) => state.size)
-  const paletteIndex = useGameStore((state) => state.paletteIndex)
+  const paletteConfig = useGameStore((state) => state.paletteConfig)
   const backgroundConfig = usePerformanceStore((state) => state.sceneConfig.background)
   const { keyframes } = backgroundConfig
   const gameStore = useGameStoreAPI()
@@ -481,7 +485,7 @@ const Background: FC = () => {
     configureGeneratorMaterial({
       material: generatorMaterial,
       shaderConfig,
-      paletteIndex,
+      paletteConfig,
       resolution: resolutionVector.current,
       baseSize,
     })
@@ -497,7 +501,7 @@ const Background: FC = () => {
       frameCount,
       targetSize,
       texturePool: pool,
-      seed: paletteIndex + shaderConfig.seedOffset,
+      seed: shaderConfig.seedOffset,
       clearColor: clearColorBuffer.current,
     })
 
@@ -512,7 +516,7 @@ const Background: FC = () => {
     cycleState.current.progress = 0
     cycleState.current.speed = shouldAnimate ? frameCount * 0.05 : 0
     staticRenderPending.current = !shouldAnimate
-  }, [shaderConfig, paletteIndex, keyframes, shouldAnimate, renderScale])
+  }, [shaderConfig, paletteConfig, keyframes, shouldAnimate, renderScale])
 
   useFrame((_, delta) => {
     const renderer = rendererState.current

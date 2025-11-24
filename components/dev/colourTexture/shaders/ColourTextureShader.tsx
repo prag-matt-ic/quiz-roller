@@ -11,6 +11,7 @@ export type ColourTextureShaderUniforms = {
   uSampleWeight: number
   uBlackMix: number
   uShowGradientOverlay: boolean
+  uGradientRange: number
   uOriginOffset: Vector2
 
   // Cosine Palette
@@ -48,6 +49,7 @@ export const INITIAL_COLOUR_TEXTURE_UNIFORMS: ColourTextureShaderUniforms = {
   uSampleWeight: 1,
   uBlackMix: 0.0,
   uShowGradientOverlay: true,
+  uGradientRange: 1.0,
   uOriginOffset: new Vector2(0, 0),
 
   // Default Palette (Orange-ish from Gradient page)

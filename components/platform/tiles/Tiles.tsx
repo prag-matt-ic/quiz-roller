@@ -85,7 +85,7 @@ type PlatformTilesProps = {
 
 export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
-  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const paletteIndex = 0 // useGameStore((s) => s.paletteIndex)
 
   const [instances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)

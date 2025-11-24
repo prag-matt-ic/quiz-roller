@@ -13,7 +13,7 @@ export const PLAYER_RADIUS = 0.5
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
-  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
 

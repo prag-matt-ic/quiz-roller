@@ -42,7 +42,7 @@ type MarbleProps = {
 }
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
-  const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
   // const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat } = playerConfig

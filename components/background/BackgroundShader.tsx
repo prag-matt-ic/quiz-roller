@@ -1,5 +1,5 @@
 import { shaderMaterial } from '@react-three/drei'
-import { Vector2 } from 'three'
+import { Vector2, Vector3 } from 'three'
 
 import backgroundFragment from './background.frag'
 import backgroundVertex from './background.vert'
@@ -8,8 +8,12 @@ export type BackgroundShaderUniforms = {
   uTime: number
   uResolution: Vector2
   uSeed: number
-  uPaletteIndex: number
   uSampleWeight: number
+  // Palette
+  uA: Vector3
+  uB: Vector3
+  uC: Vector3
+  uD: Vector3
   // Grainy Noise controls
   uGrainScale: number
   uGrainAmplitude: number
@@ -36,8 +40,12 @@ export const INITIAL_BACKGROUND_UNIFORMS: BackgroundShaderUniforms = {
   uTime: 0,
   uResolution: new Vector2(1024, 1024),
   uSeed: 0,
-  uPaletteIndex: 0,
   uSampleWeight: 1,
+  // Palette
+  uA: new Vector3(0.5, 0.5, 0.5),
+  uB: new Vector3(0.5, 0.5, 0.5),
+  uC: new Vector3(1.0, 1.0, 1.0),
+  uD: new Vector3(0.263, 0.416, 0.557),
   // Grainy Noise defaults
   uGrainScale: 100.0,
   uGrainAmplitude: 0.1,

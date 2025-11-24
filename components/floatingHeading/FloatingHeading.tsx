@@ -98,7 +98,7 @@ export const FloatingHeading: FC<Props> = ({
   })
 
   const { radius, thetaLength, thetaStart } = useMemo(() => {
-    const arcLength = Math.PI * 0.9 // keeps a gentle bend without wrapping the texture
+    const arcLength = Math.PI * 0.8 // keeps a gentle bend without wrapping the texture
     const computedRadius = Math.max(width / arcLength, 0.001)
     const start = Math.PI / 2 - arcLength / 2
     return {

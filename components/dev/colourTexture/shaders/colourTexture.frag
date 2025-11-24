@@ -10,6 +10,7 @@ uniform float uSeed;
 uniform float uSampleWeight;
 uniform float uBlackMix;
 uniform bool uShowGradientOverlay;
+uniform float uGradientRange;
 uniform vec2 uOriginOffset;
 
 // Cosine Palette Uniforms
@@ -69,6 +70,7 @@ void main() {
 
     // Distance from center (modified by offset)
     float dist = length(offsetUv);
+    float gradientBase = dist / max(uGradientRange, 0.0001);
 
     // Layer 1: Fractal noise for organic base
     vec2 noiseUv = uv * aspectScale;
@@ -89,7 +91,7 @@ void main() {
     }
     
     // Combine distance gradient with layered noises
-    float t = dist + fbm * uFbmMix + (grain - 0.5) * uGrainMix + worleyPattern * uWorleyMix;
+    float t = gradientBase + fbm * uFbmMix + (grain - 0.5) * uGrainMix + worleyPattern * uWorleyMix;
 
     // Get color from dynamic cosine palette (clamp sample to palette bounds)
     vec3 color = sampleClampedPalette(t, uA, uB, uC, uD) * uSampleWeight;

@@ -197,7 +197,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        infoContainerClassName="grid w-[328px] sm:w-168 grid-cols-1 md:grid-cols-5 gap-3 md:gap-4"
+        infoContainerClassName={INFO_ZONES_CONTENT[contentIndex].infoZoneContainerClassName}
         Icon={InfoIcon}>
         {INFO_ZONES_CONTENT[contentIndex].infoZoneContent}
       </InfoZone>

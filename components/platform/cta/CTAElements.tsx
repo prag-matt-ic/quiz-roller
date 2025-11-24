@@ -13,7 +13,6 @@ import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { Trophy } from 'lucide-react'
 import CTATimeDisplay from '@/components/ui/TimeDisplay'
-import Card from '@/components/ui/Card'
 
 export type CTAElementsHandle = {
   moveElements: (zStep: number) => void
@@ -92,7 +91,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
       // There is a trigger zone which works simiar to InfoZone but instead of showing a popup it presents the element in 3D space behind the zone.
         // You roll into it, and the camera position changes to look at the info.
     */}
-      <InfoZone
+      {/* <InfoZone
         key="cta-zone"
         ref={ctaZone}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
@@ -100,10 +99,8 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         height={CTA_ZONE_HEIGHT}
         infoContainerClassName="w-[328px] sm:w-[450px]"
         Icon={Trophy}>
-        <Card className="w-full md:col-span-5" paletteIndex={0}>
-          <CTATimeDisplay />
-        </Card>
-      </InfoZone>
+        <CTATimeDisplay />
+      </InfoZone> */}
     </>
   )
 }

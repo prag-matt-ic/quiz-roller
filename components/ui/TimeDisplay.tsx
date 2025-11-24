@@ -1,5 +1,5 @@
 'use client'
-import { type FC, useCallback, useEffect, useRef } from 'react'
+import { type FC, useRef } from 'react'
 
 import { useSpeedRunTime, useTime } from '@/hooks/useTime'
 

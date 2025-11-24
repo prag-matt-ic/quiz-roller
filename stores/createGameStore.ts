@@ -6,10 +6,11 @@ import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
 import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
+import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 type PersistedStore = Pick<
   GameStore,
-  'username' | 'paletteIndex' | 'totalTimeS' | 'completedSpeedRuns'
+  'username' | 'paletteConfig' | 'totalTimeS' | 'completedSpeedRuns'
 >
 
 export const createGameStore = (
@@ -30,7 +31,7 @@ export const createGameStore = (
           partialize: (s) =>
             ({
               username: s.username,
-              paletteIndex: s.paletteIndex,
+              paletteConfig: s.paletteConfig,
               totalTimeS: s.totalTimeS,
               completedSpeedRuns: s.completedSpeedRuns,
             }) as PersistedStore,
