@@ -43,7 +43,7 @@ type Props = {
   isMobile: boolean
 }
 
-const INFO_BITMAP_TEXTURES = [info1Texture.src, info2Texture.src, info3Texture.src] // TODO: replace duplicates once dedicated info bitmaps are available
+const INFO_BITMAP_TEXTURES = [info1Texture.src, info2Texture.src, info3Texture.src]
 const OBSTACLE_BITMAP_TEXTURES = [
   obstacle1Texture.src,
   obstacle2Texture.src,
