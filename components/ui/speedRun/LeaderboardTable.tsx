@@ -3,30 +3,36 @@ import { type FC, useEffect, useMemo, useState } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 import type { SpeedRunDatabase } from '@/model/schema'
-import { TrophyIcon } from 'lucide-react'
 import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 
-export function useLeaderboardTableData(count: number = 10): TableProps {
+export function useLeaderboardTableData(
+  count: number = 10,
+  showPlayerPosition: boolean = true,
+): TableProps {
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
   const [playerPosition, setPlayerPosition] = useState<number | null>(null)
 
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
   const userSpeedRunIds = useMemo(
-    () => completedSpeedruns.map((run) => run.id),
-    [completedSpeedruns],
+    () => (showPlayerPosition ? completedSpeedruns.map((run) => run.id) : []),
+    [completedSpeedruns, showPlayerPosition],
   )
 
   const latestRunId = useMemo(
-    () => completedSpeedruns[completedSpeedruns.length - 1]?.id,
-    [completedSpeedruns],
+    () =>
+      showPlayerPosition ? completedSpeedruns[completedSpeedruns.length - 1]?.id : undefined,
+    [completedSpeedruns, showPlayerPosition],
   )
 
   useEffect(() => {
     let isMounted = true
 
     const fetchData = async () => {
+      setIsLoading(true)
+      setPlayerPosition(null)
+
       const speedrunData = await getSpeedrunData(count)
 
       if (!isMounted) return
@@ -34,7 +40,7 @@ export function useLeaderboardTableData(count: number = 10): TableProps {
       let playerPosition: number | null = null
       let allSpeedruns = speedrunData
 
-      if (latestRunId) {
+      if (showPlayerPosition && latestRunId) {
         const isOnLeaderboard = speedrunData.some((speedrun) => speedrun.id === latestRunId)
 
         if (!isOnLeaderboard) {
@@ -58,7 +64,7 @@ export function useLeaderboardTableData(count: number = 10): TableProps {
     return () => {
       isMounted = false
     }
-  }, [count, latestRunId])
+  }, [count, latestRunId, showPlayerPosition])
 
   return { count, isLoading, speedRuns, userSpeedRunIds, playerPosition }
 }

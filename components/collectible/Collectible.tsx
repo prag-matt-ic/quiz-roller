@@ -129,7 +129,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         />
       </mesh>
 
-      <pointLight intensity={isCollected ? 2 : 0} position={[-2, 0, 5]}>
+      <pointLight intensity={isCollected ? 2 : 0} position={[0, -1.5, 5]}>
         {/* Visualises light position */}
         <mesh>
           <sphereGeometry args={[0.25, 16, 16]} />

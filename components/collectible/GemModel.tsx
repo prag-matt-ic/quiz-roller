@@ -26,21 +26,21 @@ const GemModel: FC<Props> = ({ ...props }) => {
   const firstNode = nodes.scene || nodes[Object.keys(nodes)[0]]
 
   const material = useMemo(() => {
-    const baseColor = new THREE.Color(0x37d6c7) // teal-accent
-    const emissiveColor = new THREE.Color(0x37d6c7)
+    const baseColor = new THREE.Color(0xeed500) // gold
+    const emissiveColor = new THREE.Color(0xeed500)
 
     return new THREE.MeshPhysicalMaterial({
       color: baseColor,
       metalness: 0.1,
-      roughness: 0.1,
+      roughness: 0.3,
       emissive: emissiveColor,
       emissiveIntensity: 1,
-      envMapIntensity: 1.5,
+      envMapIntensity: 0.5,
       clearcoat: 1.0,
       clearcoatRoughness: 0.1,
-      reflectivity: 1,
+      reflectivity: 0.5,
       transparent: true,
-      opacity: 1,
+      opacity: 0.9,
     })
   }, [])
 

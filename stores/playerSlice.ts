@@ -161,7 +161,7 @@ export const createPlayerSlice =
         set((s) => ({
           isRespawning: true,
           respawnPlayerTick: s.respawnPlayerTick + 1,
-          // TODO: reset rings collected?
+          collectedRings: {},
         }))
       },
       stopConfirmation: () => {

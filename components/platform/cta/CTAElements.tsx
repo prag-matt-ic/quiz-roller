@@ -147,7 +147,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
     totalTimeContainer.current.textContent = formatTotalTime(elapsedSeconds)
   })
 
-  const tableData = useLeaderboardTableData(5)
+  const tableData = useLeaderboardTableData(5, false)
 
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
