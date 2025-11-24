@@ -20,6 +20,7 @@ import info2Texture from '@/assets/platform/info-2.png'
 import info3Texture from '@/assets/platform/info-3.png'
 import obstacle1Texture from '@/assets/platform/obstacles-1.png'
 import obstacle2Texture from '@/assets/platform/obstacles-2.png'
+import obstacle3Texture from '@/assets/platform/obstacles-3.png'
 import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import { loadHtmlImage } from '@/utils/loadImage'
@@ -47,7 +48,7 @@ const OBSTACLE_BITMAP_TEXTURES = [
   obstacle1Texture.src,
   obstacle2Texture.src,
   obstacle1Texture.src,
-  obstacle2Texture.src,
+  obstacle3Texture.src,
 ]
 
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
