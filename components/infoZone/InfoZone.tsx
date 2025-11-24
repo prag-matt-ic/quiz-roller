@@ -4,6 +4,7 @@
 import { useGSAP } from '@gsap/react'
 import { Html } from '@react-three/drei'
 import { shaderMaterial } from '@react-three/drei'
+import { type HtmlProps } from '@react-three/drei/web/Html'
 import { extend } from '@react-three/fiber'
 import {
   CuboidCollider,
@@ -29,7 +30,6 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
-import { HtmlProps } from '@react-three/drei/web/Html'
 
 gsap.registerPlugin(EasePack)
 
