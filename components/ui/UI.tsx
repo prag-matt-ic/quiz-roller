@@ -73,7 +73,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         className="pointer-events-auto fixed top-6 right-24 rounded-lg bg-white px-4 py-2 text-sm font-bold text-black uppercase transition"
         onClick={startSpeedRun}>
         <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
-        Start Speedrun
+        Start Speedroll
       </button>
 
       <Transition

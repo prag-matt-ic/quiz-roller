@@ -169,7 +169,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         <button
           className="pointer-events-auto relative bg-white p-5 text-black"
           onClick={startSpeedRun}>
-          Start Speed Roll!
+          Start Speedroll!
         </button>
       </InfoZone>
 
