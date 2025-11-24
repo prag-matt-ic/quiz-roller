@@ -11,8 +11,9 @@ import {
 import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaSection'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { Trophy } from 'lucide-react'
+import { TimerIcon, TrophyIcon } from 'lucide-react'
 import CTATimeDisplay from '@/components/ui/TimeDisplay'
+import { LeaderboardTable } from '@/components/ui/speedRun/SpeedrunLeaderboard'
 
 export type CTAElementsHandle = {
   moveElements: (zStep: number) => void
@@ -87,20 +88,31 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
-      {/* TODO: introduce new InfoProjection element.
-      // There is a trigger zone which works simiar to InfoZone but instead of showing a popup it presents the element in 3D space behind the zone.
-        // You roll into it, and the camera position changes to look at the info.
-    */}
-      {/* <InfoZone
-        key="cta-zone"
+      <InfoZone
+        key="cta-leaderboard"
         ref={ctaZone}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={CTA_ZONE_WIDTH}
         height={CTA_ZONE_HEIGHT}
         infoContainerClassName="w-[328px] sm:w-[450px]"
-        Icon={Trophy}>
-        <CTATimeDisplay />
-      </InfoZone> */}
+        Icon={TimerIcon}>
+          <div className="flex w-full items-center justify-center">
+            <LeaderboardTable count={5} />
+          </div>
+      </InfoZone>
+
+       <InfoZone
+        key="cta-totaltime"
+        ref={ctaZone}
+        position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+        width={CTA_ZONE_WIDTH}
+        height={CTA_ZONE_HEIGHT}
+        infoContainerClassName="w-[328px] sm:w-[450px]"
+        Icon={TrophyIcon}>
+          <div className="flex w-full items-center justify-center">
+            <CTATimeDisplay />
+          </div>
+      </InfoZone>
     </>
   )
 }

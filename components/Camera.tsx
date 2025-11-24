@@ -2,7 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { type FC, useRef } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -33,13 +33,19 @@ export const CAMERA_ZOOM_FOR_STAGE: Record<Stage, number> = {
 const Camera: FC = () => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
+  const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
 
   const lastMovedBackward = useRef(false)
+
+  useEffect(() => {
+    lastMovedBackward.current = false
+  }, [respawnPlayerTick])
 
   usePlayerInput((input) => {
     if (input.down > 0) lastMovedBackward.current = true
     else if (input.up > 0) lastMovedBackward.current = false
   })
+
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
   const stage = useStage((nextStage: Stage) => {

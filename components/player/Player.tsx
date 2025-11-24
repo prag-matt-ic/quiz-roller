@@ -207,7 +207,11 @@ const Player: FC = () => {
     const correctedMovement = controllerRef.current.computedMovement()
 
     // Platform scroll input shifts the ground underneath the player; capture that displacement
-    terrainDisplacement.current.set(0, 0, platformScrollDirection * TERRAIN_SPEED_UNITS * deltaTime)
+    terrainDisplacement.current.set(
+      0,
+      0,
+      platformScrollDirection * TERRAIN_SPEED_UNITS * deltaTime,
+    )
 
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x

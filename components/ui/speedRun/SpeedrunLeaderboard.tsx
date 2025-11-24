@@ -14,10 +14,31 @@ type Props = {
 }
 
 export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true }) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
+
+  return (
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
+      <LeaderboardTable count={count} />
+      {showButtons && (
+        <div className="flex gap-4">
+          <Button color="light" variant="primary" onClick={startSpeedRun}>
+            Retry
+          </Button>
+          <Button color="light" variant="secondary" onClick={stopSpeedRun}>
+            Finish
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const LeaderboardTable: FC<{
+  count: number
+}> = ({ count }) => {
+  const [isLoading, setIsLoading] = useState(true)
+  const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -34,28 +55,6 @@ export const SpeedrunLeaderboard: FC<Props> = ({ count = 10, showButtons = true 
     }
   }, [count])
 
-  return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
-      <LeaderboardTable isLoading={isLoading} speedRuns={speedRuns} count={count} />
-      {showButtons && (
-        <div className="flex gap-4">
-          <Button color="light" variant="primary" onClick={startSpeedRun}>
-            Retry
-          </Button>
-          <Button color="light" variant="secondary" onClick={stopSpeedRun}>
-            Finish
-          </Button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export const LeaderboardTable: FC<{
-  isLoading: boolean
-  count: number
-  speedRuns: SpeedRunDatabase[]
-}> = ({ isLoading, speedRuns, count }) => {
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
   const completedSpeedrunIds = useMemo(
     () => completedSpeedruns.map((run) => run.id),
