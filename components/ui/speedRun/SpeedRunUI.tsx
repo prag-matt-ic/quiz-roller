@@ -10,16 +10,16 @@ import { twJoin } from 'tailwind-merge'
 
 export const SpeedRunTimer: FC = () => {
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
-  const isAmber = speedRunStatus === 'countdown' || speedRunStatus === 'username'
+
   const isFinished = speedRunStatus === 'submitting' || speedRunStatus === 'leaderboard'
+  if (isFinished) return null
+
+  const isAmber = speedRunStatus === 'countdown' || speedRunStatus === 'username'
   return (
     <div className="flex flex-col items-center gap-2 overflow-hidden">
       <div className="flex items-center gap-3">
         <div
-          className={twJoin(
-            'size-2.5 rounded-full',
-            isAmber ? 'bg-amber-400' : isFinished ? 'bg-white' : 'bg-green-500',
-          )}
+          className={twJoin('size-2.5 rounded-full', isAmber ? 'bg-amber-400' : 'bg-green-500')}
         />
         <h2 className="text-xs tracking-widest text-white/60 uppercase">Speedroll</h2>
       </div>

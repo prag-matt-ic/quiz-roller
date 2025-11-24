@@ -17,7 +17,7 @@ export const LeaderboardOverlay: FC<Props> = ({ showButtons = true }) => {
   const tableData = useLeaderboardTableData(10)
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
+    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/95 px-4 pb-12">
       {/* Table needs to be kept simple (e.g no access to the game store from within it otherwise it breaks in CTAELEMENTs) */}
       <LeaderboardTable {...tableData} />
       {showButtons && (

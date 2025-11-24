@@ -18,6 +18,7 @@ import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
+import { useGameStore } from '@/components/GameProvider'
 
 export type CTAElementsHandle = {
   moveElements: (zStep: number) => void
@@ -148,6 +149,8 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   const tableData = useLeaderboardTableData(5)
 
+  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+
   return (
     <>
       <InfoZone
@@ -163,6 +166,11 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         isPositioned={isLeaderboardPositioned}
         Icon={TrophyIcon}>
         <LeaderboardTable {...tableData} />
+        <button
+          className="pointer-events-auto relative bg-white p-5 text-black"
+          onClick={startSpeedRun}>
+          Start Speed Roll!
+        </button>
       </InfoZone>
 
       <InfoZone
