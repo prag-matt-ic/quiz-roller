@@ -34,12 +34,9 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
         <Card className="w-full" paletteIndex={0}>
           <h2 className="info-header">About</h2>
           <p className="paragraph-sm max-w-md">
-            Quizroller is a proof of concept developed to showcase the potential of 3D web
-            experiences for educational purposes.
-            <br />
-            <br />
-            It&apos;s built using React Three Fiber, Rapier physics and WebGL for immersive
-            graphics.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
           </p>
         </Card>
       </>
@@ -53,19 +50,15 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
         <Card className="w-full" paletteIndex={0}>
           <h2 className="info-header">Placeholder</h2>
           <p className="paragraph-sm max-w-md">
-            Quizroller is a proof of concept developed to showcase the potential of 3D web
-            experiences for educational purposes.
-            <br />
-            <br />
-            It&apos;s built using React Three Fiber, Rapier physics and WebGL for immersive
-            graphics.
+            This experience is built using React Three Fiber, Rapier physics and WebGL for
+            immersive graphics.
           </p>
         </Card>
       </>
     ),
   },
   {
-    heading: 'Heading third!',
+    heading: '3D that looks incredible and runs fast everywhere',
     infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
