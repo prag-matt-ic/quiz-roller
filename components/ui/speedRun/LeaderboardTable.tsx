@@ -91,7 +91,7 @@ export const LeaderboardTable: FC<TableProps> = ({
         <h2 className="text-center text-2xl uppercase">Global Leaderboard</h2>
         <TrophyIcon className="text-leaderboard" strokeWidth={1.5} />
       </header>
-      <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 rounded-md bg-black shadow-2xl shadow-black/90">
+      <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4">
         {isLoading
           ? placeholderRows.map((_, index) => (
               <LoadingRow key={`loading-${index}`} index={index} />
@@ -104,17 +104,17 @@ export const LeaderboardTable: FC<TableProps> = ({
                 isCurrentUser={userSpeedRunIds.includes(entry.id)}
               />
             ))}
-      </div>
-      {!isLoading && playerRunBelowLeaderboard && (
-        <div className="mt-4 grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 rounded-md bg-black shadow-2xl shadow-black/90">
+
+        {!isLoading && playerRunBelowLeaderboard && (
           <LeaderboardRow
             key={playerRunBelowLeaderboard.id}
             entry={playerRunBelowLeaderboard}
             index={playerPosition! - 1}
             isCurrentUser={true}
+            className="mt-4"
           />
-        </div>
-      )}
+        )}
+      </div>
     </section>
   )
 }
@@ -126,16 +126,18 @@ const LeaderboardRow: FC<{
   entry: SpeedRunDatabase
   index: number
   isCurrentUser: boolean
-}> = ({ entry, index, isCurrentUser }) => {
+  className?: string
+}> = ({ entry, index, isCurrentUser, className }) => {
   const isTopThree = index < 3
 
   return (
     <div
       className={twMerge(
         ROW_CONTAINER_CLASSES,
-        index % 2 === 0 && 'bg-white/1',
-        isCurrentUser && 'text-leaderboard bg-leaderboard/8',
+        index % 2 === 0 && 'bg-[#000]/20',
+        isCurrentUser && 'text-leaderboard bg-leaderboard/12',
         isTopThree ? 'h-14' : 'h-11',
+        className,
       )}>
       {isTopThree ? (
         <Medal position={index} />
