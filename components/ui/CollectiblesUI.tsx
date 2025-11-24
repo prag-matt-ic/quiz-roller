@@ -15,24 +15,28 @@ import {
 import { useGameStore } from '@/components/GameProvider'
 import { COLLECTIBLE_TYPES } from '@/model/schema'
 
-const CollectiblesUI: FC = () => {
-  const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
+export const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
   const totalRingsCount = useGameStore((s) => s.totalRingsCount)
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
+    <div className="flex h-fit items-center gap-1 text-sm select-none">
+      <div className="relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold">
+        {collectedRingCount}
+      </div>
+      <span className="font-mono font-medium">/{totalRingsCount}</span>
+
+      {/* TODO: Ring based speed boost indicator would go here... */}
+    </div>
+  )
+}
+
+const CollectiblesUI: FC = () => {
+  const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
+
+  return (
     <>
-      {/* Rings/Coins */}
-      {totalRingsCount > 0 && (
-        <div
-          className={twJoin(
-            'relative mr-2 flex aspect-square h-10 w-18 items-center justify-center rounded-full border text-center font-semibold',
-            collectedRingCount > 0 ? 'border-amber-400' : 'border-white/40',
-          )}>
-          {collectedRingCount} / {totalRingsCount}
-        </div>
-      )}
       {/* Collectibles */}
       {COLLECTIBLE_TYPES.map((type, index) => {
         return (

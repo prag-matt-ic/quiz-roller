@@ -125,7 +125,7 @@ const Keys: FC = () => {
   }, [disableInput, setPlayerInput])
 
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-3 z-1000 grid w-fit grid-cols-3 gap-0.5">
+    <aside className="pointer-events-none grid h-fit w-fit grid-cols-3 gap-0.5 place-self-end">
       <div />
       <Key Icon={ArrowUp} isActive={playerInput.up > 0} />
       <div />

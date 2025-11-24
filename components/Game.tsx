@@ -124,6 +124,8 @@ function usePlatformLayout() {
   const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
   const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
   const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
+  const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
+  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
 
   useEffect(() => {
     let isMounted = true
@@ -171,27 +173,43 @@ function usePlatformLayout() {
 
       const ctaLayout = imageToLayout(images[index], 'cta')
 
-      const totalRings = [
-        homeLayout,
-        ...infoLayouts,
-        ...obstacleLayouts,
-        speedRunLayout,
-        ctaLayout,
-      ].reduce((sum, layout) => sum + (layout?.totalRingsCount ?? 0), 0)
-
       // Set layouts into state
       setHomeLayout(homeLayout)
       setInfoLayouts(infoLayouts)
       setObstacleLayouts(obstacleLayouts)
       setSpeedRunLayout(speedRunLayout)
       setCtaLayout(ctaLayout)
-      setTotalRingsCount(totalRings)
     })
 
     return () => {
       isMounted = false
     }
   }, [setTotalRingsCount])
+
+  useEffect(() => {
+    const updateTotalRingsCount = () => {
+      const layouts = [homeLayout, ...infoLayouts, ...obstacleLayouts]
+      if (isSpeedRunMode) layouts.push(speedRunLayout)
+      else layouts.push(ctaLayout)
+
+      const totalRings = layouts.reduce(
+        (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
+        0,
+      )
+      setTotalRingsCount(totalRings)
+    }
+
+    updateTotalRingsCount()
+  }, [
+    resetPlatformTick,
+    homeLayout,
+    infoLayouts,
+    obstacleLayouts,
+    speedRunLayout,
+    ctaLayout,
+    setTotalRingsCount,
+    isSpeedRunMode,
+  ])
 
   return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout }
 }

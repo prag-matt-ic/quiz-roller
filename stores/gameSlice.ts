@@ -68,6 +68,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       ...INITIAL_GAME_STATE,
       ...INITIAL_TIME_STATE,
       ...INITIAL_PLAYER_STATE,
+      totalRingsCount: s.totalRingsCount,
       completedSpeedRuns: s.completedSpeedRuns,
       isSpeedRunMode,
       speedRunStage: speedRunStage ?? s.speedRunStage,

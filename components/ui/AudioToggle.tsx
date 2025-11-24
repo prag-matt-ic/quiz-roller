@@ -15,7 +15,7 @@ const AudioToggle: FC = () => {
       onClick={() => setIsMuted(!isMuted)}
       aria-pressed={!isMuted}
       aria-label={isMuted ? 'Enable audio' : 'Mute audio'}
-      className={twJoin('pointer-events-auto fixed top-4 right-4 z-1000 px-4')}>
+      className={twJoin('pointer-events-auto place-self-end self-start px-4')}>
       {isMuted ? (
         <VolumeXIcon className="size-5 sm:size-7" strokeWidth={1.75} />
       ) : (

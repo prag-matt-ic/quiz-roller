@@ -32,7 +32,7 @@ export const SpeedRunControls: FC = () => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
   return (
-    <div className="fixed bottom-0 left-0 mx-auto flex justify-center select-none">
+    <div className="pointer-events-auto flex size-fit justify-center self-end select-none">
       <div className="flex gap-3 rounded-t-xl bg-black/80 p-3">
         <button
           type="button"

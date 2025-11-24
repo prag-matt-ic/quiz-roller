@@ -7,7 +7,7 @@ import { FlagIcon } from 'lucide-react'
 
 import AudioToggle from '@/components/ui/AudioToggle'
 import Controls from '@/components/ui/controls/Controls'
-import CollectiblesUI from '@/components/ui/CollectiblesUI'
+import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
@@ -35,46 +35,61 @@ const UI: FC<Props> = ({ isMobile }) => {
   const showLeaderboardOverlay =
     isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
 
+  const showSpeedRunControls = isSpeedRunMode && speedRunStatus === 'running'
+
   return (
     <>
       <ProgressBar />
-      <Controls isMobile={isMobile} />
 
-      {/* Top Info */}
-      <SwitchTransition>
-        <Transition
-          key={isSpeedRunMode ? 'timer' : 'collectibles'}
-          timeout={{ enter: 0, exit: 240 }}
-          appear={true}
-          nodeRef={infoContainer}>
-          {(status: TransitionStatus) => {
-            return (
-              <section
-                ref={infoContainer}
-                className={twJoin(
-                  'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-center justify-center gap-2 p-6 opacity-0 transition-opacity duration-200',
-                  status === 'exiting' && 'opacity-0',
-                  status === 'entering' && 'opacity-100',
-                  status === 'entered' && 'opacity-100',
-                )}>
-                {isSpeedRunMode ? <SpeedRunTimer /> : <CollectiblesUI />}
-              </section>
-            )
-          }}
-        </Transition>
-      </SwitchTransition>
+      <div className="gap-y-auto pointer-events-none fixed inset-0 z-100 grid grid-cols-3 grid-rows-2 gap-x-2 p-4 select-none">
+        {/* Top Left Rings */}
+        <RingsUI />
+        {/* Top Center Info */}
+        <SwitchTransition>
+          <Transition
+            key={isSpeedRunMode ? 'timer' : 'collectibles'}
+            timeout={{ enter: 0, exit: 240 }}
+            appear={true}
+            nodeRef={infoContainer}>
+            {(status: TransitionStatus) => {
+              return (
+                <section
+                  ref={infoContainer}
+                  className={twJoin(
+                    'pointer-events-none flex h-fit items-center justify-center gap-2 opacity-0 transition-opacity duration-200',
+                    status === 'exiting' && 'opacity-0',
+                    status === 'entering' && 'opacity-100',
+                    status === 'entered' && 'opacity-100',
+                  )}>
+                  {isSpeedRunMode ? <SpeedRunTimer /> : <CollectiblesUI />}
+                </section>
+              )
+            }}
+          </Transition>
+        </SwitchTransition>
+        {/* Top Right Audio */}
+        <AudioToggle />
 
-      <AudioToggle />
+        {/* Bottom left */}
+        {showSpeedRunControls ? (
+          <SpeedRunControls />
+        ) : !isSpeedRunMode ? (
+          <button
+            type="button"
+            className="pointer-events-auto size-fit self-end rounded-lg bg-white px-4 py-2 text-sm font-bold text-black uppercase transition"
+            onClick={startSpeedRun}>
+            <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
+            Start Speedroll
+          </button>
+        ) : (
+          <div className="size-0 opacity-0" />
+        )}
 
-      <button
-        type="button"
-        className="pointer-events-auto fixed top-6 right-24 rounded-lg bg-white px-4 py-2 text-sm font-bold text-black uppercase transition"
-        onClick={startSpeedRun}>
-        <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
-        Start Speedroll
-      </button>
+        <div className="size-0 opacity-0" />
 
-      {isSpeedRunMode && speedRunStatus === 'running' && <SpeedRunControls />}
+        {/* Bottom Right Controls */}
+        <Controls isMobile={isMobile} />
+      </div>
 
       {/* Fullscreen overlays */}
       <Transition
