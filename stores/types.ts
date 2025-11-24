@@ -119,6 +119,9 @@ export type GameSlice = {
     speedRunStage?: SpeedRunStage
   }) => void
 
+  htmlPortal: undefined | React.RefObject<HTMLDivElement>
+  setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
+
   _isHydrated: boolean
   setHydrated: () => void
 }

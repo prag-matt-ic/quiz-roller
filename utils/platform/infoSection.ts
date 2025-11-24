@@ -13,7 +13,6 @@ const INFO_HEADING_RELATIVE_Z = (INFO_HEADING_TRIGGER_ROW - INFO_HEADING_CENTER_
 const INFO_ZONE_COLS = 5
 const INFO_ZONE_ROWS = 5
 
-// Answer tile fixed sizing (in world units, aligned to grid columns/rows)
 export const INFO_ZONE_WIDTH = INFO_ZONE_COLS * TILE_SIZE
 export const INFO_ZONE_HEIGHT = INFO_ZONE_ROWS * TILE_SIZE
 

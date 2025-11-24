@@ -6,7 +6,6 @@ import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
 import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
-import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 type PersistedStore = Pick<
   GameStore,

@@ -10,7 +10,7 @@ import CollectiblesUI from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
 import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
-import { SpeedrunLeaderboard } from './speedRun/SpeedrunLeaderboard'
+import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
 import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
 import { FlagIcon } from 'lucide-react'
 
@@ -40,7 +40,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       <Controls isMobile={isMobile} />
       <ProgressBar />
 
-      {showLeaderboard && <SpeedrunLeaderboard count={10} />}
+      {showLeaderboard && <LeaderboardOverlay />}
 
       {/* Top Info */}
       <SwitchTransition>
@@ -70,9 +70,10 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       <button
         type="button"
-        className="pointer-events-auto fixed top-6 right-24 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white uppercase backdrop-blur transition hover:bg-white/30"
+        className="pointer-events-auto fixed top-6 right-24 rounded-sm bg-white px-4 py-2 text-sm font-bold text-black uppercase transition"
         onClick={startSpeedRun}>
-        <FlagIcon className="mr-2 inline-block" size={20} /> Speedrun
+        <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
+        Start Speedrun
       </button>
 
       <Transition

@@ -5,7 +5,7 @@ import { type FC, type Ref, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
-import { SpeedRunTimeDisplay } from '@/components/ui/TimeDisplay'
+import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
 import { twJoin } from 'tailwind-merge'
 
 export const SpeedRunTimer: FC = () => {

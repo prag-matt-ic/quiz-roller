@@ -7,6 +7,7 @@ import Game from './Game'
 import { PerformanceProvider } from './PerformanceProvider'
 import UI from './ui/UI'
 import Timer from './Timer'
+import HtmlPortal from './ui/HtmlPortal'
 
 type Props = {
   isMobile: boolean
@@ -17,6 +18,7 @@ const Main: FC<Props> = ({ isMobile, isDebug }) => {
   return (
     <PerformanceProvider isMobile={isMobile}>
       <Game isDebug={isDebug} isMobile={isMobile} />
+      <HtmlPortal />
       <UI isMobile={isMobile} />
       <Timer />
       {isDebug && <PerformanceDebug />}

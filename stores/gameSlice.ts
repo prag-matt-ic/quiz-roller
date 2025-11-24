@@ -21,6 +21,7 @@ export const INITIAL_GAME_STATE = {
   resetPlatformTick: 0,
   isPlatformReady: false,
   rowsData: [] as RowData[],
+  htmlPortal: undefined,
   _isHydrated: false,
 }
 
@@ -28,6 +29,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   ...INITIAL_GAME_STATE,
   setHydrated: () => {
     set({ _isHydrated: true })
+  },
+  setHtmlPortal: (htmlPortal) => {
+    set({ htmlPortal })
   },
   setInfoContentIndex: (index) => {
     set({ infoContentIndex: index })

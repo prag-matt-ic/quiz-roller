@@ -29,6 +29,7 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
+import { HtmlProps } from '@react-three/drei/web/Html'
 
 gsap.registerPlugin(EasePack)
 
@@ -55,7 +56,11 @@ type Props = PropsWithChildren<{
   width: number
   height: number
   infoContainerClassName?: string
-  Icon: LucideIcon
+  Icon: LucideIcon | null
+  infoPositionOffset?: Vector3Tuple
+  alwaysShowInfo?: boolean
+  infoContentHtmlProps?: HtmlProps
+  isPositioned: boolean
 }>
 
 // Shows HTML content when the player enters the zone
@@ -67,15 +72,19 @@ export const InfoZone: FC<Props> = ({
   infoContainerClassName,
   Icon,
   children,
+  infoPositionOffset = [0, 0, 4],
+  alwaysShowInfo = false,
+  infoContentHtmlProps = {},
+  isPositioned = false,
 }) => {
+  const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
 
-  const [showInfo, setShowInfo] = useState(false)
+  const [showInfo, setShowInfo] = useState(alwaysShowInfo)
   const iconContainer = useRef<HTMLDivElement>(null)
   const infoContainer = useRef<HTMLDivElement>(null)
   const iconPositionOffset: Vector3Tuple = [0, 0, 1]
-  const infoPositionOffset: Vector3Tuple = [0, 0, 4]
 
   const lookAtInfo = () => {
     if (!ref || !ref.current) return
@@ -92,19 +101,19 @@ export const InfoZone: FC<Props> = ({
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
     if (otherUserData.type !== 'player') return
-
-    setShowInfo(true)
     lookAtInfo()
+    if (alwaysShowInfo) return
+    setShowInfo(true)
   }
 
   const onIntersectionExit: IntersectionExitHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData
     if (!otherUserData) return
     if (otherUserData.type !== 'player') return
-
-    // Always reset camera and hide info when exiting
-    setShowInfo(false)
+    // Reset camera and hide info when exiting
     setCameraLookAtPosition(null)
+    if (alwaysShowInfo) return
+    setShowInfo(false)
   }
 
   const { contextSafe } = useGSAP({ dependencies: [showInfo] })
@@ -124,7 +133,7 @@ export const InfoZone: FC<Props> = ({
   const onInfoEnter = contextSafe(() => {
     playSoundFX(SoundFX.OPEN_INFO)
     gsap.fromTo(
-      '.card',
+      infoContainer.current,
       { opacity: 0, scale: 0.8 },
       {
         opacity: 1,
@@ -177,7 +186,7 @@ export const InfoZone: FC<Props> = ({
           onIntersectionExit={onIntersectionExit}
           collisionGroups={COLLISION_GROUPS.infoZoneSensor}
         />
-        <mesh position={[0, 0, 0.01]} renderOrder={2}>
+        <mesh position={[0, 0, 0.03]} renderOrder={2}>
           <planeGeometry args={[width, height]} />
           <InfoZoneShaderMaterial
             key={InfoZoneShader.key}
@@ -189,28 +198,30 @@ export const InfoZone: FC<Props> = ({
         </mesh>
 
         {/* Icon */}
-        <Html
-          sprite={true}
-          center={true}
-          renderOrder={2}
-          occlude={false}
-          pointerEvents="none"
-          position={iconPositionOffset}
-          className="relative z-10 select-none">
-          <Transition
-            in={!showInfo}
-            timeout={{ enter: 0, exit: 300 }}
-            onEnter={onIconEnter}
-            onExit={onIconExit}
-            nodeRef={iconContainer}>
-            <div
-              ref={iconContainer}
-              className="flex items-center justify-center overflow-hidden rounded-full bg-black p-2 sm:p-3">
-              <Icon strokeWidth={1.75} className="text-teal-accent size-9 sm:size-11" />
-            </div>
-          </Transition>
-        </Html>
-
+        {!!Icon && isPositioned && (
+          <Html
+            sprite={true}
+            center={true}
+            renderOrder={2}
+            occlude={false}
+            portal={htmlPortal}
+            pointerEvents="none"
+            position={iconPositionOffset}
+            className="relative z-10 select-none">
+            <Transition
+              in={!showInfo}
+              timeout={{ enter: 0, exit: 300 }}
+              onEnter={onIconEnter}
+              onExit={onIconExit}
+              nodeRef={iconContainer}>
+              <div
+                ref={iconContainer}
+                className="flex items-center justify-center overflow-hidden rounded-full bg-black p-2 sm:p-3">
+                <Icon strokeWidth={1.75} className="text-teal-accent size-9 sm:size-11" />
+              </div>
+            </Transition>
+          </Html>
+        )}
         {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>
           <sphereGeometry args={[0.5, 16, 16]} />
@@ -218,32 +229,36 @@ export const InfoZone: FC<Props> = ({
         </mesh> */}
 
         {/* Info Content */}
-        <Html
-          sprite={true}
-          center={true}
-          renderOrder={2}
-          occlude={false}
-          pointerEvents="none"
-          position={infoPositionOffset}
-          className="relative z-100 select-none">
-          <Transition
-            in={showInfo}
-            mountOnEnter={true}
-            unmountOnExit={true}
-            timeout={{ enter: 0, exit: 300 }}
-            onEnter={onInfoEnter}
-            onExit={onInfoExit}
-            nodeRef={infoContainer}>
-            <div
-              ref={infoContainer}
-              className={twMerge(
-                'relative size-fit max-w-[calc(100vw-56px)]',
-                infoContainerClassName,
-              )}>
-              {children}
-            </div>
-          </Transition>
-        </Html>
+        {isPositioned && (
+          <Html
+            sprite={true}
+            center={true}
+            renderOrder={2}
+            occlude={false}
+            portal={htmlPortal}
+            pointerEvents="none"
+            position={infoPositionOffset}
+            className="relative z-100 select-none"
+            {...infoContentHtmlProps}>
+            <Transition
+              in={showInfo}
+              mountOnEnter={true}
+              unmountOnExit={true}
+              timeout={{ enter: 0, exit: 300 }}
+              onEnter={onInfoEnter}
+              onExit={onInfoExit}
+              nodeRef={infoContainer}>
+              <div
+                ref={infoContainer}
+                className={twMerge(
+                  'relative size-fit max-w-[calc(100vw-56px)]',
+                  infoContainerClassName,
+                )}>
+                {children}
+              </div>
+            </Transition>
+          </Html>
+        )}
       </RigidBody>
     </>
   )

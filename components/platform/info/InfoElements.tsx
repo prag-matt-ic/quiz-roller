@@ -49,6 +49,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
   const headingRowIndex = useRef<number | null>(null)
   const collectibleRowIndex = useRef<number | null>(null)
   const infoZoneRowIndex = useRef<number | null>(null)
+  const [isInfoZonePositioned, setInfoZonePositioned] = useState(false)
 
   // Called when the row is raised
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
@@ -96,6 +97,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
         infoZone.current.setTranslation(translation.current, true)
         infoZoneRowIndex.current = absoluteRowIndex
       }
+      setInfoZonePositioned(true)
     }
   }, [])
 
@@ -126,6 +128,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)
       infoZoneRowIndex.current = null
+      setInfoZonePositioned(false)
     }
   }, [])
 
@@ -198,6 +201,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
         infoContainerClassName={INFO_ZONES_CONTENT[contentIndex].infoZoneContainerClassName}
+        isPositioned={isInfoZonePositioned}
         Icon={InfoIcon}>
         {INFO_ZONES_CONTENT[contentIndex].infoZoneContent}
       </InfoZone>

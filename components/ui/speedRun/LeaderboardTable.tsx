@@ -1,41 +1,13 @@
 'use client'
-import { type FC, useEffect, useState, useMemo } from 'react'
+import { type FC, useEffect, useMemo, useState } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
-import { getSpeedrunData } from '@/app/actions'
 import type { SpeedRunDatabase } from '@/model/schema'
+import { TrophyIcon } from 'lucide-react'
+import { getSpeedrunData } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
-import { Trophy } from 'lucide-react'
-import Button from '../Button'
 
-type Props = {
-  showButtons?: boolean
-}
-
-export const SpeedrunLeaderboard: FC<Props> = ({ showButtons = true }) => {
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
-  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
-
-  return (
-    <div className="fixed inset-0 z-100 flex flex-col items-center justify-center gap-6 bg-black/60 px-4 pb-12">
-      <LeaderboardTable count={10} />
-      {showButtons && (
-        <div className="flex gap-4">
-          <Button color="light" variant="primary" onClick={startSpeedRun}>
-            Retry
-          </Button>
-          <Button color="light" variant="secondary" onClick={stopSpeedRun}>
-            Finish
-          </Button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export const LeaderboardTable: FC<{
-  count: number
-}> = ({ count }) => {
+export function useLeaderboardTableData(count: number = 10) {
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
 
@@ -55,18 +27,34 @@ export const LeaderboardTable: FC<{
   }, [count])
 
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
-  const completedSpeedrunIds = useMemo(
+  const userSpeedRunIds = useMemo(
     () => completedSpeedruns.map((run) => run.id),
     [completedSpeedruns],
   )
+  return { count, isLoading, speedRuns, userSpeedRunIds }
+}
+
+type TableProps = {
+  count: number
+  isLoading: boolean
+  speedRuns: SpeedRunDatabase[]
+  userSpeedRunIds: number[]
+}
+
+export const LeaderboardTable: FC<TableProps> = ({
+  count,
+  isLoading,
+  speedRuns,
+  userSpeedRunIds,
+}) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
 
   return (
     <section className="w-full max-w-xl">
       <header className="flex w-full items-center justify-between px-3 py-5">
-        <Trophy className="text-leaderboard" strokeWidth={1.5} />
+        <TrophyIcon className="text-leaderboard" strokeWidth={1.5} />
         <h2 className="text-center text-2xl uppercase">Global Leaderboard</h2>
-        <Trophy className="text-leaderboard" strokeWidth={1.5} />
+        <TrophyIcon className="text-leaderboard" strokeWidth={1.5} />
       </header>
       <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 rounded-md bg-black shadow-2xl shadow-black/90">
         {isLoading
@@ -78,7 +66,7 @@ export const LeaderboardTable: FC<{
                 key={entry.id}
                 entry={entry}
                 index={index}
-                isCurrentUser={completedSpeedrunIds.includes(entry.id)}
+                isCurrentUser={userSpeedRunIds.includes(entry.id)}
               />
             ))}
       </div>

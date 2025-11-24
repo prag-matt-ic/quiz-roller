@@ -13,7 +13,8 @@ export const CTA_ZONE_HEIGHT = CTA_ZONE_ROWS * TILE_SIZE
 const CTA_ZONE_CENTER_ROW = 12
 const CTA_ZONE_TRIGGER_ROW = Math.ceil(CTA_ZONE_CENTER_ROW)
 const CTA_ZONE_RELATIVE_Z = (CTA_ZONE_TRIGGER_ROW - CTA_ZONE_CENTER_ROW) * TILE_SIZE
-const CTA_ZONE_X = colToX(CTA_ZONE_CENTER_COLUMN)
+const CTA_ZONE_LEFT_X = colToX(CTA_ZONE_CENTER_COLUMN - 3)
+const CTA_ZONE_RIGHT_X = colToX(CTA_ZONE_CENTER_COLUMN + 3)
 
 export function generateCtaSectionRowData(layout: SectionBitmapLayout | null): RowData[] {
   try {
@@ -31,7 +32,10 @@ function buildRowsFromLayout(layout: SectionBitmapLayout): RowData[] {
   return buildGenericRows(layout, 'cta', (rowIndex) => {
     if (rowIndex === ctaRowIndex) {
       return {
-        ctaZonePosition: [CTA_ZONE_X, ON_TILE_Y, CTA_ZONE_RELATIVE_Z],
+        infoZonePositions: [
+          [CTA_ZONE_LEFT_X, ON_TILE_Y, CTA_ZONE_RELATIVE_Z],
+          [CTA_ZONE_RIGHT_X, ON_TILE_Y, CTA_ZONE_RELATIVE_Z],
+        ],
       }
     }
     return {}
