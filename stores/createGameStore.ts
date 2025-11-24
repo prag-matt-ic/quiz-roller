@@ -8,10 +8,7 @@ import { createGameSlice } from './gameSlice'
 import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
-type PersistedStore = Pick<
-  GameStore,
-  'username' | 'paletteConfig' | 'totalTimeS' | 'completedSpeedRuns'
->
+type PersistedStore = Pick<GameStore, 'username' | 'totalTimeS' | 'completedSpeedRuns'>
 
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
@@ -31,7 +28,6 @@ export const createGameStore = (
           partialize: (s) =>
             ({
               username: s.username,
-              paletteConfig: s.paletteConfig,
               totalTimeS: s.totalTimeS,
               completedSpeedRuns: s.completedSpeedRuns,
             }) as PersistedStore,

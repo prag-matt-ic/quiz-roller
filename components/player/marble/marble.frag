@@ -4,11 +4,9 @@ precision mediump int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 
-#pragma glslify: getColourFromPalette = require(../../../resources/glsl/palette.glsl)
+#pragma glslify: samplePlayerPalette = require(../../../resources/glsl/playerPalette.glsl)
 
 uniform highp float uTime;
-uniform mediump int uPaletteIndex; // 0,1,2: selected palette
-uniform mediump int uConfirmingPaletteIndex; // -1 when not confirming
 uniform mediump float uConfirmingProgress; // [0,1]
 uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
@@ -55,19 +53,8 @@ void main() {
   noiseValue = noiseValue * 0.5 + 0.5;
 
   float paletteT = clamp(noiseValue, 0.0, 1.0);
-  vec3 baseColor = getColourFromPalette(uPaletteIndex, paletteT);
+  vec3 baseColor = samplePlayerPalette(paletteT);
   vec3 marbleColor = baseColor;
-
-  if (uConfirmingPaletteIndex >= 0 && uConfirmingProgress > 0.0) {
-    vec3 confirmingColor = getColourFromPalette(uConfirmingPaletteIndex, paletteT);
-
-    float clampedProgress = clamp(uConfirmingProgress, 0.0, 1.0);
-    float height01 = unitLocalPos.y * 0.5 + 0.5;
-    vec2 revealEdges = clamp(vec2(height01 - REVEAL_SMOOTHNESS, height01 + REVEAL_SMOOTHNESS), 0.0, 1.0);
-    float reveal = smoothstep(revealEdges.x, revealEdges.y, clampedProgress);
-
-    marbleColor = mix(baseColor, confirmingColor, reveal);
-  }
 
   if (uIsFlat) {
     gl_FragColor = vec4(marbleColor, 1.0);

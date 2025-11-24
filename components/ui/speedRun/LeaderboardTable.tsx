@@ -7,12 +7,17 @@ import { TrophyIcon } from 'lucide-react'
 import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 
-export function useLeaderboardTableData(count: number = 10) {
+export function useLeaderboardTableData(count: number = 10): TableProps {
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
   const [playerPosition, setPlayerPosition] = useState<number | null>(null)
 
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
+  const userSpeedRunIds = useMemo(
+    () => completedSpeedruns.map((run) => run.id),
+    [completedSpeedruns],
+  )
+
   const latestRunId = useMemo(
     () => completedSpeedruns[completedSpeedruns.length - 1]?.id,
     [completedSpeedruns],
@@ -55,10 +60,6 @@ export function useLeaderboardTableData(count: number = 10) {
     }
   }, [count, latestRunId])
 
-  const userSpeedRunIds = useMemo(
-    () => completedSpeedruns.map((run) => run.id),
-    [completedSpeedruns],
-  )
   return { count, isLoading, speedRuns, userSpeedRunIds, playerPosition }
 }
 

@@ -41,7 +41,6 @@ type TileShaderUniforms = {
   uPlayerWorldPos: Vector3
   uScrollZ: number
   uAddDetailNoise: number
-  uPaletteIndex: number
   uHighlightRadius: number
   uFadeFullRadius: number
   uFadeMinRadius: number
@@ -52,7 +51,6 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uPlayerWorldPos: PLAYER_INITIAL_POSITION_VEC3,
   uScrollZ: 0,
   uAddDetailNoise: 1,
-  uPaletteIndex: 0,
   uHighlightRadius: TILE_PLAYER_HIGHLIGHT_RADIUS,
   uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
   uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
@@ -85,7 +83,6 @@ type PlatformTilesProps = {
 
 export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
-  const paletteIndex = 0 // useGameStore((s) => s.paletteIndex)
 
   const [instances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
@@ -131,7 +128,6 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
   useGameFrame(() => {
     if (!tileShader.current) return
     tileShader.current.uPlayerWorldPos = playerPosition.current
-    tileShader.current.uPaletteIndex = paletteIndex
   })
 
   useEffect(() => {

@@ -52,6 +52,7 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 type Props = PropsWithChildren<{
   ref?: RefObject<RapierRigidBody | null>
+  isPositioned: boolean
   position: Vector3Tuple
   width: number
   height: number
@@ -60,12 +61,12 @@ type Props = PropsWithChildren<{
   infoPositionOffset?: Vector3Tuple
   alwaysShowInfo?: boolean
   infoContentHtmlProps?: HtmlProps
-  isPositioned: boolean
 }>
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
+  isPositioned = false,
   position,
   width,
   height,
@@ -75,7 +76,6 @@ export const InfoZone: FC<Props> = ({
   infoPositionOffset = [0, 0, 4],
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
-  isPositioned = false,
 }) => {
   const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)

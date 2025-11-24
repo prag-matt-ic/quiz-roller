@@ -30,7 +30,6 @@ import {
 import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
-import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import {
   COLUMNS,
@@ -44,7 +43,6 @@ import {
 type FloatingTilesUniforms = {
   uMix: number
   uPositionTexture: Texture | null
-  uPaletteIndex: number
   uRowWorldPositions: Texture | null
   uGridCols: number
   uTileSize: number
@@ -73,7 +71,6 @@ const SPEED_RANGE = 0.4
 const INITIAL_FLOATING_TILE_UNIFORMS: FloatingTilesUniforms = {
   uMix: 0.4,
   uPositionTexture: null,
-  uPaletteIndex: 0,
   uRowWorldPositions: null,
   uGridCols: 0,
   uTileSize: TILE_SIZE,
@@ -130,9 +127,8 @@ const createRowPositionsTexture = (data: Float32Array) => {
 
 const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   const count = usePerformanceStore((s) => s.sceneConfig.floatingTiles.instanceCount)
-  const paletteIndex = 1 // useGameStore((s) => s.paletteIndex)
-  const renderer = useThree((state) => state.gl)
-  const camera = useThree((state) => state.camera)
+  const renderer = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
 
   const [simToken, setSimToken] = useState(0)
   const isDisabled = count === 0
@@ -360,7 +356,6 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
   useEffect(() => {
     if (!materialRef.current) return
-    materialRef.current.uPaletteIndex = paletteIndex
     materialRef.current.uGridCols = GRID_COLS
     materialRef.current.uTileSize = TILE_SIZE
     materialRef.current.uYMin = Y_MIN
@@ -370,7 +365,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
     materialRef.current.uRowCount = ROWS_RENDERED
     materialRef.current.uRowWorldPositions = rowPositionsTextureRef.current ?? null
     materialRef.current.uScrollZ = 0
-  }, [paletteIndex])
+  }, [])
 
   const updateRowMask = useCallback(
     (rowIndex: number, rowData: RowData | null) => {

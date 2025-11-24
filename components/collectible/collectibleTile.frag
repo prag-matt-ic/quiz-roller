@@ -3,10 +3,9 @@ precision mediump float;
 precision mediump int;
 
 #pragma glslify: paintCorners = require(../../resources/glsl/paintCorners.glsl)
-#pragma glslify: getColourFromPalette = require(../../resources/glsl/palette.glsl)
+#pragma glslify: samplePlayerPalette = require(../../resources/glsl/playerPalette.glsl)
 #pragma glslify: sdBox = require(../../resources/glsl/sdBox.glsl)
 
-uniform mediump int uPlayerPaletteIndex; // 0,1,2: selected palette
 uniform mediump float uConfirmingProgress;
 uniform mediump float uAspect; // width / height
 uniform mediump float uTilesX;
@@ -36,7 +35,7 @@ void main() {
 
   float borderWave = sin(vUv.x * BORDER_WAVE_FREQUENCY);
   float paletteT = borderWave * BORDER_WAVE_OFFSET + BORDER_WAVE_OFFSET;
-  vec3 borderColour = getColourFromPalette(uPlayerPaletteIndex, paletteT);
+  vec3 borderColour = samplePlayerPalette(paletteT);
 
   float bracketMask = paintCorners(
     vHeightSpacePosition,

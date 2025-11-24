@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Vector3, type Vector3Tuple } from 'three'
+import { Vector3 } from 'three'
 import { type StateCreator } from 'zustand'
 import { CollectibleType, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
@@ -91,8 +91,6 @@ export type GameSlice = {
 
   infoContentIndex: number
   setInfoContentIndex: (index: number) => void
-
-  paletteConfig: CosinePaletteParams
 
   hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void

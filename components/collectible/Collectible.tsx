@@ -21,7 +21,6 @@ type TileShaderUniforms = {
   uConfirmingProgress: number
   uIsConfirming: number
   uTime: number
-  uPlayerPaletteIndex: number
   uAspect: number
   uTilesX: number
   uTilesY: number
@@ -31,7 +30,6 @@ const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uConfirmingProgress: 0,
   uIsConfirming: 0,
   uTime: 0,
-  uPlayerPaletteIndex: 1,
   uAspect: 1,
   uTilesX: 5,
   uTilesY: 5,
@@ -59,13 +57,11 @@ type Props = {
 
 export const Collectible: FC<Props> = ({ ref, position, width, height, type, isOutOfView }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(type))
-  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
+  const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
-
   const localProgress = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
-  const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
 
   useGameFrame(({ clock }) => {
     if (!shader.current) return
@@ -127,7 +123,6 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
           depthWrite={false}
           uConfirmingProgress={0}
           uIsConfirming={0}
-          uPlayerPaletteIndex={paletteIndex}
           uAspect={tileAspect}
           uTilesX={tilesX}
           uTilesY={tilesY}

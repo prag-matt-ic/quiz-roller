@@ -6,7 +6,6 @@ import { FC, type RefObject, Suspense, useRef } from 'react'
 import * as THREE from 'three'
 
 import normal from '@/assets/textures/marble/normal.webp'
-import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import fragment from '@/components/player/marble/marble.frag'
@@ -16,8 +15,6 @@ import useGameFrame from '@/hooks/useGameFrame'
 
 export type MarbleShaderUniforms = {
   uTime: number
-  uPaletteIndex: number
-  uConfirmingPaletteIndex: number
   uConfirmingProgress: number
   uNormalMap: THREE.Texture | null
   uNormalScale: number
@@ -26,8 +23,6 @@ export type MarbleShaderUniforms = {
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uTime: 0,
-  uPaletteIndex: 1, // Default to middle palette
-  uConfirmingPaletteIndex: -1, // No confirming by default
   uConfirmingProgress: 0,
   uNormalMap: null,
   uNormalScale: 0.3,
@@ -42,8 +37,6 @@ type MarbleProps = {
 }
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
-  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
-  // const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex)
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat } = playerConfig
   const normalMap = useTexture(normal.src)
@@ -72,8 +65,6 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           key={MarbleShader.key}
           ref={shader}
           uTime={INITIAL_UNIFORMS.uTime}
-          uPaletteIndex={paletteIndex}
-          uConfirmingPaletteIndex={-1} // TODO: review when colour shifting
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}

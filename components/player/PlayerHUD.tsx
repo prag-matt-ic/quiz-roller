@@ -6,14 +6,12 @@ import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
-import { createPaletteGradient } from '@/components/palette'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
 export const PLAYER_RADIUS = 0.45
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
-  const paletteIndex = 1 //useGameStore((s) => s.paletteIndex)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
 
@@ -78,14 +76,6 @@ const PlayerHUD: FC = () => {
     })
   }
 
-  // Generate gradient colors based on selected colour band
-  const rgbGradient = createPaletteGradient(paletteIndex, {
-    mode: 'rgb',
-  })
-  const oklchGradient = createPaletteGradient(paletteIndex, {
-    mode: 'oklch',
-  })
-
   const switchKey = `${showBar}-${showContent}`
 
   if (!isMounted) return null
@@ -122,11 +112,7 @@ const PlayerHUD: FC = () => {
                   <div className="relative h-5 w-36 overflow-hidden rounded-full border border-white bg-white">
                     <div
                       id="progress-bar"
-                      className="absolute h-full w-full -translate-x-full rounded-full"
-                      style={{
-                        background: rgbGradient,
-                        backgroundImage: oklchGradient,
-                      }}
+                      className="absolute h-full w-full -translate-x-full rounded-full bg-linear-0 from-amber-400 to-amber-500"
                     />
                   </div>
                 </div>

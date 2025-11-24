@@ -4,14 +4,13 @@ import { twMerge } from 'tailwind-merge'
 import { createPaletteGradient } from '@/components/palette'
 
 type CardProps = PropsWithChildren<{
-  paletteIndex: number
   className?: string
   childrenClassName?: string
 }>
 
 // TODO: new deisgn for this in-keeping with the grid and use a cool masked reveal effect.
-const Card: FC<CardProps> = ({ paletteIndex = 1, className, children, childrenClassName }) => {
-  const oklchGradient = createPaletteGradient(paletteIndex, {
+const Card: FC<CardProps> = ({ className, children, childrenClassName }) => {
+  const oklchGradient = createPaletteGradient(1, {
     mode: 'oklch',
     angle: 35,
   })

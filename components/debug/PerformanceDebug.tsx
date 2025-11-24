@@ -3,12 +3,8 @@
 import { type ChangeEvent, type FC, type ReactNode } from 'react'
 import { twJoin } from 'tailwind-merge'
 
-import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
-import {
-  type RapierSimFPS,
-  SceneQuality,
-  usePerformanceStore,
-} from '@/components/PerformanceProvider'
+import { useGameStore } from '@/components/GameProvider'
+import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
 
 type Option<T> = {
   label: string
@@ -40,13 +36,6 @@ const PerformanceDebug: FC = () => {
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
   const resetGame = useGameStore((s) => s.resetGame)
 
-  const gameStoreApi = useGameStoreAPI()
-
-  // const handleSimFpsChange = (event: ChangeEvent<HTMLSelectElement>) => {
-  //   event.target.blur()
-  //   setSimFps(Number(event.target.value) as RapierSimFPS)
-  // }
-
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
     setSceneQuality(event.target.value as SceneQuality)
@@ -60,17 +49,6 @@ const PerformanceDebug: FC = () => {
 
   return (
     <div className="fixed top-0 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 pt-14 font-mono text-xs text-white">
-      {/* <SelectRow
-        id="performance-debug-sim-fps"
-        label="Sim FPS"
-        value={simFps.toString()}
-        onChange={handleSimFpsChange}>
-        {SIM_FPS_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </SelectRow> */}
       <SelectRow
         id="performance-debug-scene-quality"
         label="Quality"
@@ -95,20 +73,6 @@ const PerformanceDebug: FC = () => {
           </option>
         ))}
       </SelectRow>
-      {/* <SelectRow
-        id="performance-debug-palette-index"
-        label="Palette"
-        value={paletteIndex.toString()}
-        onChange={(event) => {
-          event.target.blur()
-          gameStoreApi.setState({ paletteIndex: Number(event.target.value) as 0 | 1 | 2 })
-        }}>
-        {new Array(3).fill(null).map((_, index) => (
-          <option key={index} value={index}>
-            {index}
-          </option>
-        ))}
-      </SelectRow> */}
       <button
         onClick={() => resetGame({ isSpeedRunMode: false })}
         className="w-full rounded bg-red-800 p-1 text-xs font-semibold text-white">

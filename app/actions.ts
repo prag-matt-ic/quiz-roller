@@ -11,9 +11,7 @@ import {
 } from '@/model/schema'
 import { neon } from '@neondatabase/serverless'
 
-export async function getSpeedrunData(
-  count: number,
-): Promise<SpeedRunDatabase[]> {
+export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
 
@@ -30,9 +28,7 @@ export async function getSpeedrunData(
   }
 }
 
-export async function getSpeedrunPosition(
-  id: number,
-): Promise<{
+export async function getSpeedrunPosition(id: number): Promise<{
   run: SpeedRunDatabase
   position: number
 } | null> {
