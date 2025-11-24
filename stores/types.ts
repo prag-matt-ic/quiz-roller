@@ -65,6 +65,9 @@ export type PlayerSlice = {
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
+  respawnPosition: Vector3 | null
+  setRespawnPosition: (pos: { x: number; y: number; z: number } | null) => void
+
   edgeWarningIntensities: EdgeWarningIntensities
   setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
 

@@ -3,7 +3,12 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 
-import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
+import {
+  PLAYER_INITIAL_POSITION,
+  Stage,
+  useGameStore,
+  useGameStoreAPI,
+} from '@/components/GameProvider'
 import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
 import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
@@ -40,6 +45,7 @@ import usePlayerInput from '@/hooks/usePlayerInput'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
+import { usePlayerRespawn } from './usePlayerRespawn'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -349,6 +355,20 @@ const Platform: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick, hasAllLayouts, readyState])
 
+  const targetScrollPosition = useRef<number | null>(null)
+  const pendingRespawnX = useRef<number | null>(null)
+  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
+
+  usePlayerRespawn({
+    activeRowsData,
+    rowZByIndex,
+    currentScrollPosition,
+    onRespawnCalculated: (targetScroll, safeX) => {
+      targetScrollPosition.current = targetScroll
+      pendingRespawnX.current = safeX
+    },
+  })
+
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA
     const visibilityData = tilesHandle.current?.visibilityData
@@ -616,22 +636,60 @@ const Platform: FC<Props> = ({
     tilesHandle.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
-
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
+
+    // Cancel auto-scroll if player is providing input
+    if (Math.abs(zStep) > EPSILON.SMALL) {
+      targetScrollPosition.current = null
+      pendingRespawnX.current = null
+    }
+
+    const previousScroll = currentScrollPosition.current
+
+    if (targetScrollPosition.current !== null) {
+      // Lerp towards target
+      const t = 5.0 * delta // Adjust speed as needed
+      currentScrollPosition.current = lerp(
+        currentScrollPosition.current,
+        targetScrollPosition.current,
+        t,
+      )
+
+      // Stop lerping if close enough
+      if (Math.abs(currentScrollPosition.current - targetScrollPosition.current) < 0.01) {
+        currentScrollPosition.current = targetScrollPosition.current
+        targetScrollPosition.current = null
+
+        // Respawn player now that platform is aligned
+        if (pendingRespawnX.current !== null) {
+          setRespawnPosition({
+            x: pendingRespawnX.current,
+            y: PLAYER_INITIAL_POSITION[1],
+            z: PLAYER_INITIAL_POSITION[2],
+          })
+          pendingRespawnX.current = null
+        }
+      }
+    }
+
     currentScrollPosition.current += zStep
+
+    const totalScrollDelta = currentScrollPosition.current - previousScroll
+
     const playerZ = playerPosition.current.z
     updateTiles(playerZ)
     floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
     floatingTilesHandle.current?.step(delta)
 
-    if (zStep === 0) return
-    ringsHandle.current.moveElements(zStep)
-    infoElements.current.moveElements(zStep)
-    homeElements.current.moveElements(zStep)
+    if (Math.abs(totalScrollDelta) < EPSILON.SMALL) return
+
+    ringsHandle.current.moveElements(totalScrollDelta)
+    infoElements.current.moveElements(totalScrollDelta)
+    homeElements.current.moveElements(totalScrollDelta)
     if (isSpeedRunMode) {
-      speedRunElements.current?.moveElements(zStep)
+      speedRunElements.current?.moveElements(totalScrollDelta)
     } else {
-      ctaElements.current?.moveElements(zStep)
+      ctaElements.current?.moveElements(totalScrollDelta)
     }
   })
 

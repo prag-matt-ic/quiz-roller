@@ -14,9 +14,9 @@ import {
   useRef,
   useState,
 } from 'react'
-import { type InstancedBufferAttribute, Vector3 } from 'three'
+import { type InstancedBufferAttribute, Vector2 } from 'three'
 
-import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
@@ -38,7 +38,7 @@ const INSTANCE_COUNT = COLUMNS * ROWS_RENDERED
 
 // Shader material for proximity-driven tile visibility and coloring
 type TileShaderUniforms = {
-  uPlayerWorldPos: Vector3
+  uPlayerWorldPos: Vector2
   uScrollZ: number
   uAddDetailNoise: number
   uHighlightRadius: number
@@ -48,7 +48,7 @@ type TileShaderUniforms = {
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uPlayerWorldPos: PLAYER_INITIAL_POSITION_VEC3,
+  uPlayerWorldPos: new Vector2(PLAYER_INITIAL_POSITION[0], PLAYER_INITIAL_POSITION[2]),
   uScrollZ: 0,
   uAddDetailNoise: 1,
   uHighlightRadius: TILE_PLAYER_HIGHLIGHT_RADIUS,
@@ -127,7 +127,10 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
 
   useGameFrame(() => {
     if (!tileShader.current) return
-    tileShader.current.uPlayerWorldPos = playerPosition.current
+    tileShader.current.uPlayerWorldPos.set(
+      playerPosition.current.x,
+      playerPosition.current.z,
+    )
   })
 
   useEffect(() => {

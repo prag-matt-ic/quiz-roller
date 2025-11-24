@@ -84,87 +84,33 @@ const Player: FC = () => {
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
+  const respawnPosition = useGameStore((s) => s.respawnPosition)
+  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
+
   useEffect(() => {
     if (!isPlatformReady) return
-    if (respawnPlayerTick === 0) return
     const body = bodyRef.current
     if (!body) return
 
-    function calculateSafeXForPlayerReset(): number {
-      const state = gameStoreAPI.getState()
-      const { rowsData, currentRow } = state
+    // Wait for platform to calculate safe position
+    if (!respawnPosition) return
 
-      if (!rowsData.length) {
-        return PLAYER_INITIAL_POSITION[0]
-      }
-
-      const clampedRowIndex = Math.min(
-        Math.max(currentRow, 0),
-        Math.max(rowsData.length - 1, 0),
-      )
-      const rowData = rowsData[clampedRowIndex]
-      if (!rowData || !rowData.heights?.length) {
-        return PLAYER_INITIAL_POSITION[0]
-      }
-
-      const availableColumns = Math.min(rowData.heights.length, COLUMNS)
-      if (availableColumns <= 0) {
-        return PLAYER_INITIAL_POSITION[0]
-      }
-
-      const maxColumnIndex = availableColumns - 1
-
-      let preferredColumn = 0
-      let smallestAbsX = Infinity
-      for (let columnIndex = 0; columnIndex < availableColumns; columnIndex++) {
-        const columnX = colToX(columnIndex)
-        const absX = Math.abs(columnX)
-        if (absX < smallestAbsX) {
-          smallestAbsX = absX
-          preferredColumn = columnIndex
-        }
-      }
-
-      const isColumnRaised = (columnIndex: number) => {
-        const height = rowData.heights[columnIndex]
-        return typeof height === 'number' && height >= SAFE_HEIGHT - EPSILON.TINY
-      }
-
-      if (isColumnRaised(preferredColumn)) {
-        return colToX(preferredColumn)
-      }
-
-      for (let offset = 1; offset <= maxColumnIndex; offset++) {
-        const leftColumn = preferredColumn - offset
-        if (leftColumn >= 0 && isColumnRaised(leftColumn)) {
-          return colToX(leftColumn)
-        }
-
-        const rightColumn = preferredColumn + offset
-        if (rightColumn <= maxColumnIndex && isColumnRaised(rightColumn)) {
-          return colToX(rightColumn)
-        }
-      }
-
-      return PLAYER_INITIAL_POSITION[0]
-    }
+    console.log('[Player] Respawning at:', respawnPosition)
 
     // Reset position, player drops in from Y height to land on the surface.
     body.setTranslation(
       {
-        x: calculateSafeXForPlayerReset(),
-        y: PLAYER_INITIAL_POSITION[1],
-        z: PLAYER_INITIAL_POSITION[2],
+        x: respawnPosition.x,
+        y: respawnPosition.y,
+        z: respawnPosition.z,
       },
       true,
     )
 
-    const clearRespawnTimeout = setTimeout(() => {
-      setIsRespawning(false)
-    }, 420)
-
-    return () => clearTimeout(clearRespawnTimeout)
-  }, [gameStoreAPI, isPlatformReady, respawnPlayerTick, setIsRespawning])
+    // Clear the position so we don't keep teleporting
+    setRespawnPosition(null)
+    setIsRespawning(false)
+  }, [isPlatformReady, respawnPosition, setIsRespawning, setRespawnPosition])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -177,7 +123,6 @@ const Player: FC = () => {
       return
 
     const currentPosition = bodyRef.current.translation()
-
     // if (currentPosition.y > 1.0 ) return
 
     // Resolve player input into a clamped direction vector

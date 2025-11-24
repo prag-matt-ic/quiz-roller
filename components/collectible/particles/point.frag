@@ -3,20 +3,25 @@ precision mediump float;
 
 varying mediump float vProgress;
 varying mediump float vOpacityFactor;
+varying mediump float vSoftness;
 varying lowp vec3 vColor;
 
 void main() {
-    // Circular point mask without sqrt
     vec2 c = gl_PointCoord - vec2(0.5);
-    float r2 = dot(c, c);
-    float circleMask = 1.0 - step(0.25, r2); // 0.5^2
+    float dist = length(c);
+    float softEdge = mix(0.0, 0.45, vSoftness);
+    float hardRadius = 0.5 - softEdge * 0.5;
+    float circleMask = 1.0 - smoothstep(hardRadius, 0.5, dist);
 
-    // Temporal fade in/out
-    float opacity = smoothstep(0.0, 0.1, vProgress) * (1.0 - smoothstep(0.7, 1.0, vProgress));
-    opacity *= circleMask;
+    float appear = smoothstep(0.0, 0.15, vProgress);
+    float settle = smoothstep(0.6, 1.0, vProgress);
+    float trailFade = 1.0 - smoothstep(0.75, 1.0, vProgress);
+    float linger = mix(trailFade, 1.0, settle);
+    float opacity = appear * linger * circleMask;
 
     // Per-particle variation
     opacity *= vOpacityFactor;
 
-    gl_FragColor = vec4(vColor, opacity);
+    vec3 glowColor = mix(vColor, vec3(1.0, 0.95, 0.85), vSoftness * 0.6);
+    gl_FragColor = vec4(glowColor, opacity);
 }

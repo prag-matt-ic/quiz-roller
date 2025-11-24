@@ -6,7 +6,7 @@ attribute float visibility;
 attribute float seed;
 attribute float isHighlighted;
 
-uniform vec3 uPlayerWorldPos;
+uniform vec2 uPlayerWorldPos;
 uniform float uHighlightRadius;
 uniform float uFadeFullRadius;
 uniform float uFadeMinRadius;
@@ -47,7 +47,7 @@ void main() {
   vec3 instanceCenter = modelInstanceMatrix[3].xyz;
 
   // Precompute highlight based on distance to player in the vertex shader.
-  vec3 playerOffset = instanceCenter - uPlayerWorldPos;
+  vec2 playerOffset = instanceCenter.xz - uPlayerWorldPos;
   float distSq = dot(playerOffset, playerOffset);
   float radiusSq = uHighlightRadius * uHighlightRadius;
   vPlayerHighlight = smoothstep(radiusSq, 0.0, distSq);

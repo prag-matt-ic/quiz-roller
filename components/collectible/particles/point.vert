@@ -1,10 +1,12 @@
-// Collectible Particle Point Vertex Shader (optimized)
+// Collectible Particle Point Vertex Shader (gem focused)
 #pragma glslify: noise3d = require('glsl-noise/simplex/3d')
 
 precision highp float;
 
 uniform float uBurstProgress; // 0.0 to 1.0
-uniform vec3 uPlayerPosition;
+uniform vec3 uGemPosition;
+uniform float uGemScale;
+uniform float uTime;
 uniform float uDpr;
 
 attribute vec3 spawnPosition;
@@ -13,81 +15,81 @@ attribute vec3 colour;
 
 varying mediump float vProgress;
 varying mediump float vOpacityFactor;
+varying mediump float vSoftness;
 varying lowp vec3 vColor;
 
 const float TWO_PI = 6.28318530718;
 const float EPSILON = 0.0001;
-const vec3 NOISE_WEIGHTS = vec3(0.8, 0.3, 0.4);
+const vec3 NOISE_WEIGHTS = vec3(0.7, 0.4, 0.5);
+const vec3 FLOAT_FREQ = vec3(0.35, 0.27, 0.41);
+const float GEM_INTERIOR_SCALE = 0.9;
 
 float easeOutCubic(in float t) {
     float inverted = 1.0 - t;
     return 1.0 - inverted * inverted * inverted;
 }
 
+vec3 randomOctaPoint(float s) {
+    vec3 rand = fract(vec3(
+        s * 53.0 + 0.37,
+        s * 97.0 + 0.11,
+        s * 29.0 + 0.73
+    ));
+    vec3 signedRand = rand * 2.0 - 1.0;
+    vec3 absRand = abs(signedRand);
+    float normalization = max(absRand.x + absRand.y + absRand.z, EPSILON);
+    vec3 direction = signedRand / normalization;
+    float radius = pow(fract(s * 91.0 + rand.x * 1.3), 0.55);
+    return direction * radius;
+}
+
 void main() {
-    // Progress with per-particle offset; avoid division via reciprocal
     float timingOffset = seed * 0.2;
     float normalizer = max(1.0 - timingOffset, EPSILON);
     float progress = clamp((uBurstProgress - timingOffset) * (1.0 / normalizer), 0.0, 1.0);
-    float oneMinusProgress = 1.0 - progress;
     float easedProgress = easeOutCubic(progress);
-    float easedInverse = 1.0 - easedProgress;
+    float settleProgress = smoothstep(0.5, 1.0, progress);
+    float inverseProgress = 1.0 - progress;
 
-    // Hash seed for deterministic params
     vec4 hashedSeed = fract(seed * vec4(17.0, 27.0, 15.0, 13.0));
-    float lateralAngle = hashedSeed.x * TWO_PI;
-    float lateralStrength = mix(0.2, 0.8, hashedSeed.y);
-    float upwardStrength = mix(4.0, 8.4, hashedSeed.z);
 
-    // Outward burst vector
-    vec3 burstVector = vec3(
-        cos(lateralAngle) * lateralStrength,
-        upwardStrength,
-        sin(lateralAngle) * lateralStrength
+    vec3 baseNoise = vec3(
+        noise3d(vec3(seed * 6.0, progress * 0.6, 0.0)),
+        noise3d(vec3(seed * 4.0, progress * 0.4, 2.3)),
+        noise3d(vec3(seed * 5.0, progress * 0.5, 3.9))
     );
-    vec3 burstOffset = burstVector * progress;
+    vec3 swirlNoise = baseNoise * NOISE_WEIGHTS * inverseProgress;
 
-    // Coherent noise (share intermediates)
-    float noisePhase = seed * 6.0;
-    float t06 = progress * 0.6;
-    float t03 = progress * 0.3;
-    float noiseX = noise3d(vec3(noisePhase, t06, 0.0));
-    float noiseY = fract(seed * 23.0); //noise3d(vec3(noisePhase, t03, 2.4));
-    float noiseZ = noise3d(vec3(noisePhase, t06, 3.0));
-    vec3 baseNoise = vec3(noiseX, noiseY, noiseZ);
-    vec3 burstNoise = baseNoise * NOISE_WEIGHTS * oneMinusProgress;
-    vec3 burstPosition = spawnPosition + burstOffset + burstNoise;
+    vec3 gemInterior = randomOctaPoint(seed) * (uGemScale * GEM_INTERIOR_SCALE);
+    vec3 gemTarget = uGemPosition + gemInterior;
 
-    // Attraction towards player
-    vec3 toPlayer = uPlayerPosition - spawnPosition;
-    vec3 attractionPosition = spawnPosition + toPlayer * progress;
+    vec3 liftPosition = mix(spawnPosition, gemTarget, easedProgress);
+    float arcHeight = mix(2.0, 4.5, hashedSeed.w) * max(uGemScale * 10.0, 0.5);
+    float arcProfile = progress * (1.0 - progress);
+    liftPosition.y += arcHeight * arcProfile;
+    liftPosition += swirlNoise;
 
-    float verticalBase = mix(spawnPosition.y, uPlayerPosition.y, easedProgress);
-    attractionPosition.y = verticalBase;
+    float timePhase = uTime * 0.4;
+    vec3 floatWave = vec3(
+        sin(timePhase * FLOAT_FREQ.x + seed * TWO_PI),
+        sin(timePhase * FLOAT_FREQ.y + seed * 13.0),
+        cos(timePhase * FLOAT_FREQ.z + seed * 7.0)
+    );
+    floatWave *= uGemScale * mix(0.2, 0.5, hashedSeed.y);
+    vec3 floatingPosition = gemTarget + floatWave;
 
-    float arcHeight = mix(5.0, 9.0, hashedSeed.w);
-    float heightProfile = pow(progress, 0.4) * oneMinusProgress;
-    attractionPosition.y += arcHeight * heightProfile;
+    vec3 finalPosition = mix(liftPosition, floatingPosition, settleProgress);
 
-    vec3 attractionNoise = baseNoise * NOISE_WEIGHTS * easedInverse;
-    attractionNoise.y *= 0.6;
-    attractionPosition += attractionNoise;
-
-    float attractStrength = step(0.3, seed); // 70% chance to attract
-    vec3 finalPosition = mix(burstPosition, attractionPosition, attractStrength);
-
-    // Standard transform
     vec4 modelPosition = modelMatrix * vec4(finalPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    // Point size with subtle shrink during motion
-    float baseSize = mix(12.0, 24.0, fract(seed * 17.0));
+    float baseSize = mix(5.0, 12.0, fract(seed * 17.0));
     float sizeFade = 1.0 - easedProgress * 0.3;
     gl_PointSize = baseSize * sizeFade * uDpr;
 
-    // Varyings
     vProgress = progress;
     vOpacityFactor = 1.0 - seed * 0.5;
+    vSoftness = fract(seed * 31.0);
     vColor = colour;
 }

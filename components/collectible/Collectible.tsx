@@ -2,11 +2,12 @@
 
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
-import { type Vector3Tuple } from 'three'
+import { DataTexture, FloatType, Mesh, RGBAFormat, Vector3, type Vector3Tuple } from 'three'
 import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import GemModel from '@/components/collectible/GemModel'
+import GemLines from '@/components/collectible/GemLines'
 import Particles from '@/components/collectible/particles/Particles'
 import { CollectibleType, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
@@ -16,6 +17,9 @@ import { extend } from '@react-three/fiber'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
+
+// Sample the surface of the gem model to position particles within it.
 
 type TileShaderUniforms = {
   uConfirmingProgress: number
@@ -44,7 +48,7 @@ const CollectibleTileShader = shaderMaterial(
 const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 
 const GEM_POSITION: Vector3Tuple = [0, -1, 2.5]
-const GEM_SCALE = 0.08
+const GEM_SCALE = 0.8
 
 type Props = {
   ref?: RefObject<RapierRigidBody | null>
@@ -136,10 +140,86 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         </mesh>
       </pointLight>
 
-      <GemModel visible={isCollected} position={GEM_POSITION} scale={GEM_SCALE} />
-      <Particles width={width} height={height} wasConfirmed={isCollected} />
+      <GemLines
+        position={GEM_POSITION}
+        scale={GEM_SCALE * 1.05}
+        opacity={isCollected ? 1.0 : 0.2}
+      />
+      {/* <GemModel visible={isCollected} position={GEM_POSITION} scale={GEM_SCALE} /> */}
+      <Particles
+        width={width}
+        height={height}
+        wasConfirmed={isCollected}
+        gemPosition={GEM_POSITION}
+        gemScale={GEM_SCALE}
+      />
     </RigidBody>
   )
 }
 
 export default Collectible
+
+// ------------------
+// DataTexture + position field generation (copied from previous FBO setup)
+// ------------------
+
+export const createDataTextureFromSeeds = (
+  seeds: Float32Array,
+  textureSize: number,
+): DataTexture => {
+  const expectedLength = textureSize * textureSize * 4
+  const data = new Float32Array(expectedLength)
+  for (let i = 0; i < textureSize * textureSize; i++) {
+    data[i * 4] = seeds[i] !== undefined ? seeds[i] : 0
+    data[i * 4 + 1] = 0
+    data[i * 4 + 2] = 0
+    data[i * 4 + 3] = 1
+  }
+  const dt = new DataTexture(data, textureSize, textureSize, RGBAFormat, FloatType)
+  dt.needsUpdate = true
+  return dt
+}
+
+export const createDataTextureFromPositions = (
+  positions: Float32Array,
+  textureSize: number,
+): DataTexture => {
+  const expectedLength = textureSize * textureSize * 4
+  if (positions.length !== expectedLength) {
+    const padded = new Float32Array(expectedLength)
+    padded.set(positions)
+    positions = padded
+  }
+  const dt = new DataTexture(positions, textureSize, textureSize, RGBAFormat, FloatType)
+  dt.needsUpdate = true
+  return dt
+}
+
+export const getMeshSurfacePositions = ({
+  mesh,
+  count,
+  scale,
+  offset,
+  extrude,
+}: {
+  mesh: Mesh
+  count: number
+  scale?: number
+  offset?: Vector3
+  extrude?: number
+}): Float32Array => {
+  const positions = new Float32Array(count * 4)
+  const sampler = new MeshSurfaceSampler(mesh).build()
+  const pos = new Vector3()
+  const normal = new Vector3()
+
+  for (let i = 0; i < count; i++) {
+    sampler.sample(pos, normal)
+    if (!!extrude) pos.addScaledVector(normal, extrude)
+    if (!!scale) pos.multiplyScalar(scale)
+    if (!!offset) pos.add(offset)
+    positions.set([pos.x, pos.y, pos.z, 1.0], i * 4)
+  }
+
+  return positions
+}

@@ -2,15 +2,12 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
-import { BufferAttribute, Color, Points, Vector3 } from 'three'
+import { BufferAttribute, Color, Points, Vector3, type Vector3Tuple } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
-import { useControls } from 'leva'
 
 const PARTICLE_COLOUR_HEX = [
   '#509e7b',
@@ -28,13 +25,17 @@ const PARTICLE_COLOUR_HEX = [
 
 type PointsShaderUniforms = {
   uBurstProgress: number
-  uPlayerPosition: Vector3
+  uGemPosition: Vector3
+  uGemScale: number
+  uTime: number
   uDpr: number
 }
 
 const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
   uBurstProgress: 0,
-  uPlayerPosition: new Vector3(),
+  uGemPosition: new Vector3(),
+  uGemScale: 1,
+  uTime: 0,
   uDpr: 1,
 }
 
@@ -49,9 +50,17 @@ type Props = {
   width: number
   height: number
   wasConfirmed: boolean
+  gemPosition: Vector3Tuple
+  gemScale: number
 }
 
-const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
+const Particles: FC<Props> = ({
+  width,
+  height,
+  wasConfirmed = false,
+  gemPosition,
+  gemScale,
+}) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.answerTile.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
   const goToStage = useGameStore((s) => s.goToStage)
@@ -61,12 +70,14 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
 
   const progress = useRef({ value: 0 })
   const progressTween = useRef<GSAPTween | null>(null)
-  const isActive = useRef(false)
   const hasMounted = useRef(false)
   const previouslyConfirmed = useRef(false)
 
-  const playerLocalPosition = useRef(new Vector3())
-  const { playerPosition } = usePlayerPosition()
+  const [gemX, gemY, gemZ] = gemPosition
+  const gemParentPosition = useMemo(() => new Vector3(gemX, gemY, gemZ), [gemX, gemY, gemZ])
+  const gemWorldPosition = useRef(new Vector3())
+  const gemLocalPosition = useRef(new Vector3())
+  const parentScaleVector = useRef(new Vector3(1, 1, 1))
 
   // Geometry buffers
   const positionComponentCount = particleCount * 3
@@ -162,8 +173,6 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
 
     progressTween.current?.kill()
     progress.current.value = 0
-    isActive.current = true
-
     materialRef.current.uBurstProgress = 0
 
     progressTween.current = gsap.to(progress.current, {
@@ -171,43 +180,42 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
       duration: 1.3,
       ease: 'power2.out',
       onComplete: () => {
-        materialRef.current!.uBurstProgress = 0
-        isActive.current = false
+        progress.current.value = 1
+        materialRef.current!.uBurstProgress = 1
         goToStage(Stage.TERRAIN)
       },
     })
   }, [goToStage, wasConfirmed])
 
-  // useControls({
-  //   progress: {
-  //     value: 0,
-  //     min: 0,
-  //     max: 1,
-  //     step: 0.01,
-  //     onChange: (v) => {
-  //       if (materialRef.current) {
-  //         materialRef.current.uBurstProgress = v
-  //       }
-  //     },
-  //   },
-  // })
-
   useEffect(() => {
     return () => {
       progressTween.current?.kill()
-      isActive.current = false
     }
   }, [])
 
-  useFrame(() => {
-    if (!materialRef.current || !points.current || !isActive.current) return
+  useFrame(({ clock }) => {
+    const material = materialRef.current
+    if (!material) return
 
-    // Update burst progress uniform
-    materialRef.current.uBurstProgress = progress.current.value
+    material.uBurstProgress = progress.current.value
+    material.uTime = clock.elapsedTime
 
-    // Update player position in local particle space
-    points.current.worldToLocal(playerLocalPosition.current.copy(playerPosition.current))
-    materialRef.current.uPlayerPosition.copy(playerLocalPosition.current)
+    const currentPoints = points.current
+    if (!currentPoints) return
+
+    const parent = currentPoints.parent
+    if (parent) {
+      parent.localToWorld(gemWorldPosition.current.copy(gemParentPosition))
+      gemLocalPosition.current.copy(gemWorldPosition.current)
+      currentPoints.worldToLocal(gemLocalPosition.current)
+      material.uGemPosition.copy(gemLocalPosition.current)
+
+      parent.getWorldScale(parentScaleVector.current)
+      material.uGemScale = gemScale * parentScaleVector.current.x
+    } else {
+      material.uGemPosition.copy(gemParentPosition)
+      material.uGemScale = gemScale
+    }
   })
 
   return (
@@ -252,6 +260,8 @@ const Particles: FC<Props> = ({ width, height, wasConfirmed = false }) => {
         ref={materialRef}
         {...INITIAL_POINTS_UNIFORMS}
         uDpr={dpr}
+        uGemPosition={gemParentPosition}
+        uGemScale={gemScale}
         transparent={true}
         depthTest={false}
       />

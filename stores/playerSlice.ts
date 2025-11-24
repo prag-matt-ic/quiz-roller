@@ -100,6 +100,10 @@ export const createPlayerSlice =
           playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
         }))
       },
+      respawnPosition: null,
+      setRespawnPosition: (position) => {
+        set({ respawnPosition: position ? new Vector3(position.x, position.y, position.z) : null })
+      },
       setEdgeWarningIntensities: (intensities) => {
         set({
           edgeWarningIntensities: {
@@ -161,6 +165,7 @@ export const createPlayerSlice =
         set((s) => ({
           isRespawning: true,
           respawnPlayerTick: s.respawnPlayerTick + 1,
+          respawnPosition: null,
           collectedRings: {},
         }))
       },
