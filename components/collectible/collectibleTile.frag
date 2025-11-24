@@ -14,7 +14,7 @@ uniform mediump float uTilesY;
 varying mediump vec2 vUv;
 varying mediump vec2 vHeightSpacePosition;
 
-const float BORDER_FRACTION = 0.06; // fraction of full height
+const float BORDER_FRACTION = 0.1; // fraction of full height
 const float BORDER_WAVE_FREQUENCY = 3.0;
 const float BORDER_WAVE_OFFSET = 0.5;
 
