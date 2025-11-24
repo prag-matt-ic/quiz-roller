@@ -123,6 +123,7 @@ function usePlatformLayout() {
   const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
   const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
+  // const setTotalRings =....
 
   useEffect(() => {
     let isMounted = true
@@ -171,6 +172,8 @@ function usePlatformLayout() {
 
       setCtaLayout(imageToLayout(images[idx], 'cta'))
     })
+
+    // TODO: iterate through all the layouts to count the number of rings, set that into game store state..
 
     return () => {
       isMounted = false

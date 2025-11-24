@@ -9,7 +9,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { createPaletteGradient } from '@/components/palette'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 
-export const PLAYER_RADIUS = 0.5
+export const PLAYER_RADIUS = 0.45
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)

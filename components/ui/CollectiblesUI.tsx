@@ -29,6 +29,7 @@ const CollectiblesUI: FC = () => {
           collectedRingCount > 0 ? 'border-amber-400' : 'border-white/40',
         )}>
         {collectedRingCount}
+        {/* TODO: display total rings count here: / {totalRingsCount} */}
       </div>
       {/* Collectibles */}
       {COLLECTIBLE_TYPES.map((type, index) => {
