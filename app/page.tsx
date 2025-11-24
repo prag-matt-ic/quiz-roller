@@ -31,7 +31,7 @@ export default async function Home(props: PageProps) {
       {/* <button
         onClick={deleteAllSpeedRuns}
         className="fixed bottom-4 left-4 z-50 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700">
-        Clear data
+        Delete All Speedruns
       </button> */}
       <StructuredData />
     </>
