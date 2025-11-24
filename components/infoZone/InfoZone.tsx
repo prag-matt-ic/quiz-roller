@@ -205,6 +205,7 @@ export const InfoZone: FC<Props> = ({
             renderOrder={2}
             occlude={false}
             portal={htmlPortal}
+            transform={true}
             pointerEvents="none"
             position={iconPositionOffset}
             className="relative z-10 select-none">

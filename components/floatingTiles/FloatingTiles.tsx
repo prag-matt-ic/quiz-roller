@@ -322,14 +322,9 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   }, [initializeSpawnMaskDefaults])
 
   useEffect(() => {
-    if (isDisabled) {
-      onReadyChange(false)
-      return
-    }
-
     let mounted = true
     try {
-      initializeSimulation()
+      if (!isDisabled) initializeSimulation()
       if (mounted) onReadyChange(true)
     } catch (error) {
       console.error('Failed to initialize FloatingTiles simulation', error)
@@ -343,7 +338,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       gpuCompute.current = null
       positionVariable.current = null
     }
-  }, [initializeSimulation, onReadyChange, simToken, isDisabled])
+  }, [initializeSimulation, isDisabled, onReadyChange, simToken])
 
   useEffect(() => {
     if (!meshRef.current) return

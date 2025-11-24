@@ -39,7 +39,7 @@ import {
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
-import SpeedRunElements, { SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
+import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -642,16 +642,16 @@ const Platform: FC<Props> = ({
 
   return (
     <group>
-      <PlatformTiles
-        ref={tilesHandle}
-        key={`${resetPlatformTick}-tiles`}
-        onReadyChange={onTilesReadyChange}
-      />
-
       <FloatingTiles
         ref={floatingTilesHandle}
         key={`${resetPlatformTick}-floatingTiles`}
         onReadyChange={onFloatingTilesReadyChange}
+      />
+
+      <PlatformTiles
+        ref={tilesHandle}
+        key={`${resetPlatformTick}-tiles`}
+        onReadyChange={onTilesReadyChange}
       />
 
       <Rings

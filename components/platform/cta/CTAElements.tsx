@@ -160,7 +160,6 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         width={CTA_ZONE_WIDTH}
         height={CTA_ZONE_HEIGHT}
         infoPositionOffset={[0, 12, 4]}
-        alwaysShowInfo={false}
         infoContentHtmlProps={{ transform: true }}
         infoContainerClassName="w-[328px] sm:w-[450px]"
         isPositioned={isLeaderboardPositioned}
