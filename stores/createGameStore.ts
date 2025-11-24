@@ -5,7 +5,8 @@ import { GameStore } from './types'
 import { createTimeSlice } from './timeSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createGameSlice } from './gameSlice'
-import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
+import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
+import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 type PersistedStore = Pick<
   GameStore,
@@ -15,7 +16,7 @@ type PersistedStore = Pick<
 export const createGameStore = (
   playSoundFX: PlaySoundFX,
   stopSoundFX: (fx: SoundFX) => void,
-  insertSpeedRun: (data: SpeedRunSubmission) => InsertSpeedRunResponse,
+  insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse,
 ) => {
   return createStore<GameStore>()(
     subscribeWithSelector(

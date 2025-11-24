@@ -73,6 +73,8 @@ export const speedrunDatabaseSchema = speedrunDatabaseInsertSchema.extend({
 
 export type SpeedRunSubmission = z.infer<typeof speedRunSubmissionSchema>
 
+export type ServerSpeedRunSubmission = Omit<SpeedRunSubmission, 'attempt'>
+
 export type SpeedRunDatabaseInsert = z.infer<typeof speedrunDatabaseInsertSchema>
 
 export type SpeedRunDatabase = z.infer<typeof speedrunDatabaseSchema>

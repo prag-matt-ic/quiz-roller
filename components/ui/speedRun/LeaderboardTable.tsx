@@ -4,34 +4,62 @@ import { twJoin, twMerge } from 'tailwind-merge'
 
 import type { SpeedRunDatabase } from '@/model/schema'
 import { TrophyIcon } from 'lucide-react'
-import { getSpeedrunData } from '@/app/actions'
+import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 
 export function useLeaderboardTableData(count: number = 10) {
   const [isLoading, setIsLoading] = useState(true)
   const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
+  const [playerPosition, setPlayerPosition] = useState<number | null>(null)
+
+  const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
+  const latestRunId = useMemo(
+    () => completedSpeedruns[completedSpeedruns.length - 1]?.id,
+    [completedSpeedruns],
+  )
 
   useEffect(() => {
     let isMounted = true
 
-    getSpeedrunData(count).then((data) => {
+    const fetchData = async () => {
+      const speedrunData = await getSpeedrunData(count)
+
+      if (!isMounted) return
+
+      let playerPosition: number | null = null
+      let allSpeedruns = speedrunData
+
+      if (latestRunId) {
+        const isOnLeaderboard = speedrunData.some((speedrun) => speedrun.id === latestRunId)
+
+        if (!isOnLeaderboard) {
+          const playerData = await getSpeedrunPosition(latestRunId)
+          if (playerData && isMounted) {
+            playerPosition = playerData.position
+            allSpeedruns = [...speedrunData, playerData.run]
+          }
+        }
+      }
+
       if (isMounted) {
-        setSpeedRuns(data)
+        setSpeedRuns(allSpeedruns)
+        setPlayerPosition(playerPosition)
         setIsLoading(false)
       }
-    })
+    }
+
+    fetchData()
 
     return () => {
       isMounted = false
     }
-  }, [count])
+  }, [count, latestRunId])
 
-  const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
   const userSpeedRunIds = useMemo(
     () => completedSpeedruns.map((run) => run.id),
     [completedSpeedruns],
   )
-  return { count, isLoading, speedRuns, userSpeedRunIds }
+  return { count, isLoading, speedRuns, userSpeedRunIds, playerPosition }
 }
 
 type TableProps = {
@@ -39,6 +67,7 @@ type TableProps = {
   isLoading: boolean
   speedRuns: SpeedRunDatabase[]
   userSpeedRunIds: number[]
+  playerPosition: number | null
 }
 
 export const LeaderboardTable: FC<TableProps> = ({
@@ -46,8 +75,13 @@ export const LeaderboardTable: FC<TableProps> = ({
   isLoading,
   speedRuns,
   userSpeedRunIds,
+  playerPosition,
 }) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
+
+  const leaderboardRuns = speedRuns.slice(0, count)
+  const playerRunBelowLeaderboard =
+    playerPosition && playerPosition > count ? speedRuns[speedRuns.length - 1] : null
 
   return (
     <section className="w-full max-w-xl">
@@ -61,7 +95,7 @@ export const LeaderboardTable: FC<TableProps> = ({
           ? placeholderRows.map((_, index) => (
               <LoadingRow key={`loading-${index}`} index={index} />
             ))
-          : speedRuns.map((entry, index) => (
+          : leaderboardRuns.map((entry, index) => (
               <LeaderboardRow
                 key={entry.id}
                 entry={entry}
@@ -70,6 +104,16 @@ export const LeaderboardTable: FC<TableProps> = ({
               />
             ))}
       </div>
+      {!isLoading && playerRunBelowLeaderboard && (
+        <div className="mt-4 grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 rounded-md bg-black shadow-2xl shadow-black/90">
+          <LeaderboardRow
+            key={playerRunBelowLeaderboard.id}
+            entry={playerRunBelowLeaderboard}
+            index={playerPosition! - 1}
+            isCurrentUser={true}
+          />
+        </div>
+      )}
     </section>
   )
 }

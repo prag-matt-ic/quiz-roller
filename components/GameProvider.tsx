@@ -4,7 +4,7 @@ import { useStore } from 'zustand'
 import { useSoundStore } from '@/components/SoundProvider'
 import { createGameStore } from '@/stores/createGameStore'
 import type { GameStore } from '@/stores/types'
-import type { SpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
+import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
 export {
   Stage,
@@ -19,7 +19,7 @@ export { PLAYER_INITIAL_POSITION, PLAYER_INITIAL_POSITION_VEC3 } from '@/stores/
 const GameContext = createContext<ReturnType<typeof createGameStore>>(undefined!)
 
 type Props = PropsWithChildren<{
-  insertSpeedRun: (data: SpeedRunSubmission) => InsertSpeedRunResponse
+  insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse
 }>
 
 export const GameProvider: FC<Props> = ({ children, insertSpeedRun }) => {
