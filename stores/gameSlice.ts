@@ -9,6 +9,7 @@ export const INITIAL_GAME_STATE = {
   infoContentIndex: 0,
   hudIndicator: MOVE_HUD_INDICATOR,
   totalRows: 100,
+  totalRingsCount: 0,
   currentRow: 0,
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
@@ -43,6 +44,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   setRowsData: (rowsData) => {
     set({ rowsData, totalRows: rowsData.length })
+  },
+  setTotalRingsCount: (totalRingsCount) => {
+    set({ totalRingsCount })
   },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {

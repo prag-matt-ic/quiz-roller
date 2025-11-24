@@ -11,7 +11,7 @@ import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
 
 import Camera, { CAMERA_POSITION_FOR_STAGE } from './Camera'
-import { Stage } from './GameProvider'
+import { Stage, useGameStore } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
 import homeTexture from '@/assets/platform/home.png'
@@ -123,7 +123,7 @@ function usePlatformLayout() {
   const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
   const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
-  // const setTotalRings =....
+  const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
 
   useEffect(() => {
     let isMounted = true
@@ -173,11 +173,28 @@ function usePlatformLayout() {
       setCtaLayout(imageToLayout(images[idx], 'cta'))
     })
 
-    // TODO: iterate through all the layouts to count the number of rings, set that into game store state..
-
     return () => {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    if (
+      !homeLayout ||
+      !infoLayouts.length ||
+      !obstacleLayouts.length ||
+      !speedRunLayout ||
+      !ctaLayout
+    )
+      return
+
+    const totalRings = [homeLayout, ...infoLayouts, ...obstacleLayouts].reduce(
+      (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
+      0,
+    )
+
+    setTotalRingsCount(totalRings)
+  }, [homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, setTotalRingsCount])
+
   return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout }
 }

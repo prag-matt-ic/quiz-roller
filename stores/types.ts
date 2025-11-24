@@ -98,6 +98,8 @@ export type GameSlice = {
   rowsData: RowData[]
   setRowsData: (rows: RowData[]) => void
   totalRows: number
+  totalRingsCount: number
+  setTotalRingsCount: (count: number) => void
   currentRow: number
   setCurrentRow: (row: number) => void
 
