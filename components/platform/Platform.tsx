@@ -95,7 +95,23 @@ type Props = {
   obstacleLayouts: Array<SectionBitmapLayout | null>
   speedRunLayout: SectionBitmapLayout | null
   ctaLayout: SectionBitmapLayout | null
+  testLayout: SectionBitmapLayout | null
+  isTestMode: boolean
 }
+
+type ReadyState = {
+  tiles: boolean
+  rings: boolean
+  home: boolean
+  info: boolean
+  cta: boolean
+  speedRun: boolean
+  floatingTiles: boolean
+}
+
+type ReadyStateKey = keyof ReadyState
+
+const CORE_READY_KEYS: ReadyStateKey[] = ['tiles', 'rings', 'floatingTiles']
 
 const Platform: FC<Props> = ({
   homeLayout,
@@ -103,6 +119,8 @@ const Platform: FC<Props> = ({
   obstacleLayouts,
   speedRunLayout,
   ctaLayout,
+  testLayout,
+  isTestMode,
 }) => {
   const gameStore = useGameStoreAPI()
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
@@ -144,7 +162,7 @@ const Platform: FC<Props> = ({
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
-  const [readyState, setReadyState] = useState({
+  const [readyState, setReadyState] = useState<ReadyState>({
     tiles: false,
     rings: false,
     home: false,
@@ -231,19 +249,38 @@ const Platform: FC<Props> = ({
     appendRowsWithIndices(rows)
   }
 
-  const hasAllLayouts =
-    !!homeLayout &&
-    !!infoLayouts.length &&
-    !!obstacleLayouts.length &&
-    !!speedRunLayout &&
-    !!ctaLayout
+  function insertTestRows() {
+    const rows = generateInfoSectionRowData({
+      layout: testLayout,
+      contentIndex: 0,
+    })
+    appendRowsWithIndices(rows)
+  }
+
+  const hasAllLayouts = isTestMode
+    ? !!testLayout
+    : !!homeLayout &&
+      !!infoLayouts.length &&
+      !!obstacleLayouts.length &&
+      !!speedRunLayout &&
+      !!ctaLayout
 
   useEffect(() => {
     if (!hasAllLayouts) return
 
-    const areElementsReady = Object.entries(readyState).every(([key, value]) => {
+    const shouldSkipReadyCheck = (key: ReadyStateKey) => {
+      if (isTestMode) {
+        return !CORE_READY_KEYS.includes(key)
+      }
       if (isSpeedRunMode && key === 'cta') return true
       if (!isSpeedRunMode && key === 'speedRun') return true
+      return false
+    }
+
+    const areElementsReady = (
+      Object.entries(readyState) as Array<[ReadyStateKey, boolean]>
+    ).every(([key, value]) => {
+      if (shouldSkipReadyCheck(key)) return true
       return value
     })
 
@@ -271,18 +308,22 @@ const Platform: FC<Props> = ({
       yByBodyIndex.current = []
       currentScrollPosition.current = 0
 
-      insertHomeRows()
-      insertObstacleRows(0)
-      insertInfoRows(0)
-      insertObstacleRows(1)
-      insertInfoRows(1)
-      insertObstacleRows(2)
-      insertInfoRows(2)
-      insertObstacleRows(3)
-      if (!isSpeedRunMode) {
-        insertCtaRows()
+      if (isTestMode) {
+        insertTestRows()
       } else {
-        insertSpeedRunRows()
+        insertHomeRows()
+        insertObstacleRows(0)
+        insertInfoRows(0)
+        insertObstacleRows(1)
+        insertInfoRows(1)
+        insertObstacleRows(2)
+        insertInfoRows(2)
+        insertObstacleRows(3)
+        if (!isSpeedRunMode) {
+          insertCtaRows()
+        } else {
+          insertSpeedRunRows()
+        }
       }
 
       setRowsData(rowsDataRef.current)
@@ -353,7 +394,7 @@ const Platform: FC<Props> = ({
 
     setupInitialRowsAndTiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, hasAllLayouts, readyState])
+  }, [resetPlatformTick, hasAllLayouts, readyState, isSpeedRunMode, isTestMode])
 
   const targetScrollPosition = useRef<number | null>(null)
   const pendingRespawnX = useRef<number | null>(null)

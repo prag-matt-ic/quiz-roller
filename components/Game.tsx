@@ -39,6 +39,8 @@ const INITIAL_CAMERA_POSITION = {
   z: HOME_CAMERA_POSITION.z,
 }
 
+const IS_TEST_MODE = false
+
 type Props = {
   isDebug: boolean
   isMobile: boolean
@@ -64,8 +66,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout } =
-    usePlatformLayout()
+  const { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, testLayout } =
+    usePlatformLayout(IS_TEST_MODE)
 
   return (
     <Canvas
@@ -107,6 +109,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
               obstacleLayouts={obstacleLayouts}
               speedRunLayout={speedRunLayout}
               ctaLayout={ctaLayout}
+              testLayout={testLayout}
+              isTestMode={IS_TEST_MODE}
             />
             <Player />
           </Physics>
@@ -118,12 +122,13 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
 export default Game
 
-function usePlatformLayout() {
+function usePlatformLayout(isTestMode: boolean) {
   const [homeLayout, setHomeLayout] = useState<SectionBitmapLayout | null>(null)
   const [obstacleLayouts, setObstacleLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
   const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
+  const [testLayout, setTestLayout] = useState<SectionBitmapLayout | null>(null)
   const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
@@ -144,51 +149,69 @@ function usePlatformLayout() {
       }
     }
 
-    loadHtmlImage([
-      homeTexture.src,
-      ...INFO_BITMAP_TEXTURES,
-      ...OBSTACLE_BITMAP_TEXTURES,
-      speedRunTexture.src,
-      ctaTexture.src,
-    ]).then((images) => {
-      if (!isMounted) return
-      let index = 0
+    if (isTestMode) {
+      loadHtmlImage([testTexture.src]).then((images) => {
+        if (!isMounted) return
+        const layout = imageToLayout(images[0], 'test')
+        setTestLayout(layout)
+        setHomeLayout(null)
+        setInfoLayouts([])
+        setObstacleLayouts([])
+        setSpeedRunLayout(null)
+        setCtaLayout(null)
+      })
+    } else {
+      loadHtmlImage([
+        homeTexture.src,
+        ...INFO_BITMAP_TEXTURES,
+        ...OBSTACLE_BITMAP_TEXTURES,
+        speedRunTexture.src,
+        ctaTexture.src,
+      ]).then((images) => {
+        if (!isMounted) return
+        let index = 0
 
-      const homeLayout = imageToLayout(images[index], 'home')
-      index++
+        const homeLayout = imageToLayout(images[index], 'home')
+        index++
 
-      const infoImages = images.slice(index, index + INFO_BITMAP_TEXTURES.length)
-      const infoLayouts = infoImages.map((image, layoutIndex) =>
-        imageToLayout(image, `info-${layoutIndex}`),
-      )
-      index += INFO_BITMAP_TEXTURES.length
+        const infoImages = images.slice(index, index + INFO_BITMAP_TEXTURES.length)
+        const infoLayouts = infoImages.map((image, layoutIndex) =>
+          imageToLayout(image, `info-${layoutIndex}`),
+        )
+        index += INFO_BITMAP_TEXTURES.length
 
-      const obstacleImages = images.slice(index, index + OBSTACLE_BITMAP_TEXTURES.length)
-      const obstacleLayouts = obstacleImages.map((image, layoutIndex) =>
-        imageToLayout(image, `obstacle-${layoutIndex}`),
-      )
-      index += OBSTACLE_BITMAP_TEXTURES.length
+        const obstacleImages = images.slice(index, index + OBSTACLE_BITMAP_TEXTURES.length)
+        const obstacleLayouts = obstacleImages.map((image, layoutIndex) =>
+          imageToLayout(image, `obstacle-${layoutIndex}`),
+        )
+        index += OBSTACLE_BITMAP_TEXTURES.length
 
-      const speedRunLayout = imageToLayout(images[index], 'speed-run')
-      index++
+        const speedRunLayout = imageToLayout(images[index], 'speed-run')
+        index++
 
-      const ctaLayout = imageToLayout(images[index], 'cta')
+        const ctaLayout = imageToLayout(images[index], 'cta')
 
-      // Set layouts into state
-      setHomeLayout(homeLayout)
-      setInfoLayouts(infoLayouts)
-      setObstacleLayouts(obstacleLayouts)
-      setSpeedRunLayout(speedRunLayout)
-      setCtaLayout(ctaLayout)
-    })
+        setTestLayout(null)
+        setHomeLayout(homeLayout)
+        setInfoLayouts(infoLayouts)
+        setObstacleLayouts(obstacleLayouts)
+        setSpeedRunLayout(speedRunLayout)
+        setCtaLayout(ctaLayout)
+      })
+    }
 
     return () => {
       isMounted = false
     }
-  }, [setTotalRingsCount])
+  }, [isTestMode, setTotalRingsCount])
 
   useEffect(() => {
     const updateTotalRingsCount = () => {
+      if (isTestMode) {
+        setTotalRingsCount(testLayout?.totalRingsCount ?? 0)
+        return
+      }
+
       const layouts = [homeLayout, ...infoLayouts, ...obstacleLayouts]
       if (isSpeedRunMode) layouts.push(speedRunLayout)
       else layouts.push(ctaLayout)
@@ -210,7 +233,9 @@ function usePlatformLayout() {
     ctaLayout,
     setTotalRingsCount,
     isSpeedRunMode,
+    isTestMode,
+    testLayout,
   ])
 
-  return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout }
+  return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, testLayout }
 }
