@@ -31,6 +31,7 @@ gsap.registerPlugin(useGSAP)
 
 // Start at the intro sweep position to avoid a jump before animation
 const HOME_CAMERA_POSITION = CAMERA_POSITION_FOR_STAGE[Stage.HOME]
+
 const INITIAL_CAMERA_POSITION = {
   x: 0,
   y: HOME_CAMERA_POSITION.y,
@@ -94,7 +95,6 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <ambientLight intensity={1.0} />
         {/* <OrbitControls /> */}
         <Camera />
-
         {isDebug && <Stats />}
         <Backdrop />
         <Suspense>
