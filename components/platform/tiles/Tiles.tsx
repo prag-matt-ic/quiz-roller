@@ -16,7 +16,7 @@ import {
 } from 'react'
 import { type InstancedBufferAttribute, Vector2 } from 'three'
 
-import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {

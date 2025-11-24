@@ -49,7 +49,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     player: { segments: 64, isFlat: false },
     ring: { radialSegments: 12, tubularSegments: 24 },
-    answerTile: { particleCount: 81 },
+    answerTile: { particleCount: 120 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
@@ -89,11 +89,15 @@ type PerformanceState = {
   setSceneQuality: (quality: SceneQuality) => void
   setMaxDpr: (value: number | undefined) => void
   hasBeenManuallySet: boolean
+  isTestPlatform: boolean
+  setIsTestPlatform: (value: boolean) => void
 }
 
 type PerformanceStore = StoreApi<PerformanceState>
 
 const PerformanceContext = createContext<PerformanceStore>(undefined!)
+
+const DEFAULT_IS_TEST_PLATFORM = true
 
 const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>) => {
   const initialQualityMode = initialState.isMobile ? SceneQuality.MEDIUM : SceneQuality.HIGH
@@ -107,6 +111,7 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     sceneQuality: initialQualityMode,
     sceneConfig: SCENE_CONFIGS[initialQualityMode],
     hasBeenManuallySet: false,
+    isTestPlatform: DEFAULT_IS_TEST_PLATFORM,
     setSimFps: (fps: RapierSimFPS) => {
       const previous = get().simFps
       logPerformanceDebug('simFps updated', { previous, next: fps })
@@ -126,6 +131,12 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
       set({
         maxDPR: value,
       })
+    },
+    setIsTestPlatform: (value: boolean) => {
+      const previous = get().isTestPlatform
+      if (previous === value) return
+      logPerformanceDebug('isTestPlatform updated', { previous, next: value })
+      set({ isTestPlatform: value })
     },
     onPerformanceChange: (up: boolean) => {
       const { sceneQuality, hasBeenManuallySet, maxDPR } = get()

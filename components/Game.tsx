@@ -39,8 +39,6 @@ const INITIAL_CAMERA_POSITION = {
   z: HOME_CAMERA_POSITION.z,
 }
 
-const IS_TEST_MODE = false
-
 type Props = {
   isDebug: boolean
   isMobile: boolean
@@ -66,8 +64,15 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, testLayout } =
-    usePlatformLayout(IS_TEST_MODE)
+  const {
+    homeLayout,
+    infoLayouts,
+    obstacleLayouts,
+    speedRunLayout,
+    ctaLayout,
+    testLayout,
+    isTestMode,
+  } = usePlatformLayout()
 
   return (
     <Canvas
@@ -104,13 +109,14 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
           <Physics debug={isDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />
             <Platform
+              key={isTestMode ? 'test' : 'normal'}
               homeLayout={homeLayout}
               infoLayouts={infoLayouts}
               obstacleLayouts={obstacleLayouts}
               speedRunLayout={speedRunLayout}
               ctaLayout={ctaLayout}
               testLayout={testLayout}
-              isTestMode={IS_TEST_MODE}
+              isTestMode={isTestMode}
             />
             <Player />
           </Physics>
@@ -122,7 +128,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
 export default Game
 
-function usePlatformLayout(isTestMode: boolean) {
+function usePlatformLayout() {
+  const isTestMode = usePerformanceStore((s) => s.isTestPlatform)
   const [homeLayout, setHomeLayout] = useState<SectionBitmapLayout | null>(null)
   const [obstacleLayouts, setObstacleLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
@@ -237,5 +244,13 @@ function usePlatformLayout(isTestMode: boolean) {
     testLayout,
   ])
 
-  return { homeLayout, infoLayouts, obstacleLayouts, speedRunLayout, ctaLayout, testLayout }
+  return {
+    homeLayout,
+    infoLayouts,
+    obstacleLayouts,
+    speedRunLayout,
+    ctaLayout,
+    testLayout,
+    isTestMode,
+  }
 }

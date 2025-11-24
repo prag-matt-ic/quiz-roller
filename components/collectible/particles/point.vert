@@ -64,7 +64,7 @@ void main() {
     vec3 gemTarget = uGemPosition + gemInterior;
 
     vec3 liftPosition = mix(spawnPosition, gemTarget, easedProgress);
-    float arcHeight = mix(2.0, 4.5, hashedSeed.w) * max(uGemScale * 10.0, 0.5);
+    float arcHeight = mix(0.5, 1.4, hashedSeed.w) * max(uGemScale * 10.0, 0.5);
     float arcProfile = progress * (1.0 - progress);
     liftPosition.y += arcHeight * arcProfile;
     liftPosition += swirlNoise;

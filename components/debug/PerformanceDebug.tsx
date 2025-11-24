@@ -34,6 +34,8 @@ const PerformanceDebug: FC = () => {
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
+  const isTestPlatform = usePerformanceStore((s) => s.isTestPlatform)
+  const setIsTestPlatform = usePerformanceStore((s) => s.setIsTestPlatform)
   const resetGame = useGameStore((s) => s.resetGame)
 
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -45,6 +47,11 @@ const PerformanceDebug: FC = () => {
     event.target.blur()
     const next = event.target.value === 'native' ? undefined : Number(event.target.value)
     setMaxDpr(next)
+  }
+
+  const handlePlatformChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    event.target.blur()
+    setIsTestPlatform(event.target.value === 'test')
   }
 
   return (
@@ -59,6 +66,14 @@ const PerformanceDebug: FC = () => {
             {quality}
           </option>
         ))}
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-platform"
+        label="Platform"
+        value={isTestPlatform ? 'test' : 'full'}
+        onChange={handlePlatformChange}>
+        <option value="full">Full Run</option>
+        <option value="test">Test Section</option>
       </SelectRow>
       <SelectRow
         id="performance-debug-dpr"
