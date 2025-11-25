@@ -31,6 +31,7 @@ import { group } from 'console'
 type TileShaderUniforms = {
   uConfirmingProgress: number
   uIsConfirming: number
+  uWasConfirmed: number
   uTime: number
   uAspect: number
   uTilesX: number
@@ -40,6 +41,7 @@ type TileShaderUniforms = {
 const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uConfirmingProgress: 0,
   uIsConfirming: 0,
+  uWasConfirmed: 0,
   uTime: 0,
   uAspect: 1,
   uTilesX: 5,
@@ -93,6 +95,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
 
     shader.current.uConfirmingProgress = localProgress.current
     shader.current.uIsConfirming = isConfirming ? 1 : 0
+    shader.current.uWasConfirmed = isCollected ? 1 : 0
     shader.current.uTime = clock.elapsedTime
     
     if (gemShaderRef.current) {

@@ -6,6 +6,7 @@ precision mediump int;
 
 uniform mediump float uConfirmingProgress;
 uniform mediump float uIsConfirming;
+uniform mediump float uWasConfirmed;
 uniform mediump float uAspect; // width / height
 uniform mediump float uTilesX;
 uniform mediump float uTilesY;
@@ -21,7 +22,8 @@ void main() {
   
   // Start at original size, expand to 6x during confirmation (reaches neighboring corners)
   // When confirmed, lock at full extension
-  float targetLength = uIsConfirming > 0.5 ? CORNER_LENGTH_TILES * 6.0 : CORNER_LENGTH_TILES;
+  bool shouldBeExtended = uIsConfirming > 0.5 || uWasConfirmed > 0.5;
+  float targetLength = shouldBeExtended ? CORNER_LENGTH_TILES * 6.0 : CORNER_LENGTH_TILES;
   float animatedCornerLength = mix(CORNER_LENGTH_TILES, targetLength, progress);
 
   float bracketMask = paintCorners(
