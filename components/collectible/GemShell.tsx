@@ -36,7 +36,7 @@ const GEM_SURFACE_GEOMETRY = (() => {
   return geometry
 })()
 
-const GEM_ROTATION_SPEED = 0.4
+const GEM_ROTATION_SPEED = 0.33
 const GEM_LINE_WIDTH = 1.05
 const GEM_GLOW_STRENGTH = 0.8
 
@@ -64,12 +64,12 @@ const GemShellShader = shaderMaterial(
 
 const GemShellShaderMaterial = extend(GemShellShader)
 
-export type GemLinesProps = React.ComponentProps<'group'> & {
+export type GemShellProps = React.ComponentProps<'group'> & {
   color?: THREE.ColorRepresentation
   opacity?: number
 }
 
-const GemLines: FC<GemLinesProps> = ({ color = 0xffffff, opacity = 0.35, ...props }) => {
+const GemShell: FC<GemShellProps> = ({ color = 0xffffff, opacity = 0.35, ...props }) => {
   const groupRef = useRef<THREE.Group>(null)
 
   const surfaceColor = useMemo(() => new THREE.Color(color), [color])
@@ -108,4 +108,4 @@ const GemLines: FC<GemLinesProps> = ({ color = 0xffffff, opacity = 0.35, ...prop
   )
 }
 
-export default GemLines
+export default GemShell

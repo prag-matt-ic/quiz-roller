@@ -7,7 +7,7 @@ import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import GemModel from '@/components/collectible/GemModel'
-import GemLines from '@/components/collectible/GemLines'
+import GemShell from '@/components/collectible/GemShell'
 import Particles from '@/components/collectible/particles/Particles'
 import { CollectibleType, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
@@ -47,8 +47,8 @@ const CollectibleTileShader = shaderMaterial(
 
 const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 
-const GEM_POSITION: Vector3Tuple = [0, -1, 2.5]
-const GEM_SCALE = 0.8
+const GEM_POSITION: Vector3Tuple = [0, 0, 3]
+const GEM_SCALE = 1.1
 
 type Props = {
   ref?: RefObject<RapierRigidBody | null>
@@ -133,18 +133,18 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         />
       </mesh>
 
-      <GemLines
-        position={GEM_POSITION}
-        scale={GEM_SCALE * 1.05}
-        opacity={isCollected ? 1.0 : 0.2}
-      />
-      {/* <GemModel visible={isCollected} position={GEM_POSITION} scale={GEM_SCALE} /> */}
       <Particles
         width={width}
         height={height}
         wasConfirmed={isCollected}
         gemPosition={GEM_POSITION}
         gemScale={GEM_SCALE}
+      />
+
+      <GemShell
+        position={GEM_POSITION}
+        scale={GEM_SCALE * 1.05}
+        opacity={isCollected ? 0.4 : 0.16}
       />
     </RigidBody>
   )
