@@ -1,6 +1,7 @@
 import { useEffect, useRef, type FC } from 'react'
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
+import { EMPTY_ROW_INDEX } from '../platform/usePlayerRespawn'
 
 const ProgressBar: FC = () => {
   const totalRows = useGameStore((s) => s.totalRows)
@@ -17,6 +18,7 @@ const ProgressBar: FC = () => {
     if (!barElement) return
 
     const updateBarTransform = (row: number) => {
+      if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
       const denominator = Math.max(1, totalRowsRef.current - 1)
       const rowsProgress = Math.min(1, Math.max(0, row / denominator))
       barElement.style.transform = `translate3d(0, ${100 - rowsProgress * 100}%, 0)`

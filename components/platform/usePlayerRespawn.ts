@@ -10,7 +10,7 @@ import {
   SAFE_HEIGHT,
 } from '@/utils/tiles'
 
-const INVALID_ROW_INDEX = 10000
+export const EMPTY_ROW_INDEX = 10000
 const CENTER_COL_INDEX = Math.floor(COLUMNS / 2)
 
 type UsePlayerRespawnProps = {
@@ -30,18 +30,12 @@ function findSafeColumnX(row: RowData): number | null {
   for (let offset = 1; offset <= Math.floor(COLUMNS / 2); offset++) {
     // Check left
     const leftIndex = CENTER_COL_INDEX - offset
-    if (
-      leftIndex >= 0 &&
-      row.heights[leftIndex] >= SAFE_HEIGHT - EPSILON.TINY
-    ) {
+    if (leftIndex >= 0 && row.heights[leftIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
       return colToX(leftIndex)
     }
     // Check right
     const rightIndex = CENTER_COL_INDEX + offset
-    if (
-      rightIndex < COLUMNS &&
-      row.heights[rightIndex] >= SAFE_HEIGHT - EPSILON.TINY
-    ) {
+    if (rightIndex < COLUMNS && row.heights[rightIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
       return colToX(rightIndex)
     }
   }
@@ -75,7 +69,7 @@ function getBestSafeRowIndex(
 
   for (let i = 0; i < ROWS_RENDERED; i++) {
     const row = activeRowsData[i]
-    if (!row || (row.rowIndex ?? INVALID_ROW_INDEX) >= INVALID_ROW_INDEX) continue
+    if (!row || (row.rowIndex ?? EMPTY_ROW_INDEX) >= EMPTY_ROW_INDEX) continue
 
     // Must have at least one safe column
     if (findSafeColumnX(row) === null) continue
@@ -115,10 +109,10 @@ export function usePlayerRespawn({
 
     // 1. Try to find the closest row (current row)
     const closestRowIndex = getClosestRowIndex(zValues, playerZ)
-    
+
     if (closestRowIndex !== -1) {
       const row = rows[closestRowIndex]
-      if (row && (row.rowIndex ?? INVALID_ROW_INDEX) < INVALID_ROW_INDEX) {
+      if (row && (row.rowIndex ?? EMPTY_ROW_INDEX) < EMPTY_ROW_INDEX) {
         const safeX = findSafeColumnX(row)
         if (safeX !== null) {
           // Current row is safe! No need to scroll.

@@ -45,14 +45,14 @@ import usePlayerInput from '@/hooks/usePlayerInput'
 import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
-import { usePlayerRespawn } from './usePlayerRespawn'
+import { EMPTY_ROW_INDEX, usePlayerRespawn } from './usePlayerRespawn'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
   type: 'empty',
   isSectionStart: false,
   isSectionEnd: false,
-  rowIndex: 10000,
+  rowIndex: EMPTY_ROW_INDEX,
 }
 
 const FADE_FULL_RADIUS_SQ = TILE_PLAYER_FADE_FULL_RADIUS * TILE_PLAYER_FADE_FULL_RADIUS
