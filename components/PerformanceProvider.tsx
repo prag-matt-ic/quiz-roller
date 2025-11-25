@@ -97,8 +97,6 @@ type PerformanceStore = StoreApi<PerformanceState>
 
 const PerformanceContext = createContext<PerformanceStore>(undefined!)
 
-const DEFAULT_IS_TEST_PLATFORM = true
-
 const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>) => {
   const initialQualityMode = initialState.isMobile ? SceneQuality.MEDIUM : SceneQuality.HIGH
 
@@ -111,7 +109,7 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     sceneQuality: initialQualityMode,
     sceneConfig: SCENE_CONFIGS[initialQualityMode],
     hasBeenManuallySet: false,
-    isTestPlatform: DEFAULT_IS_TEST_PLATFORM,
+    isTestPlatform: false,
     setSimFps: (fps: RapierSimFPS) => {
       const previous = get().simFps
       logPerformanceDebug('simFps updated', { previous, next: fps })
