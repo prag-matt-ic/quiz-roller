@@ -22,6 +22,6 @@ void main() {
     // Per-particle variation
     opacity *= vOpacityFactor;
 
-    vec3 glowColor = mix(vColor, vec3(1.0, 0.95, 0.85), vSoftness * 0.6);
+    vec3 glowColor = mix(vColor, vec3(1.0, 1.0, 1.0), vSoftness);
     gl_FragColor = vec4(glowColor, opacity);
 }

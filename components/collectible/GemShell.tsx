@@ -48,7 +48,9 @@ type GemShellUniforms = {
   uGlowStrength: number
 }
 
-const surfaceColour = new THREE.Color('#E97449')
+const COLOUR = '#F6B253'
+
+const surfaceColour = new THREE.Color(COLOUR)
 
 const lineColor = surfaceColour.clone()
 lineColor.offsetHSL(0, 0, 0.15)
