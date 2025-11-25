@@ -19,7 +19,7 @@ import { InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Collectible from '@/components/collectible/Collectible'
 import { INFO_ZONES_CONTENT } from '@/resources/content'
-import { COLLECTIBLE_TYPES } from '@/model/schema'
+import { COLLECTIBLE_IDS } from '@/model/schema'
 
 export type InfoElementsHandle = {
   moveElements: (zStep: number) => void
@@ -173,6 +173,8 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
     }
   }, [onReadyChange])
 
+  const collectibleId = COLLECTIBLE_IDS[contentIndex]
+
   return (
     <>
       <FloatingHeading
@@ -185,12 +187,12 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       />
 
       <Collectible
-        key="collectible"
+        key={'collectible' + collectibleId}
         ref={collectible}
         position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
-        type={COLLECTIBLE_TYPES[contentIndex]}
+        id={collectibleId}
         isOutOfView={isCollectibleOutOfView}
       />
 

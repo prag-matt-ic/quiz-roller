@@ -1,6 +1,6 @@
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import Card from '@/components/ui/Card'
-import { CollectibleType } from '@/model/schema'
+import { CollectibleID } from '@/model/schema'
 import { ArrowUpCircleIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
 import { type FC, type ReactNode } from 'react'
 
@@ -89,16 +89,16 @@ const CollectibleHUDContent: FC<{
   )
 }
 
-export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleType, HudIndicatorConfig> = {
-  [CollectibleType.Discount]: {
+export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> = {
+  [CollectibleID.Discount]: {
     autoDismissS: 6,
     content: <CollectibleHUDContent Icon={CoinsIcon} text="10% off your first project!" />,
   },
-  [CollectibleType.AI_Prompts]: {
+  [CollectibleID.AI_Prompts]: {
     autoDismissS: 6,
     content: <CollectibleHUDContent Icon={BotIcon} text="Access to proprietary AI prompts" />,
   },
-  [CollectibleType.Consultation]: {
+  [CollectibleID.Consultation]: {
     autoDismissS: 6,
     content: <CollectibleHUDContent Icon={CoinsIcon} text="Free 30 minute consultation!" />,
   },

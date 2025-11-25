@@ -14,9 +14,9 @@ import {
   TextureControls,
 } from '@/components/dev/colourTexture/components'
 import {
-  ColourTextureProvider,
-  useColourTextureStore,
-} from '@/components/dev/colourTexture/ColourTextureProvider'
+  DesignerToolsProvider,
+  useDesignerToolsStore,
+} from '@/components/dev/colourTexture/DesignerToolsProvider'
 import {
   CUSTOM_PRESET_ID,
   DEFAULT_EXPORT_RESOLUTION,
@@ -44,7 +44,7 @@ const ColourTextureContent: FC = () => {
     saveUserColour,
     loadUserColour,
     deleteUserColour,
-  } = useColourTextureStore(
+  } = useDesignerToolsStore(
     useShallow((state) => ({
       name: state.name,
       hex: state.hex,
@@ -66,7 +66,7 @@ const ColourTextureContent: FC = () => {
     saveTexturePreset,
     loadTexturePreset,
     deleteTexturePreset,
-  } = useColourTextureStore(
+  } = useDesignerToolsStore(
     useShallow((state) => ({
       config: state.config,
       texturePresets: state.texturePresets,
@@ -83,7 +83,7 @@ const ColourTextureContent: FC = () => {
     aspectHeightInput,
     activeTab,
     updateDisplay,
-  } = useColourTextureStore(
+  } = useDesignerToolsStore(
     useShallow((state) => ({
       resolutionPresetId: state.display.resolutionPresetId,
       customResolutionInput: state.display.customResolutionInput,
@@ -296,9 +296,9 @@ const ColourTextureContent: FC = () => {
 }
 
 const ColourTexturePage: FC = () => (
-  <ColourTextureProvider>
+  <DesignerToolsProvider>
     <ColourTextureContent />
-  </ColourTextureProvider>
+  </DesignerToolsProvider>
 )
 
 export default ColourTexturePage

@@ -3,7 +3,7 @@ import { Vector3, type Vector3Tuple } from 'three'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX } from '@/components/SoundProvider'
 import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
-import { CollectibleType } from '@/model/schema'
+import { CollectibleID } from '@/model/schema'
 import { GameSliceCreator, PlayerSlice, SliceDeps, type RingIndex } from './types'
 import { ringIndexToKey } from '@/utils/rings'
 
@@ -127,7 +127,7 @@ export const createPlayerSlice =
         }))
         playSoundFX(SoundFX.COIN_COLLECTED)
       },
-      setConfirmingCollectible: (collectibleType: CollectibleType | null) => {
+      setConfirmingCollectible: (collectibleType: CollectibleID | null) => {
         confirmationTween?.kill()
 
         if (collectibleType === null) {

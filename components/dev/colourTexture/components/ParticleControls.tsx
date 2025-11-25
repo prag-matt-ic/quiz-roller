@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Copy, Plus, X } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useColourTextureStore } from '@/components/dev/colourTexture/ColourTextureProvider'
+import { useDesignerToolsStore } from '@/components/dev/colourTexture/DesignerToolsProvider'
 import { formatPaletteAsConstant } from '@/components/dev/colourTexture/particlePalette/generator'
 import {
   PARTICLE_RANGE_KEYS,
@@ -38,7 +38,7 @@ export const ParticleControls = () => {
     setRangeVariance,
     regenerate,
     clearError,
-  } = useColourTextureStore(
+  } = useDesignerToolsStore(
     useShallow((state) => ({
       inputs: state.particlePalette.inputs,
       draft: state.particlePalette.draft,

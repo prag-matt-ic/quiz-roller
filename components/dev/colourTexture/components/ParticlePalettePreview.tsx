@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
-import { useColourTextureStore } from '@/components/dev/colourTexture/ColourTextureProvider'
+import { useDesignerToolsStore } from '@/components/dev/colourTexture/DesignerToolsProvider'
 import { PARTICLE_RANGE_KEYS } from '@/components/dev/colourTexture/particlePalette/types'
 
 const RANGE_LABELS = {
@@ -13,7 +13,7 @@ const RANGE_LABELS = {
 const formatHex = (value: string) => value.toUpperCase()
 
 export const ParticlePalettePreview = () => {
-  const { groups, sources, combined } = useColourTextureStore(
+  const { groups, sources, combined } = useDesignerToolsStore(
     useShallow((state) => ({
       groups: state.particlePalette.result.groups,
       sources: state.particlePalette.result.sources,

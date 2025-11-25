@@ -13,17 +13,17 @@ export type RingUserData = {
   slotIndex: number
 }
 
-export enum CollectibleType {
+export enum CollectibleID {
   Discount = 'discount',
   AI_Prompts = 'ai_prompts',
   Consultation = 'consultation',
 }
 
-export const COLLECTIBLE_TYPES: CollectibleType[] = Object.values(CollectibleType)
+export const COLLECTIBLE_IDS: CollectibleID[] = Object.values(CollectibleID)
 
 export type CollectibleUserData = {
   type: 'collectible'
-  collectibleType: CollectibleType
+  collectibleType: CollectibleID
 }
 
 export type InfoZoneUserData = {

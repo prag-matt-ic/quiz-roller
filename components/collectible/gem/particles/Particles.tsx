@@ -8,7 +8,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
 import useGameFrame from '@/hooks/useGameFrame'
-
+import { CollectibleID } from '@/model/schema'
 
 const PARTICLE_PALETTE = [
   '#f6b253',

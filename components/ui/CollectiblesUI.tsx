@@ -13,7 +13,7 @@ import {
 } from '@floating-ui/react'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLLECTIBLE_TYPES } from '@/model/schema'
+import { COLLECTIBLE_IDS } from '@/model/schema'
 
 export const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
@@ -38,10 +38,8 @@ const CollectiblesUI: FC = () => {
   return (
     <>
       {/* Collectibles */}
-      {COLLECTIBLE_TYPES.map((type, index) => {
-        return (
-          <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(type)} />
-        )
+      {COLLECTIBLE_IDS.map((id, index) => {
+        return <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(id)} />
       })}
     </>
   )

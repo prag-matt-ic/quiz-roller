@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { Vector3 } from 'three'
 import { type StateCreator } from 'zustand'
-import { CollectibleType, SpeedRunDatabase } from '@/model/schema'
+import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
 import type { RowData } from '@/utils/tiles'
 import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
@@ -71,11 +71,11 @@ export type PlayerSlice = {
   edgeWarningIntensities: EdgeWarningIntensities
   setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
 
-  confirmingCollectible: CollectibleType | null
-  setConfirmingCollectible: (collectibleType: CollectibleType | null) => void
+  confirmingCollectible: CollectibleID | null
+  setConfirmingCollectible: (collectibleType: CollectibleID | null) => void
   confirmationProgress: number
 
-  collectedCollectibles: CollectibleType[]
+  collectedCollectibles: CollectibleID[]
 
   collectedRings: RingCollection
   onRingCollected: (indexes: RingIndex) => void

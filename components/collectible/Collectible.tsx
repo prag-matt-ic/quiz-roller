@@ -1,7 +1,7 @@
 'use client'
 
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { type FC, type RefObject, useMemo, useRef } from 'react'
+import { type FC, type RefObject, useEffect, useMemo, useRef } from 'react'
 import {
   DataTexture,
   FloatType,
@@ -15,7 +15,7 @@ import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import Gem, { type GemShellRef } from '@/components/collectible/gem/Gem'
-import { CollectibleType, type CollectibleUserData } from '@/model/schema'
+import { CollectibleID, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
 import fragmentShader from './collectibleTile.frag'
@@ -60,13 +60,13 @@ type Props = {
   position: Vector3Tuple
   width: number
   height: number
-  type: CollectibleType
+  id: CollectibleID
   isOutOfView: RefObject<boolean>
 }
 
-export const Collectible: FC<Props> = ({ ref, position, width, height, type, isOutOfView }) => {
-  const isCollected = useGameStore((s) => s.collectedCollectibles.includes(type))
-  const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
+export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOutOfView }) => {
+  const isCollected = useGameStore((s) => s.collectedCollectibles.includes(id))
+  const isConfirming = useGameStore((s) => s.confirmingCollectible === id)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
   const gemShaderRef = useRef<GemShellRef>(null)
@@ -112,9 +112,9 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
   const userData = useMemo<CollectibleUserData>(
     () => ({
       type: 'collectible',
-      collectibleType: type,
+      collectibleType: id,
     }),
-    [type],
+    [id],
   )
 
   return (
@@ -155,6 +155,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
 
       <Gem
         ref={gemRotationGroupRef}
+        key={`gem-${id}`}
         shaderRef={gemShaderRef}
         isCollected={isCollected}
         tileWidth={width}
