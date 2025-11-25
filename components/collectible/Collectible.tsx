@@ -14,7 +14,7 @@ import {
 import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import Gem from '@/components/collectible/gem/Gem'
+import Gem, { type GemShellRef } from '@/components/collectible/gem/Gem'
 import { CollectibleType, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
@@ -24,7 +24,6 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
-import { group } from 'console'
 
 // Sample the surface of the gem model to position particles within it.
 
@@ -70,8 +69,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
   const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const gemShaderRef = useRef<any>(null)
+  const gemShaderRef = useRef<GemShellRef>(null)
   const localProgress = useRef(0)
   const gemRotationGroupRef = useRef<Group>(null)
   const { confirmationProgress } = useConfirmationProgress()
@@ -97,9 +95,10 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
     shader.current.uIsConfirming = isConfirming ? 1 : 0
     shader.current.uWasConfirmed = isCollected ? 1 : 0
     shader.current.uTime = clock.elapsedTime
-    
+
     if (gemShaderRef.current) {
-        gemShaderRef.current.uConfirmingProgress = isCollected ? 1.0 : localProgress.current
+      gemShaderRef.current.uConfirmingProgress = isCollected ? 1.0 : localProgress.current
+      gemShaderRef.current.uTime = clock.elapsedTime
     }
 
     if (!gemRotationGroupRef?.current) return

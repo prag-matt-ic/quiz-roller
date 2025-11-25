@@ -14,7 +14,7 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[2],
 )
 
-const COLLECTIBLE_DURATION_S = 1.0
+const COLLECTIBLE_DURATION_S = 1.5
 
 const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
 
@@ -102,7 +102,9 @@ export const createPlayerSlice =
       },
       respawnPosition: null,
       setRespawnPosition: (position) => {
-        set({ respawnPosition: position ? new Vector3(position.x, position.y, position.z) : null })
+        set({
+          respawnPosition: position ? new Vector3(position.x, position.y, position.z) : null,
+        })
       },
       setEdgeWarningIntensities: (intensities) => {
         set({

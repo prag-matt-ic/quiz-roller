@@ -58,10 +58,13 @@ export const TextureControls: FC<TextureControlsProps> = ({
               Load Preset
               <select
                 onChange={(event) => {
-                  if (event.target.value) onLoad(event.target.value)
+                  const id = event.currentTarget.value
+                  if (!id) return
+                  onLoad(id)
+                  event.currentTarget.selectedIndex = 0
                 }}
                 className="mt-2 h-10 w-full rounded-lg bg-white/5 px-3 text-sm text-white outline-none hover:bg-white/10"
-                value="">
+                defaultValue="">
                 <option value="" disabled>
                   Select a preset...
                 </option>

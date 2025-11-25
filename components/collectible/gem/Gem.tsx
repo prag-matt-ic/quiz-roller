@@ -1,6 +1,6 @@
 'use client'
 
-import { type FC } from 'react'
+import { RefObject, type FC } from 'react'
 import { extend } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -49,6 +49,7 @@ type GemShellUniforms = {
   uLineWidth: number
   uGlowStrength: number
   uConfirmingProgress: number
+  uTime: number
 }
 
 const surfaceColour = new Color(COLOUR)
@@ -63,6 +64,7 @@ const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
   uLineWidth: GEM_LINE_WIDTH,
   uGlowStrength: GEM_GLOW_STRENGTH,
   uConfirmingProgress: 0,
+  uTime: 0,
 }
 
 const GemShellShader = shaderMaterial(
@@ -73,11 +75,13 @@ const GemShellShader = shaderMaterial(
 
 const GemShellShaderMaterial = extend(GemShellShader)
 
+export type GemShellRef = typeof GemShellShaderMaterial & GemShellUniforms
+
 export type GemShellProps = React.ComponentProps<'group'> & {
   isCollected: boolean
   tileWidth: number
   tileHeight: number
-  shaderRef?: React.RefObject<GemShellUniforms | null>
+  shaderRef: RefObject<GemShellRef | null>
 }
 
 const Gem: FC<GemShellProps> = ({
@@ -110,6 +114,7 @@ const Gem: FC<GemShellProps> = ({
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}
           uConfirmingProgress={isCollected ? 1 : 0}
+          uTime={INITIAL_GEM_SHELL_UNIFORMS.uTime}
         />
       </mesh>
     </group>

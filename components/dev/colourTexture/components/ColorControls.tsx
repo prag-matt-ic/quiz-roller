@@ -98,10 +98,13 @@ export const ColorControls: FC<ColorControlsProps> = ({
             {userColours.length > 0 && (
               <select
                 onChange={(event) => {
-                  if (event.target.value) onLoad(event.target.value)
+                  const id = event.currentTarget.value
+                  if (!id) return
+                  onLoad(id)
+                  event.currentTarget.selectedIndex = 0
                 }}
                 className="h-8 rounded-lg bg-white/5 px-2 text-xs text-white outline-none hover:bg-white/10"
-                value="">
+                defaultValue="">
                 <option value="" disabled>
                   Load previous...
                 </option>

@@ -6,6 +6,7 @@ uniform lowp float uOpacity;
 uniform mediump float uLineWidth;
 uniform mediump float uGlowStrength;
 uniform mediump float uConfirmingProgress;
+uniform highp float uTime;
 
 varying mediump vec3 vBarycentric;
 varying mediump vec3 vNormal;
@@ -29,7 +30,10 @@ void main() {
   
   float glowContribution = uGlowStrength * fresnel;
 
-  float wire = getWireFactor(vBarycentric, uLineWidth);
+  float pulseMix = smoothstep(0.9, 1.0, clamp(uConfirmingProgress, 0.0, 1.0));
+  float pulse = 0.5 + 0.5 * sin(uTime * 4.0);
+  float wireWidth = uLineWidth * mix(1.0, 0.9 + pulse * 0.3, pulseMix);
+  float wire = getWireFactor(vBarycentric, wireWidth);
 
   vec3 litSurface = uSurfaceColor * (0.6 + 0.4 * max(normal.y, 0.0));
   litSurface += glowContribution * uSurfaceColor;
@@ -43,9 +47,12 @@ void main() {
   float mask = 1.0 - smoothstep(limit, limit + 0.5, vPosition.y);
   
   // Ensure minimum visibility (25%) so it doesn't disappear completely
-  float revealFactor = mix(0.3, 1.0, mask);
+  float revealFactor = mix(0.25, 1.0, mask);
   
   alpha *= revealFactor;
+
+  float pulseScale = mix(1.0, 0.92 + pulse * 0.12, pulseMix);
+  alpha *= pulseScale;
 
   if (alpha <= 0.01) discard;
 
