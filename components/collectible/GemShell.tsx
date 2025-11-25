@@ -95,7 +95,6 @@ const GemShell: FC<GemShellProps> = ({ color = 0xffffff, opacity = 0.35, ...prop
             depthWrite={false}
             depthTest={true}
             toneMapped={false}
-            extensions={{ derivatives: true }}
             uSurfaceColor={surfaceColor}
             uLineColor={lineColor}
             uOpacity={opacity}

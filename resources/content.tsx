@@ -30,7 +30,7 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
     infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
-        <Card className="w-full" paletteIndex={0}>
+        <Card className="w-full">
           <h2 className="info-header">About</h2>
           <p className="paragraph-sm max-w-md">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
@@ -46,7 +46,7 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
     infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
-        <Card className="w-full" paletteIndex={0}>
+        <Card className="w-full">
           <h2 className="info-header">Placeholder</h2>
           <p className="paragraph-sm max-w-md">
             This experience is built using React Three Fiber, Rapier physics and WebGL for
@@ -61,7 +61,7 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
     infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
     infoZoneContent: (
       <>
-        <Card className="w-full" paletteIndex={0}>
+        <Card className="w-full">
           <h2 className="info-header">Placeholder</h2>
           <p className="paragraph-sm max-w-md">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor

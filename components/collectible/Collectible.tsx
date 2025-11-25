@@ -6,7 +6,6 @@ import { DataTexture, FloatType, Mesh, RGBAFormat, Vector3, type Vector3Tuple } 
 import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import GemModel from '@/components/collectible/GemModel'
 import GemShell from '@/components/collectible/GemShell'
 import Particles from '@/components/collectible/particles/Particles'
 import { CollectibleType, type CollectibleUserData } from '@/model/schema'
