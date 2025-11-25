@@ -17,13 +17,13 @@ varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
 
 // Constants
-const float HIGHLIGHTED_MIX_MIN = 0.12;
-const float HIGHLIGHTED_MIX_MAX = 0.24;
+const float HIGHLIGHTED_MIX_MIN = 0.16;
+const float HIGHLIGHTED_MIX_MAX = 0.32;
 
 const float REGULAR_MIX = 0.5;
 const float DARKEN_FACTOR = 0.4;
 const float UP_THRESHOLD = 0.5;
-const float HIGHLIGHT_MIX = 0.2;
+const float HIGHLIGHT_MIX = 0.84;
 const vec3 WHITE = vec3(1.0);
 
 void main() {
