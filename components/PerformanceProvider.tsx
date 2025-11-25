@@ -18,7 +18,7 @@ export type SceneConfig = {
     radialSegments: number
     tubularSegments: number
   }
-  answerTile: {
+  gem: {
     particleCount: number
   }
   floatingTiles: {
@@ -49,7 +49,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     player: { segments: 64, isFlat: false },
     ring: { radialSegments: 12, tubularSegments: 24 },
-    answerTile: { particleCount: 120 },
+    gem: { particleCount: 120 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
@@ -59,7 +59,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.MEDIUM]: {
     player: { segments: 40, isFlat: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
-    answerTile: { particleCount: 64 },
+    gem: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
@@ -69,7 +69,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.LOW]: {
     player: { segments: 24, isFlat: true },
     ring: { radialSegments: 6, tubularSegments: 12 },
-    answerTile: { particleCount: 36 },
+    gem: { particleCount: 36 },
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
@@ -91,6 +91,8 @@ type PerformanceState = {
   hasBeenManuallySet: boolean
   isTestPlatform: boolean
   setIsTestPlatform: (value: boolean) => void
+  isPhysicsDebug: boolean
+  setIsPhysicsDebug: (value: boolean) => void
 }
 
 type PerformanceStore = StoreApi<PerformanceState>
@@ -110,6 +112,7 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     sceneConfig: SCENE_CONFIGS[initialQualityMode],
     hasBeenManuallySet: false,
     isTestPlatform: false,
+    isPhysicsDebug: false,
     setSimFps: (fps: RapierSimFPS) => {
       const previous = get().simFps
       logPerformanceDebug('simFps updated', { previous, next: fps })
@@ -135,6 +138,12 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
       if (previous === value) return
       logPerformanceDebug('isTestPlatform updated', { previous, next: value })
       set({ isTestPlatform: value })
+    },
+    setIsPhysicsDebug: (value: boolean) => {
+      const previous = get().isPhysicsDebug
+      if (previous === value) return
+      logPerformanceDebug('isPhysicsDebug updated', { previous, next: value })
+      set({ isPhysicsDebug: value })
     },
     onPerformanceChange: (up: boolean) => {
       const { sceneQuality, hasBeenManuallySet, maxDPR } = get()

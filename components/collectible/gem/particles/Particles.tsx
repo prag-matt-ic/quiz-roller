@@ -1,13 +1,14 @@
 import { shaderMaterial } from '@react-three/drei'
-import { extend, useFrame, useThree } from '@react-three/fiber'
+import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, useCallback, useEffect, useMemo, useRef } from 'react'
-import { BufferAttribute, Color, Points, Vector3, type Vector3Tuple } from 'three'
+import { type FC, useEffect, useMemo, useRef } from 'react'
+import { BufferAttribute, Color, Vector3, type Vector3Tuple } from 'three'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
+import useGameFrame from '@/hooks/useGameFrame'
 
 // TODO: create a new palette based on the gem colour (yellow/orange)
 const PARTICLE_COLOUR_HEX = [
@@ -59,25 +60,67 @@ const CustomPointsShaderMaterial = shaderMaterial(
 const PointsShaderMaterial = extend(CustomPointsShaderMaterial)
 
 type Props = {
-  width: number
-  height: number
+  tileWidth: number
+  tileHeight: number
   wasConfirmed: boolean
   gemPosition: Vector3Tuple
   gemScale: number
+  position?: Vector3Tuple
+}
+
+const EPSILON = 0.0001
+
+const createRandomSeeds = (count: number): Float32Array => {
+  const values = new Float32Array(count)
+  for (let i = 0; i < count; i++) {
+    values[i] = Math.random()
+  }
+  return values
+}
+
+const tempColour = new Color()
+
+const createRandomColours = (count: number): Float32Array => {
+  const values = new Float32Array(count * 3)
+  for (let i = 0; i < count; i++) {
+    const offset = i * 3
+    const colourIndex = Math.floor(Math.random() * PARTICLE_COLOUR_HEX.length)
+    tempColour.set(PARTICLE_COLOUR_HEX[colourIndex])
+    values[offset] = tempColour.r
+    values[offset + 1] = tempColour.g
+    values[offset + 2] = tempColour.b
+  }
+  return values
+}
+
+const sampleOctaPoint = () => {
+  const signedRand = {
+    x: Math.random() * 2 - 1,
+    y: Math.random() * 2 - 1,
+    z: Math.random() * 2 - 1,
+  }
+  const normalization =
+    Math.abs(signedRand.x) + Math.abs(signedRand.y) + Math.abs(signedRand.z) || EPSILON
+  const radius = Math.pow(Math.random(), 0.55)
+  return {
+    x: (signedRand.x / normalization) * radius,
+    y: (signedRand.y / normalization) * radius,
+    z: (signedRand.z / normalization) * radius,
+  }
 }
 
 const Particles: FC<Props> = ({
-  width,
-  height,
+  tileWidth,
+  tileHeight,
   wasConfirmed = false,
   gemPosition,
   gemScale,
+  position = [0, 0, 0],
 }) => {
-  const particleCount = usePerformanceStore((s) => s.sceneConfig.answerTile.particleCount)
+  const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
   const goToStage = useGameStore((s) => s.goToStage)
 
-  const points = useRef<Points>(null)
   const materialRef = useRef<(typeof PointsShaderMaterial & PointsShaderUniforms) | null>(null)
 
   const progress = useRef({ value: 0 })
@@ -87,10 +130,6 @@ const Particles: FC<Props> = ({
 
   const [gemX, gemY, gemZ] = gemPosition
   const gemParentPosition = useMemo(() => new Vector3(gemX, gemY, gemZ), [gemX, gemY, gemZ])
-  const gemWorldPosition = useRef(new Vector3())
-  const gemLocalPosition = useRef(new Vector3())
-  const parentScaleVector = useRef(new Vector3(1, 1, 1))
-
   // Geometry buffers
   const positionComponentCount = particleCount * 3
   const initialPositions = useMemo(
@@ -101,50 +140,17 @@ const Particles: FC<Props> = ({
     () => new Float32Array(positionComponentCount),
     [positionComponentCount],
   )
-  const seeds = useMemo(() => new Float32Array(particleCount), [particleCount])
-  const colours = useMemo(
+  const gemTargets = useMemo(
     () => new Float32Array(positionComponentCount),
     [positionComponentCount],
   )
+  const seeds = useMemo(() => createRandomSeeds(particleCount), [particleCount])
+  const colours = useMemo(() => createRandomColours(particleCount), [particleCount])
 
   const spawnAttribute = useRef<BufferAttribute>(null)
+  const gemTargetAttribute = useRef<BufferAttribute>(null)
   const seedAttribute = useRef<BufferAttribute>(null)
   const colourAttribute = useRef<BufferAttribute>(null)
-  const colourTemp = useRef(new Color())
-
-  const refreshSeeds = useCallback(() => {
-    if (!seedAttribute.current) {
-      console.error('Seed attribute not initialized')
-      return
-    }
-    /* eslint-disable react-hooks/immutability */
-    for (let i = 0; i < particleCount; i++) {
-      seeds[i] = Math.random()
-    }
-    /* eslint-enable react-hooks/immutability */
-    seedAttribute.current.needsUpdate = true
-  }, [particleCount, seeds])
-
-  const assignColours = useCallback(() => {
-    if (!colourAttribute.current) {
-      console.error('Colour attribute not initialized')
-      return
-    }
-    const tempColour = colourTemp.current
-    /* eslint-disable react-hooks/immutability */
-    for (let i = 0; i < particleCount; i++) {
-      const colourOffset = i * 3
-      const colourIndex = Math.floor(Math.random() * PARTICLE_COLOUR_HEX.length)
-
-      tempColour.set(PARTICLE_COLOUR_HEX[colourIndex])
-
-      colours[colourOffset] = tempColour.r
-      colours[colourOffset + 1] = tempColour.g
-      colours[colourOffset + 2] = tempColour.b
-    }
-    /* eslint-enable react-hooks/immutability */
-    colourAttribute.current.needsUpdate = true
-  }, [colours, particleCount])
 
   useEffect(() => {
     const initializeStaticParticleData = () => {
@@ -152,22 +158,37 @@ const Particles: FC<Props> = ({
       for (let i = 0; i < particleCount; i++) {
         const spawnIndex = i * 3
         // Spawn within tile footprint (local space)
-        spawnPositions[spawnIndex] = (Math.random() - 0.5) * width
+        spawnPositions[spawnIndex] = (Math.random() - 0.5) * tileWidth
         spawnPositions[spawnIndex + 1] = 0
-        spawnPositions[spawnIndex + 2] = (Math.random() - 0.5) * height
+        spawnPositions[spawnIndex + 2] = (Math.random() - 0.5) * tileHeight
+
+        const target = sampleOctaPoint()
+        gemTargets[spawnIndex] = target.x
+        gemTargets[spawnIndex + 1] = target.y
+        gemTargets[spawnIndex + 2] = target.z
       }
       /* eslint-enable react-hooks/immutability */
       if (spawnAttribute.current) {
         spawnAttribute.current.needsUpdate = true
       }
-      assignColours()
+      if (gemTargetAttribute.current) {
+        gemTargetAttribute.current.needsUpdate = true
+      }
     }
     initializeStaticParticleData()
-  }, [assignColours, height, particleCount, spawnPositions, width])
+  }, [gemTargets, particleCount, spawnPositions, tileHeight, tileWidth])
 
   useEffect(() => {
-    refreshSeeds()
-  }, [refreshSeeds])
+    if (seedAttribute.current) {
+      seedAttribute.current.needsUpdate = true
+    }
+  }, [seeds])
+
+  useEffect(() => {
+    if (colourAttribute.current) {
+      colourAttribute.current.needsUpdate = true
+    }
+  }, [colours])
 
   useEffect(() => {
     if (!materialRef.current) return
@@ -205,38 +226,16 @@ const Particles: FC<Props> = ({
     }
   }, [])
 
-  useFrame(({ clock }) => {
+  useGameFrame(({ clock }) => {
     const material = materialRef.current
     if (!material) return
 
     material.uBurstProgress = progress.current.value
     material.uTime = clock.elapsedTime
-
-    const currentPoints = points.current
-    if (!currentPoints) return
-
-    const parent = currentPoints.parent
-    if (!!parent) {
-      parent.localToWorld(gemWorldPosition.current.copy(gemParentPosition))
-      gemLocalPosition.current.copy(gemWorldPosition.current)
-      currentPoints.worldToLocal(gemLocalPosition.current)
-      material.uGemPosition.copy(gemLocalPosition.current)
-
-      parent.getWorldScale(parentScaleVector.current)
-      material.uGemScale = gemScale * parentScaleVector.current.x
-    } else {
-      material.uGemPosition.copy(gemParentPosition)
-      material.uGemScale = gemScale
-    }
   })
 
   return (
-    <points
-      ref={points}
-      dispose={null}
-      frustumCulled={false}
-      rotation={[Math.PI / 2, 0, 0]}
-      renderOrder={2}>
+    <points position={position} dispose={null} frustumCulled={false}>
       <bufferGeometry attach="geometry">
         <bufferAttribute
           attach="attributes-position"
@@ -249,6 +248,13 @@ const Particles: FC<Props> = ({
           attach="attributes-spawnPosition"
           args={[spawnPositions, 3]}
           count={spawnPositions.length / 3}
+          itemSize={3}
+        />
+        <bufferAttribute
+          ref={gemTargetAttribute}
+          attach="attributes-gemTarget"
+          args={[gemTargets, 3]}
+          count={gemTargets.length / 3}
           itemSize={3}
         />
         <bufferAttribute

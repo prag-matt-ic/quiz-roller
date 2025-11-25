@@ -2,12 +2,19 @@
 
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
-import { DataTexture, FloatType, Mesh, RGBAFormat, Vector3, type Vector3Tuple } from 'three'
+import {
+  DataTexture,
+  FloatType,
+  Group,
+  Mesh,
+  RGBAFormat,
+  Vector3,
+  type Vector3Tuple,
+} from 'three'
 import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import GemShell from '@/components/collectible/GemShell'
-import Particles from '@/components/collectible/particles/Particles'
+import Gem from '@/components/collectible/gem/Gem'
 import { CollectibleType, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
@@ -46,9 +53,6 @@ const CollectibleTileShader = shaderMaterial(
 
 const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 
-const GEM_POSITION: Vector3Tuple = [0, 0, 3]
-const GEM_SCALE = 1.1
-
 type Props = {
   ref?: RefObject<RapierRigidBody | null>
   position: Vector3Tuple
@@ -64,9 +68,10 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
   const localProgress = useRef(0)
+  const gemRotationGroupRef = useRef<Group>(null)
   const { confirmationProgress } = useConfirmationProgress()
 
-  useGameFrame(({ clock }) => {
+  useGameFrame(({ clock }, delta) => {
     if (!shader.current) return
     if (isOutOfView.current) return
     const globalProgress = confirmationProgress.current
@@ -119,7 +124,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         collisionGroups={COLLISION_GROUPS.collectibleSensor}
       />
 
-      {/* Tile mesh: shader renders border */}
+      {/* Tile mesh: shader renders corner brackets and confirmation progress bar */}
       <mesh position={[0, 0, 0.01]} renderOrder={2}>
         <planeGeometry args={[width, height]} />
         <CollectibleTileShaderMaterial
@@ -136,18 +141,11 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
         />
       </mesh>
 
-      <Particles
-        width={width}
-        height={height}
-        wasConfirmed={isCollected}
-        gemPosition={GEM_POSITION}
-        gemScale={GEM_SCALE}
-      />
-
-      <GemShell
-        position={GEM_POSITION}
-        scale={GEM_SCALE * 1.05}
-        opacity={isCollected ? 0.4 : 0.16}
+      <Gem
+        ref={gemRotationGroupRef}
+        isCollected={isCollected}
+        tileWidth={width}
+        tileHeight={height}
       />
     </RigidBody>
   )

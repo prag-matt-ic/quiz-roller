@@ -10,6 +10,7 @@ uniform float uTime;
 uniform float uDpr;
 
 attribute vec3 spawnPosition;
+attribute vec3 gemTarget;
 attribute float seed;
 attribute vec3 colour;
 
@@ -23,24 +24,24 @@ const float EPSILON = 0.0001;
 const vec3 NOISE_WEIGHTS = vec3(0.7, 0.4, 0.5);
 const vec3 FLOAT_FREQ = vec3(0.35, 0.27, 0.41);
 const float GEM_INTERIOR_SCALE = 0.9;
+const float OCTA_INV_SQRT3 = 0.57735027;
 
 float easeOutCubic(in float t) {
     float inverted = 1.0 - t;
     return 1.0 - inverted * inverted * inverted;
 }
 
-vec3 randomOctaPoint(float s) {
-    vec3 rand = fract(vec3(
-        s * 53.0 + 0.37,
-        s * 97.0 + 0.11,
-        s * 29.0 + 0.73
-    ));
-    vec3 signedRand = rand * 2.0 - 1.0;
-    vec3 absRand = abs(signedRand);
-    float normalization = max(absRand.x + absRand.y + absRand.z, EPSILON);
-    vec3 direction = signedRand / normalization;
-    float radius = pow(fract(s * 91.0 + rand.x * 1.3), 0.55);
-    return direction * radius;
+float sdOctahedron(vec3 p, float s) {
+    p = abs(p);
+    return (p.x + p.y + p.z - s) * OCTA_INV_SQRT3;
+}
+
+vec3 clampToOctahedron(vec3 p, float s) {
+    vec3 absP = abs(p);
+    float sum = absP.x + absP.y + absP.z;
+    if (sum <= s) return p;
+    float scale = s / max(sum, EPSILON);
+    return p * scale;
 }
 
 void main() {
@@ -60,10 +61,10 @@ void main() {
     );
     vec3 swirlNoise = baseNoise * NOISE_WEIGHTS * inverseProgress;
 
-    vec3 gemInterior = randomOctaPoint(seed) * (uGemScale * GEM_INTERIOR_SCALE);
-    vec3 gemTarget = uGemPosition + gemInterior;
+    vec3 gemInterior = gemTarget * (uGemScale * GEM_INTERIOR_SCALE);
+    vec3 gemTargetPosition = uGemPosition + gemInterior;
 
-    vec3 liftPosition = mix(spawnPosition, gemTarget, easedProgress);
+    vec3 liftPosition = mix(spawnPosition, gemTargetPosition, easedProgress);
     float arcHeight = mix(0.5, 1.4, hashedSeed.w) * max(uGemScale * 10.0, 0.5);
     float arcProfile = progress * (1.0 - progress);
     liftPosition.y += arcHeight * arcProfile;
@@ -76,7 +77,13 @@ void main() {
         cos(timePhase * FLOAT_FREQ.z + seed * 7.0)
     );
     floatWave *= uGemScale * mix(0.2, 0.5, hashedSeed.y);
-    vec3 floatingPosition = gemTarget + floatWave;
+    float interiorBound = uGemScale * GEM_INTERIOR_SCALE;
+    vec3 floatingLocal = gemInterior + floatWave;
+    float octaDistance = sdOctahedron(floatingLocal, interiorBound);
+    if (octaDistance > 0.0) {
+        floatingLocal = clampToOctahedron(floatingLocal, interiorBound);
+    }
+    vec3 floatingPosition = uGemPosition + floatingLocal;
 
     vec3 finalPosition = mix(liftPosition, floatingPosition, settleProgress);
 
@@ -84,7 +91,7 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float baseSize = mix(5.0, 12.0, fract(seed * 17.0));
+    float baseSize = mix(8.0, 14.0, fract(seed * 17.0));
     float sizeFade = 1.0 - easedProgress * 0.3;
     gl_PointSize = baseSize * sizeFade * uDpr;
 

@@ -56,6 +56,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
+  const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
 
   const dpr = useMemo<number>(() => {
@@ -100,13 +101,13 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         onIncline={() => onPerformanceChange(true)}
         onDecline={() => onPerformanceChange(false)}
         flipflops={2}>
-        <ambientLight intensity={1.0} />
+        {/* <ambientLight intensity={1.0} /> */}
         {/* <OrbitControls /> */}
         <Camera />
         {isDebug && <Stats />}
         <Backdrop />
         <Suspense>
-          <Physics debug={isDebug} timeStep={physicsTimeStep}>
+          <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />
             <Platform
               key={isTestMode ? 'test' : 'normal'}
