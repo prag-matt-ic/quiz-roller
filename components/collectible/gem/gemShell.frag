@@ -1,15 +1,16 @@
-precision highp float;
-precision highp int;
+precision mediump float;
 
-uniform vec3 uSurfaceColor;
-uniform vec3 uLineColor;
-uniform float uOpacity;
-uniform float uLineWidth;
-uniform float uGlowStrength;
+uniform lowp vec3 uSurfaceColor;
+uniform lowp vec3 uLineColor;
+uniform lowp float uOpacity;
+uniform mediump float uLineWidth;
+uniform mediump float uGlowStrength;
+uniform mediump float uConfirmingProgress;
 
-varying vec3 vBarycentric;
-varying vec3 vNormal;
-varying vec3 vViewPosition;
+varying mediump vec3 vBarycentric;
+varying mediump vec3 vNormal;
+varying mediump vec3 vViewPosition;
+varying mediump vec3 vPosition;
 
 float getWireFactor(vec3 barycentric, float width) {
   vec3 derivative = fwidth(barycentric);
@@ -21,7 +22,11 @@ void main() {
   vec3 normal = normalize(vNormal);
   vec3 viewDirection = normalize(vViewPosition);
 
-  float fresnel = pow(1.0 - max(dot(normal, viewDirection), 0.0), 2.5);
+  // Approx fresnel: pow(x, 2.5) ~ x*x for performance
+  float NdotV = max(dot(normal, viewDirection), 0.0);
+  float invNdotV = 1.0 - NdotV;
+  float fresnel = invNdotV * invNdotV; 
+  
   float glowContribution = uGlowStrength * fresnel;
 
   float wire = getWireFactor(vBarycentric, uLineWidth);
@@ -32,9 +37,17 @@ void main() {
   vec3 finalColor = mix(litSurface, uLineColor, clamp(wire, 0.0, 1.0));
   float alpha = clamp(uOpacity + wire * 0.35 + glowContribution * 0.3, 0.0, 1.0);
 
-  if (alpha <= 0.01) {
-    discard;
-  }
+  // Vertical reveal logic
+  // Range approx -1.75 to 1.75
+  float limit = uConfirmingProgress * 3.5 - 1.75; 
+  float mask = 1.0 - smoothstep(limit, limit + 0.5, vPosition.y);
+  
+  // Ensure minimum visibility (25%) so it doesn't disappear completely
+  float revealFactor = mix(0.3, 1.0, mask);
+  
+  alpha *= revealFactor;
+
+  if (alpha <= 0.01) discard;
 
   gl_FragColor = vec4(finalColor, alpha);
 }

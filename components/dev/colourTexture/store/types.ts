@@ -1,5 +1,13 @@
 import type { Vector3Tuple } from 'three'
 
+import type {
+  ParticlePaletteConfig,
+  ParticlePaletteRangeKey,
+  ParticlePaletteResult,
+} from '../particlePalette/types'
+
+export type ColourTextureTab = 'color' | 'texture' | 'particles'
+
 export type CosinePaletteParams = {
   a: Vector3Tuple
   b: Vector3Tuple
@@ -77,6 +85,7 @@ export type DisplayConfigState = {
   customResolutionInput: string
   aspectWidthInput: string
   aspectHeightInput: string
+  activeTab: ColourTextureTab
 }
 
 export type DisplaySlice = {
@@ -101,4 +110,27 @@ export type PresetSlice = {
   deleteTexturePreset: (id: string) => void
 }
 
-export type ColourTextureStore = ColourSlice & TextureSlice & DisplaySlice & PresetSlice
+export type ParticlePaletteSlice = {
+  particlePalette: {
+    inputs: string[]
+    draft: string
+    config: ParticlePaletteConfig
+    result: ParticlePaletteResult
+    error: string | null
+  }
+  setParticlePaletteDraft: (value: string) => void
+  addParticlePaletteInput: (value?: string) => void
+  removeParticlePaletteInput: (hex: string) => void
+  setParticleRangeEnabled: (key: ParticlePaletteRangeKey, enabled: boolean) => void
+  setParticleRangeCount: (key: ParticlePaletteRangeKey, count: number) => void
+  setParticleRangeVariance: (key: ParticlePaletteRangeKey, variance: number) => void
+  regenerateParticlePalette: () => void
+  clearParticlePaletteError: () => void
+  resetParticlePalette: () => void
+}
+
+export type ColourTextureStore = ColourSlice &
+  TextureSlice &
+  DisplaySlice &
+  PresetSlice &
+  ParticlePaletteSlice

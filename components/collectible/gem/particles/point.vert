@@ -1,6 +1,4 @@
-// Collectible Particle Point Vertex Shader (gem focused)
-#pragma glslify: noise3d = require('glsl-noise/simplex/3d')
-
+// Collectible Particle Point Vertex Shader (gem focused) - Optimized
 precision highp float;
 
 uniform float uBurstProgress; // 0.0 to 1.0
@@ -14,17 +12,26 @@ attribute vec3 gemTarget;
 attribute float seed;
 attribute vec3 colour;
 
-varying mediump float vProgress;
-varying mediump float vOpacityFactor;
+varying lowp vec4 vColorAlpha; // rgb = color, a = opacity
 varying mediump float vSoftness;
-varying lowp vec3 vColor;
 
-const float TWO_PI = 6.28318530718;
+const float TWO_PI = 6.2831853;
 const float EPSILON = 0.0001;
 const vec3 NOISE_WEIGHTS = vec3(0.7, 0.4, 0.5);
 const vec3 FLOAT_FREQ = vec3(0.35, 0.27, 0.41);
 const float GEM_INTERIOR_SCALE = 0.9;
 const float OCTA_INV_SQRT3 = 0.57735027;
+
+// Cheap pseudo-random noise
+// Replaced hash with smooth sine waves to prevent jitter
+vec3 smoothNoise(float seed, float progress) {
+    float t = progress * 3.0;
+    return vec3(
+        sin(seed * 12.0 + t),
+        sin(seed * 23.0 + t * 1.2 + 1.0),
+        cos(seed * 45.0 + t * 0.8 + 2.0)
+    );
+}
 
 float easeOutCubic(in float t) {
     float inverted = 1.0 - t;
@@ -54,11 +61,9 @@ void main() {
 
     vec4 hashedSeed = fract(seed * vec4(17.0, 27.0, 15.0, 13.0));
 
-    vec3 baseNoise = vec3(
-        noise3d(vec3(seed * 6.0, progress * 0.6, 0.0)),
-        noise3d(vec3(seed * 4.0, progress * 0.4, 2.3)),
-        noise3d(vec3(seed * 5.0, progress * 0.5, 3.9))
-    );
+    // Use smooth sine noise for organic movement without jitter
+    vec3 baseNoise = smoothNoise(seed, progress);
+    
     vec3 swirlNoise = baseNoise * NOISE_WEIGHTS * inverseProgress;
 
     vec3 gemInterior = gemTarget * (uGemScale * GEM_INTERIOR_SCALE);
@@ -67,16 +72,27 @@ void main() {
     vec3 liftPosition = mix(spawnPosition, gemTargetPosition, easedProgress);
     float arcHeight = mix(0.5, 1.4, hashedSeed.w) * max(uGemScale * 10.0, 0.5);
     float arcProfile = progress * (1.0 - progress);
+    
+    // Add outward burst spread on XZ plane
+    vec2 burstDir = normalize(spawnPosition.xz);
+    if (length(spawnPosition.xz) < EPSILON) burstDir = vec2(1.0, 0.0); // Fallback
+    
+    // Spread amount varies per particle
+    float spreadAmount = mix(3.0, 8.0, hashedSeed.z) * uGemScale;
+    
     liftPosition.y += arcHeight * arcProfile;
+    liftPosition.xz += burstDir * spreadAmount * arcProfile;
+    
     liftPosition += swirlNoise;
 
-    float timePhase = uTime * 0.4;
+    float timePhase = uTime * 0.7; // Faster movement (was 0.4)
     vec3 floatWave = vec3(
         sin(timePhase * FLOAT_FREQ.x + seed * TWO_PI),
         sin(timePhase * FLOAT_FREQ.y + seed * 13.0),
         cos(timePhase * FLOAT_FREQ.z + seed * 7.0)
     );
-    floatWave *= uGemScale * mix(0.2, 0.5, hashedSeed.y);
+    // Increased amplitude (was 0.2-0.5)
+    floatWave *= uGemScale * mix(0.5, 1.2, hashedSeed.y);
     float interiorBound = uGemScale * GEM_INTERIOR_SCALE;
     vec3 floatingLocal = gemInterior + floatWave;
     float octaDistance = sdOctahedron(floatingLocal, interiorBound);
@@ -91,12 +107,42 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float baseSize = mix(8.0, 14.0, fract(seed * 17.0));
-    float sizeFade = 1.0 - easedProgress * 0.3;
-    gl_PointSize = baseSize * sizeFade * uDpr;
+    float baseSize = mix(12.0, 40.0, fract(seed * 17.0));
+    
+    // Sparkle logic: rare particles are larger and white
+    bool isSparkle = hashedSeed.x > 0.9;
+    if (isSparkle) {
+        baseSize *= 4.0;
+    }
 
-    vProgress = progress;
-    vOpacityFactor = 1.0 - seed * 0.5;
-    vSoftness = fract(seed * 31.0);
-    vColor = colour;
+    float sizeFade = 1.0 - easedProgress * 0.3;
+    float perspectiveScale = projectionMatrix[1][1];
+    float distanceToCamera = max(-viewPosition.z, EPSILON);
+    float attenuation = clamp(perspectiveScale / distanceToCamera, 0.35, 2.8);
+    gl_PointSize = baseSize * sizeFade * attenuation * uDpr;
+
+    // --- Logic moved from Fragment Shader ---
+    
+    // Opacity calculations
+    float appear = smoothstep(0.0, 0.15, progress);
+    float settle = smoothstep(0.6, 1.0, progress);
+    float trailFade = 1.0 - smoothstep(0.75, 1.0, progress);
+    float linger = mix(trailFade, 1.0, settle);
+    
+    float opacityFactor = 1.0 - seed * 0.5;
+    float finalOpacity = appear * linger * opacityFactor;
+
+    // Color calculations
+    float softness = fract(seed * 31.0);
+    vec3 glowColor = mix(colour, vec3(1.0), softness);
+    
+    // Force sparkles to be pure white
+    if (isSparkle) {
+        glowColor = vec3(1.0, 0.99, 0.92); // Subtle off-white yellow
+        finalOpacity = min(finalOpacity * 2.0, 1.0); // Slightly brighter/more opaque
+        softness = 2.0; // Signal fragment shader to use pow2 glow
+    }
+
+    vColorAlpha = vec4(glowColor, finalOpacity);
+    vSoftness = softness;
 }

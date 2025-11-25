@@ -1,27 +1,34 @@
 // Answer Point Fragment Shader (optimized)
 precision mediump float;
 
-varying mediump float vProgress;
-varying mediump float vOpacityFactor;
+varying lowp vec4 vColorAlpha; // rgb = color, a = opacity
 varying mediump float vSoftness;
-varying lowp vec3 vColor;
 
 void main() {
+    // Circle shape calculation
     vec2 c = gl_PointCoord - vec2(0.5);
     float dist = length(c);
-    float softEdge = mix(0.0, 0.45, vSoftness);
-    float hardRadius = 0.5 - softEdge * 0.5;
-    float circleMask = 1.0 - smoothstep(hardRadius, 0.5, dist);
+    
+    // Soft edge calculation
+    float circleMask;
+    
+    if (vSoftness > 1.5) {
+        // Sparkle mode: Pow2 falloff for "glowing star" look
+        // dist is 0..0.5, so dist*2 is 0..1
+        float falloff = max(0.0, 1.0 - dist * 2.0);
+        circleMask = falloff * falloff;
+    } else {
+        // Standard particle mode
+        float softEdge = mix(0.0, 0.45, vSoftness);
+        float hardRadius = 0.5 - softEdge * 0.5;
+        circleMask = 1.0 - smoothstep(hardRadius, 0.5, dist);
+    }
 
-    float appear = smoothstep(0.0, 0.15, vProgress);
-    float settle = smoothstep(0.6, 1.0, vProgress);
-    float trailFade = 1.0 - smoothstep(0.75, 1.0, vProgress);
-    float linger = mix(trailFade, 1.0, settle);
-    float opacity = appear * linger * circleMask;
+    // Final opacity: combined vertex opacity * shape mask
+    float finalOpacity = vColorAlpha.a * circleMask;
 
-    // Per-particle variation
-    opacity *= vOpacityFactor;
+    // Discard fully transparent pixels to save fill rate (optional but good for overdraw)
+    if (finalOpacity < 0.01) discard;
 
-    vec3 glowColor = mix(vColor, vec3(1.0, 1.0, 1.0), vSoftness);
-    gl_FragColor = vec4(glowColor, opacity);
+    gl_FragColor = vec4(vColorAlpha.rgb, finalOpacity);
 }

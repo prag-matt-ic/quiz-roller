@@ -4,36 +4,25 @@ import gsap from 'gsap'
 import { type FC, useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, Color, Vector3, type Vector3Tuple } from 'three'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
 import useGameFrame from '@/hooks/useGameFrame'
 
-// TODO: create a new palette based on the gem colour (yellow/orange)
-const PARTICLE_COLOUR_HEX = [
-  '#ecb21e',
+
+const PARTICLE_PALETTE = [
   '#f6b253',
-  '#ffd146',
-  '#facc00',
-  '#ffc723',
-  '#fff330',
-  '#ffd33e',
-  '#ffe65d',
-  '#ffdf25',
-  '#fffef3',
-  '#f6e6c3',
-  '#7f6639',
-  '#ffd955',
-  '#ffec5a',
-  '#ffc700',
-  '#ffcd3a',
-  '#ffca31',
-  '#ffdd56',
-  '#ffbe24',
-  '#fffbe3',
-  '#ffefd0',
-  '#896544',
+  '#ffcc3e',
+  '#ffb328',
+  '#ffc82c',
+  '#ffdd3f',
+  '#ffbd1f',
+  '#ffb51d',
+  '#ffaf07',
+  '#ffe55e',
+  '#f7ebda',
+  '#fff7ec',
+  '#fde5d2',
 ] as const
 
 type PointsShaderUniforms = {
@@ -84,8 +73,8 @@ const createRandomColours = (count: number): Float32Array => {
   const values = new Float32Array(count * 3)
   for (let i = 0; i < count; i++) {
     const offset = i * 3
-    const colourIndex = Math.floor(Math.random() * PARTICLE_COLOUR_HEX.length)
-    tempColour.set(PARTICLE_COLOUR_HEX[colourIndex])
+    const colourIndex = Math.floor(Math.random() * PARTICLE_PALETTE.length)
+    tempColour.set(PARTICLE_PALETTE[colourIndex])
     values[offset] = tempColour.r
     values[offset + 1] = tempColour.g
     values[offset + 2] = tempColour.b
@@ -119,8 +108,6 @@ const Particles: FC<Props> = ({
 }) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
   const dpr = useThree((s) => s.viewport.dpr)
-  const goToStage = useGameStore((s) => s.goToStage)
-
   const materialRef = useRef<(typeof PointsShaderMaterial & PointsShaderUniforms) | null>(null)
 
   const progress = useRef({ value: 0 })
@@ -215,10 +202,9 @@ const Particles: FC<Props> = ({
       onComplete: () => {
         progress.current.value = 1
         materialRef.current!.uBurstProgress = 1
-        goToStage(Stage.TERRAIN)
       },
     })
-  }, [goToStage, wasConfirmed])
+  }, [wasConfirmed])
 
   useEffect(() => {
     return () => {

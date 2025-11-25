@@ -3,13 +3,21 @@ import { persist, subscribeWithSelector, type PersistOptions } from 'zustand/mid
 
 import { createColourSlice } from './colourSlice'
 import { createDisplaySlice } from './displaySlice'
+import { createParticlePaletteSlice } from './particlePaletteSlice'
 import { createPresetSlice } from './presetSlice'
 import { createTextureSlice } from './textureSlice'
 import type { ColourTextureStore } from './types'
 
 type PersistedStore = Pick<
   ColourTextureStore,
-  'name' | 'hex' | 'params' | 'config' | 'display' | 'userColours' | 'texturePresets'
+  | 'name'
+  | 'hex'
+  | 'params'
+  | 'config'
+  | 'display'
+  | 'userColours'
+  | 'texturePresets'
+  | 'particlePalette'
 >
 
 export const createColourTextureStore = () =>
@@ -21,10 +29,11 @@ export const createColourTextureStore = () =>
           ...createTextureSlice(...a),
           ...createDisplaySlice(...a),
           ...createPresetSlice(...a),
+          ...createParticlePaletteSlice(...a),
         }),
         {
           name: 'colour-texture-dev',
-          version: 4,
+          version: 6,
           partialize: (state) =>
             ({
               name: state.name,
@@ -34,6 +43,7 @@ export const createColourTextureStore = () =>
               display: state.display,
               userColours: state.userColours,
               texturePresets: state.texturePresets,
+              particlePalette: state.particlePalette,
             }) as PersistedStore,
         } as PersistOptions<ColourTextureStore, PersistedStore>,
       ),

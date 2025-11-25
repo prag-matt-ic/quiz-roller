@@ -13,6 +13,7 @@ const getInitialDisplayConfig = (): DisplayConfigState => ({
   customResolutionInput: String(DEFAULT_EXPORT_RESOLUTION),
   aspectWidthInput: DEFAULT_ASPECT_VALUE,
   aspectHeightInput: DEFAULT_ASPECT_VALUE,
+  activeTab: 'color',
 })
 
 export const createDisplaySlice: StateCreator<

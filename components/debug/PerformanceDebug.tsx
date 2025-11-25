@@ -62,7 +62,7 @@ const PerformanceDebug: FC = () => {
   }
 
   return (
-    <div className="fixed top-0 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 pt-14 font-mono text-xs text-white">
+    <div className="fixed top-0 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 pt-14 text-xs text-white">
       <SelectRow
         id="performance-debug-scene-quality"
         label="Quality"
@@ -75,24 +75,8 @@ const PerformanceDebug: FC = () => {
         ))}
       </SelectRow>
       <SelectRow
-        id="performance-debug-platform"
-        label="Platform"
-        value={isTestPlatform ? 'test' : 'full'}
-        onChange={handlePlatformChange}>
-        <option value="full">Full Run</option>
-        <option value="test">Test Section</option>
-      </SelectRow>
-      <SelectRow
-        id="performance-debug-physics"
-        label="Physics"
-        value={isPhysicsDebug ? 'true' : 'false'}
-        onChange={handlePhysicsDebugChange}>
-        <option value="false">Off</option>
-        <option value="true">On</option>
-      </SelectRow>
-      <SelectRow
         id="performance-debug-dpr"
-        label="Max DPR"
+        label="DPR"
         value={maxDpr === undefined ? 'native' : maxDpr.toString()}
         onChange={handleDprChange}>
         {DPR_OPTIONS.map((option) => (
@@ -103,10 +87,27 @@ const PerformanceDebug: FC = () => {
           </option>
         ))}
       </SelectRow>
+      <SelectRow
+        id="performance-debug-physics"
+        label="Physics Debug"
+        value={isPhysicsDebug ? 'true' : 'false'}
+        onChange={handlePhysicsDebugChange}>
+        <option value="false">Off</option>
+        <option value="true">On</option>
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-platform"
+        label="Platform"
+        value={isTestPlatform ? 'test' : 'full'}
+        onChange={handlePlatformChange}>
+        <option value="full">Full Run</option>
+        <option value="test">Test</option>
+      </SelectRow>
+
       <button
         onClick={() => resetGame({ isSpeedRunMode: false })}
-        className="w-full rounded bg-red-800 p-1 text-xs font-semibold text-white">
-        Reset Game
+        className="w-full rounded bg-red-900 p-1 text-xs font-semibold text-white">
+        Reset
       </button>
     </div>
   )

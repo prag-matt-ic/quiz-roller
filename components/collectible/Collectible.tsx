@@ -24,6 +24,7 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
+import { group } from 'console'
 
 // Sample the surface of the gem model to position particles within it.
 
@@ -67,6 +68,8 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
   const isConfirming = useGameStore((s) => s.confirmingCollectible === type)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gemShaderRef = useRef<any>(null)
   const localProgress = useRef(0)
   const gemRotationGroupRef = useRef<Group>(null)
   const { confirmationProgress } = useConfirmationProgress()
@@ -85,12 +88,19 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
     }
 
     if (isCollected) {
-      localProgress.current = 0.0
+      localProgress.current = 1.0
     }
 
     shader.current.uConfirmingProgress = localProgress.current
     shader.current.uIsConfirming = isConfirming ? 1 : 0
     shader.current.uTime = clock.elapsedTime
+    
+    if (gemShaderRef.current) {
+        gemShaderRef.current.uConfirmingProgress = isCollected ? 1.0 : localProgress.current
+    }
+
+    if (!gemRotationGroupRef?.current) return
+    gemRotationGroupRef.current.rotation.y += delta * 0.4
   })
 
   const tileAspect = width / height
@@ -143,6 +153,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
 
       <Gem
         ref={gemRotationGroupRef}
+        shaderRef={gemShaderRef}
         isCollected={isCollected}
         tileWidth={width}
         tileHeight={height}

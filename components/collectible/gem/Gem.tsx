@@ -48,6 +48,7 @@ type GemShellUniforms = {
   uOpacity: number
   uLineWidth: number
   uGlowStrength: number
+  uConfirmingProgress: number
 }
 
 const surfaceColour = new Color(COLOUR)
@@ -61,6 +62,7 @@ const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
   uOpacity: 0.2,
   uLineWidth: GEM_LINE_WIDTH,
   uGlowStrength: GEM_GLOW_STRENGTH,
+  uConfirmingProgress: 0,
 }
 
 const GemShellShader = shaderMaterial(
@@ -75,9 +77,16 @@ export type GemShellProps = React.ComponentProps<'group'> & {
   isCollected: boolean
   tileWidth: number
   tileHeight: number
+  shaderRef?: React.RefObject<GemShellUniforms | null>
 }
 
-const Gem: FC<GemShellProps> = ({ tileWidth, tileHeight, isCollected, ...props }) => {
+const Gem: FC<GemShellProps> = ({
+  tileWidth,
+  tileHeight,
+  isCollected,
+  shaderRef,
+  ...props
+}) => {
   return (
     <group {...props} renderOrder={2} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
       <Particles
@@ -92,6 +101,7 @@ const Gem: FC<GemShellProps> = ({ tileWidth, tileHeight, isCollected, ...props }
       <mesh geometry={GEM_SURFACE_GEOMETRY} dispose={null} position={GEM_POSITION}>
         <GemShellShaderMaterial
           key={GemShellShader.key}
+          ref={shaderRef}
           transparent={true}
           depthWrite={false}
           depthTest={true}
@@ -99,6 +109,7 @@ const Gem: FC<GemShellProps> = ({ tileWidth, tileHeight, isCollected, ...props }
           uOpacity={isCollected ? 0.35 : 0.15}
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}
+          uConfirmingProgress={isCollected ? 1 : 0}
         />
       </mesh>
     </group>

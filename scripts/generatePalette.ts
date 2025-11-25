@@ -1,85 +1,11 @@
 #!/usr/bin/env ts-node
 
-import { colorsFromRange, rgb, css } from '@thi.ng/color'
 import { pathToFileURL } from 'node:url'
 
-// Instructions
-// This generates a palette of colours based on input hex colors.
-// npx tsx scripts/generatePalette.ts #hex #hex ...
-
-type RangeConfig = {
-  num: number
-  variance: number
-}
-
-type PaletteConfig = {
-  bright: RangeConfig
-  cool: RangeConfig
-  neutral: RangeConfig
-}
-
-const DEFAULT_PALETTE_CONFIG: PaletteConfig = {
-  bright: { num: 7, variance: 0.02 },
-  cool: { num: 2, variance: 0.03 },
-  neutral: { num: 1, variance: 0.03 },
-}
-
-const HEX_COLOR_PATTERN = /^#?([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
-
-function normalizeHexColor(input: string): string {
-  const trimmed = input.trim()
-
-  if (!HEX_COLOR_PATTERN.test(trimmed)) {
-    throw new Error(`Invalid hex color: ${input}`)
-  }
-
-  const hex = trimmed.startsWith('#') ? trimmed.slice(1) : trimmed
-  return `#${hex.toLowerCase()}`
-}
-
-function generatePaletteForColor(color: string, config: PaletteConfig): string[] {
-  const base = rgb(color)
-  const segments = [
-    ...Array.from(
-      colorsFromRange('bright', {
-        base,
-        num: config.bright.num,
-        variance: config.bright.variance,
-      }),
-    ),
-    ...Array.from(
-      colorsFromRange('cool', { base, num: config.cool.num, variance: config.cool.variance }),
-    ),
-    ...Array.from(
-      colorsFromRange('neutral', {
-        base,
-        num: config.neutral.num,
-        variance: config.neutral.variance,
-      }),
-    ),
-  ]
-
-  return segments.map((value) => css(value))
-}
-
-/**
- * Generates a dynamic color palette from an array of hex color values using @thi.ng/color.
- */
-export function generateDynamicPalette(
-  inputColors: string[],
-  config: PaletteConfig = DEFAULT_PALETTE_CONFIG,
-): string[] {
-  if (inputColors.length === 0) {
-    throw new Error('At least one input color is required to generate a palette')
-  }
-
-  const normalizedColors = inputColors.map(normalizeHexColor)
-  const generatedColors = normalizedColors.flatMap((color) =>
-    generatePaletteForColor(color, config),
-  )
-  const palette = [...normalizedColors, ...generatedColors]
-  return Array.from(new Set(palette))
-}
+import {
+  DEFAULT_PARTICLE_PALETTE_CONFIG,
+  generateParticlePaletteList,
+} from '../components/dev/colourTexture/particlePalette/generator'
 
 function formatPaletteForConsole(palette: string[]): string {
   return palette.map((color) => `  '${color}',`).join('\n')
@@ -115,7 +41,7 @@ async function runFromCli(): Promise<void> {
   }
 
   try {
-    const palette = generateDynamicPalette(args)
+    const palette = generateParticlePaletteList(args, DEFAULT_PARTICLE_PALETTE_CONFIG)
     console.log('======== Palette ========')
     console.log(formatPaletteForConsole(palette))
   } catch (error) {
