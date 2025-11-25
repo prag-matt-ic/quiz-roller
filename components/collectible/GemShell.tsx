@@ -37,8 +37,8 @@ const GEM_SURFACE_GEOMETRY = (() => {
 })()
 
 const GEM_ROTATION_SPEED = 0.33
-const GEM_LINE_WIDTH = 1.05
-const GEM_GLOW_STRENGTH = 0.8
+const GEM_LINE_WIDTH = 3.0
+const GEM_GLOW_STRENGTH = 1.4
 
 type GemShellUniforms = {
   uSurfaceColor: THREE.Color
@@ -48,9 +48,14 @@ type GemShellUniforms = {
   uGlowStrength: number
 }
 
+const surfaceColour = new THREE.Color('#E97449')
+
+const lineColor = surfaceColour.clone()
+lineColor.offsetHSL(0, 0, 0.15)
+
 const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
-  uSurfaceColor: new THREE.Color(0xffffff),
-  uLineColor: new THREE.Color(0xffffff),
+  uSurfaceColor: surfaceColour,
+  uLineColor: lineColor,
   uOpacity: 0.35,
   uLineWidth: GEM_LINE_WIDTH,
   uGlowStrength: GEM_GLOW_STRENGTH,
@@ -65,19 +70,11 @@ const GemShellShader = shaderMaterial(
 const GemShellShaderMaterial = extend(GemShellShader)
 
 export type GemShellProps = React.ComponentProps<'group'> & {
-  color?: THREE.ColorRepresentation
   opacity?: number
 }
 
-const GemShell: FC<GemShellProps> = ({ color = 0xffffff, opacity = 0.35, ...props }) => {
+const GemShell: FC<GemShellProps> = ({ opacity = 0.35, ...props }) => {
   const groupRef = useRef<THREE.Group>(null)
-
-  const surfaceColor = useMemo(() => new THREE.Color(color), [color])
-  const lineColor = useMemo(() => {
-    const base = new THREE.Color(color)
-    base.offsetHSL(0, 0, 0.15)
-    return base
-  }, [color])
 
   useFrame((_, delta) => {
     const group = groupRef.current
@@ -95,8 +92,6 @@ const GemShell: FC<GemShellProps> = ({ color = 0xffffff, opacity = 0.35, ...prop
             depthWrite={false}
             depthTest={true}
             toneMapped={false}
-            uSurfaceColor={surfaceColor}
-            uLineColor={lineColor}
             uOpacity={opacity}
             uLineWidth={GEM_LINE_WIDTH}
             uGlowStrength={GEM_GLOW_STRENGTH}

@@ -105,11 +105,11 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="flex flex-col items-center gap-2 rounded-md bg-black p-3 opacity-0">
+                  className="flex flex-col items-center gap-2 rounded-md bg-black p-2 opacity-0">
                   <div className="animate-pulse text-center text-sm font-bold tracking-wide text-nowrap text-white/70 uppercase">
                     Unlocking bonus...
                   </div>
-                  <div className="relative h-5 w-36 overflow-hidden rounded-full border border-white bg-white">
+                  <div className="relative h-3 w-full overflow-hidden rounded-full border border-white bg-white">
                     <div
                       id="progress-bar"
                       className="absolute h-full w-full -translate-x-full rounded-full bg-linear-0 from-amber-400 to-amber-500"

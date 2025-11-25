@@ -9,6 +9,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import particleFragment from './point.frag'
 import particleVertex from './point.vert'
 
+// TODO: create a new palette based on the gem colour (yellow/orange)
 const PARTICLE_COLOUR_HEX = [
   '#509e7b',
   '#00ea89',
@@ -204,7 +205,7 @@ const Particles: FC<Props> = ({
     if (!currentPoints) return
 
     const parent = currentPoints.parent
-    if (parent) {
+    if (!!parent) {
       parent.localToWorld(gemWorldPosition.current.copy(gemParentPosition))
       gemLocalPosition.current.copy(gemWorldPosition.current)
       currentPoints.worldToLocal(gemLocalPosition.current)

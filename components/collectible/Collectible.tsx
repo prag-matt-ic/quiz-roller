@@ -79,6 +79,10 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, type, isO
       localProgress.current = Math.min(localProgress.current, globalProgress)
     }
 
+    if (isCollected) {
+      localProgress.current = 0.0
+    }
+
     shader.current.uConfirmingProgress = localProgress.current
     shader.current.uIsConfirming = isConfirming ? 1 : 0
     shader.current.uTime = clock.elapsedTime
