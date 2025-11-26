@@ -107,12 +107,15 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
+    float settlePulsePhase = uTime * 4.0 + seed * 23.0;
+    float settlePulseWave = sin(settlePulsePhase) * 0.5 + 0.5;
+
     float baseSize = mix(12.0, 40.0, fract(seed * 17.0));
     
     // Sparkle logic: rare particles are larger and white
     bool isSparkle = hashedSeed.x > 0.9;
     if (isSparkle) {
-        baseSize *= 4.0;
+        baseSize *= 3.0;
     }
 
     float sizeFade = 1.0 - easedProgress * 0.3;
@@ -120,6 +123,10 @@ void main() {
     float distanceToCamera = max(-viewPosition.z, EPSILON);
     float attenuation = clamp(perspectiveScale / distanceToCamera, 0.35, 2.8);
     gl_PointSize = baseSize * sizeFade * attenuation * uDpr;
+
+    float settleScalePulse = mix(0.9, 1.3, settlePulseWave);
+    float settleScale = mix(1.0, settleScalePulse, settleProgress);
+    gl_PointSize *= settleScale;
 
     // --- Logic moved from Fragment Shader ---
     
@@ -132,16 +139,20 @@ void main() {
     float opacityFactor = 1.0 - seed * 0.5;
     float finalOpacity = appear * linger * opacityFactor;
 
+    float settleOpacityPulse = mix(0.6, 1.0, settlePulseWave);
+    float settleOpacity = mix(1.0, settleOpacityPulse, settleProgress);
+    finalOpacity *= settleOpacity;
+
     // Color calculations
     float softness = fract(seed * 31.0);
     vec3 glowColor = mix(colour, vec3(1.0), softness);
     
-    // Force sparkles to be pure white
     if (isSparkle) {
-        glowColor = vec3(1.0, 0.99, 0.92); // Subtle off-white yellow
         finalOpacity = min(finalOpacity * 2.0, 1.0); // Slightly brighter/more opaque
         softness = 2.0; // Signal fragment shader to use pow2 glow
     }
+
+    finalOpacity *= 0.8; // Overall opacity dampening
 
     vColorAlpha = vec4(glowColor, finalOpacity);
     vSoftness = softness;

@@ -11,7 +11,7 @@ import { OctahedronGeometry, Color, type Vector3Tuple, Float32BufferAttribute } 
 import { CollectibleID } from '@/model/schema'
 import { GEMS_BY_ID } from '@/resources/content'
 
-const GEM_RADIUS = 1.1
+const GEM_RADIUS = 1.25
 const BASE_GEOMETRY = new OctahedronGeometry(GEM_RADIUS, 0)
 const GEM_LINE_WIDTH = 4.0
 const GEM_GLOW_STRENGTH = 4.0
