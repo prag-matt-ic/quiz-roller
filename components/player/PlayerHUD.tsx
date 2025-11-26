@@ -2,13 +2,25 @@
 
 import { Html } from '@react-three/drei'
 import gsap from 'gsap'
-import { type FC, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type CSSProperties,
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
+import { GEMS_BY_ID } from '@/resources/content'
+import { CollectibleID } from '@/model/schema'
 
 export const PLAYER_RADIUS = 0.45
+
+const defaultGemColour = GEMS_BY_ID[CollectibleID.Discount].colour
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
@@ -21,6 +33,18 @@ const PlayerHUD: FC = () => {
 
   const [isMounted, setIsMounted] = useState(show)
   const showRef = useRef(show)
+
+  const currentGemColour = confirmingCollectible
+    ? (GEMS_BY_ID[confirmingCollectible]?.colour ?? defaultGemColour)
+    : defaultGemColour
+
+  const progressBarStyle = useMemo(
+    () =>
+      ({
+        '--collectible-color': currentGemColour,
+      }) as CSSProperties,
+    [currentGemColour],
+  )
 
   if (show && !isMounted) {
     setIsMounted(true)
@@ -106,10 +130,12 @@ const PlayerHUD: FC = () => {
                 <div
                   ref={container}
                   className="flex flex-col items-center rounded-full bg-black p-1.5 opacity-0">
-                  <div className="relative h-3 w-26 overflow-hidden rounded-full border border-white bg-white">
+                  <div
+                    className="relative h-3 w-26 overflow-hidden rounded-full border border-white bg-white"
+                    style={progressBarStyle}>
                     <div
                       id="progress-bar"
-                      className="absolute h-full w-full -translate-x-full rounded-full bg-linear-0 from-amber-400 to-amber-500"
+                      className="absolute h-full w-full -translate-x-full rounded-full bg-linear-0 from-(--collectible-color) to-[color-mix(in_srgb,var(--collectible-color)_80%,#000)]"
                     />
                   </div>
                 </div>
