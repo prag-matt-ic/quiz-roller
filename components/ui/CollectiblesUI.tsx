@@ -71,15 +71,31 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
 
   return (
     <>
-      <div ref={refs.setReference} {...getReferenceProps()} className="pointer-events-auto">
+      <div
+        style={
+          {
+            '--icon-colour': collectedColour,
+          } as React.CSSProperties
+        }
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className="pointer-events-auto relative">
         <GemIcon
           size={40}
-          strokeWidth={1}
+          strokeWidth={0.25}
           className={twJoin(
-            'size-8 md:size-10',
-            isCollected ? 'opacity-100' : 'text-white opacity-30',
+            'absolute inset-0 size-8 text-transparent transition-opacity md:size-10',
+            isCollected ? 'fill-(--icon-colour)/50' : 'fill-(--icon-colour)/10',
           )}
-          style={isCollected ? { color: collectedColour } : undefined}
+        />
+        <GemIcon
+          size={40}
+          strokeWidth={0.75}
+          className={twJoin(
+            'relative size-8 text-white md:size-10',
+            isCollected ? 'opacity-80' : 'opacity-30',
+          )}
+          // style={isCollected ? { color: collectedColour } : undefined}
         />
       </div>
       {/* Dropdown Info */}

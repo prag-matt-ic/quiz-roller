@@ -9,6 +9,8 @@ import {
   type ParticlePaletteRangeKey,
 } from '@/components/dev/colourTexture/particlePalette/types'
 
+import { ColorPicker } from './ColorPicker'
+
 const RANGE_LABELS: Record<ParticlePaletteRangeKey, string> = {
   bright: 'Bright',
   cool: 'Cool',
@@ -80,25 +82,15 @@ export const ParticleControls = () => {
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/5 bg-neutral-900/60 p-6">
         <div className="flex items-end gap-3">
-          <label className="flex-1 text-xs font-semibold tracking-widest text-neutral-400 uppercase">
-            Add Source Hex
-            <input
-              type="text"
-              value={draft}
-              onChange={(event) => {
-                if (error) clearError()
-                setDraft(event.target.value)
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  handleAddHex()
-                }
-              }}
-              placeholder="#00fcdf"
-              className="mt-2 w-full rounded-lg border border-white/10 bg-neutral-950/60 px-3 py-2 font-mono text-sm text-white transition outline-none focus:border-white/40"
-            />
-          </label>
+          <ColorPicker
+            label="Add Source Hex"
+            color={draft}
+            onChange={(newHex) => {
+              if (error) clearError()
+              setDraft(newHex)
+            }}
+            placeholder="#00fcdf"
+          />
           <button
             onClick={handleAddHex}
             className="flex size-12 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"

@@ -238,7 +238,7 @@ export type RowData = {
   logoPosition?: [number, number, number]
   colourPickerPosition?: [number, number, number]
   infoZonePositions?: ([number, number, number] | null)[]
-  collectiblePosition?: [number, number, number]
+  collectiblePositions?: ([number, number, number] | null)[]
 }
 ```
 

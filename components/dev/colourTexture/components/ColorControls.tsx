@@ -7,6 +7,7 @@ import { rgbToHex } from '@/components/palette'
 import { AXIS_LABELS, PARAMETER_CONFIG } from '../store/constants'
 import type { CosinePaletteParams, PaletteParamKey, UserColour } from '../store/types'
 import { evaluateCosinePalette } from '../utils'
+import { ColorPicker } from './ColorPicker'
 import { GlslExport } from './GlslExport'
 import { SliderControl } from './SliderControl'
 
@@ -74,19 +75,14 @@ export const ColorControls: FC<ColorControlsProps> = ({
             </button>
           </div>
 
-          <label className="text-xs font-semibold tracking-widest text-neutral-400 uppercase">
-            Anchor hex
-            <div className="mt-2 flex items-center gap-3">
-              <input
-                type="text"
-                value={hex}
-                onChange={onHexChange}
-                className="flex-1 rounded-lg border border-white/10 bg-neutral-950/60 px-3 py-2 font-mono text-sm text-white transition outline-none focus:border-white/40"
-                placeholder="#ff7a18"
-              />
-              <span className="size-8 rounded-lg" style={{ backgroundColor: hex }} />
-            </div>
-          </label>
+          <ColorPicker
+            label="Anchor Hex"
+            color={hex}
+            onChange={(newHex) =>
+              onHexChange({ target: { value: newHex } } as ChangeEvent<HTMLInputElement>)
+            }
+            placeholder="#ff7a18"
+          />
 
           <div className="flex flex-col gap-2">
             <button

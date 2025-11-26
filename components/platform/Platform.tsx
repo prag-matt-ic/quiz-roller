@@ -252,8 +252,7 @@ const Platform: FC<Props> = ({
 
   function insertTestRows() {
     testLayouts.forEach((layout, layoutIndex) => {
-      const contentIndex =
-        INFO_CONTENT_INDEXES[layoutIndex % INFO_CONTENT_INDEXES.length]
+      const contentIndex = INFO_CONTENT_INDEXES[layoutIndex % INFO_CONTENT_INDEXES.length]
       const rows = generateInfoSectionRowData({
         layout,
         contentIndex,
