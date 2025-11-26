@@ -2,7 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -24,17 +24,24 @@ export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPositio
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
-  [Stage.HOME]: { y: 4, z: 6 },
-  [Stage.INFO]: { y: 4, z: 6 },
-  [Stage.TERRAIN]: { y: 6, z: 4 },
-  [Stage.CTA]: { y: 6, z: 6 },
+  [Stage.HOME]: { y: 4, z: 9 },
+  [Stage.INFO]: { y: 4, z: 9 },
+  [Stage.TERRAIN]: { y: 6, z: 9 },
+  [Stage.CTA]: { y: 6, z: 9 },
 }
 
-export const CAMERA_ZOOM_FOR_STAGE: Record<Stage, number> = {
-  [Stage.HOME]: 1.0,
-  [Stage.INFO]: 1.0,
-  [Stage.TERRAIN]: 1.2,
-  [Stage.CTA]: 1.4,
+export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
+  [Stage.HOME]: 1.1,
+  [Stage.INFO]: 1.1,
+  [Stage.TERRAIN]: 1.3,
+  [Stage.CTA]: 1.1,
+}
+
+export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
+  [Stage.HOME]: 1.25,
+  [Stage.INFO]: 1.25,
+  [Stage.TERRAIN]: 1.3,
+  [Stage.CTA]: 1.25,
 }
 
 type Props = {
@@ -60,10 +67,20 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
 
-  const stage = useStage((nextStage: Stage) => {
-    if (!cameraControls.current) return
-    cameraControls.current.zoomTo(CAMERA_ZOOM_FOR_STAGE[nextStage], true)
-  })
+  const cameraZoomForStage = isMobile
+    ? CAMERA_ZOOM_FOR_STAGE_MOBILE
+    : CAMERA_ZOOM_FOR_STAGE_DESKTOP
+
+  const handleStageChange = useCallback(
+    (nextStage: Stage, previousStage: Stage) => {
+      void previousStage
+      if (!cameraControls.current) return
+      cameraControls.current.zoomTo(cameraZoomForStage[nextStage], true)
+    },
+    [cameraZoomForStage],
+  )
+
+  const stage = useStage(handleStageChange)
 
   const hasLookAtPosition = !!cameraLookAtPosition
 
@@ -76,7 +93,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not
-    zOffset += lastMovedBackward.current ? (!isMobile ? 4 : 0) : 0
+    zOffset += lastMovedBackward.current ? (isMobile ? 3 : 4) : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,

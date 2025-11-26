@@ -13,8 +13,8 @@ import {
 } from '@floating-ui/react'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLLECTIBLE_IDS, type CollectibleID } from '@/model/schema'
-import { GEMS_BY_ID } from '@/resources/content'
+import { COLLECTIBLE_IDS, CollectibleID } from '@/model/schema'
+import { COLLECTIBLES_CONTENT, GEMS_BY_ID } from '@/resources/content'
 
 export const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
@@ -57,6 +57,8 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   const [show, setShow] = useState(false)
   const { refs, floatingStyles, context } = useFloating({
     open: show,
+    transform: true,
+    placement: 'bottom',
     onOpenChange: setShow,
     middleware: [offset(12)],
   })
@@ -66,6 +68,8 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   const { isMounted, status } = useTransitionStatus(context)
   const hover = useHover(context, { handleClose: safePolygon() })
   const click = useClick(context, { toggle: true })
+
+  const Icon = COLLECTIBLES_CONTENT[id].Icon
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click])
 
@@ -104,16 +108,31 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           // eslint-disable-next-line react-hooks/refs
           ref={refs.setFloating}
           style={floatingStyles}
-          data-status={status}
           {...getFloatingProps()}
-          className={twJoin(
-            'absolute z-50 flex w-sm flex-col gap-5 overflow-hidden rounded-xl bg-black p-6 whitespace-nowrap',
-            // Transition states
-            'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
-            'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
-            'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
-          )}>
-          <div>{isCollected ? 'Collected TODO: CONTENT' : 'Collect this to learn more'}</div>
+          className="absolute z-50">
+          <div
+            data-status={status}
+            className={twJoin(
+              'flex max-w-sm origin-top flex-col gap-5 overflow-hidden rounded-xl bg-black p-6 whitespace-nowrap',
+              // Transition states
+              'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
+              'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
+              'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
+            )}>
+            <div className="flex max-w-full items-center gap-2 pr-2">
+              <Icon strokeWidth={1.5} size={32} />
+              <p className="block text-sm font-medium">
+                <span className="block tracking-wide text-white/80 uppercase">Bonus</span>
+                {isCollected ? (
+                  <span className="block text-base font-bold sm:text-lg">
+                    {COLLECTIBLES_CONTENT[id].content}
+                  </span>
+                ) : (
+                  <span className="block">Unlock this to learn more</span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </>

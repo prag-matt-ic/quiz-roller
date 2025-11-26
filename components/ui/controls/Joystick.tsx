@@ -286,7 +286,7 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
 
   const joystickClasses = twMerge(
     twJoin(
-      'absolute left-1/2 bottom-1/2 rounded-full bg-white shadow-lg shadow-black/30',
+      'absolute left-1/2 bottom-1/2 rounded-full bg-white border-2 border-[#000]',
       'transition-transform duration-100 ease-out',
       'touch-none select-none',
       isGrabbing ? 'cursor-grabbing' : 'cursor-grab',
@@ -303,7 +303,7 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
       aria-hidden="true">
       <div
         ref={controllerRef}
-        className={twMerge('relative rounded-full bg-black/10', controllerClassName)}
+        className={twMerge('relative rounded-full bg-white/10', controllerClassName)}
         style={{ width: radius * 2, height: radius * 2 }}>
         <div
           ref={joystickRef}

@@ -118,7 +118,7 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="overflow-hidden rounded-full bg-black p-2 text-white opacity-0 sm:p-3">
+                  className="overflow-hidden rounded-full bg-black p-1.5 text-white opacity-0 sm:p-3">
                   {hudIndicator.content}
                 </div>
               )

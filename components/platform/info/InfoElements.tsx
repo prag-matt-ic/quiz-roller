@@ -106,16 +106,19 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
     if (!row) return
     if (row.type !== 'info') return
 
+    const absoluteRowIndex = typeof row.rowIndex === 'number' ? row.rowIndex : null
+    if (absoluteRowIndex == null) return
+
     const shouldHideHeading = !!row.floatingHeadingPosition
     const shouldHideInfoZone = row.infoZonePositions?.some((pos) => !!pos) === true
     const shouldHideCollectible = !!row.collectiblePosition
 
-    if (shouldHideHeading) {
+    if (shouldHideHeading && headingRowIndex.current === absoluteRowIndex) {
       setHeadingVisible(false)
       headingRowIndex.current = null
     }
 
-    if (shouldHideCollectible && collectible.current) {
+    if (shouldHideCollectible && collectible.current && collectibleRowIndex.current === absoluteRowIndex) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       collectible.current.setTranslation(translation.current, true)
@@ -123,7 +126,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       collectibleRowIndex.current = null
     }
 
-    if (shouldHideInfoZone && infoZone.current) {
+    if (shouldHideInfoZone && infoZone.current && infoZoneRowIndex.current === absoluteRowIndex) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)

@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import { type ChangeEvent, type FC, useCallback, useMemo, useRef } from 'react'
+import { type FC, useCallback, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
@@ -22,7 +22,7 @@ import {
   DEFAULT_EXPORT_RESOLUTION,
   PRESET_RESOLUTIONS,
 } from '@/components/dev/colourTexture/store/constants'
-import type { ColourTextureTab, PaletteParamKey } from '@/components/dev/colourTexture/store/types'
+import type { ColourTextureTab } from '@/components/dev/colourTexture/store/types'
 import {
   clampResolution,
   getNormalizedAspectMultipliers,
@@ -32,48 +32,11 @@ import {
 
 const ColourTextureContent: FC = () => {
   const canvasRef = useRef<ColourTextureCanvasHandle>(null)
-  const {
-    name,
-    hex,
-    params,
-    userColours,
-    setName,
-    setHex,
-    seedFromHex,
-    setPaletteParam,
-    saveUserColour,
-    loadUserColour,
-    deleteUserColour,
-  } = useDesignerToolsStore(
+
+  const { params, config } = useDesignerToolsStore(
     useShallow((state) => ({
-      name: state.name,
-      hex: state.hex,
       params: state.params,
-      userColours: state.userColours,
-      setName: state.setName,
-      setHex: state.setHex,
-      seedFromHex: state.seedFromHex,
-      setPaletteParam: state.setPaletteParam,
-      saveUserColour: state.saveUserColour,
-      loadUserColour: state.loadUserColour,
-      deleteUserColour: state.deleteUserColour,
-    })),
-  )
-  const {
-    config,
-    texturePresets,
-    updateConfig,
-    saveTexturePreset,
-    loadTexturePreset,
-    deleteTexturePreset,
-  } = useDesignerToolsStore(
-    useShallow((state) => ({
       config: state.config,
-      texturePresets: state.texturePresets,
-      updateConfig: state.updateConfig,
-      saveTexturePreset: state.saveTexturePreset,
-      loadTexturePreset: state.loadTexturePreset,
-      deleteTexturePreset: state.deleteTexturePreset,
     })),
   )
   const {
@@ -92,22 +55,6 @@ const ColourTextureContent: FC = () => {
       activeTab: state.display.activeTab,
       updateDisplay: state.updateDisplay,
     })),
-  )
-
-  const handleNameChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setName(event.target.value),
-    [setName],
-  )
-
-  const handleHexChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setHex(event.target.value),
-    [setHex],
-  )
-
-  const handleParameterChange = useCallback(
-    (key: PaletteParamKey, axisIndex: number, value: number) =>
-      setPaletteParam(key, axisIndex, value),
-    [setPaletteParam],
   )
 
   const handleResolutionPresetChange = useCallback(
@@ -134,6 +81,7 @@ const ColourTextureContent: FC = () => {
     (tab: ColourTextureTab) => updateDisplay('activeTab', tab),
     [updateDisplay],
   )
+
 
   const baseResolution = useMemo(() => {
     if (resolutionPresetId === CUSTOM_PRESET_ID) {
@@ -221,32 +169,8 @@ const ColourTextureContent: FC = () => {
 
       <section className="flex flex-col gap-6 overflow-y-auto border-b border-white/5 p-6 lg:border-r lg:border-b-0">
         <div className="flex-1">
-          {activeTab === 'color' && (
-            <ColorControls
-              name={name}
-              hex={hex}
-              params={params}
-              userColours={userColours}
-              onNameChange={handleNameChange}
-              onHexChange={handleHexChange}
-              onSeed={seedFromHex}
-              onParamChange={handleParameterChange}
-              onSave={saveUserColour}
-              onLoad={loadUserColour}
-              onDelete={deleteUserColour}
-            />
-          )}
-          {activeTab === 'texture' && (
-            <TextureControls
-              config={config}
-              presets={texturePresets || []}
-              userColours={userColours || []}
-              update={updateConfig}
-              onSave={saveTexturePreset}
-              onLoad={loadTexturePreset}
-              onDelete={deleteTexturePreset}
-            />
-          )}
+          {activeTab === 'color' && <ColorControls />}
+          {activeTab === 'texture' && <TextureControls />}
           {activeTab === 'particles' && <ParticleControls />}
         </div>
       </section>

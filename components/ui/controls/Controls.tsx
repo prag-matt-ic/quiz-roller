@@ -168,7 +168,7 @@ const Stick: FC = () => {
       className="pointer-events-auto right-8 bottom-8 z-200"
       onMove={onJoystickMove}>
       <div className="flex size-full items-center justify-center text-black">
-        <Move size={24} strokeWidth={1.5} />
+        <Move size={24} strokeWidth={2} />
       </div>
     </Joystick>
   )

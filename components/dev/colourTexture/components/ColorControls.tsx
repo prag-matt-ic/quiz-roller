@@ -1,46 +1,63 @@
 import type { ChangeEvent, FC } from 'react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Save } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 
 import { rgbToHex } from '@/components/palette'
 
 import { AXIS_LABELS, PARAMETER_CONFIG } from '../store/constants'
-import type { CosinePaletteParams, PaletteParamKey, UserColour } from '../store/types'
+import type { PaletteParamKey } from '../store/types'
 import { evaluateCosinePalette } from '../utils'
 import { ColorPicker } from './ColorPicker'
 import { GlslExport } from './GlslExport'
 import { SliderControl } from './SliderControl'
+import { useDesignerToolsStore } from '../DesignerToolsProvider'
 
 type ParameterConfigEntry = [PaletteParamKey, (typeof PARAMETER_CONFIG)[PaletteParamKey]]
 
 const formatFloat = (value: number) => value.toFixed(2)
 
-export type ColorControlsProps = {
-  name: string
-  hex: string
-  params: CosinePaletteParams
-  userColours: UserColour[]
-  onNameChange: (event: ChangeEvent<HTMLInputElement>) => void
-  onHexChange: (event: ChangeEvent<HTMLInputElement>) => void
-  onSeed: () => void
-  onParamChange: (key: PaletteParamKey, axis: number, value: number) => void
-  onSave: () => void
-  onLoad: (id: string) => void
-  onDelete: (id: string) => void
-}
+export const ColorControls: FC = () => {
+  const {
+    name,
+    hex,
+    params,
+    userColours,
+    setName,
+    setHex,
+    seedFromHex,
+    setPaletteParam,
+    saveUserColour,
+    loadUserColour,
+  } = useDesignerToolsStore(
+    useShallow((state) => ({
+      name: state.name,
+      hex: state.hex,
+      params: state.params,
+      userColours: state.userColours,
+      setName: state.setName,
+      setHex: state.setHex,
+      seedFromHex: state.seedFromHex,
+      setPaletteParam: state.setPaletteParam,
+      saveUserColour: state.saveUserColour,
+      loadUserColour: state.loadUserColour,
+    })),
+  )
 
-export const ColorControls: FC<ColorControlsProps> = ({
-  name,
-  hex,
-  params,
-  userColours,
-  onNameChange,
-  onHexChange,
-  onSeed,
-  onParamChange,
-  onSave,
-  onLoad,
-}) => {
+  const handleNameChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setName(event.target.value),
+    [setName],
+  )
+
+  const handleHexChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setHex(event.target.value),
+    [setHex],
+  )
+
+  const handleParamChange = useCallback(
+    (key: PaletteParamKey, axis: number, value: number) => setPaletteParam(key, axis, value),
+    [setPaletteParam],
+  )
   const swatches = useMemo(() => {
     const sampleCount = 10
     return Array.from({ length: sampleCount }, (_, index) => {
@@ -62,13 +79,13 @@ export const ColorControls: FC<ColorControlsProps> = ({
               <input
                 type="text"
                 value={name ?? ''}
-                onChange={onNameChange}
+                onChange={handleNameChange}
                 className="mt-2 w-full rounded-lg border border-white/10 bg-neutral-950/60 px-3 py-2 font-mono text-sm text-white transition outline-none focus:border-white/40"
                 placeholder="My Gradient"
               />
             </label>
             <button
-              onClick={onSave}
+              onClick={saveUserColour}
               className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white transition hover:bg-white/20"
               title="Save Config">
               <Save size={18} />
@@ -79,7 +96,7 @@ export const ColorControls: FC<ColorControlsProps> = ({
             label="Anchor Hex"
             color={hex}
             onChange={(newHex) =>
-              onHexChange({ target: { value: newHex } } as ChangeEvent<HTMLInputElement>)
+              handleHexChange({ target: { value: newHex } } as ChangeEvent<HTMLInputElement>)
             }
             placeholder="#ff7a18"
           />
@@ -87,7 +104,7 @@ export const ColorControls: FC<ColorControlsProps> = ({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={onSeed}
+              onClick={seedFromHex}
               className="h-10 w-full rounded-full bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/20">
               Generate from Hex
             </button>
@@ -96,7 +113,7 @@ export const ColorControls: FC<ColorControlsProps> = ({
                 onChange={(event) => {
                   const id = event.currentTarget.value
                   if (!id) return
-                  onLoad(id)
+                  loadUserColour(id)
                   event.currentTarget.selectedIndex = 0
                 }}
                 className="h-8 rounded-lg bg-white/5 px-2 text-xs text-white outline-none hover:bg-white/10"
@@ -151,7 +168,7 @@ export const ColorControls: FC<ColorControlsProps> = ({
                   min={config.min}
                   max={config.max}
                   step={config.step}
-                  onChange={(value) => onParamChange(key, axisIndex, value)}
+                  onChange={(value) => handleParamChange(key, axisIndex, value)}
                 />
               ))}
             </div>

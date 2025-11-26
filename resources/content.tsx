@@ -1,13 +1,31 @@
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import Card from '@/components/ui/Card'
 import { CollectibleID } from '@/model/schema'
-import { ArrowUpCircleIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
-import { type FC, type ReactNode } from 'react'
+import { ArrowUpCircleIcon, HandshakeIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
+import { type ReactNode } from 'react'
 
 type InfoContent = {
   heading: string
   infoZoneContainerClassName?: string
   infoZoneContent: ReactNode
+}
+
+export const COLLECTIBLES_CONTENT: Record<
+  CollectibleID,
+  { content: ReactNode; Icon: LucideIcon }
+> = {
+  [CollectibleID.Discount]: {
+    Icon: CoinsIcon,
+    content: '10% discount off your first project',
+  },
+  [CollectibleID.AI_Prompts]: {
+    Icon: BotIcon,
+    content: 'Utilise proprietary AI prompts',
+  },
+  [CollectibleID.Consultation]: {
+    Icon: HandshakeIcon,
+    content: 'Free 30 minute consultation',
+  },
 }
 
 const BLUE_PARTICLE_PALETTE = [
@@ -55,20 +73,6 @@ export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalett
       particlesPalette: ['#E5F0FF', '#B3D1FF', '#80B2FF', '#4682B4', '#2C5D8A'],
     },
   } as const
-
-// badges: [
-//   {
-//     label: 'Stand out',
-//     Icon: HeartIcon,
-//   },
-//   {
-//     label: 'Boost engagement and conversions',
-//     Icon: TrendingUp,
-//   },
-//   {
-//     label: 'Optimised experiences',
-//     Icon: CircleGauge,
-//   },
 
 export const INFO_ZONES_CONTENT: InfoContent[] = [
   {
@@ -120,33 +124,18 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
   },
 ]
 
-const CollectibleHUDContent: FC<{
-  Icon: LucideIcon
-  text: ReactNode
-}> = ({ Icon, text }) => {
-  return (
-    <div className="flex items-center gap-2 pr-2">
-      <Icon strokeWidth={1.5} size={32} />
-      <p className="block text-sm font-medium uppercase">
-        Bonus Unlocked!
-        <span className="block text-xl font-bold whitespace-nowrap uppercase">{text}</span>
-      </p>
-    </div>
-  )
-}
-
 export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> = {
   [CollectibleID.Discount]: {
-    autoDismissS: 6,
-    content: <CollectibleHUDContent Icon={CoinsIcon} text="10% off your first project!" />,
+    autoDismissS: 3.5,
+    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
   },
   [CollectibleID.AI_Prompts]: {
-    autoDismissS: 6,
-    content: <CollectibleHUDContent Icon={BotIcon} text="Access to proprietary AI prompts" />,
+    autoDismissS: 3.5,
+    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
   },
   [CollectibleID.Consultation]: {
-    autoDismissS: 6,
-    content: <CollectibleHUDContent Icon={CoinsIcon} text="Free 30 minute consultation!" />,
+    autoDismissS: 3.5,
+    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
   },
 }
 

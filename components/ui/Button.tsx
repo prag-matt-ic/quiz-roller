@@ -1,11 +1,13 @@
 import type { ButtonHTMLAttributes, FC, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary'
   color?: 'light' | 'dark'
   children: ReactNode
   className?: string
+  leadingNode?: ReactNode
+  trailingNode?: ReactNode
 }
 
 const BASE_CLASSES =
@@ -31,13 +33,21 @@ const Button: FC<ButtonProps> = ({
   color = 'light',
   children,
   className,
+  leadingNode,
+  trailingNode,
   ...props
 }) => {
   return (
     <button
       className={twMerge(BASE_CLASSES, COLOUR_CLASSES[color][variant], className)}
       {...props}>
+      {!!leadingNode ? (
+        <span className="flex items-center justify-center">{leadingNode}</span>
+      ) : null}
       {children}
+      {!!trailingNode ? (
+        <span className="flex items-center justify-center">{trailingNode}</span>
+      ) : null}
     </button>
   )
 }

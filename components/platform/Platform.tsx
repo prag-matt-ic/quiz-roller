@@ -529,8 +529,9 @@ const Platform: FC<Props> = ({
     }
 
     if (row.type === 'info') {
-      const contentIndex = row.infoContentIndex ?? 0
-      setInfoContentIndex(contentIndex)
+      if (row.isSectionStart && typeof row.infoContentIndex === 'number') {
+        setInfoContentIndex(row.infoContentIndex)
+      }
       if (stageRef.current !== Stage.INFO) {
         goToStage(Stage.INFO)
       }
