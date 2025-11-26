@@ -19,14 +19,14 @@ type StageCameraPosition = {
 export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 8 },
   [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.TERRAIN]: { y: 9, z: 4 },
+  [Stage.TERRAIN]: { y: 6, z: 5 },
   [Stage.CTA]: { y: 7, z: 8 },
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 6 },
   [Stage.INFO]: { y: 4, z: 6 },
-  [Stage.TERRAIN]: { y: 9, z: 4 },
+  [Stage.TERRAIN]: { y: 6, z: 4 },
   [Stage.CTA]: { y: 6, z: 6 },
 }
 
@@ -76,7 +76,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not
-    zOffset += lastMovedBackward.current ? 4 : 0
+    zOffset += lastMovedBackward.current ? (!isMobile ? 4 : 0) : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
