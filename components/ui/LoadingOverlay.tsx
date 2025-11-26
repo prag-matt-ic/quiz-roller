@@ -11,7 +11,13 @@ import { GradientText } from '../ui/GradientText'
 
 const Button = dynamic(() => import('@/components/ui/Button'))
 
-const LoadingOverlay: FC = () => {
+type Props = {
+  isMobile: boolean
+}
+
+// TODO: add rotate device if mobile and in landscape mode
+
+const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const { active, progress } = useProgress()
   const [isMounted, setIsMounted] = useState(true)
   const [isExiting, setIsExiting] = useState(false)

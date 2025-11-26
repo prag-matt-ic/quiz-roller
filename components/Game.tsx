@@ -75,7 +75,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
   return (
     <Canvas
-      className="fixed! inset-0! h-lvh! w-full"
+      className="fixed! inset-0! h-dvh! w-full"
       onContextMenu={(e) => e.preventDefault()}
       dpr={dpr}
       camera={{

@@ -1,11 +1,12 @@
 import dynamic from 'next/dynamic'
 import { type FC } from 'react'
 
-// import LoadingOverlay from '@/components/ui/LoadingOverlay'
+import LoadingOverlay from '@/components/ui/LoadingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
 import { SoundProvider } from '@/components/SoundProvider'
 import { GameProvider } from '@/components/GameProvider'
 import { deleteAllSpeedRuns, insertSpeedRun } from './actions'
+import { twJoin } from 'tailwind-merge'
 
 const Main = dynamic(() => import('@/components/Main'))
 
@@ -20,10 +21,10 @@ export default async function Home(props: PageProps) {
 
   return (
     <>
-      <main className="h-lvh w-full overflow-hidden">
+      <main className={twJoin('w-full overflow-hidden', isMobile ? 'h-dvh' : 'h-vh')}>
         <SoundProvider>
           <GameProvider insertSpeedRun={insertSpeedRun}>
-            {/* <LoadingOverlay /> */}
+            {/* <LoadingOverlay isMobile={isMobile} /> */}
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>
         </SoundProvider>
