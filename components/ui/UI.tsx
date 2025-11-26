@@ -76,7 +76,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         ) : !isSpeedRunMode ? (
           <button
             type="button"
-            className="pointer-events-auto size-fit self-end rounded-lg bg-white px-4 py-2 text-sm font-bold text-black uppercase transition"
+            className="pointer-events-auto size-fit self-end rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black uppercase transition md:text-sm"
             onClick={startSpeedRun}>
             <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
             Start Speedroll

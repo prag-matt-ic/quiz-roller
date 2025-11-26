@@ -68,6 +68,7 @@ const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
           size={40}
           strokeWidth={1}
           className={twJoin(
+            'size-8 md:size-10',
             isCollected ? 'text-amber-400 opacity-100' : 'text-white opacity-30',
           )}
         />

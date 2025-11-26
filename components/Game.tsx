@@ -10,7 +10,10 @@ import { type FC, Suspense, useEffect, useMemo, useState } from 'react'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
 
-import Camera, { CAMERA_POSITION_FOR_STAGE } from './Camera'
+import Camera, {
+  CAMERA_POSITION_FOR_STAGE_DESKTOP,
+  CAMERA_POSITION_FOR_STAGE_MOBILE,
+} from './Camera'
 import { Stage, useGameStore } from './GameProvider'
 import OutOfBounds from './OutOfBounds'
 import { usePerformanceStore } from './PerformanceProvider'
@@ -29,15 +32,6 @@ import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/s
 import Backdrop from './backdrop/Backdrop'
 
 gsap.registerPlugin(useGSAP)
-
-// Start at the intro sweep position to avoid a jump before animation
-const HOME_CAMERA_POSITION = CAMERA_POSITION_FOR_STAGE[Stage.HOME]
-
-const INITIAL_CAMERA_POSITION = {
-  x: 0,
-  y: HOME_CAMERA_POSITION.y,
-  z: HOME_CAMERA_POSITION.z,
-}
 
 type Props = {
   isDebug: boolean
@@ -58,6 +52,10 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
+
+  const cameraPositions = isMobile
+    ? CAMERA_POSITION_FOR_STAGE_MOBILE
+    : CAMERA_POSITION_FOR_STAGE_DESKTOP
 
   const dpr = useMemo<number>(() => {
     if (typeof window === 'undefined') return 1
@@ -81,11 +79,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       onContextMenu={(e) => e.preventDefault()}
       dpr={dpr}
       camera={{
-        position: [
-          INITIAL_CAMERA_POSITION.x,
-          INITIAL_CAMERA_POSITION.y,
-          INITIAL_CAMERA_POSITION.z,
-        ],
+        position: [0, cameraPositions[Stage.HOME].y, cameraPositions[Stage.HOME].z],
         far: process.env.NODE_ENV === 'development' ? 10000 : 40,
         fov: 65,
       }}
@@ -103,7 +97,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
         {/* <OrbitControls /> */}
-        <Camera />
+        <Camera isMobile={isMobile} positions={cameraPositions} />
         {isDebug && <Stats />}
         <Backdrop />
         <Suspense>

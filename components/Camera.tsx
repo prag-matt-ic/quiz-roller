@@ -16,21 +16,33 @@ type StageCameraPosition = {
   z: number
 }
 
-export const CAMERA_POSITION_FOR_STAGE: Record<Stage, StageCameraPosition> = {
+export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 8 },
   [Stage.INFO]: { y: 4, z: 8 },
   [Stage.TERRAIN]: { y: 9, z: 4 },
   [Stage.CTA]: { y: 7, z: 8 },
 }
 
+export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
+  [Stage.HOME]: { y: 4, z: 6 },
+  [Stage.INFO]: { y: 4, z: 6 },
+  [Stage.TERRAIN]: { y: 9, z: 4 },
+  [Stage.CTA]: { y: 6, z: 6 },
+}
+
 export const CAMERA_ZOOM_FOR_STAGE: Record<Stage, number> = {
   [Stage.HOME]: 1.0,
   [Stage.INFO]: 1.0,
   [Stage.TERRAIN]: 1.2,
-  [Stage.CTA]: 1.5,
+  [Stage.CTA]: 1.4,
 }
 
-const Camera: FC = () => {
+type Props = {
+  isMobile: boolean
+  positions: Record<Stage, StageCameraPosition>
+}
+
+const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
   const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
@@ -60,7 +72,7 @@ const Camera: FC = () => {
     const lookAt = cameraLookAtPosition ?? playerPosition.current
 
     // When looking at content, move camera backward to keep player visible
-    const stageCameraPosition = CAMERA_POSITION_FOR_STAGE[stage.current]
+    const stageCameraPosition = positions[stage.current]
     let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not

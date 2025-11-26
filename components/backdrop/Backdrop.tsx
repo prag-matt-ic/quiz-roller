@@ -13,15 +13,16 @@ import backdrop from '@/assets/textures/backdrop/bg-1.webp'
 
 const BACKDROP_SEGMENT_COUNT = 6
 const BACKDROP_FLOOR_RATIO = 1
-const BACKDROP_WIDTH_TILES = 80
+const BACKDROP_WIDTH_TILES = 88
 const BACKDROP_DEPTH_TILES = 20
-const BACKDROP_HEIGHT = 28
+const BACKDROP_HEIGHT = 32
 const BACKDROP_WIDTH = TILE_SIZE * BACKDROP_WIDTH_TILES
 const BACKDROP_DEPTH = TILE_SIZE * BACKDROP_DEPTH_TILES
 const BACKDROP_POSITION: [number, number, number] = [0, -5, -14]
 const BACKDROP_ROTATION: [number, number, number] = [-Math.PI / 2, 0, Math.PI / 2]
-const BACKDROP_DARKNESS = 0.4
+const BACKDROP_DARKNESS = 0.42
 const BACKDROP_EDGE_FADE = 0.16
+// TODO: re-export backdrop with optimal aspect ratio based on calculations in Backdrop component
 
 type BackdropShaderUniforms = {
   uBackdrop: Texture | null
