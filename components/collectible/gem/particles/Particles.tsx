@@ -2,7 +2,7 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { type FC, useEffect, useMemo, useRef } from 'react'
-import { BufferAttribute, Color, Vector3, type Vector3Tuple } from 'three'
+import { AdditiveBlending, BufferAttribute, Color, Vector3, type Vector3Tuple } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import particleFragment from './point.frag'
@@ -260,6 +260,7 @@ const Particles: FC<Props> = ({
         uGemScale={gemScale}
         transparent={true}
         depthTest={false}
+        blending={AdditiveBlending}
       />
     </points>
   )
