@@ -35,7 +35,7 @@ const ProgressBar: FC = () => {
   }, [gameStoreAPI])
 
   return (
-    <div className="fixed right-0 z-100 h-full w-1 overflow-hidden bg-black">
+    <div id="progress-bar" className="fixed right-0 z-100 h-full w-1 overflow-hidden bg-black">
       <div
         ref={barRef}
         className="absolute bottom-0 h-full w-1 bg-white transition-transform duration-100 ease-linear"

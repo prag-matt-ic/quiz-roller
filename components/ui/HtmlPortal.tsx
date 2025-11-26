@@ -18,7 +18,7 @@ const HtmlPortal: FC = () => {
     <div
       id="html-portal"
       ref={container}
-      className="pointer-events-none fixed inset-0 z-100 select-none"
+      className="pointer-events-none fixed inset-0 z-90 select-none"
     />
   )
 }
