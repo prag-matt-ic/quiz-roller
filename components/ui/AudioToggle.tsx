@@ -4,14 +4,12 @@ import { twJoin } from 'tailwind-merge'
 
 import { useSoundStore } from '@/components/SoundProvider'
 
-import Button from './Button'
-
 const AudioToggle: FC = () => {
   const isMuted = useSoundStore((s) => s.isMuted)
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
   return (
-    <Button
+    <button
       onClick={() => setIsMuted(!isMuted)}
       aria-pressed={!isMuted}
       aria-label={isMuted ? 'Enable audio' : 'Mute audio'}
@@ -21,7 +19,7 @@ const AudioToggle: FC = () => {
       ) : (
         <Volume2Icon className="size-5 sm:size-7" strokeWidth={1.75} />
       )}
-    </Button>
+    </button>
   )
 }
 
