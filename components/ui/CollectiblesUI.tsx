@@ -13,7 +13,8 @@ import {
 } from '@floating-ui/react'
 
 import { useGameStore } from '@/components/GameProvider'
-import { COLLECTIBLE_IDS } from '@/model/schema'
+import { COLLECTIBLE_IDS, type CollectibleID } from '@/model/schema'
+import { GEMS_BY_ID } from '@/resources/content'
 
 export const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
@@ -38,8 +39,10 @@ const CollectiblesUI: FC = () => {
   return (
     <>
       {/* Collectibles */}
-      {COLLECTIBLE_IDS.map((id, index) => {
-        return <CollectibleIcon key={index} isCollected={collectedCollectibles.includes(id)} />
+      {COLLECTIBLE_IDS.map((id) => {
+        return (
+          <CollectibleIcon key={id} id={id} isCollected={collectedCollectibles.includes(id)} />
+        )
       })}
     </>
   )
@@ -47,13 +50,18 @@ const CollectiblesUI: FC = () => {
 
 export default CollectiblesUI
 
-const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
+const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
+  id,
+  isCollected,
+}) => {
   const [show, setShow] = useState(false)
   const { refs, floatingStyles, context } = useFloating({
     open: show,
     onOpenChange: setShow,
     middleware: [offset(12)],
   })
+
+  const collectedColour = GEMS_BY_ID[id]?.colour
 
   const { isMounted, status } = useTransitionStatus(context)
   const hover = useHover(context, { handleClose: safePolygon() })
@@ -69,8 +77,9 @@ const CollectibleIcon: FC<{ isCollected: boolean }> = ({ isCollected }) => {
           strokeWidth={1}
           className={twJoin(
             'size-8 md:size-10',
-            isCollected ? 'text-amber-400 opacity-100' : 'text-white opacity-30',
+            isCollected ? 'opacity-100' : 'text-white opacity-30',
           )}
+          style={isCollected ? { color: collectedColour } : undefined}
         />
       </div>
       {/* Dropdown Info */}

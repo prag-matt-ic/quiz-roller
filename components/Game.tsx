@@ -27,6 +27,7 @@ import obstacle3Texture from '@/assets/platform/obstacles-3.png'
 import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import testTexture from '@/assets/platform/test.png'
+import { INFO_ZONES_CONTENT } from '@/resources/content'
 import { loadHtmlImage } from '@/utils/loadImage'
 import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import Backdrop from './backdrop/Backdrop'
@@ -45,6 +46,8 @@ const OBSTACLE_BITMAP_TEXTURES = [
   obstacle1Texture.src,
   obstacle3Texture.src,
 ]
+
+const TEST_SECTIONS_COUNT = INFO_ZONES_CONTENT.length
 
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
@@ -69,7 +72,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     obstacleLayouts,
     speedRunLayout,
     ctaLayout,
-    testLayout,
+    testLayouts,
     isTestMode,
   } = usePlatformLayout()
 
@@ -110,7 +113,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
               obstacleLayouts={obstacleLayouts}
               speedRunLayout={speedRunLayout}
               ctaLayout={ctaLayout}
-              testLayout={testLayout}
+              testLayouts={testLayouts}
               isTestMode={isTestMode}
             />
             <Player />
@@ -130,7 +133,7 @@ function usePlatformLayout() {
   const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
   const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
-  const [testLayout, setTestLayout] = useState<SectionBitmapLayout | null>(null)
+  const [testLayouts, setTestLayouts] = useState<Array<SectionBitmapLayout | null>>([])
   const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
@@ -155,7 +158,10 @@ function usePlatformLayout() {
       loadHtmlImage([testTexture.src]).then((images) => {
         if (!isMounted) return
         const layout = imageToLayout(images[0], 'test')
-        setTestLayout(layout)
+        const repeatedLayouts = layout
+          ? Array.from({ length: TEST_SECTIONS_COUNT }, () => layout)
+          : []
+        setTestLayouts(repeatedLayouts)
         setHomeLayout(null)
         setInfoLayouts([])
         setObstacleLayouts([])
@@ -193,7 +199,7 @@ function usePlatformLayout() {
 
         const ctaLayout = imageToLayout(images[index], 'cta')
 
-        setTestLayout(null)
+        setTestLayouts([])
         setHomeLayout(homeLayout)
         setInfoLayouts(infoLayouts)
         setObstacleLayouts(obstacleLayouts)
@@ -210,7 +216,11 @@ function usePlatformLayout() {
   useEffect(() => {
     const updateTotalRingsCount = () => {
       if (isTestMode) {
-        setTotalRingsCount(testLayout?.totalRingsCount ?? 0)
+        const totalTestRings = testLayouts.reduce(
+          (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
+          0,
+        )
+        setTotalRingsCount(totalTestRings)
         return
       }
 
@@ -236,7 +246,7 @@ function usePlatformLayout() {
     setTotalRingsCount,
     isSpeedRunMode,
     isTestMode,
-    testLayout,
+    testLayouts,
   ])
 
   return {
@@ -245,7 +255,7 @@ function usePlatformLayout() {
     obstacleLayouts,
     speedRunLayout,
     ctaLayout,
-    testLayout,
+    testLayouts,
     isTestMode,
   }
 }

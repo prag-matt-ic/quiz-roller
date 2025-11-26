@@ -1,7 +1,7 @@
 'use client'
 
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { type FC, type RefObject, useEffect, useMemo, useRef } from 'react'
+import { type FC, type RefObject, useMemo, useRef } from 'react'
 import {
   DataTexture,
   FloatType,
@@ -56,12 +56,12 @@ const CollectibleTileShader = shaderMaterial(
 const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 
 type Props = {
-  ref?: RefObject<RapierRigidBody | null>
+  id: CollectibleID
+  isOutOfView: RefObject<boolean>
+  ref: RefObject<RapierRigidBody | null>
   position: Vector3Tuple
   width: number
   height: number
-  id: CollectibleID
-  isOutOfView: RefObject<boolean>
 }
 
 export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOutOfView }) => {
@@ -160,6 +160,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
         isCollected={isCollected}
         tileWidth={width}
         tileHeight={height}
+        id={id}
       />
     </RigidBody>
   )

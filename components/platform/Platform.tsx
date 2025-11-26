@@ -64,6 +64,7 @@ const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
 const INITIAL_ROW_BACK_OFFSET_ROWS = 12
 const INITIAL_ROW_BACK_OFFSET = INITIAL_ROW_BACK_OFFSET_ROWS * TILE_SIZE
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
+const INFO_CONTENT_INDEXES = [0, 1, 2] as const // Keep in sync with INFO_ZONES_CONTENT
 
 const warnVisibilityCoverageIfNeeded = (() => {
   let hasWarned = false
@@ -95,7 +96,7 @@ type Props = {
   obstacleLayouts: Array<SectionBitmapLayout | null>
   speedRunLayout: SectionBitmapLayout | null
   ctaLayout: SectionBitmapLayout | null
-  testLayout: SectionBitmapLayout | null
+  testLayouts: Array<SectionBitmapLayout | null>
   isTestMode: boolean
 }
 
@@ -119,7 +120,7 @@ const Platform: FC<Props> = ({
   obstacleLayouts,
   speedRunLayout,
   ctaLayout,
-  testLayout,
+  testLayouts,
   isTestMode,
 }) => {
   const gameStore = useGameStoreAPI()
@@ -250,15 +251,19 @@ const Platform: FC<Props> = ({
   }
 
   function insertTestRows() {
-    const rows = generateInfoSectionRowData({
-      layout: testLayout,
-      contentIndex: 0,
+    testLayouts.forEach((layout, layoutIndex) => {
+      const contentIndex =
+        INFO_CONTENT_INDEXES[layoutIndex % INFO_CONTENT_INDEXES.length]
+      const rows = generateInfoSectionRowData({
+        layout,
+        contentIndex,
+      })
+      appendRowsWithIndices(rows)
     })
-    appendRowsWithIndices(rows)
   }
 
   const hasAllLayouts = isTestMode
-    ? !!testLayout
+    ? testLayouts.length > 0 && testLayouts.every((layout) => !!layout)
     : !!homeLayout &&
       !!infoLayouts.length &&
       !!obstacleLayouts.length &&
@@ -319,10 +324,10 @@ const Platform: FC<Props> = ({
         insertObstacleRows(2)
         insertInfoRows(2)
         insertObstacleRows(3)
-        if (!isSpeedRunMode) {
-          insertCtaRows()
-        } else {
+        if (isSpeedRunMode) {
           insertSpeedRunRows()
+        } else {
+          insertCtaRows()
         }
       }
 

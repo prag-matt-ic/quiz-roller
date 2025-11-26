@@ -96,7 +96,7 @@ export const ParticleControls = () => {
                 }
               }}
               placeholder="#00fcdf"
-              className="mt-2 w-full rounded-lg border border-white/10 bg-neutral-950/60 px-3 py-2 font-mono text-sm text-white outline-none transition focus:border-white/40"
+              className="mt-2 w-full rounded-lg border border-white/10 bg-neutral-950/60 px-3 py-2 font-mono text-sm text-white transition outline-none focus:border-white/40"
             />
           </label>
           <button
@@ -115,7 +115,7 @@ export const ParticleControls = () => {
           {inputs.map((hex) => (
             <div
               key={hex}
-              className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pl-2 pr-1 text-xs text-white">
+              className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pr-1 pl-2 text-xs text-white">
               <span className="size-4 rounded-full" style={{ backgroundColor: hex }} />
               <span className="font-mono">{formatHex(hex)}</span>
               <button
@@ -137,16 +137,16 @@ export const ParticleControls = () => {
           </div>
           <button
             onClick={regenerate}
-            className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/80 transition hover:border-white/60 hover:text-white">
+            className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold tracking-wide text-white/80 uppercase transition hover:border-white/60 hover:text-white">
             Regenerate
           </button>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1">
           {PARTICLE_RANGE_KEYS.map((key) => (
             <div key={key} className="rounded-xl border border-white/10 bg-black/20 p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-white">{RANGE_LABELS[key]}</p>
-                <label className="flex items-center gap-2 text-[0.65rem] uppercase tracking-widest text-neutral-400">
+                <label className="flex items-center gap-2 text-[0.65rem] tracking-widest text-neutral-400 uppercase">
                   <span>Enabled</span>
                   <input
                     type="checkbox"
@@ -159,7 +159,7 @@ export const ParticleControls = () => {
               <p className="mt-2 text-xs text-neutral-400">{RangeDescription[key]}</p>
               <div className="mt-4 space-y-3 text-xs text-neutral-300">
                 <label className="flex flex-col gap-1">
-                  <span className="font-semibold uppercase tracking-widest text-neutral-400">
+                  <span className="font-semibold tracking-widest text-neutral-400 uppercase">
                     Count
                   </span>
                   <input
@@ -169,11 +169,11 @@ export const ParticleControls = () => {
                     step={1}
                     value={config[key].count}
                     onChange={(event) => setRangeCount(key, Number(event.target.value))}
-                    className="rounded-lg border border-white/10 bg-neutral-950/60 px-2 py-1 font-mono text-sm text-white outline-none transition focus:border-white/40"
+                    className="rounded-lg border border-white/10 bg-neutral-950/60 px-2 py-1 font-mono text-sm text-white transition outline-none focus:border-white/40"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="font-semibold uppercase tracking-widest text-neutral-400">
+                  <span className="font-semibold tracking-widest text-neutral-400 uppercase">
                     Variance
                   </span>
                   <input
@@ -183,7 +183,7 @@ export const ParticleControls = () => {
                     step={0.01}
                     value={config[key].variance}
                     onChange={(event) => setRangeVariance(key, Number(event.target.value))}
-                    className="rounded-lg border border-white/10 bg-neutral-950/60 px-2 py-1 font-mono text-sm text-white outline-none transition focus:border-white/40"
+                    className="rounded-lg border border-white/10 bg-neutral-950/60 px-2 py-1 font-mono text-sm text-white transition outline-none focus:border-white/40"
                   />
                 </label>
               </div>
@@ -215,41 +215,6 @@ export const ParticleControls = () => {
             Add at least one valid hex colour to generate a palette.
           </p>
         )}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {PARTICLE_RANGE_KEYS.map((key) => {
-          const colours = result.groups[key]
-          return (
-            <div key={key} className="rounded-2xl border border-white/5 bg-neutral-900/60 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-white">{RANGE_LABELS[key]}</p>
-                <span className="text-xs text-neutral-400">{colours.length} swatches</span>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {colours.length === 0 ? (
-                  <span className="col-span-3 text-xs text-neutral-500">
-                    {config[key].enabled
-                      ? 'No colours generated yet.'
-                      : 'Range disabled.'}
-                  </span>
-                ) : (
-                  colours.map((hex, index) => (
-                    <div key={`${key}-${hex}-${index}`} className="space-y-1 text-center">
-                      <div
-                        className="size-12 rounded-xl border border-white/10 shadow-inner"
-                        style={{ backgroundColor: hex }}
-                      />
-                      <span className="block text-[0.6rem] font-mono text-neutral-400">
-                        {formatHex(hex)}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )
-        })}
       </div>
     </div>
   )

@@ -5,13 +5,14 @@ uniform lowp vec3 uLineColor;
 uniform lowp float uOpacity;
 uniform mediump float uLineWidth;
 uniform mediump float uGlowStrength;
-uniform mediump float uConfirmingProgress;
-uniform highp float uTime;
 
 varying mediump vec3 vBarycentric;
 varying mediump vec3 vNormal;
 varying mediump vec3 vViewPosition;
 varying mediump vec3 vPosition;
+varying mediump float vPulse;
+varying mediump float vPulseMix;
+varying mediump float vRevealLimit;
 
 float getWireFactor(vec3 barycentric, float width) {
   vec3 derivative = fwidth(barycentric);
@@ -26,32 +27,29 @@ void main() {
   // Approx fresnel: pow(x, 2.5) ~ x*x for performance
   float NdotV = max(dot(normal, viewDirection), 0.0);
   float invNdotV = 1.0 - NdotV;
-  float fresnel = invNdotV * invNdotV; 
+  float fresnel = invNdotV * invNdotV;
   
   float glowContribution = uGlowStrength * fresnel;
 
-  float pulseMix = smoothstep(0.9, 1.0, clamp(uConfirmingProgress, 0.0, 1.0));
-  float pulse = 0.5 + 0.5 * sin(uTime * 4.0);
-  float wireWidth = uLineWidth * mix(1.0, 0.9 + pulse * 0.3, pulseMix);
+  float wireWidth = uLineWidth * mix(1.0, 0.9 + vPulse * 0.3, vPulseMix);
   float wire = getWireFactor(vBarycentric, wireWidth);
 
-  vec3 litSurface = uSurfaceColor * (0.6 + 0.4 * max(normal.y, 0.0));
-  litSurface += glowContribution * uSurfaceColor;
+  float lambert = max(normal.y, 0.0);
+  vec3 litSurface = uSurfaceColor * (0.6 + 0.4 * lambert + glowContribution);
 
-  vec3 finalColor = mix(litSurface, uLineColor, clamp(wire, 0.0, 1.0));
+  vec3 finalColor = mix(litSurface, uLineColor, wire);
   float alpha = clamp(uOpacity + wire * 0.35 + glowContribution * 0.3, 0.0, 1.0);
 
   // Vertical reveal logic
   // Range approx -1.75 to 1.75
-  float limit = uConfirmingProgress * 3.5 - 1.75; 
-  float mask = 1.0 - smoothstep(limit, limit + 0.5, vPosition.y);
+  float mask = 1.0 - smoothstep(vRevealLimit, vRevealLimit + 0.5, vPosition.y);
   
   // Ensure minimum visibility (25%) so it doesn't disappear completely
   float revealFactor = mix(0.25, 1.0, mask);
   
   alpha *= revealFactor;
 
-  float pulseScale = mix(1.0, 0.92 + pulse * 0.12, pulseMix);
+  float pulseScale = mix(1.0, 0.92 + vPulse * 0.12, vPulseMix);
   alpha *= pulseScale;
 
   if (alpha <= 0.01) discard;

@@ -19,8 +19,8 @@ type StageCameraPosition = {
 export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 8 },
   [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.TERRAIN]: { y: 6, z: 5 },
-  [Stage.CTA]: { y: 7, z: 8 },
+  [Stage.TERRAIN]: { y: 6, z: 8 },
+  [Stage.CTA]: { y: 4, z: 10 },
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {

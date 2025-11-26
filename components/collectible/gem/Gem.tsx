@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject, type FC } from 'react'
+import { RefObject, type FC, useMemo } from 'react'
 import { extend } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -8,13 +8,15 @@ import gemShellVertex from './gemShell.vert'
 import gemShellFragment from './gemShell.frag'
 import Particles from './particles/Particles'
 import { OctahedronGeometry, Color, type Vector3Tuple, Float32BufferAttribute } from 'three'
+import { CollectibleID } from '@/model/schema'
+import { GEMS_BY_ID } from '@/resources/content'
 
 const GEM_RADIUS = 1.1
 const BASE_GEOMETRY = new OctahedronGeometry(GEM_RADIUS, 0)
 const GEM_LINE_WIDTH = 4.0
-const GEM_GLOW_STRENGTH = 2.0
-const COLOUR = '#F6B253'
+const GEM_GLOW_STRENGTH = 4.0
 const GEM_POSITION: Vector3Tuple = [0, 3, 0]
+const DEFAULT_SURFACE_COLOR = new Color(GEMS_BY_ID[CollectibleID.AI_Prompts].colour)
 
 const GEM_SURFACE_GEOMETRY = (() => {
   const geometry = BASE_GEOMETRY.clone().toNonIndexed()
@@ -52,14 +54,14 @@ type GemShellUniforms = {
   uTime: number
 }
 
-const surfaceColour = new Color(COLOUR)
+const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
+DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 
-const lineColor = surfaceColour.clone()
-lineColor.offsetHSL(0, 0, 0.2)
+type GemConfig = (typeof GEMS_BY_ID)[CollectibleID]
 
 const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
-  uSurfaceColor: surfaceColour,
-  uLineColor: lineColor,
+  uSurfaceColor: DEFAULT_SURFACE_COLOR,
+  uLineColor: DEFAULT_LINE_COLOR,
   uOpacity: 0.2,
   uLineWidth: GEM_LINE_WIDTH,
   uGlowStrength: GEM_GLOW_STRENGTH,
@@ -77,11 +79,14 @@ const GemShellShaderMaterial = extend(GemShellShader)
 
 export type GemShellRef = typeof GemShellShaderMaterial & GemShellUniforms
 
-export type GemShellProps = React.ComponentProps<'group'> & {
+type GroupLikeProps = Record<string, unknown>
+
+export type GemShellProps = GroupLikeProps & {
   isCollected: boolean
   tileWidth: number
   tileHeight: number
   shaderRef: RefObject<GemShellRef | null>
+  id: CollectibleID
 }
 
 const Gem: FC<GemShellProps> = ({
@@ -89,11 +94,21 @@ const Gem: FC<GemShellProps> = ({
   tileHeight,
   isCollected,
   shaderRef,
+  id,
   ...props
 }) => {
+  const gemConfig: GemConfig = GEMS_BY_ID[id] ?? GEMS_BY_ID[CollectibleID.AI_Prompts]
+  const surfaceColor = useMemo(() => new Color(gemConfig.colour), [gemConfig])
+  const lineColor = useMemo(() => {
+    const colour = new Color(gemConfig.colour)
+    colour.offsetHSL(0, 0, 0.2)
+    return colour
+  }, [gemConfig])
+
   return (
     <group {...props} renderOrder={2} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
       <Particles
+        id={id}
         tileWidth={tileWidth}
         tileHeight={tileHeight}
         wasConfirmed={isCollected}
@@ -110,6 +125,8 @@ const Gem: FC<GemShellProps> = ({
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
+          uSurfaceColor={surfaceColor}
+          uLineColor={lineColor}
           uOpacity={isCollected ? 0.35 : 0.15}
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}

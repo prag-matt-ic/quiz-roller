@@ -9,21 +9,7 @@ import particleFragment from './point.frag'
 import particleVertex from './point.vert'
 import useGameFrame from '@/hooks/useGameFrame'
 import { CollectibleID } from '@/model/schema'
-
-const PARTICLE_PALETTE = [
-  '#f6b253',
-  '#ffcc3e',
-  '#ffb328',
-  '#ffc82c',
-  '#ffdd3f',
-  '#ffbd1f',
-  '#ffb51d',
-  '#ffaf07',
-  '#ffe55e',
-  '#f7ebda',
-  '#fff7ec',
-  '#fde5d2',
-] as const
+import { GEMS_BY_ID, GOLD_PARTICLE_PALETTE } from '@/resources/content'
 
 type PointsShaderUniforms = {
   uBurstProgress: number
@@ -49,6 +35,7 @@ const CustomPointsShaderMaterial = shaderMaterial(
 const PointsShaderMaterial = extend(CustomPointsShaderMaterial)
 
 type Props = {
+  id: CollectibleID
   tileWidth: number
   tileHeight: number
   wasConfirmed: boolean
@@ -69,12 +56,12 @@ const createRandomSeeds = (count: number): Float32Array => {
 
 const tempColour = new Color()
 
-const createRandomColours = (count: number): Float32Array => {
+const createRandomColours = (count: number, palette: readonly string[]): Float32Array => {
   const values = new Float32Array(count * 3)
   for (let i = 0; i < count; i++) {
     const offset = i * 3
-    const colourIndex = Math.floor(Math.random() * PARTICLE_PALETTE.length)
-    tempColour.set(PARTICLE_PALETTE[colourIndex])
+    const colourIndex = Math.floor(Math.random() * palette.length)
+    tempColour.set(palette[colourIndex])
     values[offset] = tempColour.r
     values[offset + 1] = tempColour.g
     values[offset + 2] = tempColour.b
@@ -99,6 +86,7 @@ const sampleOctaPoint = () => {
 }
 
 const Particles: FC<Props> = ({
+  id,
   tileWidth,
   tileHeight,
   wasConfirmed = false,
@@ -132,7 +120,11 @@ const Particles: FC<Props> = ({
     [positionComponentCount],
   )
   const seeds = useMemo(() => createRandomSeeds(particleCount), [particleCount])
-  const colours = useMemo(() => createRandomColours(particleCount), [particleCount])
+  const particlePalette = GEMS_BY_ID[id]?.particlesPalette ?? GOLD_PARTICLE_PALETTE
+  const colours = useMemo(
+    () => createRandomColours(particleCount, particlePalette),
+    [particleCount, particlePalette],
+  )
 
   const spawnAttribute = useRef<BufferAttribute>(null)
   const gemTargetAttribute = useRef<BufferAttribute>(null)

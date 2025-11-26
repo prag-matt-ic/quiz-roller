@@ -10,6 +10,52 @@ type InfoContent = {
   infoZoneContent: ReactNode
 }
 
+const BLUE_PARTICLE_PALETTE = [
+  '#5a62f2',
+  '#c1b4ff',
+  '#cab5ff',
+  '#c0c2ff',
+  '#acc2ff',
+  '#d2baff',
+  '#e7daff',
+  '#c2bbff',
+  '#d5baff',
+  '#e7e1ff',
+  '#f4f2fe',
+  '#f3ecff',
+]
+
+export const GOLD_PARTICLE_PALETTE = [
+  '#f6b253',
+  '#ffcc3e',
+  '#ffb328',
+  '#ffc82c',
+  '#ffdd3f',
+  '#ffbd1f',
+  '#ffb51d',
+  '#ffaf07',
+  '#ffe55e',
+  '#f7ebda',
+  '#fff7ec',
+  '#fde5d2',
+]
+
+export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalette: string[] }> =
+  {
+    [CollectibleID.Discount]: {
+      colour: '#F6B253',
+      particlesPalette: GOLD_PARTICLE_PALETTE,
+    },
+    [CollectibleID.AI_Prompts]: {
+      colour: '#5A62F2',
+      particlesPalette: BLUE_PARTICLE_PALETTE,
+    },
+    [CollectibleID.Consultation]: {
+      colour: '#4682B4',
+      particlesPalette: ['#E5F0FF', '#B3D1FF', '#80B2FF', '#4682B4', '#2C5D8A'],
+    },
+  } as const
+
 // badges: [
 //   {
 //     label: 'Stand out',
