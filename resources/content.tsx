@@ -28,21 +28,6 @@ export const COLLECTIBLES_CONTENT: Record<
   },
 }
 
-const BLUE_PARTICLE_PALETTE = [
-  '#5a62f2',
-  '#c1b4ff',
-  '#cab5ff',
-  '#c0c2ff',
-  '#acc2ff',
-  '#d2baff',
-  '#e7daff',
-  '#c2bbff',
-  '#d5baff',
-  '#e7e1ff',
-  '#f4f2fe',
-  '#f3ecff',
-]
-
 export const GOLD_PARTICLE_PALETTE = [
   '#f6b253',
   '#ffcc3e',
@@ -58,6 +43,36 @@ export const GOLD_PARTICLE_PALETTE = [
   '#fde5d2',
 ]
 
+const BLUE_PARTICLE_PALETTE = [
+  '#6a68e7',
+  '#e4d8ff',
+  '#debcff',
+  '#b8bfff',
+  '#b1c0ff',
+  '#d8c1ff',
+  '#e7c4ff',
+  '#e8ceff',
+  '#eec6ff',
+  '#e4e1f9',
+  '#e9e3fc',
+  '#fffaff',
+]
+
+const GREEN_PARTICLE_PALETTE = [
+  '#5ed35e',
+  '#47ec5e',
+  '#97ff7c',
+  '#74e45d',
+  '#80f662',
+  '#6ae557',
+  '#5ce62c',
+  '#60ea48',
+  '#4eff83',
+  '#eeffe9',
+  '#e7fce1',
+  '#e6ffdd',
+]
+
 export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalette: string[] }> =
   {
     [CollectibleID.Discount]: {
@@ -65,12 +80,12 @@ export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalett
       particlesPalette: GOLD_PARTICLE_PALETTE,
     },
     [CollectibleID.AI_Prompts]: {
-      colour: '#5A62F2',
+      colour: '#6A68E7',
       particlesPalette: BLUE_PARTICLE_PALETTE,
     },
     [CollectibleID.Consultation]: {
-      colour: '#4682B4',
-      particlesPalette: ['#E5F0FF', '#B3D1FF', '#80B2FF', '#4682B4', '#2C5D8A'],
+      colour: '#5ED35E',
+      particlesPalette: GREEN_PARTICLE_PALETTE,
     },
   } as const
 
