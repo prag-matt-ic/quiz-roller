@@ -16,6 +16,7 @@ varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
 varying mediump vec2 vUv;
 varying highp vec3 vViewPosition;
+varying mediump float vRespawnFade;
 
 // -------- Surface lighting constants --------
 const vec3 LIGHT_DIR = normalize(vec3(1.0, 1.0, 1.0));
@@ -57,7 +58,7 @@ void main() {
   vec3 marbleColor = baseColor;
 
   if (uIsFlat) {
-    gl_FragColor = vec4(marbleColor, 1.0);
+    gl_FragColor = vec4(marbleColor, vRespawnFade);
     return;
   }
 
@@ -73,5 +74,5 @@ void main() {
   float specular = specular8 * specular2; // specularBase^10
   vec3 litSurface = marbleColor * (AMBIENT_STRENGTH + diffuse * DIFFUSE_STRENGTH) + specular * SPECULAR_STRENGTH;
 
-  gl_FragColor = vec4(litSurface, 1.0);
+  gl_FragColor = vec4(litSurface, vRespawnFade);
 }

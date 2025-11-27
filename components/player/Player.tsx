@@ -16,7 +16,6 @@ import {
   type EdgeWarningIntensities,
   PLAYER_INITIAL_POSITION,
   useGameStore,
-  useGameStoreAPI,
 } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -229,11 +228,9 @@ const Player: FC = () => {
     }
   }
 
-  const userData: PlayerUserData = { type: 'player' }
+  if (!isPlatformReady) return null
 
-  if (!isPlatformReady) {
-    return null
-  }
+  const userData: PlayerUserData = { type: 'player' }
 
   return (
     <RigidBody

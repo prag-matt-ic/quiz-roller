@@ -68,6 +68,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}
+          transparent
         />
       </Suspense>
     </mesh>

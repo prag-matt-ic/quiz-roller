@@ -108,7 +108,7 @@ const PlayerHUD: FC = () => {
     <Html
       sprite={true}
       pointerEvents="none"
-      position={[0, PLAYER_RADIUS * 3, PLAYER_RADIUS]}
+      position={[0, PLAYER_RADIUS * 2.5, PLAYER_RADIUS]}
       center={true}
       renderOrder={2}
       className="relative select-none">
@@ -129,9 +129,9 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="flex flex-col items-center rounded-full bg-black p-1.5 opacity-0">
+                  className="flex flex-col items-center rounded-full bg-black p-2 opacity-0">
                   <div
-                    className="relative h-3 w-26 overflow-hidden rounded-full border border-white bg-white"
+                    className="relative h-4 w-26 overflow-hidden rounded-full border border-white bg-white"
                     style={progressBarStyle}>
                     <div
                       id="progress-bar"
