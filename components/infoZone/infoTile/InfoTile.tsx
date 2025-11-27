@@ -47,37 +47,37 @@ export type InfoTileShaderRef = typeof InfoTileShaderMaterial & InfoTileShaderUn
 
 type InfoTileProps = {
   position: Vector3Tuple
-  isHidden: boolean
+  showInfo: boolean
 }
 
-export const InfoTile: FC<InfoTileProps> = ({ position, isHidden }) => {
+export const InfoTile: FC<InfoTileProps> = ({ position, showInfo }) => {
   const shaderRef = useRef<InfoTileShaderRef | null>(null)
   const hasInitialized = useRef(false)
 
   const colourTexture = useTexture(infoIcon.src)
 
-  // useGSAP(
-  //   () => {
-  //     const material = shaderRef.current
-  //     if (!material) return
+  useGSAP(
+    () => {
+      const material = shaderRef.current
+      if (!material) return
 
-  //     const target = isHidden ? 1 : 0
+      const target = showInfo ? 0 : 1
 
-  //     if (!hasInitialized.current) {
-  //       material.uExitProgress = target
-  //       hasInitialized.current = true
-  //       return
-  //     }
+      if (!hasInitialized.current) {
+        material.uExitProgress = target
+        hasInitialized.current = true
+        return
+      }
 
-  //     gsap.to(material, {
-  //       duration: 0.4,
-  //       uExitProgress: target,
-  //       ease: 'power2.out',
-  //       overwrite: true,
-  //     })
-  //   },
-  //   { dependencies: [isHidden] },
-  // )
+      gsap.to(material, {
+        duration: 0.4,
+        uExitProgress: target,
+        ease: 'power2.out',
+        overwrite: true,
+      })
+    },
+    { dependencies: [showInfo] },
+  )
 
   return (
     <group position={position} rotation={[INFO_TILE_ROTATION_X, 0, 0]}>

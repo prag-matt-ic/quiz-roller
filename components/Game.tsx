@@ -5,7 +5,7 @@ import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense, useEffect, useMemo, useState } from 'react'
+import { type FC, Suspense, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
@@ -139,20 +139,25 @@ export default Game
 
 function usePlatformLayout() {
   const isTestMode = usePerformanceStore((s) => s.isTestPlatform)
+  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const [sectionLayouts, setSectionLayouts] = useState<SectionBitmapLayout[]>([])
   const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
-  const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+
+  useLayoutEffect(() => {
+    setSectionLayouts([])
+  }, [isTestMode, isSpeedRunMode])
 
   useEffect(() => {
     let isMounted = true
+
+    // TODO: parse all the section bitmaps and then switch based on mode to avoid re-fetching / re-parsing
 
     const imageToLayout = (
       image: HTMLImageElement | null,
       stage: Stage,
     ): SectionBitmapLayout | null => {
-      if (!image) return null
       try {
+        if (!image) return null
         return parseSectionBitmap(image, stage)
       } catch (error) {
         console.error(`[Game] Failed to parse ${stage} bitmap`, error)
@@ -166,6 +171,10 @@ function usePlatformLayout() {
         ? SPEED_RUN_TEXTURES
         : MAIN_TEXTURES
 
+    const getTotalRingsCount = (layouts: SectionBitmapLayout[]): number => {
+      return layouts.reduce((sum, layout) => sum + (layout?.totalRingsCount ?? 0), 0)
+    }
+
     loadHtmlImage(textures.map((descriptor) => descriptor.src)).then((images) => {
       if (!isMounted) return
       const layouts: SectionBitmapLayout[] = images
@@ -175,25 +184,16 @@ function usePlatformLayout() {
           return imageToLayout(image, descriptor.stage)
         })
         .filter((layout): layout is SectionBitmapLayout => layout !== null)
+
+      const totalRings = getTotalRingsCount(layouts)
+      setTotalRingsCount(totalRings)
       setSectionLayouts(layouts)
     })
 
     return () => {
       isMounted = false
     }
-  }, [isTestMode, isSpeedRunMode])
-
-  useEffect(() => {
-    const updateTotalRingsCount = () => {
-      const totalRings = sectionLayouts.reduce(
-        (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
-        0,
-      )
-      setTotalRingsCount(totalRings)
-    }
-
-    updateTotalRingsCount()
-  }, [resetPlatformTick, sectionLayouts, setTotalRingsCount])
+  }, [isTestMode, isSpeedRunMode, setTotalRingsCount])
 
   return {
     sectionLayouts,

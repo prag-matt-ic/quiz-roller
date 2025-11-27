@@ -13,6 +13,7 @@ uniform mediump float uTilesY;
 
 varying mediump vec2 vUv;
 varying mediump vec2 vHeightSpacePosition;
+varying mediump float vDistanceFade;
 
 const float BORDER_THICKNESS_TILES = 0.1; // thickness relative to a tile height
 const float CORNER_LENGTH_TILES = 0.5; // fraction of tile to extend from each corner
@@ -35,7 +36,7 @@ void main() {
   );
 
   vec3 cornerColour = vec3(1.0);
-  float finalAlpha = bracketMask;
+  float finalAlpha = bracketMask * vDistanceFade;
 
   gl_FragColor = vec4(cornerColour, finalAlpha);
 }

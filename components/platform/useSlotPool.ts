@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef, useState } from 'react'
+import { createRef, type RefObject, useCallback, useRef, useState } from 'react'
 
 type SlotAssignment = {
   rowIndex: number
@@ -11,7 +11,7 @@ type UseSlotPoolOptions<TRef, TState extends Record<string, unknown>> = {
 }
 
 type UseSlotPoolResult<TRef, TState extends Record<string, unknown>> = {
-  refs: RefObject<Array<TRef | null>>
+  refs: RefObject<TRef | null>[]
   slotAssignments: RefObject<Array<SlotAssignment | null>>
   slotStates: TState[]
   updateSlotState: (slotIndex: number, updates: Partial<TState>) => void
@@ -29,7 +29,7 @@ export function useSlotPool<TRef, TState extends Record<string, unknown>>({
   size,
   createInitialState,
 }: UseSlotPoolOptions<TRef, TState>): UseSlotPoolResult<TRef, TState> {
-  const refs = useRef<Array<TRef | null>>(Array.from({ length: size }, () => null))
+  const [refs] = useState(Array.from({ length: size }, () => createRef<TRef | null>()))
 
   const slotAssignments = useRef<Array<SlotAssignment | null>>(
     Array.from({ length: size }, () => null),

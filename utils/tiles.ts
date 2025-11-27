@@ -75,12 +75,8 @@ export type RowData = {
   isSectionEnd: boolean
   rowIndex?: number
   ringPositions?: RingPositions
-
   isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
-
-  tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface
-  imagePosition?: [number, number, number] // 2D image rendered on the platform
-  infoZonePlacements?: (IndexedPlacement | null)[] // Info zones rendered on the platform
+  infoZonePlacements?: IndexedPlacement[] // Info zones rendered on the platform
   collectiblePlacements?: IndexedPlacement[] // Collectibles rendered on the platform
   floatingHeadingPlacements?: IndexedPlacement[] // Floating heading above the platform but still aligned to the row
   finishLinePosition?: [number, number, number] // Finish line position

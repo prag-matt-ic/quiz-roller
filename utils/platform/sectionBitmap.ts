@@ -10,7 +10,7 @@ export type SectionBitmapRow = {
   finishLineColumns: number[]
   floatingHeadingColumns: number[]
   infoZonePlacements?: BitmapPlacement[]
-  collectiblePlacement?: BitmapPlacement | null
+  collectiblePlacements?: BitmapPlacement[]
   finishLinePlacement?: BitmapPlacement | null
   floatingHeadingPlacement?: BitmapPlacement | null
 }
@@ -31,7 +31,7 @@ const COLOUR_CODES = {
   VOID: [0, 0, 0] as const,
   RING: [255, 0, 0] as const,
   FLOATING_HEADING: [128, 128, 128] as const,
-  INFO: [0, 255, 0] as const,
+  INFO_ZONE: [0, 255, 0] as const,
   COLLECTIBLE: [0, 0, 255] as const,
   HIGHLIGHT: [0, 255, 255] as const,
   FINISH_LINE: [255, 255, 0] as const,
@@ -91,7 +91,7 @@ export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): Secti
         ringColumns.push(column)
       }
 
-      if (isColour(r, g, b, COLOUR_CODES.INFO)) {
+      if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) {
         infoZoneColumns.push(column)
         highlightColumns.push(column)
       }
@@ -138,7 +138,8 @@ export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): Secti
     rows,
     (row) => row.collectibleColumns,
     (rowIndex, placements) => {
-      rows[rowIndex].collectiblePlacement = placements[0] ?? null
+      if (!placements.length) return
+      rows[rowIndex].collectiblePlacements = placements
     },
   )
 
@@ -175,6 +176,12 @@ export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): Secti
 type ColumnsAccessor = (row: SectionBitmapRow) => number[]
 type PlacementAssigner = (rowIndex: number, placements: BitmapPlacement[]) => void
 
+/**
+ * For a given surface element (info zones, collectibles, etc.) this helper scans the bitmap rows,
+ * groups neighbouring coloured pixels into connected components (4-directional), and records a
+ * single placement for every row that participates in that component. The function is invoked once
+ * per element type, so a row can safely contain both info zones and collectibles simultaneously.
+ */
 function assignBitmapPlacements(
   rows: SectionBitmapRow[],
   getColumns: ColumnsAccessor,
@@ -184,6 +191,7 @@ function assignBitmapPlacements(
   if (rowCount === 0) return
 
   const columnSets = rows.map((row) => new Set(getColumns(row)))
+  // Track which bitmap cells have already been consumed for this feature type.
   const visited = new Set<string>()
   const placementsByRow = new Map<number, BitmapPlacement[]>()
   const keyFor = (row: number, column: number) => `${row}:${column}`
@@ -202,6 +210,7 @@ function assignBitmapPlacements(
       const seedKey = keyFor(rowIndex, column)
       if (visited.has(seedKey)) return
 
+      // Depth-first search starting from this pixel to capture the entire connected component.
       const stack: Array<{ row: number; column: number }> = [{ row: rowIndex, column }]
       const component: Array<{ row: number; column: number }> = []
 
@@ -253,6 +262,7 @@ function assignBitmapPlacements(
 
   placementsByRow.forEach((placements, rowIndex) => {
     placements.sort((a, b) => a.columnIndex - b.columnIndex)
+    // Hand back the per-row placement list to the caller (info zones, collectibles, etc.).
     assignPlacements(rowIndex, placements)
   })
 }

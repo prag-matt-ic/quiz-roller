@@ -21,9 +21,6 @@ const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 type DebugPayload = Record<string, unknown>
 
-const formatNumber = (value: number) =>
-  Number.isFinite(value) ? Number(value.toFixed(2)) : value
-
 const logDebug = (message: string, payload?: DebugPayload) => {
   if (!IS_DEV_ENV) return
   if (payload) {
@@ -51,7 +48,7 @@ type Props = {
 
 const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
   const {
-    refs: headingRefs,
+    refs,
     slotAssignments,
     slotStates,
     updateSlotState,
@@ -73,7 +70,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
 
   const setHeadingPosition = useCallback(
     (slotIndex: number, x: number, y: number, z: number) => {
-      const heading = headingRefs.current[slotIndex]
+      const heading = refs[slotIndex].current
       if (!heading) {
         if (!missingHeadingSlotsRef.current.has(slotIndex)) {
           missingHeadingSlotsRef.current.add(slotIndex)
@@ -86,12 +83,11 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
 
       if (missingHeadingSlotsRef.current.has(slotIndex)) {
         missingHeadingSlotsRef.current.delete(slotIndex)
-        logDebug('Recovered mesh ref for heading slot.', { slotIndex })
       }
 
       heading.position.set(x, y, z + 7)
     },
-    [headingRefs, missingHeadingSlotsRef],
+    [refs, missingHeadingSlotsRef],
   )
 
   const ensureHeadingForPlacement = useCallback(
@@ -114,12 +110,6 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
         })
         if (!loggedPlacementsRef.current.has(placementKey)) {
           loggedPlacementsRef.current.add(placementKey)
-          logDebug('Updated existing floating heading slot.', {
-            rowIndex,
-            placementIndex,
-            slotIndex: existingSlot,
-            targetZ: formatNumber(targetZ),
-          })
         }
         return
       }
@@ -131,11 +121,6 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
             '[FloatingHeadings] Exceeded heading pool capacity. Increase MAX_FLOATING_HEADINGS.',
           )
         }
-        logDebug('No available floating heading slots. Skipping placement.', {
-          rowIndex,
-          placementIndex,
-          targetZ: formatNumber(targetZ),
-        })
         return
       }
 
@@ -146,12 +131,6 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
         isVisible: true,
       })
       loggedPlacementsRef.current.add(placementKey)
-      logDebug('Assigned floating heading to slot.', {
-        rowIndex,
-        placementIndex,
-        slotIndex: availableSlot,
-        targetZ: formatNumber(targetZ),
-      })
     },
     [assignSlot, findAvailableSlot, findExistingSlot, setHeadingPosition, updateSlotState],
   )
@@ -165,11 +144,6 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
 
       if (!loggedRowsRef.current.has(rowIndex)) {
         loggedRowsRef.current.add(rowIndex)
-        logDebug('Row ready for floating heading placement.', {
-          rowIndex,
-          rowZ: formatNumber(rowZ),
-          placementCount: row.floatingHeadingPlacements.length,
-        })
       }
 
       row.floatingHeadingPlacements.forEach((placement, placementIndex) => {
@@ -189,9 +163,6 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
           if (key.startsWith(`${rowIndex}:`)) {
             loggedPlacementsRef.current.delete(key)
           }
-        }
-        if (row.floatingHeadingPlacements?.length) {
-          logDebug('Releasing floating headings for row.', { rowIndex })
         }
       }
       releaseSlotsForRow(row.rowIndex, (slotIndex) => {
@@ -213,12 +184,12 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
       if (zStep === 0) return
       slotAssignments.current.forEach((assignment, slotIndex) => {
         if (!assignment) return
-        const heading = headingRefs.current[slotIndex]
+        const heading = refs[slotIndex].current
         if (!heading) return
         heading.position.z += zStep
       })
     },
-    [headingRefs, slotAssignments],
+    [refs, slotAssignments],
   )
 
   useImperativeHandle(
@@ -245,9 +216,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
         return (
           <FloatingHeading
             key={`info-floating-heading-${slotIndex}`}
-            ref={(node) => {
-              headingRefs.current[slotIndex] = node
-            }}
+            ref={refs[slotIndex]}
             text={text}
             position={INITIAL_HEADING_POSITION}
             width={HEADING_WIDTH}

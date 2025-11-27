@@ -1,7 +1,7 @@
 import { useTexture } from '@react-three/drei'
 import { type FC, type RefObject, Suspense } from 'react'
 import { Group } from 'three'
-import { StaticImageData } from 'next/image'
+import { type StaticImageData } from 'next/image'
 
 type Props = {
   ref: RefObject<Group | null>
@@ -10,7 +10,7 @@ type Props = {
   height: number
 }
 
-const FlatImage: FC<Props> = ({ ref, height, width, image }) => {
+const SurfaceImage: FC<Props> = ({ ref, height, width, image }) => {
   const texture = useTexture(image.src)
 
   return (
@@ -25,4 +25,4 @@ const FlatImage: FC<Props> = ({ ref, height, width, image }) => {
   )
 }
 
-export default FlatImage
+export default SurfaceImage

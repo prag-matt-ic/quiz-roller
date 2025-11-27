@@ -15,7 +15,7 @@ import {
 } from '@react-three/rapier'
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
-import { type FC, type PropsWithChildren, RefObject, useEffect, useRef, useState } from 'react'
+import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -52,7 +52,7 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 type Props = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
-  isVisible?: boolean
+  isVisible: boolean
   position: Vector3Tuple
   width: number
   height: number
@@ -63,7 +63,7 @@ type Props = PropsWithChildren<{
 }>
 
 const ICON_BASE_CLEARANCE = TILE_SIZE * 0.5
-const iconPositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
+const infoTilePositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
@@ -150,13 +150,6 @@ export const InfoZone: FC<Props> = ({
   const aspect = width / height
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
-  const shouldRenderInfo = isVisible
-
-  useEffect(() => {
-    if (!isVisible && !alwaysShowInfo) {
-      setShowInfo(false)
-    }
-  }, [alwaysShowInfo, isVisible])
 
   return (
     <>
@@ -193,7 +186,7 @@ export const InfoZone: FC<Props> = ({
             />
           </mesh>
 
-          <InfoTile position={iconPositionOffset} isHidden={showInfo} />
+          {/* <InfoTile position={infoTilePositionOffset} showInfo={showInfo} /> */}
         </group>
         {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>
@@ -202,7 +195,7 @@ export const InfoZone: FC<Props> = ({
         </mesh> */}
 
         {/* Info Content */}
-        {shouldRenderInfo && (
+        {isVisible && (
           <Html
             sprite={true}
             center={true}

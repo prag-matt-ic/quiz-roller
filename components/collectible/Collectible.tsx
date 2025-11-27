@@ -36,6 +36,7 @@ type TileShaderUniforms = {
   uAspect: number
   uTilesX: number
   uTilesY: number
+  uUseDistanceFade: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
@@ -46,6 +47,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uAspect: 1,
   uTilesX: 5,
   uTilesY: 5,
+  uUseDistanceFade: 1,
 }
 
 const CollectibleTileShader = shaderMaterial(
@@ -153,9 +155,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVis
           uAspect={tileAspect}
           uTilesX={tilesX}
           uTilesY={tilesY}
-          defines={{
-            CAMERA_DISTANCE_FADE: useDistanceFade,
-          }}
+          uUseDistanceFade={useDistanceFade ? 1 : 0}
         />
       </mesh>
 

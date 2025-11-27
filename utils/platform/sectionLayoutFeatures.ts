@@ -7,7 +7,7 @@ import {
   type RowData,
 } from '@/utils/tiles'
 import { HEADING_Y } from './floatingHeading'
-import type { SectionBitmapLayout, SectionBitmapRow } from './sectionBitmap'
+import type { BitmapPlacement, SectionBitmapLayout, SectionBitmapRow } from './sectionBitmap'
 import {
   COLLECTIBLES_CONTENT,
   FLOATING_HEADINGS_CONTENT,
@@ -46,10 +46,13 @@ export const buildRowsFromLayouts = (layouts: SectionBitmapLayout[]): RowData[] 
     console.error('More floating headings used than content available')
   }
   if (globalIndexes.infoZone > INFO_ZONES_CONTENT.length) {
-    console.error('More info zones used than content available')
+    console.error('More info zones used than content available', {
+      globalIndexes,
+      infoContentLength: INFO_ZONES_CONTENT.length,
+    })
   }
   if (globalIndexes.collectible > Object.keys(COLLECTIBLES_CONTENT).length) {
-    console.error('More collectibles used than content available')
+    console.error('More collectibles used than content available', { globalIndexes })
   }
 
   return rows
@@ -89,7 +92,7 @@ export function buildSectionRowsFromLayout({
 
     applyRingColumns(row, layoutRow.ringColumns)
     applyInfoColumns(row, layoutRow, globalIndexes)
-    applyCollectibleColumn(row, layoutRow, globalIndexes)
+    applyCollectiblePlacements(row, layoutRow, globalIndexes)
     applyFinishLineColumn(row, layoutRow)
     applyFloatingHeadingPlacement(row, layoutRow, globalIndexes)
     applyHighlightColumns(row, layoutRow.highlightColumns)
@@ -116,53 +119,41 @@ function applyInfoColumns(
   layoutRow: SectionBitmapRow,
   globalIndexes: GlobalIndexes,
 ) {
-  const placements = layoutRow.infoZonePlacements
-  if (placements && placements.length > 0) {
-    row.infoZonePlacements = placements.map(({ columnIndex, zOffset }) =>
-      createIndexedPlacement(columnIndex, zOffset, ON_TILE_Y, 'infoZone', globalIndexes),
-    )
-    return
-  }
+  const placements =
+    buildPlacementsFromBitmap(
+      layoutRow.infoZonePlacements,
+      ON_TILE_Y,
+      'infoZone',
+      globalIndexes,
+    ) ??
+    buildPlacementsFromColumns(layoutRow.infoZoneColumns, ON_TILE_Y, 'infoZone', globalIndexes)
 
-  const columns = layoutRow.infoZoneColumns
-  if (!columns || columns.length === 0) return
-  row.infoZonePlacements = columns.map((columnIndex) =>
-    createIndexedPlacement(columnIndex, 0, ON_TILE_Y, 'infoZone', globalIndexes),
-  )
+  if (placements?.length) {
+    row.infoZonePlacements = placements
+  }
 }
 
-function applyCollectibleColumn(
+function applyCollectiblePlacements(
   row: RowData,
   layoutRow: SectionBitmapRow,
   globalIndexes: GlobalIndexes,
 ) {
-  const placement = layoutRow.collectiblePlacement
-  if (placement) {
-    const { columnIndex, zOffset } = placement
-    const indexedPlacement = createIndexedPlacement(
-      columnIndex,
-      zOffset,
+  const placements =
+    buildPlacementsFromBitmap(
+      layoutRow.collectiblePlacements,
+      ON_TILE_Y,
+      'collectible',
+      globalIndexes,
+    ) ??
+    buildPlacementsFromColumns(
+      layoutRow.collectibleColumns,
       ON_TILE_Y,
       'collectible',
       globalIndexes,
     )
-    if (indexedPlacement) {
-      row.collectiblePlacements = [indexedPlacement]
-    }
-    return
-  }
 
-  const fallbackColumn = layoutRow.collectibleColumns[0] ?? null
-  if (fallbackColumn == null) return
-  const indexedPlacement = createIndexedPlacement(
-    fallbackColumn,
-    0,
-    ON_TILE_Y,
-    'collectible',
-    globalIndexes,
-  )
-  if (indexedPlacement) {
-    row.collectiblePlacements = [indexedPlacement]
+  if (placements?.length) {
+    row.collectiblePlacements = placements
   }
 }
 
@@ -208,6 +199,40 @@ function applyFloatingHeadingPlacement(
   if (indexedPlacement) {
     row.floatingHeadingPlacements = [indexedPlacement]
   }
+}
+
+function buildPlacementsFromBitmap(
+  placements: BitmapPlacement[] | undefined,
+  y: number,
+  indexKey: PlacementIndexKey,
+  globalIndexes: GlobalIndexes,
+): IndexedPlacement[] | undefined {
+  if (!placements?.length) return undefined
+  const indexedPlacements: IndexedPlacement[] = []
+  placements.forEach(({ columnIndex, zOffset }) => {
+    const placement = createIndexedPlacement(columnIndex, zOffset, y, indexKey, globalIndexes)
+    if (placement) {
+      indexedPlacements.push(placement)
+    }
+  })
+  return indexedPlacements.length > 0 ? indexedPlacements : undefined
+}
+
+function buildPlacementsFromColumns(
+  columns: number[] | undefined,
+  y: number,
+  indexKey: PlacementIndexKey,
+  globalIndexes: GlobalIndexes,
+): IndexedPlacement[] | undefined {
+  if (!columns?.length) return undefined
+  const indexedPlacements: IndexedPlacement[] = []
+  columns.forEach((columnIndex) => {
+    const placement = createIndexedPlacement(columnIndex, 0, y, indexKey, globalIndexes)
+    if (placement) {
+      indexedPlacements.push(placement)
+    }
+  })
+  return indexedPlacements.length > 0 ? indexedPlacements : undefined
 }
 
 function createIndexedPlacement(

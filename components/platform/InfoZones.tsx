@@ -6,11 +6,10 @@ import {
   useRef,
   useState,
   type RefObject,
+  createRef,
 } from 'react'
 import { RapierRigidBody } from '@react-three/rapier'
 
-import { InfoZone } from '@/components/infoZone/InfoZone'
-import { INFO_ZONES_CONTENT } from '@/resources/content'
 import {
   HIDE_POSITION_Y,
   HIDE_POSITION_Z,
@@ -18,24 +17,20 @@ import {
   type RowData,
 } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
+import { InfoZone } from '@/components/infoZone/InfoZone'
+import { INFO_ZONES_CONTENT } from '@/resources/content'
 
-const INFO_ZONE_CONTENT_LENGTH = Math.max(1, INFO_ZONES_CONTENT.length)
 const INITIAL_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
-
-type InfoZoneAssignment = {
-  rowIndex: number | null
-  placementIndex: number | null
-}
-
-const normalizeContentIndex = (index: number) => {
-  const normalized = index % INFO_ZONE_CONTENT_LENGTH
-  return normalized < 0 ? normalized + INFO_ZONE_CONTENT_LENGTH : normalized
-}
 
 export type InfoZonesHandle = {
   moveElements: (zStep: number) => void
   positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
   hideElementsIfNeeded: (row: RowData | undefined) => void
+}
+
+type Assignment = {
+  rowIndex: number | null
+  placementIndex: number | null
 }
 
 type Props = {
@@ -44,118 +39,118 @@ type Props = {
 }
 
 const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
-  const infoZoneRefs = useRef<Array<RapierRigidBody | null>>(
-    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => null),
-  )
-  const assignments = useRef<InfoZoneAssignment[]>(
-    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => ({
-      rowIndex: null,
-      placementIndex: null,
-    })),
-  )
+  const [refs] = useState(INFO_ZONES_CONTENT.map(() => createRef<RapierRigidBody | null>()))
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
-    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => false),
+    INFO_ZONES_CONTENT.map(() => false),
   )
+  const assignments = useRef<Assignment[]>(
+    INFO_ZONES_CONTENT.map(() => ({ rowIndex: null, placementIndex: null })),
+  )
+
   const translation = useRef({ x: 0, y: 0, z: 0 })
 
-  const setIsVisibleState = useCallback((slotIndex: number, value: boolean) => {
+  const setIsVisibleState = useCallback((index: number, value: boolean) => {
     setIsVisibleStates((prev) => {
-      if (prev[slotIndex] === value) return prev
+      if (prev[index] === value) return prev
       const next = [...prev]
-      next[slotIndex] = value
+      next[index] = value
       return next
     })
   }, [])
 
-  const setInfoZonePosition = useCallback(
-    (slotIndex: number, x: number, y: number, z: number) => {
-      const body = infoZoneRefs.current[slotIndex]
-      if (!body) return false
+  const setPosition = useCallback(
+    (index: number, x: number, y: number, z: number) => {
+      const body = refs[index]
+      if (!body?.current) return false
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
-      body.setTranslation(translation.current, true)
+      body.current.setTranslation(translation.current, true)
       return true
     },
-    [],
+    [refs, translation],
   )
 
-  const hideInfoZoneAtIndex = useCallback(
+  const hideAtIndex = useCallback(
     (index: number) => {
-      setInfoZonePosition(index, INITIAL_POSITION[0], INITIAL_POSITION[1], INITIAL_POSITION[2])
+      setPosition(index, INITIAL_POSITION[0], INITIAL_POSITION[1], INITIAL_POSITION[2])
       assignments.current[index] = { rowIndex: null, placementIndex: null }
       setIsVisibleState(index, false)
     },
-    [setInfoZonePosition, setIsVisibleState],
+    [assignments, setPosition, setIsVisibleState],
   )
 
-  const releaseRow = useCallback(
-    (rowIndex: number | null | undefined) => {
-      if (rowIndex == null) return
-      assignments.current.forEach((assignment, slotIndex) => {
-        if (assignment.rowIndex !== rowIndex) return
-        hideInfoZoneAtIndex(slotIndex)
-      })
-    },
-    [hideInfoZoneAtIndex],
-  )
-
-  const ensureInfoZoneForPlacement = useCallback(
-    (
-      rowIndex: number,
-      placementIndex: number,
-      rowZ: number,
-      placement: IndexedPlacement | null,
-    ) => {
-      if (!placement) return
+  const ensurePlacement = useCallback(
+    (rowIndex: number, placementIndex: number, rowZ: number, placement: IndexedPlacement) => {
       const [x, y, relativeZ, contentIndex] = placement
-      const normalizedIndex = normalizeContentIndex(contentIndex)
+      if (contentIndex < 0 || contentIndex >= refs.length) return
+      const assignment = assignments.current[contentIndex]
+      if (assignment?.rowIndex === rowIndex && assignment.placementIndex === placementIndex)
+        return
       const targetZ = rowZ + relativeZ
 
-      if (!setInfoZonePosition(normalizedIndex, x, y, targetZ)) return
+      if (!setPosition(contentIndex, x, y, targetZ)) return
 
-      assignments.current[normalizedIndex] = { rowIndex, placementIndex }
-      setIsVisibleState(normalizedIndex, true)
+      assignments.current[contentIndex] = { rowIndex, placementIndex }
+      setIsVisibleState(contentIndex, true)
     },
-    [setInfoZonePosition, setIsVisibleState],
+    [assignments, refs.length, setPosition, setIsVisibleState],
+  )
+
+  const releaseUnusedPlacements = useCallback(
+    (rowIndex: number, placementCount: number) => {
+      assignments.current.forEach((assignment, index) => {
+        if (assignment.rowIndex !== rowIndex) return
+        if (assignment.placementIndex != null && assignment.placementIndex < placementCount)
+          return
+        hideAtIndex(index)
+      })
+    },
+    [assignments, hideAtIndex],
   )
 
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
-      if (!row) return
-      if (!row.infoZonePlacements?.length) return
+      if (!row?.infoZonePlacements?.length) return
+
       const rowIndex = row.rowIndex ?? -1
       if (rowIndex < 0) return
 
       row.infoZonePlacements.forEach((placement, placementIndex) => {
-        if (!placement) return
-        ensureInfoZoneForPlacement(rowIndex, placementIndex, rowZ, placement)
+        ensurePlacement(rowIndex, placementIndex, rowZ, placement)
       })
+      releaseUnusedPlacements(rowIndex, row.infoZonePlacements.length)
     },
-    [ensureInfoZoneForPlacement],
+    [ensurePlacement, releaseUnusedPlacements],
   )
 
   const hideElementsIfNeeded = useCallback(
     (row: RowData | undefined) => {
-      if (!row) return
-      releaseRow(row.rowIndex)
+      if (!row || row.rowIndex == null) return
+      assignments.current.forEach((assignment, index) => {
+        if (assignment.rowIndex !== row.rowIndex) return
+        hideAtIndex(index)
+      })
     },
-    [releaseRow],
+    [assignments, hideAtIndex],
   )
 
-  const moveElements = useCallback((zStep: number) => {
-    if (zStep === 0) return
-    assignments.current.forEach((assignment, slotIndex) => {
-      if (assignment.rowIndex == null) return
-      const body = infoZoneRefs.current[slotIndex]
-      if (!body) return
-      const currentTranslation = body.translation()
-      translation.current.x = currentTranslation.x
-      translation.current.y = currentTranslation.y
-      translation.current.z = currentTranslation.z + zStep
-      body.setTranslation(translation.current, true)
-    })
-  }, [])
+  const moveElements = useCallback(
+    (zStep: number) => {
+      if (zStep === 0) return
+      assignments.current.forEach((assignment, index) => {
+        if (assignment.rowIndex == null) return
+        const body = refs[index]
+        if (!body?.current) return
+        const currentPosition = body.current.translation()
+        translation.current.x = currentPosition.x
+        translation.current.y = currentPosition.y
+        translation.current.z = currentPosition.z + zStep
+        body.current.setTranslation(translation.current, true)
+      })
+    },
+    [assignments, refs, translation],
+  )
 
   useImperativeHandle(
     ref,
@@ -176,24 +171,18 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
-      {Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, (_, index) => {
-        const infoContent =
-          INFO_ZONES_CONTENT.length > 0
-            ? INFO_ZONES_CONTENT[index % INFO_ZONES_CONTENT.length]
-            : undefined
-
+      {refs.map((ref, index) => {
+        const content = INFO_ZONES_CONTENT[index]
         return (
           <InfoZone
             key={`info-zone-${index}`}
-            ref={(node) => {
-              infoZoneRefs.current[index] = node
-            }}
+            ref={ref}
             position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
             width={INFO_ZONE_WIDTH}
             height={INFO_ZONE_HEIGHT}
-            infoContainerClassName={infoContent?.containerClassName}
+            infoContainerClassName={content.containerClassName}
             isVisible={isVisibleStates[index]}>
-            {infoContent?.content ?? null}
+            {content.content ?? null}
           </InfoZone>
         )
       })}

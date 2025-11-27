@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type RefObject,
+  createRef,
 } from 'react'
 import { RapierRigidBody } from '@react-three/rapier'
 
@@ -19,7 +20,6 @@ import {
 } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
 
-const COLLECTIBLE_COUNT = COLLECTIBLE_IDS.length
 const INITIAL_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
 export type CollectiblesHandle = {
@@ -28,15 +28,9 @@ export type CollectiblesHandle = {
   hideElementsIfNeeded: (row: RowData | undefined) => void
 }
 
-type CollectibleAssignment = {
+type Assignment = {
   rowIndex: number | null
   placementIndex: number | null
-}
-
-const normalizeContentIndex = (index: number) => {
-  if (COLLECTIBLE_COUNT === 0) return 0
-  const normalized = index % COLLECTIBLE_COUNT
-  return normalized < 0 ? normalized + COLLECTIBLE_COUNT : normalized
 }
 
 type Props = {
@@ -45,8 +39,9 @@ type Props = {
 }
 
 const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
-  const collectibleRefs = useRef<Array<RapierRigidBody | null>>(COLLECTIBLE_IDS.map(() => null))
-  const assignments = useRef<CollectibleAssignment[]>(
+  const [refs] = useState(COLLECTIBLE_IDS.map(() => createRef<RapierRigidBody | null>()))
+
+  const assignments = useRef<Assignment[]>(
     COLLECTIBLE_IDS.map(() => ({ rowIndex: null, placementIndex: null })),
   )
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
@@ -65,15 +60,15 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
 
   const setCollectiblePosition = useCallback(
     (index: number, x: number, y: number, z: number) => {
-      const body = collectibleRefs.current[index]
-      if (!body) return false
+      const body = refs[index]
+      if (!body?.current) return false
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
-      body.setTranslation(translation.current, true)
+      body.current.setTranslation(translation.current, true)
       return true
     },
-    [collectibleRefs, translation],
+    [refs, translation],
   )
 
   const hideCollectibleAtIndex = useCallback(
@@ -90,18 +85,33 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
     [assignments, setCollectiblePosition, setIsVisibleState],
   )
 
-  const ensureCollectiblePlacement = useCallback(
+  const ensurePlacement = useCallback(
     (rowIndex: number, placementIndex: number, rowZ: number, placement: IndexedPlacement) => {
       const [x, y, relativeZ, contentIndex] = placement
-      const collectibleIndex = normalizeContentIndex(contentIndex)
+      if (contentIndex < 0 || contentIndex >= refs.length) return
+      const assignment = assignments.current[contentIndex]
+      if (assignment?.rowIndex === rowIndex && assignment.placementIndex === placementIndex)
+        return
       const targetZ = rowZ + relativeZ
 
-      if (!setCollectiblePosition(collectibleIndex, x, y, targetZ)) return
+      if (!setCollectiblePosition(contentIndex, x, y, targetZ)) return
 
-      assignments.current[collectibleIndex] = { rowIndex, placementIndex }
-      setIsVisibleState(collectibleIndex, true)
+      assignments.current[contentIndex] = { rowIndex, placementIndex }
+      setIsVisibleState(contentIndex, true)
     },
-    [assignments, setCollectiblePosition, setIsVisibleState],
+    [assignments, refs.length, setCollectiblePosition, setIsVisibleState],
+  )
+
+  const releaseUnusedPlacements = useCallback(
+    (rowIndex: number, placementCount: number) => {
+      assignments.current.forEach((assignment, index) => {
+        if (assignment.rowIndex !== rowIndex) return
+        if (assignment.placementIndex != null && assignment.placementIndex < placementCount)
+          return
+        hideCollectibleAtIndex(index)
+      })
+    },
+    [assignments, hideCollectibleAtIndex],
   )
 
   const positionElementsIfNeeded = useCallback(
@@ -111,10 +121,11 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
       if (rowIndex < 0) return
 
       row.collectiblePlacements.forEach((placement, placementIndex) => {
-        ensureCollectiblePlacement(rowIndex, placementIndex, rowZ, placement)
+        ensurePlacement(rowIndex, placementIndex, rowZ, placement)
       })
+      releaseUnusedPlacements(rowIndex, row.collectiblePlacements.length)
     },
-    [ensureCollectiblePlacement],
+    [ensurePlacement, releaseUnusedPlacements],
   )
 
   const hideElementsIfNeeded = useCallback(
@@ -133,16 +144,16 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
       if (zStep === 0) return
       assignments.current.forEach((assignment, index) => {
         if (assignment.rowIndex == null) return
-        const body = collectibleRefs.current[index]
-        if (!body) return
-        const currentPosition = body.translation()
-        translation.current.x = currentPosition.x
-        translation.current.y = currentPosition.y
-        translation.current.z = currentPosition.z + zStep
-        body.setTranslation(translation.current, true)
+        const body = refs[index]
+        if (!body?.current) return
+        const currentPosition = body.current.translation()
+        translation.current.x = currentPosition?.x ?? 0
+        translation.current.y = currentPosition?.y ?? 0
+        translation.current.z = (currentPosition?.z ?? 0) + zStep
+        body.current.setTranslation(translation.current, true)
       })
     },
-    [assignments, collectibleRefs, translation],
+    [assignments, refs, translation],
   )
 
   useImperativeHandle(
@@ -167,9 +178,7 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
       {COLLECTIBLE_IDS.map((collectibleId, index) => (
         <Collectible
           key={`collectible-${collectibleId}`}
-          ref={(node) => {
-            collectibleRefs.current[index] = node
-          }}
+          ref={refs[index]}
           id={collectibleId}
           position={INITIAL_POSITION}
           width={INFO_ZONE_WIDTH}

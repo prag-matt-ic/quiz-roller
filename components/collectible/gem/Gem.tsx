@@ -20,7 +20,7 @@ const GEM_POSITION: Vector3Tuple = [0, 3, 0]
 const DEFAULT_SURFACE_COLOR = new Color(GEMS_BY_ID[CollectibleID.AI_Prompts].colour)
 
 const GEM_SURFACE_GEOMETRY = (() => {
-  const geometry = BASE_GEOMETRY.clone().toNonIndexed()
+  const geometry = BASE_GEOMETRY.clone()
   const positionCount = geometry.attributes.position.count
   const barycentric = new Float32Array(positionCount * 3)
 
