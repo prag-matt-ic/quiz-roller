@@ -89,7 +89,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
         logDebug('Recovered mesh ref for heading slot.', { slotIndex })
       }
 
-      heading.position.set(x, y, z)
+      heading.position.set(x, y, z + 7)
     },
     [headingRefs, missingHeadingSlotsRef],
   )

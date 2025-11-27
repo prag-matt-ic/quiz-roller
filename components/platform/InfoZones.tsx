@@ -19,18 +19,12 @@ import {
 } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
 
-const INFO_ZONE_SLOT_COUNT = 3
 const INFO_ZONE_CONTENT_LENGTH = Math.max(1, INFO_ZONES_CONTENT.length)
 const INITIAL_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
-type SlotAssignment = {
+type InfoZoneAssignment = {
   rowIndex: number | null
   placementIndex: number | null
-}
-
-type SlotState = {
-  contentIndex: number
-  isPositioned: boolean
 }
 
 const normalizeContentIndex = (index: number) => {
@@ -51,40 +45,18 @@ type Props = {
 
 const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const infoZoneRefs = useRef<Array<RapierRigidBody | null>>(
-    Array.from({ length: INFO_ZONE_SLOT_COUNT }, () => null),
+    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => null),
   )
-  const assignments = useRef<SlotAssignment[]>(
-    Array.from({ length: INFO_ZONE_SLOT_COUNT }, () => ({
+  const assignments = useRef<InfoZoneAssignment[]>(
+    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => ({
       rowIndex: null,
       placementIndex: null,
     })),
   )
-  const [slotStates, setSlotStates] = useState<SlotState[]>(() =>
-    Array.from({ length: INFO_ZONE_SLOT_COUNT }, () => ({
-      contentIndex: 0,
-      isPositioned: false,
-    })),
-  )
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
-    Array.from({ length: INFO_ZONE_SLOT_COUNT }, () => false),
+    Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, () => false),
   )
   const translation = useRef({ x: 0, y: 0, z: 0 })
-
-  const setSlotState = useCallback((slotIndex: number, updates: Partial<SlotState>) => {
-    setSlotStates((prev) => {
-      const current = prev[slotIndex]
-      const next = { ...current, ...updates }
-      if (
-        current.contentIndex === next.contentIndex &&
-        current.isPositioned === next.isPositioned
-      ) {
-        return prev
-      }
-      const copy = [...prev]
-      copy[slotIndex] = next
-      return copy
-    })
-  }, [])
 
   const setIsVisibleState = useCallback((slotIndex: number, value: boolean) => {
     setIsVisibleStates((prev) => {
@@ -108,30 +80,13 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
     [],
   )
 
-  const findExistingSlot = useCallback((rowIndex: number, placementIndex: number) => {
-    return assignments.current.findIndex((assignment) => {
-      if (assignment.rowIndex == null) return false
-      return assignment.rowIndex === rowIndex && assignment.placementIndex === placementIndex
-    })
-  }, [])
-
-  const findAvailableSlot = useCallback(() => {
-    return assignments.current.findIndex((assignment) => assignment.rowIndex == null)
-  }, [])
-
-  const hideSlot = useCallback(
-    (slotIndex: number) => {
-      setInfoZonePosition(
-        slotIndex,
-        INITIAL_POSITION[0],
-        INITIAL_POSITION[1],
-        INITIAL_POSITION[2],
-      )
-      assignments.current[slotIndex] = { rowIndex: null, placementIndex: null }
-      setSlotState(slotIndex, { isPositioned: false })
-      setIsVisibleState(slotIndex, false)
+  const hideInfoZoneAtIndex = useCallback(
+    (index: number) => {
+      setInfoZonePosition(index, INITIAL_POSITION[0], INITIAL_POSITION[1], INITIAL_POSITION[2])
+      assignments.current[index] = { rowIndex: null, placementIndex: null }
+      setIsVisibleState(index, false)
     },
-    [setInfoZonePosition, setIsVisibleState, setSlotState],
+    [setInfoZonePosition, setIsVisibleState],
   )
 
   const releaseRow = useCallback(
@@ -139,10 +94,10 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
       if (rowIndex == null) return
       assignments.current.forEach((assignment, slotIndex) => {
         if (assignment.rowIndex !== rowIndex) return
-        hideSlot(slotIndex)
+        hideInfoZoneAtIndex(slotIndex)
       })
     },
-    [hideSlot],
+    [hideInfoZoneAtIndex],
   )
 
   const ensureInfoZoneForPlacement = useCallback(
@@ -157,26 +112,12 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
       const normalizedIndex = normalizeContentIndex(contentIndex)
       const targetZ = rowZ + relativeZ
 
-      let slotIndex = findExistingSlot(rowIndex, placementIndex)
-      if (slotIndex === -1) {
-        slotIndex = findAvailableSlot()
-        if (slotIndex === -1) {
-          if (process.env.NODE_ENV !== 'production') {
-            console.warn(
-              '[InfoZones] No available info zone slots. Increase INFO_ZONE_SLOT_COUNT.',
-            )
-          }
-          return
-        }
-        assignments.current[slotIndex] = { rowIndex, placementIndex }
-      }
+      if (!setInfoZonePosition(normalizedIndex, x, y, targetZ)) return
 
-      if (!setInfoZonePosition(slotIndex, x, y, targetZ)) return
-
-      setSlotState(slotIndex, { contentIndex: normalizedIndex, isPositioned: true })
-      setIsVisibleState(slotIndex, true)
+      assignments.current[normalizedIndex] = { rowIndex, placementIndex }
+      setIsVisibleState(normalizedIndex, true)
     },
-    [findAvailableSlot, findExistingSlot, setInfoZonePosition, setIsVisibleState, setSlotState],
+    [setInfoZonePosition, setIsVisibleState],
   )
 
   const positionElementsIfNeeded = useCallback(
@@ -235,25 +176,23 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   return (
     <>
-      {slotStates.map((slotState, slotIndex) => {
-        const normalizedIndex = normalizeContentIndex(slotState.contentIndex)
+      {Array.from({ length: INFO_ZONE_CONTENT_LENGTH }, (_, index) => {
         const infoContent =
           INFO_ZONES_CONTENT.length > 0
-            ? INFO_ZONES_CONTENT[normalizedIndex % INFO_ZONES_CONTENT.length]
+            ? INFO_ZONES_CONTENT[index % INFO_ZONES_CONTENT.length]
             : undefined
 
         return (
           <InfoZone
-            key={`info-zone-slot-${slotIndex}`}
+            key={`info-zone-${index}`}
             ref={(node) => {
-              infoZoneRefs.current[slotIndex] = node
+              infoZoneRefs.current[index] = node
             }}
             position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
             width={INFO_ZONE_WIDTH}
             height={INFO_ZONE_HEIGHT}
             infoContainerClassName={infoContent?.containerClassName}
-            isPositioned={slotState.isPositioned}
-            isVisible={isVisibleStates[slotIndex]}>
+            isVisible={isVisibleStates[index]}>
             {infoContent?.content ?? null}
           </InfoZone>
         )

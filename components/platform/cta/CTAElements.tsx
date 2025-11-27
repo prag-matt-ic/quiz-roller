@@ -159,7 +159,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         infoPositionOffset={[0, 12, 3]}
         infoContentHtmlProps={{ transform: true }}
         infoContainerClassName="w-[328px] sm:w-[450px]"
-        isPositioned={isLeaderboardPositioned}>
+        isVisible={isLeaderboardPositioned}>
         <LeaderboardTable {...tableData} />
       </InfoZone>
 
@@ -173,7 +173,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         alwaysShowInfo={true}
         infoContentHtmlProps={{ transform: true }}
         infoContainerClassName="w-[328px] sm:w-[450px]"
-        isPositioned={isTimeDisplayPositioned}>
+        isVisible={isTimeDisplayPositioned}>
         <section className="relative flex flex-col items-center justify-center gap-3 py-5 text-center">
           <div>
             <p className="text-sm font-medium text-white/80">TOTAL TIME</p>

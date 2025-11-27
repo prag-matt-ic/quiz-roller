@@ -52,7 +52,6 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 type Props = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
-  isPositioned: boolean
   isVisible?: boolean
   position: Vector3Tuple
   width: number
@@ -69,7 +68,6 @@ const iconPositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
-  isPositioned = false,
   isVisible = false,
   position,
   width,
@@ -152,7 +150,7 @@ export const InfoZone: FC<Props> = ({
   const aspect = width / height
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
-  const shouldRenderInfo = isPositioned && isVisible
+  const shouldRenderInfo = isVisible
 
   useEffect(() => {
     if (!isVisible && !alwaysShowInfo) {
