@@ -61,7 +61,10 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const setPosition = useCallback(
     (index: number, x: number, y: number, z: number) => {
       const body = refs[index]
-      if (!body?.current) return false
+      if (!body?.current) {
+        console.warn('[InfoZones] Missing rigid body ref for index', index)
+        return false
+      }
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
@@ -83,7 +86,16 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const ensurePlacement = useCallback(
     (rowIndex: number, placementIndex: number, rowZ: number, placement: IndexedPlacement) => {
       const [x, y, relativeZ, contentIndex] = placement
-      if (contentIndex < 0 || contentIndex >= refs.length) return
+      if (contentIndex < 0 || contentIndex >= refs.length) {
+        console.warn('[InfoZones] No available zone for placement', {
+          rowIndex,
+          placementIndex,
+          contentIndex,
+          poolSize: refs.length,
+          placement,
+        })
+        return
+      }
       const assignment = assignments.current[contentIndex]
       if (assignment?.rowIndex === rowIndex && assignment.placementIndex === placementIndex)
         return
