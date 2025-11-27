@@ -9,6 +9,8 @@ uniform vec2 uPlayerXZ;
 uniform vec2 uHeadingCenterXZ;
 uniform float uCameraZ;
 uniform float uEnableRotation;
+uniform float uUsePlayerFade;
+uniform float uUseDistanceFade;
 
 const highp float PLAYER_FADE_INNER = 2.0;
 const highp float PLAYER_FADE_OUTER =  7.0;
@@ -46,16 +48,20 @@ void main() {
   }
 
   // Distance-based fades use the rotated world position
-  highp vec2 offset = worldPosition.xz - uPlayerXZ;
-  vPlayerFade = playerDistanceFade(offset);
+  if (uUsePlayerFade > 0.5) {
+    highp vec2 offset = worldPosition.xz - uPlayerXZ;
+    vPlayerFade = playerDistanceFade(offset);
+  } else {
+    vPlayerFade = 1.0;
+  }
 
-  #ifdef USE_CAMERA_FADES
+  if (uUseDistanceFade > 0.5) {
     highp float nearFade = cameraFadeNear(uCameraZ, worldPosition.z);
     highp float distantFade = fadeDistance(worldPosition.z);
     vCameraFade = nearFade * distantFade;
-  #else
+  } else {
     vCameraFade = 1.0;
-  #endif
+  }
 
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

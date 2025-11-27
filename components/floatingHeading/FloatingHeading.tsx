@@ -42,6 +42,8 @@ type FloatingHeadingUniforms = {
   uCameraZ: number
   uEnableRotation: number
   uEnableNoise: number
+  uUsePlayerFade: number
+  uUseDistanceFade: number
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
@@ -53,6 +55,8 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uCameraZ: 0,
   uEnableRotation: 1,
   uEnableNoise: 1,
+  uUsePlayerFade: 1,
+  uUseDistanceFade: 1,
 }
 
 const FloatingHeadingShader = shaderMaterial(
@@ -62,6 +66,10 @@ const FloatingHeadingShader = shaderMaterial(
 )
 
 const FloatingHeadingMaterial = extend(FloatingHeadingShader)
+
+// TODO:
+// - only the first floating heading (content index=0) should fade-in automatically using GSAP - because it is already in view
+// - other headings will fade in using the distance fade shader logic
 
 export const FloatingHeading: FC<Props> = ({
   text,
@@ -77,8 +85,9 @@ export const FloatingHeading: FC<Props> = ({
   const {
     shouldRotate,
     useNoiseReveal: useNoise,
-    usePlayerFade: useCameraFades,
+    usePlayerFade,
   } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade) // for distance faded
 
   const onPlayerPosition = (newPosition: Vector3) => {
     if (!shaderRef.current) return
@@ -111,12 +120,6 @@ export const FloatingHeading: FC<Props> = ({
       thetaStart: start,
     }
   }, [width])
-
-  const adjustedPosition = useMemo<Vector3Tuple>(() => {
-    const [x, y, z] = position
-    // Shift the mesh so the inside of the arc (where the text lives) lines up with the requested point.
-    return [x, y, z - radius]
-  }, [position, radius])
 
   useEffect(() => {
     if (!shaderRef.current) return
@@ -152,13 +155,13 @@ export const FloatingHeading: FC<Props> = ({
   }, [canvasState])
 
   useGameFrame((state) => {
-    if (!shaderRef.current) return
+    if (!shaderRef.current || !isVisible) return
     if (useNoise) {
       shaderRef.current.uTime = state.clock.elapsedTime
     }
     shaderRef.current.uCameraZ = state.camera.position.z
 
-    if (!isVisible || !shouldRotate) return
+    if (!shouldRotate) return
     if (!ref?.current) return
     ref.current.getWorldPosition(tmpWorldPosition.current)
     shaderRef.current.uHeadingCenterXZ.set(
@@ -168,23 +171,22 @@ export const FloatingHeading: FC<Props> = ({
   })
 
   return (
-    <mesh ref={ref} position={adjustedPosition} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
+    <mesh ref={ref} position={position} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
       <cylinderGeometry args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]} />
       <FloatingHeadingMaterial
         key={FloatingHeadingShader.key}
         ref={shaderRef}
-        uOpacity={0}
+        uOpacity={1}
         uTime={0}
         uEnableRotation={shouldRotate ? 1 : 0}
         uEnableNoise={useNoise ? 1 : 0}
+        uUsePlayerFade={usePlayerFade ? 1 : 0}
+        uUseDistanceFade={useDistanceFade ? 1 : 0}
         transparent={true}
         depthTest={false}
         depthWrite={false}
         toneMapped={false}
         side={BackSide}
-        defines={{
-          USE_CAMERA_FADES: useCameraFades ? 1 : 0,
-        }}
       />
     </mesh>
   )
