@@ -20,6 +20,7 @@ export type SceneConfig = {
   }
   gem: {
     particleCount: number
+    useCameraFadeDistant: boolean
   }
   floatingTiles: {
     instanceCount: number
@@ -37,6 +38,7 @@ export type SceneConfig = {
   floatingHeading: {
     shouldRotate: boolean
     useNoise: boolean
+    useCameraFades: boolean
   }
 }
 
@@ -49,32 +51,32 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     player: { segments: 64, isFlat: false },
     ring: { radialSegments: 12, tubularSegments: 24 },
-    gem: { particleCount: 120 },
+    gem: { particleCount: 120, useCameraFadeDistant: true },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 8, renderScale: 0.75 },
-    floatingHeading: { shouldRotate: true, useNoise: true },
+    floatingHeading: { shouldRotate: true, useNoise: true, useCameraFades: true },
   },
   [SceneQuality.MEDIUM]: {
     player: { segments: 40, isFlat: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
-    gem: { particleCount: 64 },
+    gem: { particleCount: 64, useCameraFadeDistant: false },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 4, renderScale: 0.5 },
-    floatingHeading: { shouldRotate: false, useNoise: true },
+    floatingHeading: { shouldRotate: false, useNoise: false, useCameraFades: true },
   },
   [SceneQuality.LOW]: {
     player: { segments: 24, isFlat: true },
     ring: { radialSegments: 6, tubularSegments: 12 },
-    gem: { particleCount: 36 },
+    gem: { particleCount: 36, useCameraFadeDistant: false },
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     background: { keyframes: 1, renderScale: 0.25 },
-    floatingHeading: { shouldRotate: false, useNoise: false },
+    floatingHeading: { shouldRotate: false, useNoise: false, useCameraFades: false },
   },
 }
 

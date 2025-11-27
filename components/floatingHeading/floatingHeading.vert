@@ -1,3 +1,6 @@
+#pragma glslify: cameraFadeNear = require('../../resources/glsl/cameraFadeNear.glsl')
+#pragma glslify: cameraFadeDistant = require('../../resources/glsl/cameraFadeDistant.glsl')
+
 varying mediump vec2 vMirroredUv;
 varying mediump float vPlayerFade;
 varying mediump float vCameraFade;
@@ -8,11 +11,16 @@ uniform float uCameraZ;
 uniform float uEnableRotation;
 
 const highp float PLAYER_FADE_INNER = 2.0;
-const highp float PLAYER_FADE_OUTER = 7.0;
+const highp float PLAYER_FADE_OUTER =  7.0;
 const highp float PLAYER_FADE_INNER_SQ = PLAYER_FADE_INNER * PLAYER_FADE_INNER;
 const highp float PLAYER_FADE_OUTER_SQ = PLAYER_FADE_OUTER * PLAYER_FADE_OUTER;
 const highp float HEADING_MAX_ANGLE = 0.4; // ~23 degrees max tilt
 const highp float HEADING_LATERAL_RANGE = 6.0; // world-units span for full tilt
+
+float playerDistanceFade(vec2 offset) {
+  highp float distSq = dot(offset, offset);
+  return smoothstep(PLAYER_FADE_INNER_SQ, PLAYER_FADE_OUTER_SQ, distSq);
+}
 
 void main() {
   vMirroredUv = vec2(1.0 - uv.x, uv.y);
@@ -39,11 +47,15 @@ void main() {
 
   // Distance-based fades use the rotated world position
   highp vec2 offset = worldPosition.xz - uPlayerXZ;
-  highp float distSq = dot(offset, offset);
-  vPlayerFade = smoothstep(PLAYER_FADE_INNER_SQ, PLAYER_FADE_OUTER_SQ, distSq);
+  vPlayerFade = playerDistanceFade(offset);
 
-  highp float distToCamera = uCameraZ - worldPosition.z;
-  vCameraFade = smoothstep(6.0, 8.0, distToCamera);
+  #ifdef USE_CAMERA_FADES
+    highp float nearFade = cameraFadeNear(uCameraZ, worldPosition.z);
+    highp float distantFade = cameraFadeDistant(uCameraZ, worldPosition.z);
+    vCameraFade = nearFade * distantFade;
+  #else
+    vCameraFade = 1.0;
+  #endif
 
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

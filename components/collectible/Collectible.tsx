@@ -24,6 +24,7 @@ import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 // Sample the surface of the gem model to position particles within it.
 
@@ -67,6 +68,7 @@ type Props = {
 export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOutOfView }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(id))
   const isConfirming = useGameStore((s) => s.confirmingCollectible === id)
+  const useCameraFade = usePerformanceStore((s) => s.sceneConfig.gem.useCameraFadeDistant)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
   const gemShaderRef = useRef<GemShellRef>(null)
@@ -74,7 +76,8 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
   const gemRotationGroupRef = useRef<Group>(null)
   const { confirmationProgress } = useConfirmationProgress()
 
-  useGameFrame(({ clock }, delta) => {
+  useGameFrame((state, delta) => {
+    const { clock, camera } = state
     if (!shader.current) return
     if (isOutOfView.current) return
     const globalProgress = confirmationProgress.current
@@ -99,6 +102,9 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
     if (gemShaderRef.current) {
       gemShaderRef.current.uConfirmingProgress = isCollected ? 1.0 : localProgress.current
       gemShaderRef.current.uTime = clock.elapsedTime
+      if (useCameraFade) {
+        gemShaderRef.current.uCameraZ = camera.position.z
+      }
     }
 
     if (!gemRotationGroupRef?.current) return
@@ -150,6 +156,9 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
           uAspect={tileAspect}
           uTilesX={tilesX}
           uTilesY={tilesY}
+          defines={{
+            CAMERA_DISTANCE_FADE: useCameraFade,
+          }}
         />
       </mesh>
 

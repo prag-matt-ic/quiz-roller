@@ -15,7 +15,6 @@ import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoSection'
 import { HEADING_HEIGHT, HEADING_Y, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { InfoIcon } from 'lucide-react'
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import Collectible from '@/components/collectible/Collectible'
 import { INFO_ZONES_CONTENT } from '@/resources/content'
@@ -118,7 +117,11 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       headingRowIndex.current = null
     }
 
-    if (shouldHideCollectible && collectible.current && collectibleRowIndex.current === absoluteRowIndex) {
+    if (
+      shouldHideCollectible &&
+      collectible.current &&
+      collectibleRowIndex.current === absoluteRowIndex
+    ) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       collectible.current.setTranslation(translation.current, true)
@@ -126,7 +129,11 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
       collectibleRowIndex.current = null
     }
 
-    if (shouldHideInfoZone && infoZone.current && infoZoneRowIndex.current === absoluteRowIndex) {
+    if (
+      shouldHideInfoZone &&
+      infoZone.current &&
+      infoZoneRowIndex.current === absoluteRowIndex
+    ) {
       translation.current.z = HIDE_POSITION_Z
       translation.current.y = HIDE_POSITION_Y
       infoZone.current.setTranslation(translation.current, true)
@@ -206,8 +213,7 @@ const InfoElements: FC<Props> = ({ ref, onReadyChange }) => {
         width={INFO_ZONE_WIDTH}
         height={INFO_ZONE_HEIGHT}
         infoContainerClassName={INFO_ZONES_CONTENT[contentIndex].infoZoneContainerClassName}
-        isPositioned={isInfoZonePositioned}
-        Icon={InfoIcon}>
+        isPositioned={isInfoZonePositioned}>
         {INFO_ZONES_CONTENT[contentIndex].infoZoneContent}
       </InfoZone>
     </>

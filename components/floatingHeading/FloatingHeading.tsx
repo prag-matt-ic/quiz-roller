@@ -74,7 +74,9 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
-  const { shouldRotate, useNoise } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
+  const { shouldRotate, useNoise, useCameraFades } = usePerformanceStore(
+    (s) => s.sceneConfig.floatingHeading,
+  )
 
   const onPlayerPosition = (newPosition: Vector3) => {
     if (!shaderRef.current) return
@@ -176,6 +178,9 @@ export const FloatingHeading: FC<Props> = ({
           depthWrite={false}
           toneMapped={false}
           side={BackSide}
+          defines={{
+            USE_CAMERA_FADES: useCameraFades ? 1 : 0,
+          }}
         />
       </mesh>
     </Suspense>

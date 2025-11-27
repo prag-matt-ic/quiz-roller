@@ -12,7 +12,6 @@ import {
 import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaSection'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { TrophyIcon } from 'lucide-react'
 import { useTime } from '@/hooks/useTime'
 import {
   LeaderboardTable,
@@ -159,8 +158,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         infoPositionOffset={[0, 12, 3]}
         infoContentHtmlProps={{ transform: true }}
         infoContainerClassName="w-[328px] sm:w-[450px]"
-        isPositioned={isLeaderboardPositioned}
-        Icon={TrophyIcon}>
+        isPositioned={isLeaderboardPositioned}>
         <LeaderboardTable {...tableData} />
       </InfoZone>
 
@@ -174,8 +172,7 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
         alwaysShowInfo={true}
         infoContentHtmlProps={{ transform: true }}
         infoContainerClassName="w-[328px] sm:w-[450px]"
-        isPositioned={isTimeDisplayPositioned}
-        Icon={null}>
+        isPositioned={isTimeDisplayPositioned}>
         <section className="relative flex flex-col items-center justify-center gap-3 py-5 text-center">
           <div>
             <p className="text-sm font-medium text-white/80">TOTAL TIME</p>

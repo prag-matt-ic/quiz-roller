@@ -1,6 +1,6 @@
 'use client'
 import { GemIcon } from 'lucide-react'
-import { useState, type FC } from 'react'
+import { type CSSProperties, useState, type FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 import {
   offset,
@@ -79,7 +79,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
         style={
           {
             '--icon-colour': collectedColour,
-          } as React.CSSProperties
+          } as CSSProperties
         }
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -107,7 +107,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
         <div
           // eslint-disable-next-line react-hooks/refs
           ref={refs.setFloating}
-          style={floatingStyles}
+          style={{ ...floatingStyles, '--icon-colour': collectedColour } as CSSProperties}
           {...getFloatingProps()}
           className="absolute z-50">
           <div
@@ -119,10 +119,12 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
               'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
               'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
             )}>
-            <div className="flex max-w-full items-center gap-2 pr-2">
-              <Icon strokeWidth={1.5} size={32} />
-              <p className="block text-sm font-medium">
-                <span className="block tracking-wide text-white/80 uppercase">Bonus</span>
+            <div className="flex max-w-full items-center gap-2 pr-2 sm:gap-3">
+              <Icon strokeWidth={1} size={40} className="text-(--icon-colour)" />
+              <p className="block">
+                <span className="block text-sm font-medium tracking-wide text-white/80 uppercase">
+                  Bonus
+                </span>
                 {isCollected ? (
                   <span className="block text-base font-bold sm:text-lg">
                     {COLLECTIBLES_CONTENT[id].content}

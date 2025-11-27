@@ -13,6 +13,7 @@ varying mediump vec3 vPosition;
 varying mediump float vPulse;
 varying mediump float vPulseMix;
 varying mediump float vRevealLimit;
+varying mediump float vCameraFade;
 
 float getWireFactor(vec3 barycentric, float width) {
   vec3 derivative = fwidth(barycentric);
@@ -51,6 +52,7 @@ void main() {
 
   float pulseScale = mix(1.0, 0.92 + vPulse * 0.12, vPulseMix);
   alpha *= pulseScale;
+  alpha *= vCameraFade;
 
   if (alpha <= 0.01) discard;
 

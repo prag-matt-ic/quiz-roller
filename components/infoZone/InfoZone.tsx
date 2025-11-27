@@ -15,7 +15,6 @@ import {
 } from '@react-three/rapier'
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
-import { type LucideIcon } from 'lucide-react'
 import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
@@ -28,6 +27,7 @@ import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
+import { InfoTile, INFO_TILE_HEIGHT } from './infoTile/InfoTile'
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
 
@@ -57,13 +57,13 @@ type Props = PropsWithChildren<{
   width: number
   height: number
   infoContainerClassName?: string
-  Icon: LucideIcon | null
   infoPositionOffset?: Vector3Tuple
   alwaysShowInfo?: boolean
   infoContentHtmlProps?: HtmlProps
 }>
 
-const iconPositionOffset: Vector3Tuple = [0, 0, 1]
+const ICON_BASE_CLEARANCE = TILE_SIZE * 0.5
+const iconPositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
@@ -73,7 +73,6 @@ export const InfoZone: FC<Props> = ({
   width,
   height,
   infoContainerClassName,
-  Icon,
   children,
   infoPositionOffset = [0, 0, 4],
   alwaysShowInfo = false,
@@ -84,7 +83,6 @@ export const InfoZone: FC<Props> = ({
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
 
   const [showInfo, setShowInfo] = useState(alwaysShowInfo)
-  const iconContainer = useRef<HTMLDivElement>(null)
   const infoContainer = useRef<HTMLDivElement>(null)
 
   const lookAtInfo = () => {
@@ -118,18 +116,6 @@ export const InfoZone: FC<Props> = ({
   }
 
   const { contextSafe } = useGSAP({ dependencies: [showInfo] })
-
-  const onIconEnter = contextSafe(() => {
-    gsap.fromTo(
-      iconContainer.current,
-      { opacity: 0, y: -40 },
-      { opacity: 1, y: 0, duration: 0.3, ease: 'power1.out' },
-    )
-  })
-
-  const onIconExit = contextSafe(() => {
-    gsap.to(iconContainer.current, { opacity: 0, y: -40, duration: 0.3, ease: 'power1.out' })
-  })
 
   const onInfoEnter = contextSafe(() => {
     playSoundFX(SoundFX.OPEN_INFO)
@@ -198,32 +184,7 @@ export const InfoZone: FC<Props> = ({
           />
         </mesh>
 
-        {/* Icon */}
-        {!!Icon && isPositioned && (
-          <Html
-            sprite={true}
-            center={true}
-            renderOrder={2}
-            occlude={false}
-            portal={htmlPortal}
-            transform={true}
-            pointerEvents="none"
-            position={iconPositionOffset}
-            className="relative z-10 select-none">
-            <Transition
-              in={!showInfo}
-              timeout={{ enter: 0, exit: 300 }}
-              onEnter={onIconEnter}
-              onExit={onIconExit}
-              nodeRef={iconContainer}>
-              <div
-                ref={iconContainer}
-                className="flex items-center justify-center overflow-hidden rounded-full bg-black p-2 sm:p-3">
-                <Icon strokeWidth={1.5} className="size-6 text-amber-300 sm:size-10" />
-              </div>
-            </Transition>
-          </Html>
-        )}
+        <InfoTile position={iconPositionOffset} isHidden={showInfo} />
         {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>
           <sphereGeometry args={[0.5, 16, 16]} />
