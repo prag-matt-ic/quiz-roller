@@ -74,21 +74,25 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   resetGame: ({ mode, speedRunStage }) => {
     get().stopConfirmation()
-    set((s) => ({
-      ...INITIAL_GAME_STATE,
-      ...INITIAL_TIME_STATE,
-      ...INITIAL_PLAYER_STATE,
-      mode,
-      rowsData: [],
-      totalRows: 0,
-      totalRingsCount: 0,
-      completedSpeedRuns: s.completedSpeedRuns,
-      speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
-      playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
-      totalTimeS: s.totalTimeS,
-      isPlatformReady: false,
-      resetPlatformTick: s.resetPlatformTick + 1,
-      respawnPlayerTick: s.respawnPlayerTick + 1,
-    }))
+    set((s) => {
+      const isModeChange = s.mode !== mode
+      const nextRowsData = isModeChange ? [] : [...s.rowsData]
+      return {
+        ...INITIAL_GAME_STATE,
+        ...INITIAL_TIME_STATE,
+        ...INITIAL_PLAYER_STATE,
+        mode,
+        rowsData: nextRowsData,
+        totalRows: nextRowsData.length,
+        totalRingsCount: isModeChange ? 0 : s.totalRingsCount,
+        completedSpeedRuns: s.completedSpeedRuns,
+        speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
+        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        totalTimeS: s.totalTimeS,
+        isPlatformReady: false,
+        resetPlatformTick: s.resetPlatformTick + 1,
+        respawnPlayerTick: s.respawnPlayerTick + 1,
+      }
+    })
   },
 })

@@ -19,7 +19,7 @@ const OutOfBounds: FC = () => {
       userData={userData}>
       {/* Large, sensor plane below the playable tiles to trigger game over / reset */}
       <CuboidCollider
-        position={[0, -6, 0]}
+        position={[0, -4, 0]}
         args={[COLUMNS * TILE_SIZE + 10, 1, ROWS_RENDERED * TILE_SIZE + 10]}
         sensor={true}
         activeCollisionTypes={

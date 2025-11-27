@@ -1,6 +1,7 @@
-import { type RefObject, useEffect } from 'react'
+import { type RefObject, useCallback, useEffect, useRef } from 'react'
 
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
   colToX,
   COLUMNS,
@@ -8,39 +9,46 @@ import {
   type RowData,
   ROWS_RENDERED,
   SAFE_HEIGHT,
+  lerp,
 } from '@/utils/tiles'
 
 export const EMPTY_ROW_INDEX = 10000
 const CENTER_COL_INDEX = Math.floor(COLUMNS / 2)
+const UNSAFE_ROW_SHIFT = 1
+const RESPAWN_ALIGN_SPEED = 5
+const RESPAWN_SNAP_THRESHOLD = 0.01
+const MIN_RESPAWN_ABSOLUTE_ROW = UNSAFE_ROW_SHIFT
+
+type SafeRowSelection = {
+  rowIndex: number
+  safeX: number
+  rowZ: number
+  absoluteRowIndex: number
+}
 
 type UsePlayerRespawnProps = {
   activeRowsData: RefObject<RowData[]>
   rowZByIndex: RefObject<number[]>
-  currentScrollPosition: RefObject<number>
-  onRespawnCalculated: (targetScroll: number, safeX: number) => void
+  scrollPositionRef: RefObject<number>
 }
 
-function findSafeColumnX(row: RowData): number | null {
-  // Check center first
-  if (row.heights[CENTER_COL_INDEX] >= SAFE_HEIGHT - EPSILON.TINY) {
-    return colToX(CENTER_COL_INDEX)
-  }
+function findSafeColumnX(row: RowData, preferredX: number): number | null {
+  let bestX: number | null = null
+  let smallestDistance = Infinity
+  const fallbackX = colToX(CENTER_COL_INDEX)
+  const targetX = Number.isFinite(preferredX) ? preferredX : fallbackX
 
-  // Expand search
-  for (let offset = 1; offset <= Math.floor(COLUMNS / 2); offset++) {
-    // Check left
-    const leftIndex = CENTER_COL_INDEX - offset
-    if (leftIndex >= 0 && row.heights[leftIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
-      return colToX(leftIndex)
-    }
-    // Check right
-    const rightIndex = CENTER_COL_INDEX + offset
-    if (rightIndex < COLUMNS && row.heights[rightIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
-      return colToX(rightIndex)
+  for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+    if (row.heights[columnIndex] < SAFE_HEIGHT - EPSILON.TINY) continue
+    const tileX = colToX(columnIndex)
+    const distance = Math.abs(tileX - targetX)
+    if (distance < smallestDistance) {
+      smallestDistance = distance
+      bestX = tileX
     }
   }
 
-  return null
+  return bestX
 }
 
 function getClosestRowIndex(rowZByIndex: number[], playerZ: number): number {
@@ -59,108 +67,219 @@ function getClosestRowIndex(rowZByIndex: number[], playerZ: number): number {
   return bestIndex
 }
 
-function getBestSafeRowIndex(
-  activeRowsData: RowData[],
-  rowZByIndex: number[],
+function selectSafeRow(
+  rows: RowData[],
+  zValues: number[],
+  rowIndex: number,
+  preferredX: number,
+): SafeRowSelection | null {
+  if (rowIndex < 0 || rowIndex >= ROWS_RENDERED) return null
+  const row = rows[rowIndex]
+  if (!row || (row.rowIndex ?? EMPTY_ROW_INDEX) >= EMPTY_ROW_INDEX) return null
+  const safeX = findSafeColumnX(row, preferredX)
+  if (safeX === null) return null
+  const rowZ = zValues[rowIndex]
+  if (typeof rowZ !== 'number') return null
+  const absoluteRowIndex = row.rowIndex ?? EMPTY_ROW_INDEX
+  return { rowIndex, safeX, rowZ, absoluteRowIndex }
+}
+
+function findSlotIndexForRow(rows: RowData[], targetRowIndex: number): number {
+  if (!Number.isFinite(targetRowIndex)) return -1
+  for (let i = 0; i < ROWS_RENDERED; i++) {
+    const row = rows[i]
+    if (!row) continue
+    if (row.rowIndex === targetRowIndex) return i
+  }
+  return -1
+}
+
+function selectRowByAbsoluteIndex(
+  rows: RowData[],
+  zValues: number[],
+  absoluteRowIndex: number,
+  preferredX: number,
+): SafeRowSelection | null {
+  const slotIndex = findSlotIndexForRow(rows, absoluteRowIndex)
+  if (slotIndex === -1) return null
+  return selectSafeRow(rows, zValues, slotIndex, preferredX)
+}
+
+function ensureMinimumRowSelection(
+  selection: SafeRowSelection | null,
+  rows: RowData[],
+  zValues: number[],
+  preferredX: number,
+): SafeRowSelection | null {
+  if (!selection) return null
+  if (selection.absoluteRowIndex >= MIN_RESPAWN_ABSOLUTE_ROW) return selection
+  const offsetSelection = selectRowByAbsoluteIndex(
+    rows,
+    zValues,
+    selection.absoluteRowIndex + UNSAFE_ROW_SHIFT,
+    preferredX,
+  )
+  return offsetSelection ?? selection
+}
+
+function getBestSafeRowSelection(
+  rows: RowData[],
+  zValues: number[],
   playerZ: number,
-): number {
-  let bestSlotIndex = -1
+  preferredX: number,
+): SafeRowSelection | null {
+  let bestSelection: SafeRowSelection | null = null
   let minDistance = Infinity
 
   for (let i = 0; i < ROWS_RENDERED; i++) {
-    const row = activeRowsData[i]
-    if (!row || (row.rowIndex ?? EMPTY_ROW_INDEX) >= EMPTY_ROW_INDEX) continue
-
-    // Must have at least one safe column
-    if (findSafeColumnX(row) === null) continue
-
-    const currentZ = rowZByIndex[i]
-    if (typeof currentZ !== 'number') continue
-
-    const dist = Math.abs(currentZ - playerZ)
-
-    if (dist < minDistance) {
-      minDistance = dist
-      bestSlotIndex = i
+    const selection = selectSafeRow(rows, zValues, i, preferredX)
+    if (!selection) continue
+    const distance = Math.abs(selection.rowZ - playerZ)
+    if (distance < minDistance) {
+      minDistance = distance
+      bestSelection = selection
     }
   }
 
-  return bestSlotIndex
+  return bestSelection
 }
 
 export function usePlayerRespawn({
   activeRowsData,
   rowZByIndex,
-  currentScrollPosition,
-  onRespawnCalculated,
+  scrollPositionRef,
 }: UsePlayerRespawnProps) {
   const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
+  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
+  const targetScrollPosition = useRef<number | null>(null)
+  const pendingRespawnX = useRef<number | null>(null)
+  const preferredRespawnX = useRef(PLAYER_INITIAL_POSITION[0])
+
+  usePlayerPosition((pos) => {
+    preferredRespawnX.current = pos.x
+  })
+
+  const handleRespawnAlignment = useCallback(
+    (delta: number, zStep: number) => {
+      if (Math.abs(zStep) > EPSILON.SMALL) {
+        targetScrollPosition.current = null
+        pendingRespawnX.current = null
+        return
+      }
+
+      if (targetScrollPosition.current === null) return
+
+      scrollPositionRef.current = lerp(
+        scrollPositionRef.current,
+        targetScrollPosition.current,
+        RESPAWN_ALIGN_SPEED * delta,
+      )
+
+      if (
+        Math.abs(scrollPositionRef.current - targetScrollPosition.current) <
+        RESPAWN_SNAP_THRESHOLD
+      ) {
+        scrollPositionRef.current = targetScrollPosition.current
+        targetScrollPosition.current = null
+
+        if (pendingRespawnX.current !== null) {
+          setRespawnPosition({
+            x: pendingRespawnX.current,
+            y: PLAYER_INITIAL_POSITION[1],
+            z: PLAYER_INITIAL_POSITION[2],
+          })
+          pendingRespawnX.current = null
+        }
+      }
+    },
+    [scrollPositionRef, setRespawnPosition],
+  )
 
   useEffect(() => {
     if (respawnPlayerTick === 0) return
 
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
-    const scrollPos = currentScrollPosition.current
+    const scrollPos = scrollPositionRef.current
 
     if (!rows || !zValues) return
 
     const playerZ = PLAYER_INITIAL_POSITION[2]
+    const preferredX = preferredRespawnX.current
 
     // 1. Try to find the closest row (current row)
     const closestRowIndex = getClosestRowIndex(zValues, playerZ)
 
+    const queueRespawn = (
+      selection: SafeRowSelection,
+      reason: string,
+      extra?: Record<string, unknown>,
+    ) => {
+      const diff = playerZ - selection.rowZ
+      const targetScroll = scrollPos + diff
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[Platform] Respawn: ${reason}`, {
+          slotIndex: selection.rowIndex,
+          rowIndex: selection.absoluteRowIndex,
+          rowZ: selection.rowZ,
+          diff,
+          safeX: selection.safeX,
+          targetScroll,
+          ...extra,
+        })
+      }
+      targetScrollPosition.current = targetScroll
+      pendingRespawnX.current = selection.safeX
+    }
+
     if (closestRowIndex !== -1) {
-      const row = rows[closestRowIndex]
-      if (row && (row.rowIndex ?? EMPTY_ROW_INDEX) < EMPTY_ROW_INDEX) {
-        const safeX = findSafeColumnX(row)
-        if (safeX !== null) {
-          // Current row is safe! No need to scroll.
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('[Platform] Respawn: Current row is safe. Snapping to X only.', {
-              closestRowIndex,
-              safeX,
-            })
-          }
-          onRespawnCalculated(scrollPos, safeX)
-          return
-        }
+      const currentRowSelection = ensureMinimumRowSelection(
+        selectSafeRow(rows, zValues, closestRowIndex, preferredX),
+        rows,
+        zValues,
+        preferredX,
+      )
+      if (currentRowSelection) {
+        queueRespawn(currentRowSelection, 'Current row is safe. Snapping to X only.')
+        return
+      }
+
+      const shiftedSelection = selectSafeRow(
+        rows,
+        zValues,
+        findSlotIndexForRow(
+          rows,
+          (rows[closestRowIndex]?.rowIndex ?? EMPTY_ROW_INDEX) + UNSAFE_ROW_SHIFT,
+        ),
+        preferredX,
+      )
+
+      if (shiftedSelection) {
+        queueRespawn(shiftedSelection, 'Current row unsafe, shifting forward.', {
+          originalSlotIndex: closestRowIndex,
+        })
+        return
       }
     }
 
     // 2. Current row is not safe (or invalid). Find the nearest safe row.
-    const bestSlotIndex = getBestSafeRowIndex(rows, zValues, playerZ)
+    const bestSelection = ensureMinimumRowSelection(
+      getBestSafeRowSelection(rows, zValues, playerZ, preferredX),
+      rows,
+      zValues,
+      preferredX,
+    )
 
-    if (bestSlotIndex === -1) {
+    if (!bestSelection) {
       console.warn('[Platform] Respawn: No valid safe row found in active set to snap to.')
       // Fallback to current position
-      onRespawnCalculated(scrollPos, 0)
+      targetScrollPosition.current = scrollPos
+      pendingRespawnX.current = 0
       return
     }
 
-    const currentZ = zValues[bestSlotIndex]
-    const targetZ = playerZ
-    const diff = targetZ - currentZ
-    const row = rows[bestSlotIndex]
-    const safeX = findSafeColumnX(row) ?? 0 // Should not be null if getBestSafeRowIndex picked it
-    const targetScroll = scrollPos + diff
+    queueRespawn(bestSelection, 'Snapping to nearest safe row')
+  }, [respawnPlayerTick, activeRowsData, rowZByIndex, scrollPositionRef])
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[Platform] Respawn: Snapping to new row', {
-        bestSlotIndex,
-        rowIndex: row?.rowIndex,
-        currentZ,
-        diff,
-        safeX,
-      })
-    }
-
-    onRespawnCalculated(targetScroll, safeX)
-  }, [
-    respawnPlayerTick,
-    activeRowsData,
-    rowZByIndex,
-    currentScrollPosition,
-    onRespawnCalculated,
-  ])
+  return handleRespawnAlignment
 }

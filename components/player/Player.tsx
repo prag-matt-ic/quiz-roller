@@ -30,8 +30,6 @@ import {
   EPSILON,
   PLAYER_MOVE_UNITS,
   TERRAIN_SPEED_UNITS,
-  SAFE_HEIGHT,
-  colToX,
 } from '@/utils/tiles'
 import { Marble } from '@/components/player/marble/Marble'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
@@ -64,7 +62,6 @@ const Player: FC = () => {
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
-  const gameStoreAPI = useGameStoreAPI()
 
   const { controllerRef, input } = usePlayerController()
 
@@ -95,7 +92,9 @@ const Player: FC = () => {
     // Wait for platform to calculate safe position
     if (!respawnPosition) return
 
-    console.log('[Player] Respawning at:', respawnPosition)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Player] Respawning at:', respawnPosition)
+    }
 
     // Reset position, player drops in from Y height to land on the surface.
     body.setTranslation(

@@ -3,7 +3,7 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useEffect, useLayoutEffect, useRef } from 'react'
 
-import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import FloatingHeadings, {
   type FloatingHeadingsHandle,
 } from '@/components/platform/FloatingHeadings'
@@ -238,19 +238,10 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick, hasRows, readyState, mode, rowsData])
 
-  // TODO: move these into usePlayerRespawn, including the function called inside useGameFrame.
-  const targetScrollPosition = useRef<number | null>(null)
-  const pendingRespawnX = useRef<number | null>(null)
-  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
-
-  usePlayerRespawn({
+  const handleRespawnAlignment = usePlayerRespawn({
     activeRowsData,
     rowZByIndex,
-    currentScrollPosition,
-    onRespawnCalculated: (targetScroll, safeX) => {
-      targetScrollPosition.current = targetScroll
-      pendingRespawnX.current = safeX
-    },
+    scrollPositionRef: currentScrollPosition,
   })
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
@@ -505,39 +496,9 @@ const Platform: FC = () => {
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
 
-    // Cancel auto-scroll if player is providing input
-    if (Math.abs(zStep) > EPSILON.SMALL) {
-      targetScrollPosition.current = null
-      pendingRespawnX.current = null
-    }
-
     const previousScroll = currentScrollPosition.current
 
-    if (targetScrollPosition.current !== null) {
-      // Lerp towards target
-      const t = 5.0 * delta // Adjust speed as needed
-      currentScrollPosition.current = lerp(
-        currentScrollPosition.current,
-        targetScrollPosition.current,
-        t,
-      )
-
-      // Stop lerping if close enough
-      if (Math.abs(currentScrollPosition.current - targetScrollPosition.current) < 0.01) {
-        currentScrollPosition.current = targetScrollPosition.current
-        targetScrollPosition.current = null
-
-        // Respawn player now that platform is aligned
-        if (pendingRespawnX.current !== null) {
-          setRespawnPosition({
-            x: pendingRespawnX.current,
-            y: PLAYER_INITIAL_POSITION[1],
-            z: PLAYER_INITIAL_POSITION[2],
-          })
-          pendingRespawnX.current = null
-        }
-      }
-    }
+    handleRespawnAlignment(delta, zStep)
 
     currentScrollPosition.current += zStep
 
