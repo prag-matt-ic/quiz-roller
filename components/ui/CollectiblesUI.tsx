@@ -56,11 +56,18 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   isCollected,
 }) => {
   const [show, setShow] = useState(false)
+  const [hasSeen, setHasSeen] = useState(false)
+
   const { refs, floatingStyles, context } = useFloating({
     open: show,
     transform: true,
     placement: 'bottom',
-    onOpenChange: setShow,
+    onOpenChange: (open) => {
+      setShow(open)
+      if (open && !hasSeen) {
+        setHasSeen(true)
+      }
+    },
     middleware: [offset(12)],
   })
 
@@ -71,9 +78,12 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   const click = useClick(context, { toggle: true })
   const dismiss = useDismiss(context)
 
-  const Icon = COLLECTIBLES_CONTENT[id].Icon
+  const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
+
+  const shouldPulse = isCollected && !hasSeen
+
   return (
     <>
       <div
@@ -84,13 +94,16 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
         }
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="pointer-events-auto relative cursor-pointer">
+        className={twJoin(
+          'pointer-events-auto relative cursor-pointer',
+          shouldPulse && 'animate-pulse',
+        )}>
         <GemIcon
           size={40}
           strokeWidth={0.25}
           className={twJoin(
             'absolute inset-0 size-8 text-transparent transition-opacity md:size-10',
-            isCollected ? 'fill-(--icon-colour)/50' : 'fill-(--icon-colour)/10',
+            isCollected ? 'fill-(--icon-colour)/60' : 'fill-(--icon-colour)/10',
           )}
         />
         <GemIcon
@@ -120,7 +133,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
               'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
             )}>
             <div className="flex max-w-full items-center gap-2 pr-2 sm:gap-3">
-              <Icon strokeWidth={1} size={40} className="text-(--icon-colour)" />
+              <ContentIcon strokeWidth={1} size={40} className="text-(--icon-colour)" />
               <p className="block">
                 <span className="mb-1 block text-sm font-medium tracking-wide text-white/80 uppercase">
                   Bonus
