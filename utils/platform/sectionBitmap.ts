@@ -1,7 +1,23 @@
 import { Stage } from '@/stores/types'
-import { COLUMNS, SAFE_HEIGHT, TILE_SIZE, UNSAFE_HEIGHT } from '@/utils/tiles'
+import {
+  colToX,
+  COLUMNS,
+  createEmptyRingPositions,
+  ON_TILE_Y,
+  SAFE_HEIGHT,
+  TILE_SIZE,
+  UNSAFE_HEIGHT,
+  type IndexedPlacement,
+  type RowData,
+} from '@/utils/tiles'
+import { HEADING_Y } from './floatingHeading'
 
-export type SectionBitmapRow = {
+type BitmapPlacement = {
+  columnIndex: number
+  zOffset: number
+}
+
+type BitmapRow = {
   heights: number[]
   highlightColumns: number[]
   ringColumns: number[]
@@ -15,16 +31,25 @@ export type SectionBitmapRow = {
   floatingHeadingPlacement?: BitmapPlacement | null
 }
 
-export type SectionBitmapLayout = {
-  stage: Stage
-  rows: SectionBitmapRow[]
-  rowCount: number
-  totalRingsCount: number
+export type RowContentIndexes = {
+  row: number
+  heading: number
+  infoZone: number
+  collectible: number
 }
 
-export type BitmapPlacement = {
-  columnIndex: number
-  zOffset: number
+type PlacementIndexKey = Exclude<keyof RowContentIndexes, 'row'>
+
+export const createRowContentIndexes = (): RowContentIndexes => ({
+  row: 0,
+  heading: 0,
+  infoZone: 0,
+  collectible: 0,
+})
+
+export type SectionBitmapParseResult = {
+  rows: RowData[]
+  totalRingsCount: number
 }
 
 const COLOUR_CODES = {
@@ -40,7 +65,11 @@ const COLOUR_CODES = {
 const isColour = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
   r === cr && g === cg && b === cb
 
-export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): SectionBitmapLayout {
+export function parseSectionBitmap(
+  image: HTMLImageElement,
+  stage: Stage,
+  globalIndexes: RowContentIndexes,
+): SectionBitmapParseResult {
   if (typeof window === 'undefined') {
     throw new Error('parseSectionBitmap must run in the browser')
   }
@@ -66,7 +95,7 @@ export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): Secti
 
   const { data } = context.getImageData(0, 0, width, imageHeight)
 
-  const rows: SectionBitmapRow[] = new Array(imageHeight)
+  const rows: BitmapRow[] = new Array(imageHeight)
 
   for (let srcRow = 0; srcRow < imageHeight; srcRow++) {
     const rowIndex = imageHeight - 1 - srcRow // bottom row -> index 0
@@ -164,16 +193,15 @@ export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): Secti
   context.canvas.height = 0
 
   const totalRingsCount = rows.reduce((count, row) => count + row.ringColumns.length, 0)
+  const rowData = buildRowDataFromBitmapRows({ rows, stage, globalIndexes })
 
   return {
-    stage,
-    rows,
-    rowCount: rows.length,
+    rows: rowData,
     totalRingsCount,
   }
 }
 
-type ColumnsAccessor = (row: SectionBitmapRow) => number[]
+type ColumnsAccessor = (row: BitmapRow) => number[]
 type PlacementAssigner = (rowIndex: number, placements: BitmapPlacement[]) => void
 
 /**
@@ -183,7 +211,7 @@ type PlacementAssigner = (rowIndex: number, placements: BitmapPlacement[]) => vo
  * per element type, so a row can safely contain both info zones and collectibles simultaneously.
  */
 function assignBitmapPlacements(
-  rows: SectionBitmapRow[],
+  rows: BitmapRow[],
   getColumns: ColumnsAccessor,
   assignPlacements: PlacementAssigner,
 ) {
@@ -265,4 +293,186 @@ function assignBitmapPlacements(
     // Hand back the per-row placement list to the caller (info zones, collectibles, etc.).
     assignPlacements(rowIndex, placements)
   })
+}
+
+function buildRowDataFromBitmapRows({
+  rows,
+  stage,
+  globalIndexes,
+}: {
+  rows: BitmapRow[]
+  stage: Stage
+  globalIndexes: RowContentIndexes
+}): RowData[] {
+  const rowCount = rows.length
+  if (rowCount <= 0) return []
+
+  const rowData: RowData[] = new Array(rowCount)
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+    const layoutRow = rows[rowIndex]
+
+    const baseRow: RowData = {
+      heights: layoutRow.heights,
+      stage,
+      isSectionStart: rowIndex === 0,
+      isSectionEnd: rowIndex === rowCount - 1,
+      isHighlighted: [],
+      rowIndex: globalIndexes.row,
+    }
+
+    globalIndexes.row++
+
+    applyRingColumns(baseRow, layoutRow.ringColumns)
+    applyInfoColumns(baseRow, layoutRow, globalIndexes)
+    applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
+    applyFinishLineColumn(baseRow, layoutRow)
+    applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
+    applyHighlightColumns(baseRow, layoutRow.highlightColumns)
+
+    rowData[rowIndex] = baseRow
+  }
+
+  return rowData
+}
+
+function applyRingColumns(row: RowData, columns?: number[]) {
+  if (!columns || columns.length === 0) return
+  const ringPositions = row.ringPositions ?? createEmptyRingPositions()
+  columns.forEach((columnIndex) => {
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    ringPositions[columnIndex] = 1
+  })
+  row.ringPositions = ringPositions
+}
+
+function applyInfoColumns(row: RowData, layoutRow: BitmapRow, globalIndexes: RowContentIndexes) {
+  const placements =
+    buildPlacementsFromBitmap(
+      layoutRow.infoZonePlacements,
+      ON_TILE_Y,
+      'infoZone',
+      globalIndexes,
+    ) ??
+    buildPlacementsFromColumns(layoutRow.infoZoneColumns, ON_TILE_Y, 'infoZone', globalIndexes)
+
+  if (placements?.length) {
+    row.infoZonePlacements = placements
+  }
+}
+
+function applyCollectiblePlacements(
+  row: RowData,
+  layoutRow: BitmapRow,
+  globalIndexes: RowContentIndexes,
+) {
+  const placements =
+    buildPlacementsFromBitmap(
+      layoutRow.collectiblePlacements,
+      ON_TILE_Y,
+      'collectible',
+      globalIndexes,
+    ) ??
+    buildPlacementsFromColumns(
+      layoutRow.collectibleColumns,
+      ON_TILE_Y,
+      'collectible',
+      globalIndexes,
+    )
+
+  if (placements?.length) {
+    row.collectiblePlacements = placements
+  }
+}
+
+function applyFinishLineColumn(row: RowData, layoutRow: BitmapRow) {
+  const placement = layoutRow.finishLinePlacement
+  if (placement) {
+    const { columnIndex, zOffset } = placement
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    row.finishLinePosition = [colToX(columnIndex), ON_TILE_Y, zOffset]
+    return
+  }
+
+  const fallbackColumn = layoutRow.finishLineColumns[0] ?? null
+  if (fallbackColumn == null || fallbackColumn < 0 || fallbackColumn >= COLUMNS) return
+  row.finishLinePosition = [colToX(fallbackColumn), ON_TILE_Y, 0]
+}
+
+function applyHighlightColumns(row: RowData, columns?: number[]) {
+  if (!columns || columns.length === 0) return
+  const highlights = row.isHighlighted ?? []
+  columns.forEach((columnIndex) => {
+    if (columnIndex < 0 || columnIndex >= COLUMNS) return
+    highlights[columnIndex] = 1
+  })
+  row.isHighlighted = highlights
+}
+
+function applyFloatingHeadingPlacement(
+  row: RowData,
+  layoutRow: BitmapRow,
+  globalIndexes: RowContentIndexes,
+) {
+  const placement = layoutRow.floatingHeadingPlacement
+  if (!placement) return
+  const { columnIndex, zOffset } = placement
+  const indexedPlacement = createIndexedPlacement(
+    columnIndex,
+    zOffset,
+    HEADING_Y,
+    'heading',
+    globalIndexes,
+  )
+  if (indexedPlacement) {
+    row.floatingHeadingPlacements = [indexedPlacement]
+  }
+}
+
+function buildPlacementsFromBitmap(
+  placements: BitmapPlacement[] | undefined,
+  y: number,
+  indexKey: PlacementIndexKey,
+  globalIndexes: RowContentIndexes,
+): IndexedPlacement[] | undefined {
+  if (!placements?.length) return undefined
+  const indexedPlacements: IndexedPlacement[] = []
+  placements.forEach(({ columnIndex, zOffset }) => {
+    const placement = createIndexedPlacement(columnIndex, zOffset, y, indexKey, globalIndexes)
+    if (placement) {
+      indexedPlacements.push(placement)
+    }
+  })
+  return indexedPlacements.length > 0 ? indexedPlacements : undefined
+}
+
+function buildPlacementsFromColumns(
+  columns: number[] | undefined,
+  y: number,
+  indexKey: PlacementIndexKey,
+  globalIndexes: RowContentIndexes,
+): IndexedPlacement[] | undefined {
+  if (!columns?.length) return undefined
+  const indexedPlacements: IndexedPlacement[] = []
+  columns.forEach((columnIndex) => {
+    const placement = createIndexedPlacement(columnIndex, 0, y, indexKey, globalIndexes)
+    if (placement) {
+      indexedPlacements.push(placement)
+    }
+  })
+  return indexedPlacements.length > 0 ? indexedPlacements : undefined
+}
+
+function createIndexedPlacement(
+  columnIndex: number,
+  zOffset: number,
+  y: number,
+  indexKey: PlacementIndexKey,
+  globalIndexes: RowContentIndexes,
+): IndexedPlacement | null {
+  if (columnIndex < 0 || columnIndex >= COLUMNS) return null
+  const placementIndex = globalIndexes[indexKey]
+  globalIndexes[indexKey] = placementIndex + 1
+  const placement: IndexedPlacement = [colToX(columnIndex), y, zOffset, placementIndex]
+  return placement
 }

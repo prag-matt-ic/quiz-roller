@@ -6,7 +6,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { type PlayerInput, useGameStore } from '@/components/GameProvider'
 import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick'
-import { SpeedRunStage } from '@/stores/types'
+import { GameMode, SpeedRunStage } from '@/stores/types'
 
 type KeyProps = {
   isActive: boolean
@@ -29,7 +29,8 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
 }
 
 function useControls() {
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+  const mode = useGameStore((s) => s.mode)
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const DISABLED_STAGES: SpeedRunStage[] = ['username', 'countdown', 'leaderboard']
   const isDisabledStage = DISABLED_STAGES.includes(speedRunStage || '')

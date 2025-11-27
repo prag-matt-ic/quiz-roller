@@ -13,6 +13,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { twJoin } from 'tailwind-merge'
 import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
 import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
+import { GameMode } from '@/stores/types'
 
 gsap.registerPlugin(useGSAP)
 
@@ -21,7 +22,8 @@ type Props = {
 }
 
 const UI: FC<Props> = ({ isMobile }) => {
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+  const mode = useGameStore((s) => s.mode)
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 

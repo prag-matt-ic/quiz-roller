@@ -141,19 +141,24 @@ export const INFO_ZONES_CONTENT: InfoZoneContent[] = [
     ),
   },
 ]
+const bonusUnlocked = (
+  <p className="rounded-md bg-black px-3 py-2 text-sm tracking-wide whitespace-nowrap uppercase sm:text-base">
+    Bonus unlocked!
+  </p>
+)
 
 export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> = {
   [CollectibleID.Discount]: {
     autoDismissS: 3.5,
-    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
+    content: bonusUnlocked,
   },
   [CollectibleID.AI_Prompts]: {
     autoDismissS: 3.5,
-    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
+    content: bonusUnlocked,
   },
   [CollectibleID.Consultation]: {
     autoDismissS: 3.5,
-    content: <p className="text-sm whitespace-nowrap sm:text-base">Bonus unlocked!</p>,
+    content: bonusUnlocked,
   },
 }
 

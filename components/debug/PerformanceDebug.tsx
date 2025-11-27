@@ -5,6 +5,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
+import { GameMode } from '@/stores/types'
 
 type Option<T> = {
   label: string
@@ -27,6 +28,12 @@ const DPR_OPTIONS: Option<number | undefined>[] = [
   { label: '2.0', value: 2 },
 ] as const
 
+const GAME_MODE_OPTIONS: Option<GameMode>[] = [
+  { label: 'Main Run', value: GameMode.MAIN },
+  { label: 'Speedrun', value: GameMode.SPEEDRUN },
+  { label: 'Test', value: GameMode.TEST },
+]
+
 const PerformanceDebug: FC = () => {
   // const simFps = usePerformanceStore((s) => s.simFps)
   // const setSimFps = usePerformanceStore((s) => s.setSimFps)
@@ -34,8 +41,8 @@ const PerformanceDebug: FC = () => {
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
-  const isTestPlatform = usePerformanceStore((s) => s.isTestPlatform)
-  const setIsTestPlatform = usePerformanceStore((s) => s.setIsTestPlatform)
+  const mode = useGameStore((s) => s.mode)
+  const setMode = useGameStore((s) => s.setMode)
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const setIsPhysicsDebug = usePerformanceStore((s) => s.setIsPhysicsDebug)
   const resetGame = useGameStore((s) => s.resetGame)
@@ -53,7 +60,7 @@ const PerformanceDebug: FC = () => {
 
   const handlePlatformChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
-    setIsTestPlatform(event.target.value === 'test')
+    setMode(event.target.value as GameMode)
   }
 
   const handlePhysicsDebugChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -96,16 +103,19 @@ const PerformanceDebug: FC = () => {
         <option value="true">On</option>
       </SelectRow>
       <SelectRow
-        id="performance-debug-platform"
-        label="Platform"
-        value={isTestPlatform ? 'test' : 'full'}
+        id="performance-debug-mode"
+        label="Mode"
+        value={mode}
         onChange={handlePlatformChange}>
-        <option value="full">Full Run</option>
-        <option value="test">Test</option>
+        {GAME_MODE_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
       </SelectRow>
 
       <button
-        onClick={() => resetGame({ isSpeedRunMode: false })}
+        onClick={() => resetGame({ mode })}
         className="w-full rounded bg-red-900 p-1 text-xs font-semibold text-white">
         Reset
       </button>

@@ -1,13 +1,12 @@
-import type { GameSliceCreator, SpeedRunStage, TimeSlice } from './types'
+import { GameMode, type GameSliceCreator, type SpeedRunStage, type TimeSlice } from './types'
 import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
 export const INITIAL_TIME_STATE: Pick<
   TimeSlice,
-  'totalTimeS' | 'speedRunTimeCS' | 'isSpeedRunMode' | 'completedSpeedRuns' | 'speedRunStage'
+  'totalTimeS' | 'speedRunTimeCS' | 'completedSpeedRuns' | 'speedRunStage'
 > = {
   totalTimeS: 0,
   speedRunTimeCS: 0,
-  isSpeedRunMode: false,
   completedSpeedRuns: [],
   speedRunStage: 'username',
 }
@@ -29,7 +28,10 @@ export const createTimeSlice =
     },
     startSpeedRun: () => {
       const { username, resetGame } = get()
-      resetGame({ isSpeedRunMode: true, speedRunStage: !!username ? 'countdown' : 'username' })
+      resetGame({
+        mode: GameMode.SPEEDRUN,
+        speedRunStage: !!username ? 'countdown' : 'username',
+      })
     },
     onCountdownComplete: () => {
       set({
@@ -37,8 +39,8 @@ export const createTimeSlice =
       })
     },
     stopSpeedRun: () => {
-      if (!get().isSpeedRunMode) return
-      get().resetGame({ isSpeedRunMode: false })
+      if (get().mode !== GameMode.SPEEDRUN) return
+      get().resetGame({ mode: GameMode.MAIN })
     },
     finishSpeedRun: async () => {
       const { speedRunTimeCS, username } = get()

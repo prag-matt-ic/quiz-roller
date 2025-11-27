@@ -37,12 +37,16 @@ export type RingIndex = [row: number, column: number]
 export type RingCollection = Record<string, true>
 
 export type SpeedRunStage = 'username' | 'countdown' | 'running' | 'submitting' | 'leaderboard'
+export enum GameMode {
+  MAIN = 'main',
+  TEST = 'test',
+  SPEEDRUN = 'speedrun',
+}
 
 export type TimeSlice = {
   totalTimeS: number // total time spent in the experience in seconds (persisted)
   setTotalTimeS: (seconds: number) => void
 
-  isSpeedRunMode: boolean
   speedRunStage: SpeedRunStage
   setSpeedRunStage: (stage: SpeedRunStage) => void
   startSpeedRun: () => void // Sets mode, sets status to countdown
@@ -103,6 +107,8 @@ export type GameSlice = {
   setTotalRingsCount: (count: number) => void
   currentRow: number
   setCurrentRow: (row: number) => void
+  mode: GameMode
+  setMode: (mode: GameMode) => void
 
   cameraLookAtPosition: Vector3 | null
   setCameraLookAtPosition: (pos: Vector3 | null) => void
@@ -113,10 +119,10 @@ export type GameSlice = {
   setPlatformReady: (isReady: boolean) => void
 
   resetGame: ({
-    isSpeedRunMode,
+    mode,
     speedRunStage,
   }: {
-    isSpeedRunMode: boolean
+    mode: GameMode
     speedRunStage?: SpeedRunStage
   }) => void
 

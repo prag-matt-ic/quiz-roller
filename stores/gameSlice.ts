@@ -1,5 +1,5 @@
 import { MOVE_HUD_INDICATOR } from '@/resources/content'
-import { GameSlice, GameSliceCreator, Stage } from './types'
+import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
 import { INITIAL_TIME_STATE } from './timeSlice'
 import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
 import type { RowData } from '@/utils/tiles'
@@ -13,6 +13,7 @@ export const INITIAL_GAME_STATE = {
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
   isPlatformReady: false,
+  mode: GameMode.TEST,
   rowsData: [] as RowData[],
   htmlPortal: undefined,
   _isHydrated: false,
@@ -39,7 +40,20 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     set({ isPlatformReady })
   },
   setRowsData: (rowsData) => {
-    set({ rowsData, totalRows: rowsData.length })
+    set({ rowsData, totalRows: rowsData.length, isPlatformReady: false })
+  },
+  setMode: (mode) => {
+    set((state) => {
+      if (state.mode === mode) return {}
+      return {
+        mode,
+        rowsData: [],
+        totalRows: 0,
+        totalRingsCount: 0,
+        isPlatformReady: false,
+        resetPlatformTick: state.resetPlatformTick + 1,
+      }
+    })
   },
   setTotalRingsCount: (totalRingsCount) => {
     set({ totalRingsCount })
@@ -58,16 +72,18 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       set({ stage: Stage.CTA })
     }
   },
-  resetGame: ({ isSpeedRunMode, speedRunStage }) => {
+  resetGame: ({ mode, speedRunStage }) => {
     get().stopConfirmation()
     set((s) => ({
       ...INITIAL_GAME_STATE,
       ...INITIAL_TIME_STATE,
       ...INITIAL_PLAYER_STATE,
-      totalRingsCount: s.totalRingsCount,
+      mode,
+      rowsData: [],
+      totalRows: 0,
+      totalRingsCount: 0,
       completedSpeedRuns: s.completedSpeedRuns,
-      isSpeedRunMode,
-      speedRunStage: speedRunStage ?? s.speedRunStage,
+      speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
       playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
       totalTimeS: s.totalTimeS,
       isPlatformReady: false,

@@ -18,7 +18,6 @@ import FloatingTiles, {
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
-import { buildRowsFromLayouts } from '@/utils/platform/sectionLayoutFeatures'
 import {
   colToX,
   COLUMNS,
@@ -37,10 +36,10 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
-import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 import { EMPTY_ROW_INDEX, usePlayerRespawn } from './usePlayerRespawn'
 import useReadyState, { ReadyStateKey } from './useReadyState'
+import { GameMode } from '@/stores/types'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -83,19 +82,15 @@ function getRowAlpha(rowZ: number, playerZ: number) {
   return lerp(1, TILE_PLAYER_FADE_MIN_ALPHA, fadeT)
 }
 
-type Props = {
-  sectionLayouts: SectionBitmapLayout[]
-  isTestMode: boolean
-}
-
-const Platform: FC<Props> = ({ sectionLayouts, isTestMode }) => {
+const Platform: FC = () => {
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const setPlatformReady = useGameStore((s) => s.setPlatformReady)
   const goToStage = useGameStore((s) => s.goToStage)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
-  const setRowsData = useGameStore((s) => s.setRowsData)
+  const mode = useGameStore((s) => s.mode)
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN
+  const rowsData = useGameStore((s) => s.rowsData)
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
@@ -129,10 +124,10 @@ const Platform: FC<Props> = ({ sectionLayouts, isTestMode }) => {
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
   const { readyState, readyChangeHandlers } = useReadyState()
-  const hasLayouts = sectionLayouts.length > 0
+  const hasRows = rowsData.length > 0
 
   useEffect(() => {
-    if (!hasLayouts) return
+    if (!hasRows) return
 
     const shouldSkipReadyCheck = (key: ReadyStateKey) => {
       if (isSpeedRunMode && key === 'cta') return true
@@ -171,8 +166,7 @@ const Platform: FC<Props> = ({ sectionLayouts, isTestMode }) => {
       yByBodyIndex.current = []
       currentScrollPosition.current = 0
 
-      const rows = buildRowsFromLayouts(sectionLayouts)
-      rowsDataRef.current = rows
+      rowsDataRef.current = rowsData
 
       const tileInstances: InstancedRigidBodyProps[] = []
 
@@ -237,13 +231,12 @@ const Platform: FC<Props> = ({ sectionLayouts, isTestMode }) => {
       nextRowDataIndex.current = ROWS_RENDERED
       markInstanceAttributesDirty()
 
-      setRowsData(rows)
       setPlatformReady(true)
     }
 
     setupInitialRowsAndTiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, hasLayouts, readyState, isSpeedRunMode, isTestMode, sectionLayouts])
+  }, [resetPlatformTick, hasRows, readyState, mode, rowsData])
 
   // TODO: move these into usePlayerRespawn, including the function called inside useGameFrame.
   const targetScrollPosition = useRef<number | null>(null)

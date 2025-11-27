@@ -5,7 +5,7 @@ import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
-import { type FC, Suspense, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { type FC, Suspense, useEffect, useMemo } from 'react'
 
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
@@ -29,8 +29,19 @@ import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import testTexture from '@/assets/platform/test.png'
 import { loadHtmlImage } from '@/utils/loadImage'
-import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
+import {
+  createRowContentIndexes,
+  parseSectionBitmap,
+  type RowContentIndexes,
+} from '@/utils/platform/sectionBitmap'
+import type { RowData } from '@/utils/tiles'
+import {
+  COLLECTIBLES_CONTENT,
+  FLOATING_HEADINGS_CONTENT,
+  INFO_ZONES_CONTENT,
+} from '@/resources/content'
 import Backdrop from './backdrop/Backdrop'
+import { GameMode } from '@/stores/types'
 
 gsap.registerPlugin(useGSAP)
 
@@ -65,7 +76,7 @@ const SPEED_RUN_TEXTURES: TextureDescriptor[] = [
   { src: speedRunTexture.src, stage: Stage.SPEED_RUN_FINISH },
 ]
 
-// Use these when isTestPlatform is true
+// Use these when mode === GameMode.TEST
 const TEST_TEXTURES: TextureDescriptor[] = [
   {
     src: testTexture.src,
@@ -90,7 +101,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const { sectionLayouts, isTestMode } = usePlatformLayout()
+  const mode = usePlatformRows()
 
   return (
     <Canvas
@@ -122,11 +133,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Suspense>
           <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />
-            <Platform
-              key={isTestMode ? 'test' : 'normal'}
-              sectionLayouts={sectionLayouts}
-              isTestMode={isTestMode}
-            />
+            <Platform key={mode} />
             <Player />
           </Physics>
         </Suspense>
@@ -137,66 +144,79 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 
 export default Game
 
-function usePlatformLayout() {
-  const isTestMode = usePerformanceStore((s) => s.isTestPlatform)
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
-  const [sectionLayouts, setSectionLayouts] = useState<SectionBitmapLayout[]>([])
-  const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
+const MODE_TEXTURES_MAP: Record<GameMode, TextureDescriptor[]> = {
+  [GameMode.MAIN]: MAIN_TEXTURES,
+  [GameMode.SPEEDRUN]: SPEED_RUN_TEXTURES,
+  [GameMode.TEST]: TEST_TEXTURES,
+}
 
-  useLayoutEffect(() => {
-    setSectionLayouts([])
-  }, [isTestMode, isSpeedRunMode])
+function usePlatformRows() {
+  const mode = useGameStore((s) => s.mode)
+  const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
+  const setRowsData = useGameStore((s) => s.setRowsData)
 
   useEffect(() => {
     let isMounted = true
+    const textures = MODE_TEXTURES_MAP[mode] || MAIN_TEXTURES
 
-    // TODO: parse all the section bitmaps and then switch based on mode to avoid re-fetching / re-parsing
+    const textureSources = textures.map((descriptor) => descriptor.src)
+    const globalIndexes = createRowContentIndexes()
 
-    const imageToLayout = (
-      image: HTMLImageElement | null,
-      stage: Stage,
-    ): SectionBitmapLayout | null => {
-      try {
-        if (!image) return null
-        return parseSectionBitmap(image, stage)
-      } catch (error) {
-        console.error(`[Game] Failed to parse ${stage} bitmap`, error)
-        return null
-      }
-    }
-
-    const textures = isTestMode
-      ? TEST_TEXTURES
-      : isSpeedRunMode
-        ? SPEED_RUN_TEXTURES
-        : MAIN_TEXTURES
-
-    const getTotalRingsCount = (layouts: SectionBitmapLayout[]): number => {
-      return layouts.reduce((sum, layout) => sum + (layout?.totalRingsCount ?? 0), 0)
-    }
-
-    loadHtmlImage(textures.map((descriptor) => descriptor.src)).then((images) => {
+    loadHtmlImage(textureSources).then((images) => {
       if (!isMounted) return
-      const layouts: SectionBitmapLayout[] = images
-        .map((image, index) => {
-          const descriptor = textures[index]
-          if (!descriptor) return null
-          return imageToLayout(image, descriptor.stage)
-        })
-        .filter((layout): layout is SectionBitmapLayout => layout !== null)
 
-      const totalRings = getTotalRingsCount(layouts)
+      const rows: RowData[] = []
+      let totalRings = 0
+
+      images.forEach((image, index) => {
+        const descriptor = textures[index]
+        if (!descriptor || !image) return
+
+        try {
+          const { rows: parsedRows, totalRingsCount } = parseSectionBitmap(
+            image,
+            descriptor.stage,
+            globalIndexes,
+          )
+          rows.push(...parsedRows)
+          totalRings += totalRingsCount
+        } catch (error) {
+          console.error(`[Game] Failed to parse ${descriptor.stage} bitmap`, error)
+        }
+      })
+
+      logRowBuildSummary(rows.length, textures.length, globalIndexes)
       setTotalRingsCount(totalRings)
-      setSectionLayouts(layouts)
+      setRowsData(rows)
     })
 
     return () => {
       isMounted = false
     }
-  }, [isTestMode, isSpeedRunMode, setTotalRingsCount])
+  }, [mode, setRowsData, setTotalRingsCount])
 
-  return {
-    sectionLayouts,
-    isTestMode,
+  return mode
+}
+
+function logRowBuildSummary(
+  rowCount: number,
+  textureCount: number,
+  indexes: RowContentIndexes,
+) {
+  console.warn(`[Game] Built ${rowCount} rows from ${textureCount} textures`, { indexes })
+
+  if (indexes.heading > FLOATING_HEADINGS_CONTENT.length) {
+    console.error('More floating headings used than content available')
+  }
+
+  if (indexes.infoZone > INFO_ZONES_CONTENT.length) {
+    console.error('More info zones used than content available', {
+      indexes,
+      infoContentLength: INFO_ZONES_CONTENT.length,
+    })
+  }
+
+  if (indexes.collectible > Object.keys(COLLECTIBLES_CONTENT).length) {
+    console.error('More collectibles used than content available', { indexes })
   }
 }

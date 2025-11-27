@@ -94,8 +94,6 @@ type PerformanceState = {
   setSceneQuality: (quality: SceneQuality) => void
   setMaxDpr: (value: number | undefined) => void
   hasBeenManuallySet: boolean
-  isTestPlatform: boolean
-  setIsTestPlatform: (value: boolean) => void
   isPhysicsDebug: boolean
   setIsPhysicsDebug: (value: boolean) => void
 }
@@ -116,7 +114,6 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     sceneQuality: initialQualityMode,
     sceneConfig: SCENE_CONFIGS[initialQualityMode],
     hasBeenManuallySet: false,
-    isTestPlatform: true,
     isPhysicsDebug: false,
     setSimFps: (fps: RapierSimFPS) => {
       const previous = get().simFps
@@ -137,12 +134,6 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
       set({
         maxDPR: value,
       })
-    },
-    setIsTestPlatform: (value: boolean) => {
-      const previous = get().isTestPlatform
-      if (previous === value) return
-      logPerformanceDebug('isTestPlatform updated', { previous, next: value })
-      set({ isTestPlatform: value })
     },
     setIsPhysicsDebug: (value: boolean) => {
       const previous = get().isPhysicsDebug

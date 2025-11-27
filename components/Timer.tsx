@@ -3,9 +3,11 @@
 import { type FC, useEffect } from 'react'
 
 import { useGameStore, useGameStoreAPI } from './GameProvider'
+import { GameMode } from '@/stores/types'
 
 const Timer: FC = () => {
-  const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
+  const mode = useGameStore((s) => s.mode)
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const isSpeedRunTiming = useGameStore((s) => s.speedRunStage === 'running')
   const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()
