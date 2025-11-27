@@ -1,6 +1,6 @@
 'use client'
 
-import { RefObject, type FC, useMemo } from 'react'
+import { type RefObject, type FC, useMemo } from 'react'
 import { extend } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 
@@ -53,7 +53,6 @@ type GemShellUniforms = {
   uGlowStrength: number
   uConfirmingProgress: number
   uTime: number
-  uCameraZ: number
 }
 
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
@@ -69,7 +68,6 @@ const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
   uGlowStrength: GEM_GLOW_STRENGTH,
   uConfirmingProgress: 0,
   uTime: 0,
-  uCameraZ: 0,
 }
 
 const GemShellShader = shaderMaterial(
@@ -90,6 +88,7 @@ export type GemShellProps = GroupLikeProps & {
   tileHeight: number
   shaderRef: RefObject<GemShellRef | null>
   id: CollectibleID
+  isVisible: boolean
 }
 
 const Gem: FC<GemShellProps> = ({
@@ -98,6 +97,7 @@ const Gem: FC<GemShellProps> = ({
   isCollected,
   shaderRef,
   id,
+  isVisible,
   ...props
 }) => {
   const gemConfig: GemConfig = GEMS_BY_ID[id] ?? GEMS_BY_ID[CollectibleID.AI_Prompts]
@@ -107,15 +107,21 @@ const Gem: FC<GemShellProps> = ({
     colour.offsetHSL(0, 0, 0.2)
     return colour
   }, [gemConfig])
-  const useCameraFade = usePerformanceStore((s) => s.sceneConfig.gem.useCameraFadeDistant)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
 
   return (
-    <group {...props} renderOrder={2} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+    <group
+      {...props}
+      renderOrder={2}
+      position={[0, 0, 0]}
+      rotation={[Math.PI / 2, 0, 0]}
+      visible={isVisible}>
       <Particles
         id={id}
         tileWidth={tileWidth}
         tileHeight={tileHeight}
         wasConfirmed={isCollected}
+        isVisible={isVisible}
         position={[0, 0, 0]}
         gemPosition={GEM_POSITION}
         gemScale={GEM_RADIUS}
@@ -136,7 +142,8 @@ const Gem: FC<GemShellProps> = ({
           uGlowStrength={GEM_GLOW_STRENGTH}
           uConfirmingProgress={isCollected ? 1 : 0}
           uTime={INITIAL_GEM_SHELL_UNIFORMS.uTime}
-          defines={{ USE_CAMERA_FADE_DISTANT: useCameraFade }}
+          // TODO: having no effect when quality changes, move to a uniform instead.
+          defines={{ USE_DISTANCE_FADE: useDistanceFade ? 1 : 0 }}
         />
       </mesh>
     </group>

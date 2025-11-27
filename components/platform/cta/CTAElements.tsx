@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react'
 
-import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaSection'
+import { CTA_ZONE_HEIGHT, CTA_ZONE_WIDTH } from '@/utils/platform/ctaZoneDimensions'
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, type RowData } from '@/utils/tiles'
 import { InfoZone } from '@/components/infoZone/InfoZone'
 import { useTime } from '@/hooks/useTime'
@@ -17,6 +17,7 @@ import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
+import { Stage } from '@/stores/types'
 
 export type CTAElementsHandle = {
   moveElements: (zStep: number) => void
@@ -40,14 +41,14 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
-    if (row.type !== 'cta') return
+    if (row.stage !== Stage.CTA) return
 
     const absoluteRowIndex = row.rowIndex as number
-    const infoZonePositions = row.infoZonePositions
+    const infoZonePlacements = row.infoZonePlacements
 
-    if (infoZonePositions && infoZonePositions.length >= 2) {
-      const leaderboardPos = infoZonePositions[0]
-      const timeDisplayPos = infoZonePositions[1]
+    if (infoZonePlacements && infoZonePlacements.length >= 2) {
+      const leaderboardPos = infoZonePlacements[0]
+      const timeDisplayPos = infoZonePlacements[1]
 
       if (leaderboardPos && leaderboardZone.current) {
         if (leaderboardRowIndex.current !== absoluteRowIndex) {
@@ -77,9 +78,9 @@ const CTAElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
     if (!row) return
-    if (row.type !== 'cta') return
+    if (row.stage !== Stage.CTA) return
 
-    const shouldHideZone = !!row.infoZonePositions
+    const shouldHideZone = !!row.infoZonePlacements
 
     if (shouldHideZone) {
       translation.current.x = 0

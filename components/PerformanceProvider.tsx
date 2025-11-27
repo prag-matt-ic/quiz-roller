@@ -10,6 +10,7 @@ export enum SceneQuality {
 }
 
 export type SceneConfig = {
+  useDistanceFade: boolean
   player: {
     segments: number
     isFlat: boolean
@@ -20,7 +21,6 @@ export type SceneConfig = {
   }
   gem: {
     particleCount: number
-    useCameraFadeDistant: boolean
   }
   floatingTiles: {
     instanceCount: number
@@ -37,8 +37,8 @@ export type SceneConfig = {
   }
   floatingHeading: {
     shouldRotate: boolean
-    useNoise: boolean
-    useCameraFades: boolean
+    useNoiseReveal: boolean
+    usePlayerFade: boolean
   }
 }
 
@@ -49,34 +49,37 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
+    useDistanceFade: true,
     player: { segments: 64, isFlat: false },
     ring: { radialSegments: 12, tubularSegments: 24 },
-    gem: { particleCount: 120, useCameraFadeDistant: true },
+    gem: { particleCount: 120 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 8, renderScale: 0.75 },
-    floatingHeading: { shouldRotate: true, useNoise: true, useCameraFades: true },
+    floatingHeading: { shouldRotate: true, useNoiseReveal: true, usePlayerFade: true },
   },
   [SceneQuality.MEDIUM]: {
+    useDistanceFade: true,
     player: { segments: 40, isFlat: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
-    gem: { particleCount: 64, useCameraFadeDistant: false },
+    gem: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 4, renderScale: 0.5 },
-    floatingHeading: { shouldRotate: false, useNoise: false, useCameraFades: true },
+    floatingHeading: { shouldRotate: false, useNoiseReveal: false, usePlayerFade: true },
   },
   [SceneQuality.LOW]: {
+    useDistanceFade: false,
     player: { segments: 24, isFlat: true },
     ring: { radialSegments: 6, tubularSegments: 12 },
-    gem: { particleCount: 36, useCameraFadeDistant: false },
+    gem: { particleCount: 36 },
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     background: { keyframes: 1, renderScale: 0.25 },
-    floatingHeading: { shouldRotate: false, useNoise: false, useCameraFades: false },
+    floatingHeading: { shouldRotate: false, useNoiseReveal: false, usePlayerFade: false },
   },
 }
 
@@ -113,7 +116,7 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     sceneQuality: initialQualityMode,
     sceneConfig: SCENE_CONFIGS[initialQualityMode],
     hasBeenManuallySet: false,
-    isTestPlatform: false,
+    isTestPlatform: true,
     isPhysicsDebug: false,
     setSimFps: (fps: RapierSimFPS) => {
       const previous = get().simFps

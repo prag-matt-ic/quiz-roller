@@ -11,6 +11,7 @@ import {
 import { HIDE_POSITION_Y, HIDE_POSITION_Z, TILE_SIZE, type RowData } from '@/utils/tiles'
 
 import FinishLine from './FinishLine'
+import { Stage } from '@/stores/types'
 
 export type SpeedRunElementsHandle = {
   moveElements: (zStep: number) => void
@@ -31,7 +32,7 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
-    if (row.type !== 'speed-run-finish') return
+    if (row.stage !== Stage.SPEED_RUN_FINISH) return
     const absoluteRowIndex = row.rowIndex as number
     if (positionedRowIndex.current === absoluteRowIndex) return
 
@@ -48,7 +49,7 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
 
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
     if (!row) return
-    if (row.type !== 'speed-run-finish') return
+    if (row.stage !== Stage.SPEED_RUN_FINISH) return
 
     const shouldHideFinishLine = !!row.finishLinePosition
 

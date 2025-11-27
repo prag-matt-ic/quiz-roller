@@ -57,18 +57,18 @@ const CollectibleTileShader = shaderMaterial(
 const CollectibleTileShaderMaterial = extend(CollectibleTileShader)
 
 type Props = {
-  id: CollectibleID
-  isOutOfView: RefObject<boolean>
   ref: RefObject<RapierRigidBody | null>
+  id: CollectibleID
+  isVisible: boolean
   position: Vector3Tuple
   width: number
   height: number
 }
 
-export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOutOfView }) => {
+export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVisible }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(id))
   const isConfirming = useGameStore((s) => s.confirmingCollectible === id)
-  const useCameraFade = usePerformanceStore((s) => s.sceneConfig.gem.useCameraFadeDistant)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
   const gemShaderRef = useRef<GemShellRef>(null)
@@ -77,9 +77,9 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
   const { confirmationProgress } = useConfirmationProgress()
 
   useGameFrame((state, delta) => {
-    const { clock, camera } = state
+    const { clock } = state
     if (!shader.current) return
-    if (isOutOfView.current) return
+    if (!isVisible) return
     const globalProgress = confirmationProgress.current
 
     if (isConfirming) {
@@ -102,9 +102,6 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
     if (gemShaderRef.current) {
       gemShaderRef.current.uConfirmingProgress = isCollected ? 1.0 : localProgress.current
       gemShaderRef.current.uTime = clock.elapsedTime
-      if (useCameraFade) {
-        gemShaderRef.current.uCameraZ = camera.position.z
-      }
     }
 
     if (!gemRotationGroupRef?.current) return
@@ -143,7 +140,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
       />
 
       {/* Tile mesh: shader renders corner brackets and confirmation progress bar */}
-      <mesh position={[0, 0, 0.01]} renderOrder={2}>
+      <mesh position={[0, 0, 0.01]} renderOrder={2} visible={isVisible}>
         <planeGeometry args={[width, height]} />
         <CollectibleTileShaderMaterial
           key={CollectibleTileShader.key}
@@ -157,7 +154,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
           uTilesX={tilesX}
           uTilesY={tilesY}
           defines={{
-            CAMERA_DISTANCE_FADE: useCameraFade,
+            CAMERA_DISTANCE_FADE: useDistanceFade,
           }}
         />
       </mesh>
@@ -170,6 +167,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isOut
         tileWidth={width}
         tileHeight={height}
         id={id}
+        isVisible={isVisible}
       />
     </RigidBody>
   )

@@ -1,3 +1,4 @@
+import { Stage } from '@/stores/types'
 import { COLUMNS, SAFE_HEIGHT, TILE_SIZE, UNSAFE_HEIGHT } from '@/utils/tiles'
 
 export type SectionBitmapRow = {
@@ -7,12 +8,15 @@ export type SectionBitmapRow = {
   infoZoneColumns: number[]
   collectibleColumns: number[]
   finishLineColumns: number[]
+  floatingHeadingColumns: number[]
   infoZonePlacements?: BitmapPlacement[]
   collectiblePlacement?: BitmapPlacement | null
   finishLinePlacement?: BitmapPlacement | null
+  floatingHeadingPlacement?: BitmapPlacement | null
 }
 
 export type SectionBitmapLayout = {
+  stage: Stage
   rows: SectionBitmapRow[]
   rowCount: number
   totalRingsCount: number
@@ -23,19 +27,20 @@ export type BitmapPlacement = {
   zOffset: number
 }
 
-const COLOR = {
+const COLOUR_CODES = {
   VOID: [0, 0, 0] as const,
   RING: [255, 0, 0] as const,
+  FLOATING_HEADING: [128, 128, 128] as const,
   INFO: [0, 255, 0] as const,
   COLLECTIBLE: [0, 0, 255] as const,
   HIGHLIGHT: [0, 255, 255] as const,
   FINISH_LINE: [255, 255, 0] as const,
 }
 
-const isColor = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
+const isColour = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
   r === cr && g === cg && b === cb
 
-export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout {
+export function parseSectionBitmap(image: HTMLImageElement, stage: Stage): SectionBitmapLayout {
   if (typeof window === 'undefined') {
     throw new Error('parseSectionBitmap must run in the browser')
   }
@@ -71,6 +76,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
     const highlightColumns: number[] = []
     const collectibleColumns: number[] = []
     const finishLineColumns: number[] = []
+    const floatingHeadingColumns: number[] = []
 
     for (let column = 0; column < width; column++) {
       const pixelIndex = (srcRow * width + column) * 4
@@ -78,29 +84,33 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
       const g = data[pixelIndex + 1]
       const b = data[pixelIndex + 2]
 
-      const isRaised = !isColor(r, g, b, COLOR.VOID)
+      const isRaised = !isColour(r, g, b, COLOUR_CODES.VOID)
       heights[column] = isRaised ? SAFE_HEIGHT : UNSAFE_HEIGHT
 
-      if (isColor(r, g, b, COLOR.RING)) {
+      if (isColour(r, g, b, COLOUR_CODES.RING)) {
         ringColumns.push(column)
       }
 
-      if (isColor(r, g, b, COLOR.INFO)) {
+      if (isColour(r, g, b, COLOUR_CODES.INFO)) {
         infoZoneColumns.push(column)
         highlightColumns.push(column)
       }
 
-      if (isColor(r, g, b, COLOR.COLLECTIBLE)) {
+      if (isColour(r, g, b, COLOUR_CODES.COLLECTIBLE)) {
         collectibleColumns.push(column)
         highlightColumns.push(column)
       }
 
-      if (isColor(r, g, b, COLOR.FINISH_LINE)) {
+      if (isColour(r, g, b, COLOUR_CODES.FINISH_LINE)) {
         finishLineColumns.push(column)
       }
 
-      if (isColor(r, g, b, COLOR.HIGHLIGHT)) {
+      if (isColour(r, g, b, COLOUR_CODES.HIGHLIGHT)) {
         highlightColumns.push(column)
+      }
+
+      if (isColour(r, g, b, COLOUR_CODES.FLOATING_HEADING)) {
+        floatingHeadingColumns.push(column)
       }
     }
 
@@ -111,6 +121,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
       collectibleColumns,
       finishLineColumns,
       highlightColumns,
+      floatingHeadingColumns,
     }
   }
 
@@ -139,6 +150,14 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
     },
   )
 
+  assignBitmapPlacements(
+    rows,
+    (row) => row.floatingHeadingColumns,
+    (rowIndex, placements) => {
+      rows[rowIndex].floatingHeadingPlacement = placements[0] ?? null
+    },
+  )
+
   // Release canvas resources promptly
   context.canvas.width = 0
   context.canvas.height = 0
@@ -146,6 +165,7 @@ export function parseSectionBitmap(image: HTMLImageElement): SectionBitmapLayout
   const totalRingsCount = rows.reduce((count, row) => count + row.ringColumns.length, 0)
 
   return {
+    stage,
     rows,
     rowCount: rows.length,
     totalRingsCount,

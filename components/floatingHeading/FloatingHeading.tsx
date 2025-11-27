@@ -24,7 +24,7 @@ import vertexShader from './floatingHeading.vert'
 gsap.registerPlugin(useGSAP)
 
 type Props = {
-  ref?: RefObject<Mesh | null>
+  ref: RefObject<Mesh | null>
   text: string
   position: Vector3Tuple
   width: number
@@ -74,9 +74,11 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
-  const { shouldRotate, useNoise, useCameraFades } = usePerformanceStore(
-    (s) => s.sceneConfig.floatingHeading,
-  )
+  const {
+    shouldRotate,
+    useNoiseReveal: useNoise,
+    usePlayerFade: useCameraFades,
+  } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
 
   const onPlayerPosition = (newPosition: Vector3) => {
     if (!shaderRef.current) return
@@ -109,6 +111,12 @@ export const FloatingHeading: FC<Props> = ({
       thetaStart: start,
     }
   }, [width])
+
+  const adjustedPosition = useMemo<Vector3Tuple>(() => {
+    const [x, y, z] = position
+    // Shift the mesh so the inside of the arc (where the text lives) lines up with the requested point.
+    return [x, y, z - radius]
+  }, [position, radius])
 
   useEffect(() => {
     if (!shaderRef.current) return
@@ -151,9 +159,8 @@ export const FloatingHeading: FC<Props> = ({
     shaderRef.current.uCameraZ = state.camera.position.z
 
     if (!isVisible || !shouldRotate) return
-    const mesh = ref?.current
-    if (!mesh) return
-    mesh.getWorldPosition(tmpWorldPosition.current)
+    if (!ref?.current) return
+    ref.current.getWorldPosition(tmpWorldPosition.current)
     shaderRef.current.uHeadingCenterXZ.set(
       tmpWorldPosition.current.x,
       tmpWorldPosition.current.z,
@@ -161,28 +168,24 @@ export const FloatingHeading: FC<Props> = ({
   })
 
   return (
-    <Suspense fallback={null}>
-      <mesh ref={ref} position={position} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
-        <cylinderGeometry
-          args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]}
-        />
-        <FloatingHeadingMaterial
-          key={FloatingHeadingShader.key}
-          ref={shaderRef}
-          uOpacity={0}
-          uTime={0}
-          uEnableRotation={shouldRotate ? 1 : 0}
-          uEnableNoise={useNoise ? 1 : 0}
-          transparent={true}
-          depthTest={false}
-          depthWrite={false}
-          toneMapped={false}
-          side={BackSide}
-          defines={{
-            USE_CAMERA_FADES: useCameraFades ? 1 : 0,
-          }}
-        />
-      </mesh>
-    </Suspense>
+    <mesh ref={ref} position={adjustedPosition} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
+      <cylinderGeometry args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]} />
+      <FloatingHeadingMaterial
+        key={FloatingHeadingShader.key}
+        ref={shaderRef}
+        uOpacity={0}
+        uTime={0}
+        uEnableRotation={shouldRotate ? 1 : 0}
+        uEnableNoise={useNoise ? 1 : 0}
+        transparent={true}
+        depthTest={false}
+        depthWrite={false}
+        toneMapped={false}
+        side={BackSide}
+        defines={{
+          USE_CAMERA_FADES: useCameraFades ? 1 : 0,
+        }}
+      />
+    </mesh>
   )
 }

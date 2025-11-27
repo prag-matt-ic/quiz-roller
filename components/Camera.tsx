@@ -19,29 +19,37 @@ type StageCameraPosition = {
 export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 8 },
   [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.TERRAIN]: { y: 6, z: 8 },
+  [Stage.OBSTACLES]: { y: 6, z: 8 },
   [Stage.CTA]: { y: 4, z: 10 },
+  [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
+  [Stage.TEST]: { y: 4, z: 8 },
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
   [Stage.HOME]: { y: 4, z: 9 },
   [Stage.INFO]: { y: 4, z: 9 },
-  [Stage.TERRAIN]: { y: 6, z: 9 },
+  [Stage.OBSTACLES]: { y: 6, z: 9 },
   [Stage.CTA]: { y: 6, z: 9 },
+  [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
+  [Stage.TEST]: { y: 4, z: 9 },
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
   [Stage.HOME]: 1.1,
   [Stage.INFO]: 1.1,
-  [Stage.TERRAIN]: 1.3,
+  [Stage.OBSTACLES]: 1.3,
   [Stage.CTA]: 1.1,
+  [Stage.SPEED_RUN_FINISH]: 1.1,
+  [Stage.TEST]: 1.1,
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
   [Stage.HOME]: 1.25,
   [Stage.INFO]: 1.25,
-  [Stage.TERRAIN]: 1.3,
+  [Stage.OBSTACLES]: 1.3,
   [Stage.CTA]: 1.25,
+  [Stage.SPEED_RUN_FINISH]: 1.25,
+  [Stage.TEST]: 1.25,
 }
 
 type Props = {

@@ -1,29 +1,24 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, useCallback, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useLayoutEffect, useRef } from 'react'
 
-import {
-  PLAYER_INITIAL_POSITION,
-  Stage,
-  useGameStore,
-  useGameStoreAPI,
-} from '@/components/GameProvider'
-import HomeElements, { type HomeElementsHandle } from '@/components/platform/home/HomeElements'
-import InfoElements, { type InfoElementsHandle } from '@/components/platform/info/InfoElements'
+import { PLAYER_INITIAL_POSITION, Stage, useGameStore } from '@/components/GameProvider'
+import FloatingHeadings, {
+  type FloatingHeadingsHandle,
+} from '@/components/platform/FloatingHeadings'
+import Collectibles, { type CollectiblesHandle } from '@/components/platform/Collectibles'
+import InfoZones, { type InfoZonesHandle } from '@/components/platform/InfoZones'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import CTAElements, { type CTAElementsHandle } from '@/components/platform/cta/CTAElements' // changed from lowercase and wont allow name CTAElements
-import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
+import Rings, { type RingsHandle } from '@/components/platform/Rings'
 import FloatingTiles, {
   type FloatingTilesHandle,
 } from '@/components/floatingTiles/FloatingTiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
-import { generateHomeSectionRowData } from '@/utils/platform/homeSection'
-import { generateObstacleSectionRowData } from '@/utils/platform/obstaclesSection'
-import { generateInfoSectionRowData } from '@/utils/platform/infoSection'
-import { generateSpeedRunSectionRowData } from '@/utils/platform/speedRunSection'
+import { buildRowsFromLayouts } from '@/utils/platform/sectionLayoutFeatures'
 import {
   colToX,
   COLUMNS,
@@ -42,14 +37,14 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
 } from '@/utils/tiles'
 import usePlayerInput from '@/hooks/usePlayerInput'
-import { generateCtaSectionRowData } from '@/utils/platform/ctaSection'
 import type { SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 import { EMPTY_ROW_INDEX, usePlayerRespawn } from './usePlayerRespawn'
+import useReadyState, { ReadyStateKey } from './useReadyState'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
-  type: 'empty',
+  stage: Stage.OBSTACLES,
   isSectionStart: false,
   isSectionEnd: false,
   rowIndex: EMPTY_ROW_INDEX,
@@ -64,8 +59,6 @@ const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
 const INITIAL_ROW_BACK_OFFSET_ROWS = 12
 const INITIAL_ROW_BACK_OFFSET = INITIAL_ROW_BACK_OFFSET_ROWS * TILE_SIZE
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
-const INFO_CONTENT_INDEXES = [0, 1, 2] as const // Keep in sync with INFO_ZONES_CONTENT
-
 const warnVisibilityCoverageIfNeeded = (() => {
   let hasWarned = false
   return () => {
@@ -91,44 +84,15 @@ function getRowAlpha(rowZ: number, playerZ: number) {
 }
 
 type Props = {
-  homeLayout: SectionBitmapLayout | null
-  infoLayouts: Array<SectionBitmapLayout | null>
-  obstacleLayouts: Array<SectionBitmapLayout | null>
-  speedRunLayout: SectionBitmapLayout | null
-  ctaLayout: SectionBitmapLayout | null
-  testLayouts: Array<SectionBitmapLayout | null>
+  sectionLayouts: SectionBitmapLayout[]
   isTestMode: boolean
 }
 
-type ReadyState = {
-  tiles: boolean
-  rings: boolean
-  home: boolean
-  info: boolean
-  cta: boolean
-  speedRun: boolean
-  floatingTiles: boolean
-}
-
-type ReadyStateKey = keyof ReadyState
-
-const CORE_READY_KEYS: ReadyStateKey[] = ['tiles', 'rings', 'floatingTiles']
-
-const Platform: FC<Props> = ({
-  homeLayout,
-  infoLayouts,
-  obstacleLayouts,
-  speedRunLayout,
-  ctaLayout,
-  testLayouts,
-  isTestMode,
-}) => {
-  const gameStore = useGameStoreAPI()
+const Platform: FC<Props> = ({ sectionLayouts, isTestMode }) => {
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const setPlatformReady = useGameStore((s) => s.setPlatformReady)
   const goToStage = useGameStore((s) => s.goToStage)
-  const setInfoContentIndex = useGameStore((s) => s.setInfoContentIndex)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
   const setRowsData = useGameStore((s) => s.setRowsData)
@@ -155,127 +119,22 @@ const Platform: FC<Props> = ({
   const activeRowsData = useRef<RowData[]>([])
   const nextAbsoluteRowIndex = useRef(0)
 
-  const tilesHandle = useRef<TilesHandle | null>(null)
+  const tiles = useRef<TilesHandle | null>(null)
   const ringsHandle = useRef<RingsHandle | null>(null)
-  const homeElements = useRef<HomeElementsHandle | null>(null)
-  const infoElements = useRef<InfoElementsHandle | null>(null)
+  const floatingHeadings = useRef<FloatingHeadingsHandle | null>(null)
+  const collectibles = useRef<CollectiblesHandle | null>(null)
+  const infoZones = useRef<InfoZonesHandle | null>(null)
   const ctaElements = useRef<CTAElementsHandle | null>(null)
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
-  const [readyState, setReadyState] = useState<ReadyState>({
-    tiles: false,
-    rings: false,
-    home: false,
-    info: false,
-    cta: false,
-    speedRun: false,
-    floatingTiles: false,
-  })
-
-  const onTilesReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, tiles: isReady }))
-  }, [])
-
-  const onRingsReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, rings: isReady }))
-  }, [])
-
-  const onHomeElementsReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, home: isReady }))
-  }, [])
-
-  const onInfoElementsReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, info: isReady }))
-  }, [])
-
-  const onCtaElementsReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, cta: isReady }))
-  }, [])
-
-  const onSpeedRunElementsReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, speedRun: isReady }))
-  }, [])
-
-  const onFloatingTilesReadyChange = useCallback((isReady: boolean) => {
-    setReadyState((prev) => ({ ...prev, floatingTiles: isReady }))
-  }, [])
-
-  const appendRowsWithIndices = (rows: RowData[]) => {
-    // Ensures rows have absolute rowIndex assigned
-    if (!rows.length) return
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i]
-      row.rowIndex = nextAbsoluteRowIndex.current
-      nextAbsoluteRowIndex.current++
-      rowsDataRef.current.push(row)
-    }
-  }
-
-  function insertInfoRows(contentIndex: 0 | 1 | 2) {
-    const layout = infoLayouts[contentIndex] ?? null
-    if (!layout) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(
-          `[Platform] Cannot insert info rows for index ${contentIndex} without layout data`,
-        )
-      }
-      return
-    }
-    const rows = generateInfoSectionRowData({
-      layout,
-      contentIndex,
-    })
-    appendRowsWithIndices(rows)
-  }
-
-  function insertHomeRows() {
-    const rows = generateHomeSectionRowData(homeLayout)
-    appendRowsWithIndices(rows)
-  }
-
-  function insertObstacleRows(bitmapIndex: number) {
-    const layout = obstacleLayouts[bitmapIndex] ?? null
-    const rows = generateObstacleSectionRowData(layout)
-    appendRowsWithIndices(rows)
-  }
-
-  function insertCtaRows() {
-    const rows = generateCtaSectionRowData(ctaLayout)
-    appendRowsWithIndices(rows)
-  }
-
-  function insertSpeedRunRows() {
-    const rows = generateSpeedRunSectionRowData(speedRunLayout)
-    appendRowsWithIndices(rows)
-  }
-
-  function insertTestRows() {
-    testLayouts.forEach((layout, layoutIndex) => {
-      const contentIndex = INFO_CONTENT_INDEXES[layoutIndex % INFO_CONTENT_INDEXES.length]
-      const rows = generateInfoSectionRowData({
-        layout,
-        contentIndex,
-      })
-      appendRowsWithIndices(rows)
-    })
-  }
-
-  const hasAllLayouts = isTestMode
-    ? testLayouts.length > 0 && testLayouts.every((layout) => !!layout)
-    : !!homeLayout &&
-      !!infoLayouts.length &&
-      !!obstacleLayouts.length &&
-      !!speedRunLayout &&
-      !!ctaLayout
+  const { readyState, readyChangeHandlers } = useReadyState()
+  const hasLayouts = sectionLayouts.length > 0
 
   useEffect(() => {
-    if (!hasAllLayouts) return
+    if (!hasLayouts) return
 
     const shouldSkipReadyCheck = (key: ReadyStateKey) => {
-      if (isTestMode) {
-        return !CORE_READY_KEYS.includes(key)
-      }
       if (isSpeedRunMode && key === 'cta') return true
       if (!isSpeedRunMode && key === 'speedRun') return true
       return false
@@ -290,12 +149,12 @@ const Platform: FC<Props> = ({
 
     if (!areElementsReady) return
 
-    if (!tilesHandle.current) {
+    if (!tiles.current) {
       console.error('[Platform] Missing tiles handle when initializing platform.')
       return
     }
 
-    const tiles = tilesHandle.current
+    const tilesHandle = tiles.current
 
     function setupInitialRowsAndTiles() {
       // Reset state
@@ -312,25 +171,9 @@ const Platform: FC<Props> = ({
       yByBodyIndex.current = []
       currentScrollPosition.current = 0
 
-      if (isTestMode) {
-        insertTestRows()
-      } else {
-        insertHomeRows()
-        insertObstacleRows(0)
-        insertInfoRows(0)
-        insertObstacleRows(1)
-        insertInfoRows(1)
-        insertObstacleRows(2)
-        insertInfoRows(2)
-        insertObstacleRows(3)
-        if (isSpeedRunMode) {
-          insertSpeedRunRows()
-        } else {
-          insertCtaRows()
-        }
-      }
+      const rows = buildRowsFromLayouts(sectionLayouts)
+      rowsDataRef.current = rows
 
-      setRowsData(rowsDataRef.current)
       const tileInstances: InstancedRigidBodyProps[] = []
 
       const playerZ = playerPosition.current.z
@@ -347,9 +190,9 @@ const Platform: FC<Props> = ({
 
       let nextRowZ = nextStartZ
 
-      const tilesVisibility = tiles.visibilityData
-      const tilesSeed = tiles.seedData
-      const tilesHighlighted = tiles.highlightedData
+      const tilesVisibility = tilesHandle.visibilityData
+      const tilesSeed = tilesHandle.seedData
+      const tilesHighlighted = tilesHandle.highlightedData
 
       if (!tilesVisibility || !tilesSeed || !tilesHighlighted) {
         console.error('[Platform] Missing tile instance attributes data.')
@@ -388,18 +231,21 @@ const Platform: FC<Props> = ({
         nextRowZ -= TILE_SIZE
       }
 
-      tiles.setTileInstances(tileInstances)
+      tilesHandle.setTileInstances(tileInstances)
       floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
       floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
-      setPlatformReady(true)
       nextRowDataIndex.current = ROWS_RENDERED
       markInstanceAttributesDirty()
+
+      setRowsData(rows)
+      setPlatformReady(true)
     }
 
     setupInitialRowsAndTiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, hasAllLayouts, readyState, isSpeedRunMode, isTestMode])
+  }, [resetPlatformTick, hasLayouts, readyState, isSpeedRunMode, isTestMode, sectionLayouts])
 
+  // TODO: move these into usePlayerRespawn, including the function called inside useGameFrame.
   const targetScrollPosition = useRef<number | null>(null)
   const pendingRespawnX = useRef<number | null>(null)
   const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
@@ -416,8 +262,8 @@ const Platform: FC<Props> = ({
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
     const data = newRowData ?? EMPTY_ROW_DATA
-    const visibilityData = tilesHandle.current?.visibilityData
-    const highlightedData = tilesHandle.current?.highlightedData
+    const visibilityData = tiles.current?.visibilityData
+    const highlightedData = tiles.current?.highlightedData
     if (!visibilityData || !highlightedData) return
     activeRowsData.current[rowIndex] = data
     floatingTilesHandle.current?.setRowData(rowIndex, data)
@@ -432,29 +278,27 @@ const Platform: FC<Props> = ({
   }
 
   function markInstanceAttributesDirty() {
-    if (tilesHandle.current?.visibilityAttribute) {
-      tilesHandle.current.visibilityAttribute.needsUpdate = true
+    if (tiles.current?.visibilityAttribute) {
+      tiles.current.visibilityAttribute.needsUpdate = true
     }
-    if (tilesHandle.current?.highlightedAttribute) {
-      tilesHandle.current.highlightedAttribute.needsUpdate = true
+    if (tiles.current?.highlightedAttribute) {
+      tiles.current.highlightedAttribute.needsUpdate = true
     }
   }
 
-  function hideRowDecorations(rowIndex: number) {
+  function hideElements(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
     ringsHandle.current?.hideElementsIfNeeded(row)
-    switch (row.type) {
-      case 'info':
-        infoElements.current?.hideElementsIfNeeded(row)
-        break
-      case 'home':
-        homeElements.current?.hideElementsIfNeeded(row)
-        break
-      case 'cta':
+    floatingHeadings.current?.hideElementsIfNeeded(row)
+    collectibles.current?.hideElementsIfNeeded(row)
+    infoZones.current?.hideElementsIfNeeded(row)
+
+    switch (row.stage) {
+      case Stage.CTA:
         ctaElements.current?.hideElementsIfNeeded(row)
         break
-      case 'speed-run-finish':
+      case Stage.SPEED_RUN_FINISH:
         speedRunElements.current?.hideElementsIfNeeded(row)
         break
       default:
@@ -462,37 +306,24 @@ const Platform: FC<Props> = ({
     }
   }
 
-  function positionRowDecorations(rowIndex: number, rowZ: number) {
+  function positionElements(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
     ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
-    switch (row.type) {
-      case 'info':
-        infoElements.current?.positionElementsIfNeeded(row, rowZ)
-        break
-      case 'home':
-        homeElements.current?.positionElementsIfNeeded(row, rowZ)
-        break
-      case 'cta':
+    floatingHeadings.current?.positionElementsIfNeeded(row, rowZ)
+    collectibles.current?.positionElementsIfNeeded(row, rowZ)
+    infoZones.current?.positionElementsIfNeeded(row, rowZ)
+
+    switch (row.stage) {
+      case Stage.CTA:
         ctaElements.current?.positionElementsIfNeeded(row, rowZ)
         break
-      case 'speed-run-finish':
+      case Stage.SPEED_RUN_FINISH:
         speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
         break
       default:
         break
     }
-  }
-
-  function setInfoContentIndexForVisibleRow(rowIndex: number) {
-    const row = activeRowsData.current[rowIndex]
-    if (!row) return
-    if (row.type !== 'info' || !row.isSectionStart) return
-    const contentIndex = row.infoContentIndex
-    if (typeof contentIndex !== 'number') return
-    const currentIndex = gameStore.getState().infoContentIndex
-    if (currentIndex === contentIndex) return
-    setInfoContentIndex(contentIndex)
   }
 
   function getRowIndexClosestToOrigin() {
@@ -521,36 +352,27 @@ const Platform: FC<Props> = ({
     const row = activeRowsData.current[rowIndex]
     if (!row) return
 
-    if (row.type === 'home') {
-      if (stageRef.current !== Stage.HOME) {
-        goToStage(Stage.HOME)
-      }
+    if (row.stage === Stage.HOME && stageRef.current !== Stage.HOME) {
+      goToStage(Stage.HOME)
       return
     }
 
-    if (row.type === 'info') {
-      if (row.isSectionStart && typeof row.infoContentIndex === 'number') {
-        setInfoContentIndex(row.infoContentIndex)
-      }
-      if (stageRef.current !== Stage.INFO) {
-        goToStage(Stage.INFO)
-      }
+    if (row.stage === Stage.INFO && stageRef.current !== Stage.INFO) {
+      goToStage(Stage.INFO)
       return
     }
 
-    if (row.type === 'obstacles') {
-      if (stageRef.current !== Stage.TERRAIN) {
-        goToStage(Stage.TERRAIN)
-      }
+    if (row.stage === Stage.OBSTACLES && stageRef.current !== Stage.OBSTACLES) {
+      goToStage(Stage.OBSTACLES)
       return
     }
 
-    if (row.type === 'cta' && stageRef.current !== Stage.CTA) {
+    if (row.stage === Stage.CTA && stageRef.current !== Stage.CTA) {
       goToStage(Stage.CTA)
       return
     }
 
-    if (row.type === 'speed-run-finish' && stageRef.current !== Stage.CTA) {
+    if (row.stage === Stage.SPEED_RUN_FINISH && stageRef.current !== Stage.CTA) {
       goToStage(Stage.CTA)
       return
     }
@@ -561,7 +383,7 @@ const Platform: FC<Props> = ({
     let wrapsApplied = 0
 
     for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
-      hideRowDecorations(rowIndex)
+      hideElements(rowIndex)
       rowIsVisible.current[rowIndex] = false
       const newRowData = rowsDataRef.current[nextRowDataIndex.current] ?? EMPTY_ROW_DATA
       updateInstanceAttributesForRow(rowIndex, newRowData)
@@ -578,7 +400,7 @@ const Platform: FC<Props> = ({
     let wrapsApplied = 0
 
     for (; wrapsApplied < wrapsToApply; wrapsApplied++) {
-      hideRowDecorations(rowIndex)
+      hideElements(rowIndex)
       rowIsVisible.current[rowIndex] = false
       nextRowDataIndex.current = Math.max(0, nextRowDataIndex.current - 1)
       const earliestRowIndex = nextRowDataIndex.current - ROWS_RENDERED
@@ -594,7 +416,7 @@ const Platform: FC<Props> = ({
 
   function setTileTranslations(rowIndex: number, rowZ: number) {
     const firstBodyIndex = rowIndex * COLUMNS
-    const rigidBodies = tilesHandle.current?.rigidBodies
+    const rigidBodies = tiles.current?.rigidBodies
     if (!rigidBodies) return
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
@@ -611,7 +433,7 @@ const Platform: FC<Props> = ({
   }
 
   function updateTiles(playerZ: number) {
-    if (!tilesHandle.current?.rigidBodies) return
+    if (!tiles.current?.rigidBodies) return
     const cycleDistance = ROW_CYCLE_DISTANCE
     const maxZ = playerZ + ROW_VISIBILITY_HALF_SPAN
     const minZ = playerZ - ROW_VISIBILITY_HALF_SPAN
@@ -653,10 +475,9 @@ const Platform: FC<Props> = ({
       if (wasVisible !== isVisible) {
         rowIsVisible.current[rowIndex] = isVisible
         if (isVisible) {
-          setInfoContentIndexForVisibleRow(rowIndex)
-          positionRowDecorations(rowIndex, rowZ)
+          positionElements(rowIndex, rowZ)
         } else {
-          hideRowDecorations(rowIndex)
+          hideElements(rowIndex)
         }
       }
     }
@@ -674,12 +495,19 @@ const Platform: FC<Props> = ({
 
   useGameFrame((_, delta) => {
     if (!isPlatformReady) return
-    if (!tilesHandle.current?.shader) return
-    if (!homeElements.current || !infoElements.current || !ringsHandle.current) return
+    if (!tiles.current?.shader) return
+    if (
+      !floatingHeadings.current ||
+      !collectibles.current ||
+      !infoZones.current ||
+      !ringsHandle.current
+    ) {
+      return
+    }
     if (!isSpeedRunMode && !ctaElements.current) return
     if (isSpeedRunMode && !speedRunElements.current) return
 
-    tilesHandle.current.shader.uScrollZ = currentScrollPosition.current
+    tiles.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
     const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
@@ -730,8 +558,10 @@ const Platform: FC<Props> = ({
     if (Math.abs(totalScrollDelta) < EPSILON.SMALL) return
 
     ringsHandle.current.moveElements(totalScrollDelta)
-    infoElements.current.moveElements(totalScrollDelta)
-    homeElements.current.moveElements(totalScrollDelta)
+    floatingHeadings.current.moveElements(totalScrollDelta)
+    collectibles.current.moveElements(totalScrollDelta)
+    infoZones.current.moveElements(totalScrollDelta)
+
     if (isSpeedRunMode) {
       speedRunElements.current?.moveElements(totalScrollDelta)
     } else {
@@ -739,56 +569,61 @@ const Platform: FC<Props> = ({
     }
   })
 
-  useEffect(() => {
-    setPlatformReady(false)
+  useLayoutEffect(() => {
     floatingTilesHandle.current?.reset()
-  }, [resetPlatformTick, setPlatformReady])
+  }, [resetPlatformTick])
 
   return (
     <group>
       <FloatingTiles
         ref={floatingTilesHandle}
-        key={`${resetPlatformTick}-floatingTiles`}
-        onReadyChange={onFloatingTilesReadyChange}
+        key={`${resetPlatformTick}-floating-tiles`}
+        onReadyChange={readyChangeHandlers.floatingTiles}
       />
 
       <PlatformTiles
-        ref={tilesHandle}
+        ref={tiles}
         key={`${resetPlatformTick}-tiles`}
-        onReadyChange={onTilesReadyChange}
+        onReadyChange={readyChangeHandlers.tiles}
+      />
+
+      <FloatingHeadings
+        ref={floatingHeadings}
+        key={`${resetPlatformTick}-headings`}
+        onReadyChange={readyChangeHandlers.headings}
+      />
+
+      <Collectibles
+        ref={collectibles}
+        key={`${resetPlatformTick}-collectibles`}
+        onReadyChange={readyChangeHandlers.collectibles}
+      />
+
+      <InfoZones
+        ref={infoZones}
+        key={`${resetPlatformTick}-info-zones`}
+        onReadyChange={readyChangeHandlers.infoZones}
       />
 
       <Rings
         ref={ringsHandle}
         key={`${resetPlatformTick}-rings`}
-        onReadyChange={onRingsReadyChange}
-      />
-
-      <HomeElements
-        ref={homeElements}
-        key={`${resetPlatformTick}-home`}
-        onReadyChange={onHomeElementsReadyChange}
-      />
-
-      <InfoElements
-        ref={infoElements}
-        key={`${resetPlatformTick}-info`}
-        onReadyChange={onInfoElementsReadyChange}
+        onReadyChange={readyChangeHandlers.rings}
       />
 
       {!isSpeedRunMode && (
         <CTAElements
           ref={ctaElements}
           key={`${resetPlatformTick}-cta`}
-          onReadyChange={onCtaElementsReadyChange}
+          onReadyChange={readyChangeHandlers.cta}
         />
       )}
 
       {isSpeedRunMode && (
         <SpeedRunElements
           ref={speedRunElements}
-          key={`${resetPlatformTick}-speedRun`}
-          onReadyChange={onSpeedRunElementsReadyChange}
+          key={`${resetPlatformTick}-speed-run`}
+          onReadyChange={readyChangeHandlers.speedRun}
         />
       )}
     </group>

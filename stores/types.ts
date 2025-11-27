@@ -4,13 +4,14 @@ import { type StateCreator } from 'zustand'
 import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
 import type { RowData } from '@/utils/tiles'
-import type { CosinePaletteParams } from '@/components/dev/colourTexture/store/types'
 
 export enum Stage {
-  HOME = 'home',
-  INFO = 'info',
-  TERRAIN = 'terrain',
-  CTA = 'cta',
+  HOME = 1,
+  INFO = 2,
+  OBSTACLES = 3,
+  CTA = 4,
+  SPEED_RUN_FINISH = 5,
+  TEST = 6,
 }
 
 export type EdgeWarningIntensities = {
@@ -91,9 +92,6 @@ export type PlayerSlice = {
 export type GameSlice = {
   stage: Stage
   goToStage: (stage: Stage) => void
-
-  infoContentIndex: number
-  setInfoContentIndex: (index: number) => void
 
   hudIndicator: HudIndicatorConfig | null
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void

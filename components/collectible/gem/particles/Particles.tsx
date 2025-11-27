@@ -42,6 +42,7 @@ type Props = {
   gemPosition: Vector3Tuple
   gemScale: number
   position?: Vector3Tuple
+  isVisible: boolean
 }
 
 const EPSILON = 0.0001
@@ -93,8 +94,10 @@ const Particles: FC<Props> = ({
   gemPosition,
   gemScale,
   position = [0, 0, 0],
+  isVisible,
 }) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
   const dpr = useThree((s) => s.viewport.dpr)
   const materialRef = useRef<(typeof PointsShaderMaterial & PointsShaderUniforms) | null>(null)
 
@@ -170,22 +173,32 @@ const Particles: FC<Props> = ({
   }, [colours])
 
   useEffect(() => {
-    if (!materialRef.current) return
-
-    if (!hasMounted.current) {
+    const material = materialRef.current
+    if (!hasMounted.current || !material) {
       hasMounted.current = true
       previouslyConfirmed.current = wasConfirmed
+      progress.current.value = wasConfirmed ? 1 : 0
+      if (material) {
+        material.uBurstProgress = progress.current.value
+      }
       return
     }
 
     const justConfirmed = wasConfirmed && !previouslyConfirmed.current
     previouslyConfirmed.current = wasConfirmed
 
-    if (!justConfirmed) return
+    if (!justConfirmed) {
+      if (!wasConfirmed && progress.current.value !== 0) {
+        progressTween.current?.kill()
+        progress.current.value = 0
+        material.uBurstProgress = 0
+      }
+      return
+    }
 
     progressTween.current?.kill()
     progress.current.value = 0
-    materialRef.current.uBurstProgress = 0
+    material.uBurstProgress = 0
 
     progressTween.current = gsap.to(progress.current, {
       value: 1,
@@ -193,7 +206,7 @@ const Particles: FC<Props> = ({
       ease: 'power2.out',
       onComplete: () => {
         progress.current.value = 1
-        materialRef.current!.uBurstProgress = 1
+        material.uBurstProgress = 1
       },
     })
   }, [wasConfirmed])
@@ -207,13 +220,14 @@ const Particles: FC<Props> = ({
   useGameFrame(({ clock }) => {
     const material = materialRef.current
     if (!material) return
+    if (!isVisible) return
 
     material.uBurstProgress = progress.current.value
     material.uTime = clock.elapsedTime
   })
 
   return (
-    <points position={position} dispose={null} frustumCulled={false}>
+    <points position={position} dispose={null} frustumCulled={false} visible={isVisible}>
       <bufferGeometry attach="geometry">
         <bufferAttribute
           attach="attributes-position"
@@ -261,6 +275,7 @@ const Particles: FC<Props> = ({
         transparent={true}
         depthTest={false}
         blending={AdditiveBlending}
+        defines={{ USE_DISTANCE_FADE: useDistanceFade ? 1 : 0 }}
       />
     </points>
   )

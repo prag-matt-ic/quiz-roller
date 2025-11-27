@@ -1,6 +1,8 @@
 // Collectible Particle Point Vertex Shader (gem focused) - Optimized
 precision highp float;
 
+#pragma glslify: fadeDistance = require('../../../../resources/glsl/fadeDistance.glsl')
+
 uniform float uBurstProgress; // 0.0 to 1.0
 uniform vec3 uGemPosition;
 uniform float uGemScale;
@@ -104,6 +106,11 @@ void main() {
     vec3 finalPosition = mix(liftPosition, floatingPosition, settleProgress);
 
     vec4 modelPosition = modelMatrix * vec4(finalPosition, 1.0);
+    #ifdef USE_DISTANCE_FADE
+        float distanceFade = fadeDistance(modelPosition.z);
+    #else
+        float distanceFade = 1.0;
+    #endif
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
@@ -122,7 +129,7 @@ void main() {
     float perspectiveScale = projectionMatrix[1][1];
     float distanceToCamera = max(-viewPosition.z, EPSILON);
     float attenuation = clamp(perspectiveScale / distanceToCamera, 0.35, 2.8);
-    gl_PointSize = baseSize * sizeFade * attenuation * uDpr;
+    gl_PointSize = baseSize * sizeFade * attenuation * uDpr * distanceFade;
 
     float settleScalePulse = mix(0.9, 1.3, settlePulseWave);
     float settleScale = mix(1.0, settleScalePulse, settleProgress);
@@ -153,6 +160,7 @@ void main() {
     }
 
     finalOpacity *= 0.8; // Overall opacity dampening
+    finalOpacity *= distanceFade;
 
     vColorAlpha = vec4(glowColor, finalOpacity);
     vSoftness = softness;

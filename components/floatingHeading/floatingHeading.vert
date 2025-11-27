@@ -1,5 +1,5 @@
 #pragma glslify: cameraFadeNear = require('../../resources/glsl/cameraFadeNear.glsl')
-#pragma glslify: cameraFadeDistant = require('../../resources/glsl/cameraFadeDistant.glsl')
+#pragma glslify: fadeDistance = require('../../resources/glsl/fadeDistance.glsl')
 
 varying mediump vec2 vMirroredUv;
 varying mediump float vPlayerFade;
@@ -51,7 +51,7 @@ void main() {
 
   #ifdef USE_CAMERA_FADES
     highp float nearFade = cameraFadeNear(uCameraZ, worldPosition.z);
-    highp float distantFade = cameraFadeDistant(uCameraZ, worldPosition.z);
+    highp float distantFade = fadeDistance(worldPosition.z);
     vCameraFade = nearFade * distantFade;
   #else
     vCameraFade = 1.0;

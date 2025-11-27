@@ -15,7 +15,7 @@ import {
 } from '@react-three/rapier'
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
-import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
+import { type FC, type PropsWithChildren, RefObject, useEffect, useRef, useState } from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -51,8 +51,9 @@ const InfoZoneShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentSh
 const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 type Props = PropsWithChildren<{
-  ref?: RefObject<RapierRigidBody | null>
+  ref: RefObject<RapierRigidBody | null>
   isPositioned: boolean
+  isVisible?: boolean
   position: Vector3Tuple
   width: number
   height: number
@@ -69,6 +70,7 @@ const iconPositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE
 export const InfoZone: FC<Props> = ({
   ref,
   isPositioned = false,
+  isVisible = false,
   position,
   width,
   height,
@@ -86,6 +88,7 @@ export const InfoZone: FC<Props> = ({
   const infoContainer = useRef<HTMLDivElement>(null)
 
   const lookAtInfo = () => {
+    if (!isVisible) return
     if (!ref || !ref.current) return
     const currentTranslation = ref.current.translation()
     const targetPosition = new Vector3(
@@ -149,6 +152,13 @@ export const InfoZone: FC<Props> = ({
   const aspect = width / height
   const tilesX = width / TILE_SIZE
   const tilesY = height / TILE_SIZE
+  const shouldRenderInfo = isPositioned && isVisible
+
+  useEffect(() => {
+    if (!isVisible && !alwaysShowInfo) {
+      setShowInfo(false)
+    }
+  }, [alwaysShowInfo, isVisible])
 
   return (
     <>
@@ -173,18 +183,20 @@ export const InfoZone: FC<Props> = ({
           onIntersectionExit={onIntersectionExit}
           collisionGroups={COLLISION_GROUPS.infoZoneSensor}
         />
-        <mesh position={[0, 0, 0.03]} renderOrder={2}>
-          <planeGeometry args={[width, height]} />
-          <InfoZoneShaderMaterial
-            key={InfoZoneShader.key}
-            transparent={true}
-            uAspect={aspect}
-            uTilesX={tilesX}
-            uTilesY={tilesY}
-          />
-        </mesh>
+        <group visible={isVisible}>
+          <mesh position={[0, 0, 0.03]} renderOrder={2}>
+            <planeGeometry args={[width, height]} />
+            <InfoZoneShaderMaterial
+              key={InfoZoneShader.key}
+              transparent={true}
+              uAspect={aspect}
+              uTilesX={tilesX}
+              uTilesY={tilesY}
+            />
+          </mesh>
 
-        <InfoTile position={iconPositionOffset} isHidden={showInfo} />
+          <InfoTile position={iconPositionOffset} isHidden={showInfo} />
+        </group>
         {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>
           <sphereGeometry args={[0.5, 16, 16]} />
@@ -192,7 +204,7 @@ export const InfoZone: FC<Props> = ({
         </mesh> */}
 
         {/* Info Content */}
-        {isPositioned && (
+        {shouldRenderInfo && (
           <Html
             sprite={true}
             center={true}

@@ -1,3 +1,5 @@
+import { Stage } from '@/stores/types'
+
 // Tile dimensions
 export const TILE_SIZE = 1.0
 export const TILE_THICKNESS = 0.08
@@ -37,7 +39,7 @@ export const ROWS_RENDERED = 31
 
 // Heights
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
-export const UNSAFE_HEIGHT = -40 // sunken obstacles (out of sight)
+export const UNSAFE_HEIGHT = -100 // sunken obstacles (out of sight)
 
 export const HIDE_POSITION_Y = -40 as const
 export const HIDE_POSITION_Z = 40 as const
@@ -56,8 +58,6 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
-export type SectionType = 'home' | 'info' | 'obstacles' | 'cta' | 'empty' | 'speed-run-finish'
-
 // Row index to columns with rings
 export type RingLayout = Record<number, number[]>
 
@@ -66,9 +66,11 @@ export type RingPositions = (0 | 1)[]
 export const createEmptyRingPositions = (): RingPositions =>
   new Array<number>(COLUMNS).fill(0) as RingPositions
 
+export type IndexedPlacement = readonly [number, number, number, number]
+
 export type RowData = {
   heights: number[]
-  type: SectionType
+  stage: Stage
   isSectionStart: boolean
   isSectionEnd: boolean
   rowIndex?: number
@@ -76,11 +78,10 @@ export type RowData = {
 
   isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
 
-  infoContentIndex?: number
   tileTextPosition?: [number, number, number] // Text rendered flat on the platform surface
   imagePosition?: [number, number, number] // 2D image rendered on the platform
-  infoZonePositions?: ([number, number, number] | null)[] // Info zones rendered on the platform
-  collectiblePosition?: [number, number, number] // Collectibles rendered on the platform
-  floatingHeadingPosition?: [number, number, number] // Floating heading above the platform but still aligned to the row
+  infoZonePlacements?: (IndexedPlacement | null)[] // Info zones rendered on the platform
+  collectiblePlacements?: IndexedPlacement[] // Collectibles rendered on the platform
+  floatingHeadingPlacements?: IndexedPlacement[] // Floating heading above the platform but still aligned to the row
   finishLinePosition?: [number, number, number] // Finish line position
 }

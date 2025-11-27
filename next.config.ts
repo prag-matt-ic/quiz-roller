@@ -2,8 +2,9 @@ import path from 'path'
 import type { NextConfig } from 'next'
 
 const envOrigins =
-  process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).filter(Boolean) ??
-  []
+  process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? []
 
 const localNetworkOrigins = ['192.168.1.118']
 

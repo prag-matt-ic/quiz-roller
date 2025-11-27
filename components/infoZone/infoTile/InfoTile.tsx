@@ -34,7 +34,7 @@ type InfoTileShaderUniforms = {
 }
 
 const INITIAL_INFO_TILE_UNIFORMS: InfoTileShaderUniforms = {
-  uExitProgress: 1,
+  uExitProgress: 0,
   uRaiseDistance: INFO_TILE_RAISE_DISTANCE,
   uTileHeight: INFO_TILE_HEIGHT,
   uIconTexture: null,
@@ -56,28 +56,28 @@ export const InfoTile: FC<InfoTileProps> = ({ position, isHidden }) => {
 
   const colourTexture = useTexture(infoIcon.src)
 
-  useGSAP(
-    () => {
-      const material = shaderRef.current
-      if (!material) return
+  // useGSAP(
+  //   () => {
+  //     const material = shaderRef.current
+  //     if (!material) return
 
-      const target = isHidden ? 1 : 0
+  //     const target = isHidden ? 1 : 0
 
-      if (!hasInitialized.current) {
-        material.uExitProgress = target
-        hasInitialized.current = true
-        return
-      }
+  //     if (!hasInitialized.current) {
+  //       material.uExitProgress = target
+  //       hasInitialized.current = true
+  //       return
+  //     }
 
-      gsap.to(material, {
-        duration: 0.4,
-        uExitProgress: target,
-        ease: 'power2.out',
-        overwrite: true,
-      })
-    },
-    { dependencies: [isHidden] },
-  )
+  //     gsap.to(material, {
+  //       duration: 0.4,
+  //       uExitProgress: target,
+  //       ease: 'power2.out',
+  //       overwrite: true,
+  //     })
+  //   },
+  //   { dependencies: [isHidden] },
+  // )
 
   return (
     <group position={position} rotation={[INFO_TILE_ROTATION_X, 0, 0]}>

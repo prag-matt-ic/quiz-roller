@@ -6,7 +6,6 @@ import type { RowData } from '@/utils/tiles'
 
 export const INITIAL_GAME_STATE = {
   stage: Stage.HOME,
-  infoContentIndex: 0,
   hudIndicator: MOVE_HUD_INDICATOR,
   totalRows: 100,
   totalRingsCount: 0,
@@ -26,9 +25,6 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   setHtmlPortal: (htmlPortal) => {
     set({ htmlPortal })
-  },
-  setInfoContentIndex: (index) => {
-    set({ infoContentIndex: index })
   },
   setHudIndicator: (indicator) => {
     set({ hudIndicator: indicator })
@@ -55,8 +51,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     if (newStage === Stage.INFO) {
       set({ stage: Stage.INFO })
     }
-    if (newStage === Stage.TERRAIN) {
-      set({ stage: Stage.TERRAIN })
+    if (newStage === Stage.OBSTACLES) {
+      set({ stage: Stage.OBSTACLES })
     }
     if (newStage === Stage.CTA) {
       set({ stage: Stage.CTA })

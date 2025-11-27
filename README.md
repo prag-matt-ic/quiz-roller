@@ -229,7 +229,7 @@ I landed on a solution in which the row data is pre-computed, and acts as the si
 ```ts
 export type RowData = {
   heights: number[] // The height of the tiles within this row
-  type: SectionType
+  stage: Stage
   isSectionStart: boolean
   isSectionEnd: boolean
   questionTextPosition?: [number, number, number]
@@ -237,8 +237,8 @@ export type RowData = {
   answerNumber?: number[]
   logoPosition?: [number, number, number]
   colourPickerPosition?: [number, number, number]
-  infoZonePositions?: ([number, number, number] | null)[]
-  collectiblePositions?: ([number, number, number] | null)[]
+  infoZonePlacements?: ([number, number, number, number] | null)[]
+  collectiblePlacements?: [number, number, number, number][]
 }
 ```
 

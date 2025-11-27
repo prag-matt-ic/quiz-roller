@@ -13,7 +13,7 @@ type Props = {
 }
 
 const InvisibleWall: FC<Props> = ({ ref, position }) => {
-  const isTerrainStage = useGameStore((s) => s.stage === Stage.TERRAIN)
+  const isTerrainStage = useGameStore((s) => s.stage === Stage.OBSTACLES)
 
   useEffect(() => {
     if (!ref.current) return

@@ -24,10 +24,10 @@ import info3Texture from '@/assets/platform/info-3.png'
 import obstacle1Texture from '@/assets/platform/obstacles-1.png'
 import obstacle2Texture from '@/assets/platform/obstacles-2.png'
 import obstacle3Texture from '@/assets/platform/obstacles-3.png'
+import obstacle4Texture from '@/assets/platform/obstacles-4.png'
 import speedRunTexture from '@/assets/platform/speed-run-finish.png'
 import ctaTexture from '@/assets/platform/cta.png'
 import testTexture from '@/assets/platform/test.png'
-import { INFO_ZONES_CONTENT } from '@/resources/content'
 import { loadHtmlImage } from '@/utils/loadImage'
 import { parseSectionBitmap, type SectionBitmapLayout } from '@/utils/platform/sectionBitmap'
 import Backdrop from './backdrop/Backdrop'
@@ -39,15 +39,39 @@ type Props = {
   isMobile: boolean
 }
 
-const INFO_BITMAP_TEXTURES = [info1Texture.src, info2Texture.src, info3Texture.src]
-const OBSTACLE_BITMAP_TEXTURES = [
-  obstacle1Texture.src,
-  obstacle2Texture.src,
-  obstacle1Texture.src,
-  obstacle3Texture.src,
+type TextureDescriptor = {
+  src: string
+  stage: Stage
+}
+
+const CORE_TEXTURES: TextureDescriptor[] = [
+  { src: homeTexture.src, stage: Stage.HOME },
+  { src: obstacle1Texture.src, stage: Stage.OBSTACLES },
+  { src: info1Texture.src, stage: Stage.INFO },
+  { src: obstacle2Texture.src, stage: Stage.OBSTACLES },
+  { src: info2Texture.src, stage: Stage.INFO },
+  { src: obstacle3Texture.src, stage: Stage.OBSTACLES },
+  { src: info3Texture.src, stage: Stage.INFO },
+  { src: obstacle4Texture.src, stage: Stage.OBSTACLES },
 ]
 
-const TEST_SECTIONS_COUNT = INFO_ZONES_CONTENT.length
+const MAIN_TEXTURES: TextureDescriptor[] = [
+  ...CORE_TEXTURES,
+  { src: ctaTexture.src, stage: Stage.CTA },
+]
+
+const SPEED_RUN_TEXTURES: TextureDescriptor[] = [
+  ...CORE_TEXTURES,
+  { src: speedRunTexture.src, stage: Stage.SPEED_RUN_FINISH },
+]
+
+// Use these when isTestPlatform is true
+const TEST_TEXTURES: TextureDescriptor[] = [
+  {
+    src: testTexture.src,
+    stage: Stage.TEST,
+  },
+]
 
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
@@ -66,15 +90,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const {
-    homeLayout,
-    infoLayouts,
-    obstacleLayouts,
-    speedRunLayout,
-    ctaLayout,
-    testLayouts,
-    isTestMode,
-  } = usePlatformLayout()
+  const { sectionLayouts, isTestMode } = usePlatformLayout()
 
   return (
     <Canvas
@@ -108,12 +124,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
             <OutOfBounds />
             <Platform
               key={isTestMode ? 'test' : 'normal'}
-              homeLayout={homeLayout}
-              infoLayouts={infoLayouts}
-              obstacleLayouts={obstacleLayouts}
-              speedRunLayout={speedRunLayout}
-              ctaLayout={ctaLayout}
-              testLayouts={testLayouts}
+              sectionLayouts={sectionLayouts}
               isTestMode={isTestMode}
             />
             <Player />
@@ -128,12 +139,7 @@ export default Game
 
 function usePlatformLayout() {
   const isTestMode = usePerformanceStore((s) => s.isTestPlatform)
-  const [homeLayout, setHomeLayout] = useState<SectionBitmapLayout | null>(null)
-  const [obstacleLayouts, setObstacleLayouts] = useState<Array<SectionBitmapLayout | null>>([])
-  const [infoLayouts, setInfoLayouts] = useState<Array<SectionBitmapLayout | null>>([])
-  const [speedRunLayout, setSpeedRunLayout] = useState<SectionBitmapLayout | null>(null)
-  const [ctaLayout, setCtaLayout] = useState<SectionBitmapLayout | null>(null)
-  const [testLayouts, setTestLayouts] = useState<Array<SectionBitmapLayout | null>>([])
+  const [sectionLayouts, setSectionLayouts] = useState<SectionBitmapLayout[]>([])
   const setTotalRingsCount = useGameStore((s) => s.setTotalRingsCount)
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isSpeedRunMode = useGameStore((s) => s.isSpeedRunMode)
@@ -143,92 +149,43 @@ function usePlatformLayout() {
 
     const imageToLayout = (
       image: HTMLImageElement | null,
-      label: string,
+      stage: Stage,
     ): SectionBitmapLayout | null => {
       if (!image) return null
       try {
-        return parseSectionBitmap(image)
+        return parseSectionBitmap(image, stage)
       } catch (error) {
-        console.error(`[Game] Failed to parse ${label} bitmap`, error)
+        console.error(`[Game] Failed to parse ${stage} bitmap`, error)
         return null
       }
     }
 
-    if (isTestMode) {
-      loadHtmlImage([testTexture.src]).then((images) => {
-        if (!isMounted) return
-        const layout = imageToLayout(images[0], 'test')
-        const repeatedLayouts = layout
-          ? Array.from({ length: TEST_SECTIONS_COUNT }, () => layout)
-          : []
-        setTestLayouts(repeatedLayouts)
-        setHomeLayout(null)
-        setInfoLayouts([])
-        setObstacleLayouts([])
-        setSpeedRunLayout(null)
-        setCtaLayout(null)
-      })
-    } else {
-      loadHtmlImage([
-        homeTexture.src,
-        ...INFO_BITMAP_TEXTURES,
-        ...OBSTACLE_BITMAP_TEXTURES,
-        speedRunTexture.src,
-        ctaTexture.src,
-      ]).then((images) => {
-        if (!isMounted) return
-        let index = 0
+    const textures = isTestMode
+      ? TEST_TEXTURES
+      : isSpeedRunMode
+        ? SPEED_RUN_TEXTURES
+        : MAIN_TEXTURES
 
-        const homeLayout = imageToLayout(images[index], 'home')
-        index++
-
-        const infoImages = images.slice(index, index + INFO_BITMAP_TEXTURES.length)
-        const infoLayouts = infoImages.map((image, layoutIndex) =>
-          imageToLayout(image, `info-${layoutIndex}`),
-        )
-        index += INFO_BITMAP_TEXTURES.length
-
-        const obstacleImages = images.slice(index, index + OBSTACLE_BITMAP_TEXTURES.length)
-        const obstacleLayouts = obstacleImages.map((image, layoutIndex) =>
-          imageToLayout(image, `obstacle-${layoutIndex}`),
-        )
-        index += OBSTACLE_BITMAP_TEXTURES.length
-
-        const speedRunLayout = imageToLayout(images[index], 'speed-run')
-        index++
-
-        const ctaLayout = imageToLayout(images[index], 'cta')
-
-        setTestLayouts([])
-        setHomeLayout(homeLayout)
-        setInfoLayouts(infoLayouts)
-        setObstacleLayouts(obstacleLayouts)
-        setSpeedRunLayout(speedRunLayout)
-        setCtaLayout(ctaLayout)
-      })
-    }
+    loadHtmlImage(textures.map((descriptor) => descriptor.src)).then((images) => {
+      if (!isMounted) return
+      const layouts: SectionBitmapLayout[] = images
+        .map((image, index) => {
+          const descriptor = textures[index]
+          if (!descriptor) return null
+          return imageToLayout(image, descriptor.stage)
+        })
+        .filter((layout): layout is SectionBitmapLayout => layout !== null)
+      setSectionLayouts(layouts)
+    })
 
     return () => {
       isMounted = false
     }
-  }, [isTestMode, setTotalRingsCount])
+  }, [isTestMode, isSpeedRunMode])
 
   useEffect(() => {
     const updateTotalRingsCount = () => {
-      if (isTestMode) {
-        const totalTestRings = testLayouts.reduce(
-          (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
-          0,
-        )
-        setTotalRingsCount(totalTestRings)
-        return
-      }
-
-      const layouts = [homeLayout, ...infoLayouts, ...obstacleLayouts]
-      if (isSpeedRunMode) layouts.push(speedRunLayout)
-      else layouts.push(ctaLayout)
-
-      const totalRings = layouts.reduce(
+      const totalRings = sectionLayouts.reduce(
         (sum, layout) => sum + (layout?.totalRingsCount ?? 0),
         0,
       )
@@ -236,26 +193,10 @@ function usePlatformLayout() {
     }
 
     updateTotalRingsCount()
-  }, [
-    resetPlatformTick,
-    homeLayout,
-    infoLayouts,
-    obstacleLayouts,
-    speedRunLayout,
-    ctaLayout,
-    setTotalRingsCount,
-    isSpeedRunMode,
-    isTestMode,
-    testLayouts,
-  ])
+  }, [resetPlatformTick, sectionLayouts, setTotalRingsCount])
 
   return {
-    homeLayout,
-    infoLayouts,
-    obstacleLayouts,
-    speedRunLayout,
-    ctaLayout,
-    testLayouts,
+    sectionLayouts,
     isTestMode,
   }
 }

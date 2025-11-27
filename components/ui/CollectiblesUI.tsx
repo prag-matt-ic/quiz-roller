@@ -6,6 +6,7 @@ import {
   offset,
   safePolygon,
   useClick,
+  useDismiss,
   useFloating,
   useHover,
   useInteractions,
@@ -68,11 +69,11 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   const { isMounted, status } = useTransitionStatus(context)
   const hover = useHover(context, { handleClose: safePolygon() })
   const click = useClick(context, { toggle: true })
+  const dismiss = useDismiss(context)
 
   const Icon = COLLECTIBLES_CONTENT[id].Icon
 
-  const { getReferenceProps, getFloatingProps } = useInteractions([hover, click])
-
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
   return (
     <>
       <div
@@ -83,7 +84,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
         }
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="pointer-events-auto relative">
+        className="pointer-events-auto relative cursor-pointer">
         <GemIcon
           size={40}
           strokeWidth={0.25}
@@ -99,7 +100,6 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
             'relative size-8 text-white md:size-10',
             isCollected ? 'opacity-80' : 'opacity-30',
           )}
-          // style={isCollected ? { color: collectedColour } : undefined}
         />
       </div>
       {/* Dropdown Info */}
@@ -122,7 +122,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
             <div className="flex max-w-full items-center gap-2 pr-2 sm:gap-3">
               <Icon strokeWidth={1} size={40} className="text-(--icon-colour)" />
               <p className="block">
-                <span className="block text-sm font-medium tracking-wide text-white/80 uppercase">
+                <span className="mb-1 block text-sm font-medium tracking-wide text-white/80 uppercase">
                   Bonus
                 </span>
                 {isCollected ? (
@@ -130,7 +130,9 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
                     {COLLECTIBLES_CONTENT[id].content}
                   </span>
                 ) : (
-                  <span className="block">Unlock this to learn more</span>
+                  <span className="block text-base font-semibold">
+                    Unlock this to learn more
+                  </span>
                 )}
               </p>
             </div>

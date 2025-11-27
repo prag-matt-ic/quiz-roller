@@ -4,12 +4,6 @@ import { CollectibleID } from '@/model/schema'
 import { ArrowUpCircleIcon, HandshakeIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
 import { type ReactNode } from 'react'
 
-type InfoContent = {
-  heading: string
-  infoZoneContainerClassName?: string
-  infoZoneContent: ReactNode
-}
-
 export const COLLECTIBLES_CONTENT: Record<
   CollectibleID,
   { content: ReactNode; Icon: LucideIcon }
@@ -89,11 +83,22 @@ export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalett
     },
   } as const
 
-export const INFO_ZONES_CONTENT: InfoContent[] = [
+export const FLOATING_HEADINGS_CONTENT: string[] = [
+  'From scroll-driven storytelling to fully interactive worlds',
+  'Bring your ideas to life with stunning 3D web experiences',
+  'Senior Three.js developers supercharged with AI capabilities',
+  'Elevate your brand with cutting-edge 3D web solutions',
+]
+
+type InfoZoneContent = {
+  containerClassName?: string
+  content: ReactNode
+}
+
+export const INFO_ZONES_CONTENT: InfoZoneContent[] = [
   {
-    heading: 'We help teams bring 3D to the browser without the bloat',
-    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    infoZoneContent: (
+    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
+    content: (
       <>
         <Card className="w-full">
           <h2 className="info-header">About</h2>
@@ -107,12 +112,11 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
     ),
   },
   {
-    heading: 'Senior Three.js developers supercharged with AI capabilities',
-    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    infoZoneContent: (
+    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
+    content: (
       <>
         <Card className="w-full">
-          <h2 className="info-header">Placeholder</h2>
+          <h2 className="info-header">Placeholder 1</h2>
           <p className="paragraph-sm max-w-md">
             This experience is built using React Three Fiber, Rapier physics and WebGL for
             immersive graphics.
@@ -122,12 +126,11 @@ export const INFO_ZONES_CONTENT: InfoContent[] = [
     ),
   },
   {
-    heading: '3D that looks incredible and runs fast everywhere',
-    infoZoneContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    infoZoneContent: (
+    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
+    content: (
       <>
         <Card className="w-full">
-          <h2 className="info-header">Placeholder</h2>
+          <h2 className="info-header">Placeholder 2</h2>
           <p className="paragraph-sm max-w-md">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
             incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
@@ -157,7 +160,7 @@ export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> 
 export const MOVE_HUD_INDICATOR: HudIndicatorConfig = {
   autoDismissS: 4,
   content: (
-    <div className="flex items-center gap-2 pr-2">
+    <div className="flex items-center gap-2 rounded-full bg-black px-2 py-2 pr-4 text-white">
       <ArrowUpCircleIcon strokeWidth={1.5} size={32} />
       <span className="block font-bold whitespace-nowrap uppercase">
         Use your keys to move along
