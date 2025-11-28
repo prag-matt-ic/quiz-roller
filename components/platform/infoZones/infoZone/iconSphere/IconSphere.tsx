@@ -1,20 +1,28 @@
 'use client'
 
-import { type FC, useRef } from 'react'
+import { type FC, Suspense, useRef } from 'react'
 import { extend } from '@react-three/fiber'
-import { shaderMaterial } from '@react-three/drei'
+import { shaderMaterial, useTexture } from '@react-three/drei'
 
 import sphereVertex from './iconSphere.vert'
 import sphereFragment from './iconSphere.frag'
-import { SphereGeometry, Color, type Vector3Tuple, Float32BufferAttribute } from 'three'
+import {
+  SphereGeometry,
+  Color,
+  type Vector3Tuple,
+  Float32BufferAttribute,
+  AdditiveBlending,
+  SpriteMaterial,
+} from 'three'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
+import infoIcon from '@/assets/icons/info-icon.png'
 
-const ICON_SPHERE_RADIUS = 1.25
+const ICON_SPHERE_RADIUS = 1
 const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 32, 16).toNonIndexed()
-const ICON_SPHERE_LINE_WIDTH = 2.0
-const ICON_SPHERE_GLOW_STRENGTH = 4.0
+const ICON_SPHERE_LINE_WIDTH = 1.0
+const ICON_SPHERE_GLOW_STRENGTH = 3.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 const DEFAULT_SURFACE_COLOR = new Color('teal')
 
@@ -60,7 +68,7 @@ DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
   uSurfaceColor: DEFAULT_SURFACE_COLOR,
   uLineColor: DEFAULT_LINE_COLOR,
-  uOpacity: 0.7,
+  uOpacity: 0.4,
   uHiddenProgress: 0,
   uLineWidth: ICON_SPHERE_LINE_WIDTH,
   uGlowStrength: ICON_SPHERE_GLOW_STRENGTH,
@@ -86,22 +94,32 @@ const IconSphere: FC<IconSphereProps> = ({ shouldHide, isVisible }) => {
 
   const hasInitialized = useRef(false)
 
+  const iconTexture = useTexture(infoIcon.src)
+  const spriteMaterialRef = useRef<SpriteMaterial>(null)
+
   useGSAP(
     () => {
-      const material = shader.current
-      if (!material) return
+      const sphereShader = shader.current
+      const spriteMaterial = spriteMaterialRef.current
+      if (!sphereShader || !spriteMaterial) return
 
       const target = shouldHide ? 1 : 0
 
       if (!hasInitialized.current) {
-        material.uHiddenProgress = target
+        sphereShader.uHiddenProgress = target
         hasInitialized.current = true
         return
       }
 
-      gsap.to(material, {
-        duration: 0.4,
+      gsap.to(sphereShader, {
+        duration: 0.6,
         uHiddenProgress: target,
+        ease: 'power2.out',
+        overwrite: true,
+      })
+      gsap.to(spriteMaterial, {
+        duration: 0.3,
+        opacity: shouldHide ? 0 : 1,
         ease: 'power2.out',
         overwrite: true,
       })
@@ -126,9 +144,23 @@ const IconSphere: FC<IconSphereProps> = ({ shouldHide, isVisible }) => {
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
+          blending={AdditiveBlending}
           uDistanceFadeEnabled={isDistanceFadeEnabled ? 1 : 0}
         />
       </mesh>
+
+      <Suspense>
+        <sprite position={ICON_SPHERE_POSITION}>
+          <spriteMaterial
+            ref={spriteMaterialRef}
+            map={iconTexture}
+            transparent={true}
+            depthWrite={false}
+            depthTest={false}
+            toneMapped={false}
+          />
+        </sprite>
+      </Suspense>
     </group>
   )
 }

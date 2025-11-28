@@ -9,15 +9,14 @@ import { type FC, Suspense, useMemo } from 'react'
 
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
-
 import Camera, {
   CAMERA_POSITION_FOR_STAGE_DESKTOP,
   CAMERA_POSITION_FOR_STAGE_MOBILE,
-} from './Camera'
-import { Stage } from './GameProvider'
-import OutOfBounds from './OutOfBounds'
-import { usePerformanceStore } from './PerformanceProvider'
-import Backdrop from './backdrop/Backdrop'
+} from '@/components/Camera'
+import { Stage } from '@/components/GameProvider'
+import OutOfBounds from '@/components/OutOfBounds'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
+import Backdrop from '@/components/backdrop/Backdrop'
 import usePlatformRows from '@/hooks/usePlatformRows'
 
 gsap.registerPlugin(useGSAP)
@@ -86,3 +85,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
 }
 
 export default Game
+
+// ------------------
+// Ideas
+
+// player fly in effect on initial spawn. Platform starts out of view, it then scrolls towards the player as the player's y position drops it onto the starting place.

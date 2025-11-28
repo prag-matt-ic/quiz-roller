@@ -38,6 +38,7 @@ void main() {
   float hiddenFade = smoothstep(0.0, 1.0, uHiddenProgress);
   float baseAlpha = uOpacity * (1.0 - hiddenFade);
   float alpha = clamp(baseAlpha + wire * 0.2 + glowContribution * 0.15, 0.0, 1.0);
+  alpha *= (1.0 - hiddenFade);
   alpha *= vCameraFade;
 
   if (alpha <= 0.01) discard;

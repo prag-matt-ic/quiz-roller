@@ -148,7 +148,6 @@ const Gem: FC<GemShellProps> = ({
           uOpacity={isCollected ? 0.35 : 0.15}
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}
-          blending={AdditiveBlending}
           uConfirmingProgress={isCollected ? 1 : 0}
           uTime={INITIAL_GEM_SHELL_UNIFORMS.uTime}
           uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
