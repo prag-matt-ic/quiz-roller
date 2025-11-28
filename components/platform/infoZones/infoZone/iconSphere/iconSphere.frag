@@ -5,12 +5,12 @@ uniform lowp vec3 uLineColor;
 uniform lowp float uOpacity;
 uniform mediump float uLineWidth;
 uniform mediump float uGlowStrength;
-uniform mediump float uHiddenProgress;
 
 varying mediump vec3 vBarycentric;
 varying mediump vec3 vNormal;
 varying mediump vec3 vViewPosition;
 varying mediump float vCameraFade;
+varying mediump float vHiddenOpacity;
 
 float getWireFactor(vec3 barycentric, float width) {
   vec3 derivative = fwidth(barycentric);
@@ -35,10 +35,9 @@ void main() {
   float wire = getWireFactor(vBarycentric, uLineWidth);
   vec3 finalColor = mix(litSurface + glowColor * 0.2, glowColor, wire);
 
-  float hiddenFade = smoothstep(0.0, 1.0, uHiddenProgress);
-  float baseAlpha = uOpacity * (1.0 - hiddenFade);
+  float baseAlpha = uOpacity * vHiddenOpacity;
   float alpha = clamp(baseAlpha + wire * 0.2 + glowContribution * 0.15, 0.0, 1.0);
-  alpha *= (1.0 - hiddenFade);
+  alpha *= vHiddenOpacity;
   alpha *= vCameraFade;
 
   if (alpha <= 0.01) discard;

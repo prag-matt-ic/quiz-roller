@@ -241,7 +241,7 @@ const Platform: FC = () => {
   const handleRespawnAlignment = usePlayerRespawn({
     activeRowsData,
     rowZByIndex,
-    scrollPositionRef: currentScrollPosition,
+    currentScrollPosition,
   })
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {

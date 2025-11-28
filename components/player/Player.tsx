@@ -54,7 +54,7 @@ const edgeWarningScratch: EdgeWarningIntensities = {
 const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
-  const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
+  // const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
 
   const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
   const setIsRespawning = useGameStore((s) => s.setIsRespawning)
@@ -90,6 +90,8 @@ const Player: FC = () => {
 
     // Wait for platform to calculate safe position
     if (!respawnPosition) return
+
+    console.warn('[Player] Respawn:', respawnPosition)
 
     // Reset position, player drops in from Y height to land on the surface.
     body.setTranslation(

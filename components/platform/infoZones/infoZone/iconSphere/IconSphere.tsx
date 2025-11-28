@@ -113,7 +113,7 @@ const IconSphere: FC<IconSphereProps> = ({ shouldHide, isVisible }) => {
 
       gsap.to(sphereShader, {
         duration: 0.6,
-        uHiddenProgress: target,
+        uHiddenProgress: shouldHide ? 1 : 0,
         ease: 'power2.out',
         overwrite: true,
       })

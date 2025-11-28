@@ -29,7 +29,7 @@ type SafeRowSelection = {
 type UsePlayerRespawnProps = {
   activeRowsData: RefObject<RowData[]>
   rowZByIndex: RefObject<number[]>
-  scrollPositionRef: RefObject<number>
+  currentScrollPosition: RefObject<number>
 }
 
 function findSafeColumnX(row: RowData, preferredX: number): number | null {
@@ -147,7 +147,7 @@ function getBestSafeRowSelection(
 export function usePlayerRespawn({
   activeRowsData,
   rowZByIndex,
-  scrollPositionRef,
+  currentScrollPosition,
 }: UsePlayerRespawnProps) {
   const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
   const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
@@ -162,24 +162,22 @@ export function usePlayerRespawn({
   const handleRespawnAlignment = useCallback(
     (delta: number, zStep: number) => {
       if (Math.abs(zStep) > EPSILON.SMALL) {
-        targetScrollPosition.current = null
-        pendingRespawnX.current = null
         return
       }
 
       if (targetScrollPosition.current === null) return
 
-      scrollPositionRef.current = lerp(
-        scrollPositionRef.current,
+      currentScrollPosition.current = lerp(
+        currentScrollPosition.current,
         targetScrollPosition.current,
         RESPAWN_ALIGN_SPEED * delta,
       )
 
       if (
-        Math.abs(scrollPositionRef.current - targetScrollPosition.current) <
+        Math.abs(currentScrollPosition.current - targetScrollPosition.current) <
         RESPAWN_SNAP_THRESHOLD
       ) {
-        scrollPositionRef.current = targetScrollPosition.current
+        currentScrollPosition.current = targetScrollPosition.current
         targetScrollPosition.current = null
 
         if (pendingRespawnX.current !== null) {
@@ -192,7 +190,7 @@ export function usePlayerRespawn({
         }
       }
     },
-    [scrollPositionRef, setRespawnPosition],
+    [currentScrollPosition, setRespawnPosition],
   )
 
   useEffect(() => {
@@ -200,7 +198,7 @@ export function usePlayerRespawn({
 
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
-    const scrollPos = scrollPositionRef.current
+    const scrollPos = currentScrollPosition.current
 
     if (!rows || !zValues) return
 
@@ -279,7 +277,13 @@ export function usePlayerRespawn({
     }
 
     queueRespawn(bestSelection, 'Snapping to nearest safe row')
-  }, [respawnPlayerTick, activeRowsData, rowZByIndex, scrollPositionRef])
+  }, [
+    respawnPlayerTick,
+    activeRowsData,
+    rowZByIndex,
+    setRespawnPosition,
+    currentScrollPosition,
+  ])
 
   return handleRespawnAlignment
 }
