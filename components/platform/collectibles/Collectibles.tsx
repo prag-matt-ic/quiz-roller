@@ -12,12 +12,12 @@ import Collectible from '@/components/platform/collectibles/collectible/Collecti
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
 import { COLLECTIBLE_IDS, type CollectibleID } from '@/model/schema'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
-import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
+import { type RowData } from '@/utils/tiles'
 
 export type CollectiblesHandle = {
   moveElements: (zStep: number) => void
-  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
-  hideElementsIfNeeded: (row: RowData | undefined) => void
+  positionElementsIfNeeded: (row: RowData, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData) => void
 }
 
 type Props = {
@@ -40,9 +40,10 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
   }, [refs.length])
 
   const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row?.collectiblePlacements?.length) return
-      row.collectiblePlacements.forEach((placement) => {
+    (row: RowData, rowZ: number) => {
+      const placements = row.collectiblePlacements
+      if (!placements?.length) return
+      placements.forEach((placement) => {
         applyPlacement(placement, rowZ)
       })
     },
@@ -50,8 +51,8 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const hideElementsIfNeeded = useCallback(
-    (row: RowData | undefined) => {
-      const placements = row?.collectiblePlacements
+    (row: RowData) => {
+      const placements = row.collectiblePlacements
       if (!placements?.length) return
       placements.forEach((placement) => {
         const contentIndex = placement[3]
@@ -106,7 +107,6 @@ const Collectibles: FC<Props> = ({ ref, onReadyChange }) => {
             key={`collectible-${index}`}
             ref={collectibleRef}
             id={collectibleId}
-            position={HIDDEN_POSITION}
             width={INFO_ZONE_WIDTH}
             height={INFO_ZONE_HEIGHT}
             isVisible={isVisibleStates[index]}

@@ -9,14 +9,11 @@ const createRigidBodyRefsFromCount = (count: number): RefObject<RapierRigidBody 
 const createInitialVisibilityState = (count: number): boolean[] =>
   Array.from({ length: count }, () => false)
 
-function useDynamicRigidBodies(totalCount: number, label?: string) {
+function useDynamicRigidBodies(totalCount: number) {
   const [refs, setRefs] = useState(() => createRigidBodyRefsFromCount(totalCount))
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
     createInitialVisibilityState(totalCount),
   )
-
-  if (!!label)
-    console.log('useDynamicRigidBodies', { label, totalCount, refs, isVisibleStates })
 
   useEffect(() => {
     if (refs.length === totalCount) return
@@ -39,7 +36,13 @@ function useDynamicRigidBodies(totalCount: number, label?: string) {
   const setRigidBodyPosition = useCallback(
     (index: number, x: number, y: number, z: number) => {
       const body = refs[index]
-      if (!body?.current) return false
+      if (!body?.current) {
+        console.warn('[setRigidBodyPosition] Invalid body reference', {
+          index,
+          poolSize: refs.length,
+        })
+        return false
+      }
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
@@ -51,7 +54,13 @@ function useDynamicRigidBodies(totalCount: number, label?: string) {
 
   const hideRigidBodyAtIndex = useCallback(
     (index: number) => {
-      if (index < 0 || index >= refs.length) return
+      if (index < 0 || index >= refs.length) {
+        console.warn('[hideRigidBodyAtIndex] Invalid hide index', {
+          index,
+          poolSize: refs.length,
+        })
+        return
+      }
       setRigidBodyPosition(index, HIDDEN_POSITION[0], HIDDEN_POSITION[1], HIDDEN_POSITION[2])
       setIsVisibleState(index, false)
     },
@@ -62,7 +71,7 @@ function useDynamicRigidBodies(totalCount: number, label?: string) {
     (placement: IndexedPlacement, rowZ: number) => {
       const [x, y, relativeZ, contentIndex] = placement
       if (contentIndex < 0 || contentIndex >= refs.length) {
-        console.warn('Invalid placement index', {
+        console.warn('[applyPlacement] Invalid placement index', {
           placement,
           poolSize: refs.length,
         })

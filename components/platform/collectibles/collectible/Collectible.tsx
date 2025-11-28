@@ -1,5 +1,7 @@
 'use client'
 
+import { shaderMaterial } from '@react-three/drei'
+import { extend } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
 import {
@@ -11,20 +13,20 @@ import {
   Vector3,
   type Vector3Tuple,
 } from 'three'
-import { shaderMaterial } from '@react-three/drei'
+import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
+
 import { useGameStore } from '@/components/GameProvider'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Gem, { type GemShellRef } from '@/components/platform/collectibles/collectible/gem/Gem'
-import { CollectibleID, type CollectibleUserData } from '@/model/schema'
-import { TILE_SIZE } from '@/utils/tiles'
-import vertexShader from './collectibleTile.vert'
-import fragmentShader from './collectibleTile.frag'
-import { extend } from '@react-three/fiber'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
+import { CollectibleID, type CollectibleUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
+import { HIDDEN_POSITION, TILE_SIZE } from '@/utils/tiles'
+
+import fragmentShader from './collectibleTile.frag'
+import vertexShader from './collectibleTile.vert'
 
 // Sample the surface of the gem model to position particles within it.
 
@@ -62,12 +64,11 @@ type Props = {
   ref: RefObject<RapierRigidBody | null>
   id: CollectibleID
   isVisible: boolean
-  position: Vector3Tuple
   width: number
   height: number
 }
 
-export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVisible }) => {
+export const Collectible: FC<Props> = ({ ref, width, height, id, isVisible }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(id))
   const isConfirming = useGameStore((s) => s.confirmingCollectible === id)
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
@@ -129,7 +130,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVis
       gravityScale={0}
       friction={0}
       mass={0}
-      position={position}
+      position={HIDDEN_POSITION} // Overwritten dynamically in the parent
       rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={userData}>

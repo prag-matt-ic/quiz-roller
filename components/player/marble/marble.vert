@@ -9,7 +9,7 @@ varying highp vec3 vViewPosition;
 varying mediump float vRespawnFade;
 
 const float PI = 3.14159265359;
-const float RESPAWN_FADE_START_Y = 4.5;
+const float RESPAWN_FADE_START_Y = 3.5;
 const float RESPAWN_FADE_RANGE = 2.0;
 
 // Convert unit-length position to spherical UV coordinates

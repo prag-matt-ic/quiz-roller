@@ -2,13 +2,8 @@ import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/s
 
 import { GameMode, type GameSliceCreator, type SpeedRunStage, type TimeSlice } from './types'
 
-export const INITIAL_TIME_STATE: Pick<
-  TimeSlice,
-  'totalTimeS' | 'speedRunTimeCS' | 'completedSpeedRuns' | 'speedRunStage'
-> = {
-  totalTimeS: 0,
+export const RESET_TIME_STATE: Pick<TimeSlice, 'speedRunTimeCS' | 'speedRunStage'> = {
   speedRunTimeCS: 0,
-  completedSpeedRuns: [],
   speedRunStage: 'username',
 }
 
@@ -17,7 +12,9 @@ export const createTimeSlice =
     insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse,
   ): GameSliceCreator<TimeSlice> =>
   (set, get) => ({
-    ...INITIAL_TIME_STATE,
+    ...RESET_TIME_STATE,
+    totalTimeS: 0,
+    completedSpeedRuns: [],
     setTotalTimeS: (seconds: number) => {
       set({ totalTimeS: seconds })
     },

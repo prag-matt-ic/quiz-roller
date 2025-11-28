@@ -11,8 +11,8 @@ import useDynamicMeshes from '../useDynamicMeshes'
 
 export type FloatingHeadingsHandle = {
   moveElements: (zStep: number) => void
-  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
-  hideElementsIfNeeded: (row: RowData | undefined) => void
+  positionElementsIfNeeded: (row: RowData, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData) => void
 }
 
 type Props = {
@@ -30,9 +30,10 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
     useDynamicMeshes(totalCount, HEADING_POSITION_OFFSET)
 
   const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row?.floatingHeadingPlacements?.length) return
-      row.floatingHeadingPlacements.forEach((placement) => {
+    (row: RowData, rowZ: number) => {
+      const placements = row.floatingHeadingPlacements
+      if (!placements?.length) return
+      placements.forEach((placement) => {
         applyPlacement(placement, rowZ)
       })
     },
@@ -40,8 +41,8 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const hideElementsIfNeeded = useCallback(
-    (row: RowData | undefined) => {
-      const placements = row?.floatingHeadingPlacements
+    (row: RowData) => {
+      const placements = row.floatingHeadingPlacements
       if (!placements?.length) return
       placements.forEach((placement) => {
         const contentIndex = placement[3]

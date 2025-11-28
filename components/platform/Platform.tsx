@@ -275,10 +275,11 @@ const Platform: FC = () => {
   function hideElements(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    ringsHandle.current?.hideElementsIfNeeded(row)
+
     floatingHeadings.current?.hideElementsIfNeeded(row)
-    collectibles.current?.hideElementsIfNeeded(row)
     infoZones.current?.hideElementsIfNeeded(row)
+    collectibles.current?.hideElementsIfNeeded(row)
+    ringsHandle.current?.hideElementsIfNeeded(row)
 
     switch (row.stage) {
       case Stage.SPEED_RUN_FINISH:
@@ -292,10 +293,10 @@ const Platform: FC = () => {
   function positionElements(rowIndex: number, rowZ: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-    ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
     floatingHeadings.current?.positionElementsIfNeeded(row, rowZ)
-    collectibles.current?.positionElementsIfNeeded(row, rowZ)
     infoZones.current?.positionElementsIfNeeded(row, rowZ)
+    collectibles.current?.positionElementsIfNeeded(row, rowZ)
+    ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
 
     switch (row.stage) {
       case Stage.SPEED_RUN_FINISH:
@@ -550,16 +551,16 @@ const Platform: FC = () => {
         onReadyChange={readyChangeHandlers.headings}
       />
 
-      <Collectibles
-        ref={collectibles}
-        key={`${resetPlatformTick}-collectibles`}
-        onReadyChange={readyChangeHandlers.collectibles}
-      />
-
       <InfoZones
         ref={infoZones}
         key={`${resetPlatformTick}-info-zones`}
         onReadyChange={readyChangeHandlers.infoZones}
+      />
+
+      <Collectibles
+        ref={collectibles}
+        key={`${resetPlatformTick}-collectibles`}
+        onReadyChange={readyChangeHandlers.collectibles}
       />
 
       <Rings

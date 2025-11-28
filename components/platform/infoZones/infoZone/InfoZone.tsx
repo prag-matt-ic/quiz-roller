@@ -38,6 +38,7 @@ import {
   INFO_ZONE_ROWS,
   INFO_ZONE_WIDTH,
 } from '@/utils/platform/infoZoneDimensions'
+import { HIDDEN_POSITION } from '@/utils/tiles'
 
 import IconSphere from './iconSphere/IconSphere'
 import fragmentShader from './infoZone.frag'
@@ -65,7 +66,6 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 export type InfoZoneProps = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
   isVisible: boolean
-  position: Vector3Tuple
   infoContainerClassName?: string
   infoPositionOffset?: Vector3Tuple
   alwaysShowInfo?: boolean
@@ -78,7 +78,6 @@ export type InfoZoneProps = PropsWithChildren<{
 export const InfoZone: FC<InfoZoneProps> = ({
   ref,
   isVisible,
-  position,
   infoContainerClassName,
   children,
   infoPositionOffset = [0, 0, 4],
@@ -166,9 +165,9 @@ export const InfoZone: FC<InfoZoneProps> = ({
       // KEEP DYNAMIC
       type="dynamic"
       gravityScale={0}
+      position={HIDDEN_POSITION}
       friction={0}
       mass={0}
-      position={position}
       rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={userData}>
@@ -183,7 +182,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
       />
       <group visible={isVisible}>
         {/* Floor tile */}
-        <mesh position={[0, 0, 0.03]} renderOrder={2}>
+        <mesh position={[0, 0, 0.01]} renderOrder={2}>
           <planeGeometry args={[INFO_ZONE_WIDTH, INFO_ZONE_HEIGHT]} />
           <InfoZoneShaderMaterial
             key={InfoZoneShader.key}

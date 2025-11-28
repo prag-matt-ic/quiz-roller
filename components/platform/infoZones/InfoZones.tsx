@@ -25,8 +25,8 @@ const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 export type InfoZonesHandle = {
   moveElements: (zStep: number) => void
-  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
-  hideElementsIfNeeded: (row: RowData | undefined) => void
+  positionElementsIfNeeded: (row: RowData, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData) => void
 }
 
 type Props = {
@@ -38,11 +38,11 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const totalCount = useGameStore((s) => s.totalCounts.infoZones)
 
   const { refs, isVisibleStates, translation, applyPlacement, hideRigidBodyAtIndex } =
-    useDynamicRigidBodies(totalCount, 'InfoZones')
+    useDynamicRigidBodies(totalCount)
 
   const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row?.infoZonePlacements?.length) return
+    (row: RowData, rowZ: number) => {
+      if (!row.infoZonePlacements?.length) return
       if (IS_DEV_ENV) {
         console.warn('[InfoZones] Position requested', {
           rowIndex: row.rowIndex,
@@ -62,8 +62,8 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const hideElementsIfNeeded = useCallback(
-    (row: RowData | undefined) => {
-      const placements = row?.infoZonePlacements
+    (row: RowData) => {
+      const placements = row.infoZonePlacements
       if (!placements?.length) return
       if (IS_DEV_ENV) {
         console.warn('[InfoZones] Hiding placements', {
@@ -132,6 +132,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   const totalTime = useTotalTime(onTimeChange)
 
+  // Has to be inside to access the store hooks.
   function getContentForPlacementIndex(placementIndex: number) {
     if (placementIndex === 0)
       return (
@@ -182,7 +183,6 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
           <InfoZone
             key={`info-zone-${index}`}
             ref={ref}
-            position={HIDDEN_POSITION}
             isVisible={isVisibleStates[index]}
             {...getInfoZonePropsForIndex(index)}>
             {getContentForPlacementIndex(index)}

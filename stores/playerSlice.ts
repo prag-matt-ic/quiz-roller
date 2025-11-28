@@ -35,7 +35,7 @@ const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void
   console.warn(`[PlayerStore] ${event}`)
 }
 
-export const INITIAL_PLAYER_STATE = {
+export const RESET_PLAYER_STATE = {
   playerInput: {
     up: 0,
     down: 0,
@@ -49,11 +49,9 @@ export const INITIAL_PLAYER_STATE = {
     far: 0,
   },
   confirmingCollectible: null,
-  collectedCollectibles: [],
   collectedRings: {},
   confirmationProgress: 0,
   spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
-  playerRespawnTick: 0,
   playerStatus: 'respawning' as PlayerStatus,
 }
 
@@ -104,7 +102,9 @@ export const createPlayerSlice =
     }
 
     return {
-      ...INITIAL_PLAYER_STATE,
+      ...RESET_PLAYER_STATE,
+      collectedCollectibles: [],
+      playerRespawnTick: 0,
       username: null,
       setUsername: (username: string) => {
         set({ username })

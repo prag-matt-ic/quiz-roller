@@ -10,6 +10,7 @@ import {
   ROWS_RENDERED,
   type RowData,
   SAFE_HEIGHT,
+  TILE_SIZE,
   colToX,
 } from '@/utils/tiles'
 
@@ -25,23 +26,51 @@ type SafeRowSelection = {
   absoluteRowIndex: number
 }
 
+/**
+ * Optimized to find the safe column closest to preferredX without iterating all columns.
+ * It calculates the target column index and expands outwards.
+ */
 function findSafeColumnX(row: RowData, preferredX: number): number | null {
-  let bestX: number | null = null
-  let smallestDistance = Infinity
   const fallbackX = colToX(CENTER_COL_INDEX)
   const targetX = Number.isFinite(preferredX) ? preferredX : fallbackX
 
-  for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-    if (row.heights[columnIndex] < SAFE_HEIGHT - EPSILON.TINY) continue
-    const tileX = colToX(columnIndex)
-    const distance = Math.abs(tileX - targetX)
-    if (distance < smallestDistance) {
-      smallestDistance = distance
-      bestX = tileX
-    }
+  // Calculate the column index closest to the target X
+  // col = (x / size) + (columns / 2) - 0.5
+  const rawColIndex = (targetX / TILE_SIZE) + (COLUMNS / 2) - 0.5
+  const startColIndex = Math.max(0, Math.min(COLUMNS - 1, Math.round(rawColIndex)))
+
+  // Check the target column first
+  if (row.heights[startColIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+    return colToX(startColIndex)
   }
 
-  return bestX
+  // Expand outwards: check left and right neighbors
+  let offset = 1
+  while (true) {
+    const leftIndex = startColIndex - offset
+    const rightIndex = startColIndex + offset
+    
+    // If both are out of bounds, no safe column exists
+    if (leftIndex < 0 && rightIndex >= COLUMNS) {
+      return null
+    }
+
+    // Check left
+    if (leftIndex >= 0) {
+      if (row.heights[leftIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+        return colToX(leftIndex)
+      }
+    }
+
+    // Check right
+    if (rightIndex < COLUMNS) {
+      if (row.heights[rightIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+        return colToX(rightIndex)
+      }
+    }
+
+    offset++
+  }
 }
 
 function getClosestRowIndex(rowZByIndex: number[], playerZ: number): number {
@@ -69,10 +98,13 @@ function selectSafeRow(
   if (rowIndex < 0 || rowIndex >= ROWS_RENDERED) return null
   const row = rows[rowIndex]
   if (!row || (row.rowIndex ?? EMPTY_ROW_INDEX) >= EMPTY_ROW_INDEX) return null
+  
   const safeX = findSafeColumnX(row, preferredX)
   if (safeX === null) return null
+  
   const rowZ = zValues[rowIndex]
   if (typeof rowZ !== 'number') return null
+  
   const absoluteRowIndex = row.rowIndex ?? EMPTY_ROW_INDEX
   return { rowIndex, safeX, rowZ, absoluteRowIndex }
 }
@@ -229,6 +261,8 @@ export function usePlayerRespawn({
     }
 
     // 2. Current row is not safe (or invalid). Find the nearest safe row.
+    // We scan all rows to ensure we find the spatially closest one, 
+    // rather than relying on index proximity which might be misleading in a ring buffer.
     const bestSelection = ensureMinimumRowSelection(
       getBestSafeRowSelection(rows, zValues, playerZ, preferredX),
       rows,

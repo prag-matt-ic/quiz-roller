@@ -1,27 +1,27 @@
 import { MOVE_HUD_INDICATOR } from '@/resources/content'
 import type { RowData } from '@/utils/tiles'
 
-import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
-import { INITIAL_TIME_STATE } from './timeSlice'
+import { PLAYER_INITIAL_POSITION_VEC3, RESET_PLAYER_STATE } from './playerSlice'
+import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
 import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
 
-export const INITIAL_GAME_STATE = {
+export const RESET_GAME_STATE = {
   stage: Stage.HOME,
-  hudIndicator: MOVE_HUD_INDICATOR,
   totalCounts: createTotalCounts(),
   currentRow: 0,
   cameraLookAtPosition: null,
-  resetPlatformTick: 0,
   isPlatformReady: false,
-  mode: GameMode.MAIN,
   rowsData: [] as RowData[],
-  htmlPortal: undefined,
-  _isHydrated: false,
 }
 
 export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
-  ...INITIAL_GAME_STATE,
+  ...RESET_GAME_STATE,
+  htmlPortal: undefined,
+  _isHydrated: false,
+  resetPlatformTick: 0,
+  mode: GameMode.MAIN,
+  hudIndicator: MOVE_HUD_INDICATOR,
   setHydrated: () => {
     set({ _isHydrated: true })
   },
@@ -66,21 +66,18 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       const isModeChange = s.mode !== mode
       const nextRowsData = isModeChange ? [] : [...s.rowsData]
       return {
-        ...INITIAL_GAME_STATE,
-        ...INITIAL_TIME_STATE,
-        ...INITIAL_PLAYER_STATE,
+        ...RESET_GAME_STATE,
+        ...RESET_TIME_STATE,
+        ...RESET_PLAYER_STATE,
         mode,
         rowsData: nextRowsData,
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
-        completedSpeedRuns: s.completedSpeedRuns,
-        speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
-        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
-        totalTimeS: s.totalTimeS,
-        _isHydrated: s._isHydrated,
-        isPlatformReady: false,
-        resetPlatformTick: s.resetPlatformTick + 1,
+        speedRunStage: speedRunStage ?? RESET_TIME_STATE.speedRunStage,
         playerStatus: 'respawning',
         spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
+        playerRespawnTick: s.playerRespawnTick + 1,
+        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
+        resetPlatformTick: s.resetPlatformTick + 1,
       }
     })
   },

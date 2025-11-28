@@ -75,13 +75,9 @@ const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
   uDistanceFadeEnabled: 1,
 }
 
-const GemShellShader = shaderMaterial(
-  INITIAL_ICON_SPHERE_UNIFORMS,
-  sphereVertex,
-  sphereFragment,
-)
+const SphereShader = shaderMaterial(INITIAL_ICON_SPHERE_UNIFORMS, sphereVertex, sphereFragment)
 
-const GemShellShaderMaterial = extend(GemShellShader)
+const SphereShaderMaterial = extend(SphereShader)
 
 export type IconSphereProps = {
   iconSrc: string
@@ -91,7 +87,7 @@ export type IconSphereProps = {
 }
 
 const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colour }) => {
-  const shader = useRef<typeof GemShellShaderMaterial & IconSphereUniforms>(null)
+  const shader = useRef<typeof SphereShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   const hasInitialized = useRef(false)
@@ -152,8 +148,8 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
         geometry={ICON_SPHERE_SURFACE_GEOMETRY}
         dispose={null}
         position={ICON_SPHERE_POSITION}>
-        <GemShellShaderMaterial
-          key={GemShellShader.key}
+        <SphereShaderMaterial
+          key={SphereShader.key}
           ref={shader}
           transparent={true}
           depthWrite={false}
