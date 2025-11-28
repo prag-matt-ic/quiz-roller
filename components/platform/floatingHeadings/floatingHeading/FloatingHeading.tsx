@@ -101,7 +101,7 @@ export const FloatingHeading: FC<Props> = ({
     color: '#ffffff',
     ...textCanvasOptions,
     lineHeightMultiplier: 1.2,
-    fontSize: 88 * dpr,
+    fontSize: 82 * dpr,
     fontWeight: 700,
   })
 
