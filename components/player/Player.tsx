@@ -114,6 +114,9 @@ const Player: FC = () => {
     )
       return
 
+    if (playerStatus === 'out-of-bounds' || playerStatus === 'respawning') {
+      return
+    }
     const currentPosition = bodyRef.current.translation()
 
     // Resolve player input into a clamped direction vector
@@ -152,8 +155,6 @@ const Player: FC = () => {
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
     nextPosition.current.y = currentPosition.y + correctedMovement.y
-    // nextPosition.current.z =
-    //   currentPosition.z + correctedMovement.z - terrainDisplacement.current.z
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
@@ -214,8 +215,6 @@ const Player: FC = () => {
     }
   }
 
-  if (!isPlatformReady) return null
-
   const userData: PlayerUserData = { type: 'player' }
 
   return (
@@ -224,6 +223,7 @@ const Player: FC = () => {
       type="kinematicPosition"
       userData={userData}
       colliders={false}
+      key={playerStatus}
       position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>

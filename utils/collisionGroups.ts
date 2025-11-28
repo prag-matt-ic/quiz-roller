@@ -6,6 +6,7 @@ const PLAYER_GROUP = 0
 const RING_GROUP = 1
 const COLLECTIBLE_GROUP = 2
 const INFO_ZONE_GROUP = 3
+const OUT_OF_BOUNDS_GROUP = 4
 
 export const COLLISION_GROUPS = {
   // Player colliders stay in their own group but filter against everything.
@@ -18,4 +19,6 @@ export const COLLISION_GROUPS = {
   infoZoneSensor: interactionGroups([INFO_ZONE_GROUP], [PLAYER_GROUP]),
   // Finish line should only react to the player.
   finishLineSensor: interactionGroups([INFO_ZONE_GROUP], [PLAYER_GROUP]),
+  // Out of bounds sensor
+  outOfBoundsSensor: interactionGroups([OUT_OF_BOUNDS_GROUP], [PLAYER_GROUP]),
 } as const

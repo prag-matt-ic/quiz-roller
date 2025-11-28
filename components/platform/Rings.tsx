@@ -1,28 +1,27 @@
 /* eslint-disable react-hooks/refs */
 import {
-  RigidBody,
-  type RapierRigidBody,
   BallCollider,
   type IntersectionEnterHandler,
+  type RapierRigidBody,
+  RigidBody,
 } from '@react-three/rapier'
 import {
   type FC,
+  type RefObject,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
-  type RefObject,
-  useEffect,
 } from 'react'
-
-import { colToX, HIDDEN_POSITION, ON_TILE_Y, type RowData } from '@/utils/tiles'
-
-import type { RigidBodyUserData, RingUserData } from '@/model/schema'
-import { type RingIndex, useGameStore } from '@/components/GameProvider'
-import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import useGameFrame from '@/hooks/useGameFrame'
 import { type ShaderMaterial } from 'three'
-import { getRingKey } from '@/utils/rings'
+
+import { type RingIndex, useGameStore } from '@/components/GameProvider'
 import Ring, { type RingUniforms } from '@/components/ring/Ring'
+import useGameFrame from '@/hooks/useGameFrame'
+import type { RigidBodyUserData, RingUserData } from '@/model/schema'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+import { getRingKey } from '@/utils/rings'
+import { HIDDEN_POSITION, ON_TILE_Y, type RowData, colToX } from '@/utils/tiles'
 
 const MAX_RING_INSTANCES = 10
 const RING_MAJOR_RADIUS = 0.3

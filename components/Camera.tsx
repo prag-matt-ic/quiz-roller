@@ -5,9 +5,9 @@ import { useFrame } from '@react-three/fiber'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
-import usePlayerInput from '@/hooks/usePlayerInput'
 
 const { ACTION } = CameraControlsImpl
 

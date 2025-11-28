@@ -1,6 +1,7 @@
-import { HIDDEN_POSITION, IndexedPlacement } from '@/utils/tiles'
-import { useCallback, useEffect, useRef, useState, type RefObject, createRef } from 'react'
+import { type RefObject, createRef, useCallback, useEffect, useRef, useState } from 'react'
 import { Mesh } from 'three'
+
+import { HIDDEN_POSITION, IndexedPlacement } from '@/utils/tiles'
 
 const createMeshRefsFromCount = (count: number): RefObject<Mesh | null>[] =>
   Array.from({ length: count }, () => createRef<Mesh | null>())

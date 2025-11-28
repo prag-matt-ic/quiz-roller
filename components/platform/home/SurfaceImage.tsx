@@ -1,7 +1,7 @@
 import { useTexture } from '@react-three/drei'
+import { type StaticImageData } from 'next/image'
 import { type FC, type RefObject, Suspense } from 'react'
 import { Group } from 'three'
-import { type StaticImageData } from 'next/image'
 
 type Props = {
   ref: RefObject<Group | null>

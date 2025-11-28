@@ -1,23 +1,24 @@
 'use client'
 
-import { type FC, Suspense, useRef } from 'react'
-import { extend } from '@react-three/fiber'
-import { shaderMaterial, useTexture } from '@react-three/drei'
-
-import sphereVertex from './iconSphere.vert'
-import sphereFragment from './iconSphere.frag'
-import {
-  SphereGeometry,
-  Color,
-  type Vector3Tuple,
-  Float32BufferAttribute,
-  AdditiveBlending,
-  SpriteMaterial,
-} from 'three'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { useGSAP } from '@gsap/react'
+import { shaderMaterial, useTexture } from '@react-three/drei'
+import { extend } from '@react-three/fiber'
 import gsap from 'gsap'
+import { type FC, Suspense, useRef } from 'react'
+import {
+  AdditiveBlending,
+  Color,
+  Float32BufferAttribute,
+  SphereGeometry,
+  SpriteMaterial,
+  type Vector3Tuple,
+} from 'three'
+
 import infoIcon from '@/assets/icons/info-icon.png'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
+
+import sphereFragment from './iconSphere.frag'
+import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
 const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 32, 16).toNonIndexed()

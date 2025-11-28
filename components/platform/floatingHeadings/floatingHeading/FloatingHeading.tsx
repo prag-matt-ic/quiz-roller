@@ -1,22 +1,21 @@
 'use client'
 
+import { useGSAP } from '@gsap/react'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { type FC, type RefObject, Suspense, useEffect, useMemo, useRef } from 'react'
-import { BackSide, Mesh, Vector2, Vector3, type Texture, type Vector3Tuple } from 'three'
-import { useGSAP } from '@gsap/react'
+import { BackSide, Mesh, type Texture, Vector2, Vector3, type Vector3Tuple } from 'three'
 
+import { usePerformanceStore } from '@/components/PerformanceProvider'
+import useGameFrame from '@/hooks/useGameFrame'
+import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
   TEXT_CANVAS_SCALE,
-  type TextCanvasOptions,
   TRANSPARENT_TEXTURE,
+  type TextCanvasOptions,
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
-
-import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import useGameFrame from '@/hooks/useGameFrame'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 import fragmentShader from './floatingHeading.frag'
 import vertexShader from './floatingHeading.vert'
