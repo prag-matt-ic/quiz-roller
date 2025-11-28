@@ -2,12 +2,12 @@
 
 import { type FC } from 'react'
 
-import PerformanceDebug from './debug/PerformanceDebug'
 import Game from './Game'
 import { PerformanceProvider } from './PerformanceProvider'
-import UI from './ui/UI'
 import Timer from './Timer'
+import DebugControls from './debug/DebugControls'
 import HtmlPortal from './ui/HtmlPortal'
+import UI from './ui/UI'
 
 type Props = {
   isMobile: boolean
@@ -21,7 +21,7 @@ const Main: FC<Props> = ({ isMobile, isDebug }) => {
       <HtmlPortal />
       <UI isMobile={isMobile} />
       <Timer />
-      {isDebug && <PerformanceDebug />}
+      {isDebug && <DebugControls />}
     </PerformanceProvider>
   )
 }

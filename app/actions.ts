@@ -1,15 +1,16 @@
 'use server'
-import { z } from 'zod'
+import { neon } from '@neondatabase/serverless'
 import { headers } from 'next/headers'
+import { z } from 'zod'
+
 import {
+  type InsertSpeedRunResponse,
+  type ServerSpeedRunSubmission,
   type SpeedRunDatabase,
   type SpeedRunDatabaseInsert,
   speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
-  type ServerSpeedRunSubmission,
-  type InsertSpeedRunResponse,
 } from '@/model/schema'
-import { neon } from '@neondatabase/serverless'
 
 export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]> {
   try {

@@ -9,7 +9,7 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
 import {
@@ -79,6 +79,8 @@ const Player: FC = () => {
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
+  const [playerKey, setPlayerKey] = useState(0)
+
   useEffect(() => {
     if (!isPlatformReady) return
 
@@ -102,7 +104,8 @@ const Player: FC = () => {
     )
 
     onRespawnComplete()
-  }, [isPlatformReady, playerStatus, respawnPosition, onRespawnComplete])
+    setPlayerKey((k) => k + 1)
+  }, [isPlatformReady, playerStatus, respawnPosition, onRespawnComplete, setPlayerKey])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -114,9 +117,8 @@ const Player: FC = () => {
     )
       return
 
-    if (playerStatus === 'out-of-bounds' || playerStatus === 'respawning') {
-      return
-    }
+    if (playerStatus !== 'normal') return
+
     const currentPosition = bodyRef.current.translation()
 
     // Resolve player input into a clamped direction vector
@@ -219,11 +221,11 @@ const Player: FC = () => {
 
   return (
     <RigidBody
+      key={playerKey}
       ref={bodyRef}
       type="kinematicPosition"
       userData={userData}
       colliders={false}
-      key={playerStatus}
       position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>

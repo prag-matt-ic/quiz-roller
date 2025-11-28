@@ -110,7 +110,6 @@ export type GameSlice = {
   currentRow: number
   setCurrentRow: (row: number) => void
   mode: GameMode
-  setMode: (mode: GameMode) => void
 
   cameraLookAtPosition: Vector3 | null
   setCameraLookAtPosition: (pos: Vector3 | null) => void

@@ -34,7 +34,7 @@ const GAME_MODE_OPTIONS: Option<GameMode>[] = [
   { label: 'Test', value: GameMode.TEST },
 ]
 
-const PerformanceDebug: FC = () => {
+const DebugControls: FC = () => {
   // const simFps = usePerformanceStore((s) => s.simFps)
   // const setSimFps = usePerformanceStore((s) => s.setSimFps)
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
@@ -42,7 +42,6 @@ const PerformanceDebug: FC = () => {
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
   const setMaxDpr = usePerformanceStore((s) => s.setMaxDpr)
   const mode = useGameStore((s) => s.mode)
-  const setMode = useGameStore((s) => s.setMode)
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const setIsPhysicsDebug = usePerformanceStore((s) => s.setIsPhysicsDebug)
   const resetGame = useGameStore((s) => s.resetGame)
@@ -60,7 +59,7 @@ const PerformanceDebug: FC = () => {
 
   const handlePlatformChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
-    setMode(event.target.value as GameMode)
+    resetGame({ mode: event.target.value as GameMode })
   }
 
   const handlePhysicsDebugChange = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -149,4 +148,4 @@ const SelectRow: FC<SelectRowProps> = ({ id, label, value, onChange, children })
   )
 }
 
-export default PerformanceDebug
+export default DebugControls

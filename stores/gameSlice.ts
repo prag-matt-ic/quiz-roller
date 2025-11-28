@@ -46,18 +46,6 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     }
     set({ rowsData, totalCounts, isPlatformReady: false })
   },
-  setMode: (mode) => {
-    set((state) => {
-      if (state.mode === mode) return {}
-      return {
-        mode,
-        rowsData: [],
-        totalCounts: createTotalCounts(),
-        isPlatformReady: false,
-        resetPlatformTick: state.resetPlatformTick + 1,
-      }
-    })
-  },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {
       set({ stage: Stage.HOME })
@@ -86,12 +74,12 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         completedSpeedRuns: s.completedSpeedRuns,
         speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
-        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
         totalTimeS: s.totalTimeS,
         isPlatformReady: false,
         resetPlatformTick: s.resetPlatformTick + 1,
         playerStatus: 'respawning',
-        respawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        respawnPosition: PLAYER_INITIAL_POSITION_VEC3,
       }
     })
   },

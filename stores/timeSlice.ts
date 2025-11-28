@@ -1,5 +1,6 @@
+import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
+
 import { GameMode, type GameSliceCreator, type SpeedRunStage, type TimeSlice } from './types'
-import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
 
 export const INITIAL_TIME_STATE: Pick<
   TimeSlice,

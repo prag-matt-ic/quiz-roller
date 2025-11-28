@@ -3,13 +3,7 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import { type FC, type RefObject, useMemo } from 'react'
-import {
-  AdditiveBlending,
-  Color,
-  Float32BufferAttribute,
-  OctahedronGeometry,
-  type Vector3Tuple,
-} from 'three'
+import { Color, Float32BufferAttribute, OctahedronGeometry, type Vector3Tuple } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { CollectibleID } from '@/model/schema'

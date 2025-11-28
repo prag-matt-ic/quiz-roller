@@ -2,7 +2,6 @@ import gsap from 'gsap'
 import { Vector3, type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { CollectibleID } from '@/model/schema'
 import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
 import { ringIndexToKey } from '@/utils/rings'
@@ -16,6 +15,7 @@ import {
 } from './types'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, 4.5, 0]
+
 export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[0],
   PLAYER_INITIAL_POSITION[1],
