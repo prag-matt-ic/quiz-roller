@@ -15,7 +15,14 @@ import {
 } from '@react-three/rapier'
 import gsap from 'gsap'
 import EasePack from 'gsap/dist/EasePack'
-import { type FC, type PropsWithChildren, type RefObject, useRef, useState } from 'react'
+import {
+  type FC,
+  type PropsWithChildren,
+  type RefObject,
+  Suspense,
+  useRef,
+  useState,
+} from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
@@ -27,7 +34,7 @@ import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
-import { InfoTile, INFO_TILE_HEIGHT } from './infoTile/InfoTile'
+import { InfoTileIcon, INFO_TILE_HEIGHT } from './infoTileIcon/InfoTileIcon'
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
 
@@ -152,80 +159,79 @@ export const InfoZone: FC<Props> = ({
   const tilesY = height / TILE_SIZE
 
   return (
-    <>
-      {/* Zone */}
-      <RigidBody
-        ref={ref}
-        // KEEP DYNAMIC
-        type="dynamic"
-        gravityScale={0}
-        friction={0}
+    <RigidBody
+      ref={ref}
+      // KEEP DYNAMIC
+      type="dynamic"
+      gravityScale={0}
+      friction={0}
+      mass={0}
+      position={position}
+      rotation={[-Math.PI / 2, 0, 0]}
+      colliders={false}
+      userData={userData}>
+      <CuboidCollider
+        args={[width / 2, height / 2, PLAYER_RADIUS * 2]}
+        sensor={true}
         mass={0}
-        position={position}
-        rotation={[-Math.PI / 2, 0, 0]}
-        colliders={false}
-        userData={userData}>
-        <CuboidCollider
-          args={[width / 2, height / 2, PLAYER_RADIUS * 2]}
-          sensor={true}
-          mass={0}
-          friction={0}
-          onIntersectionEnter={onIntersectionEnter}
-          onIntersectionExit={onIntersectionExit}
-          collisionGroups={COLLISION_GROUPS.infoZoneSensor}
-        />
-        <group visible={isVisible}>
-          <mesh position={[0, 0, 0.03]} renderOrder={2}>
-            <planeGeometry args={[width, height]} />
-            <InfoZoneShaderMaterial
-              key={InfoZoneShader.key}
-              transparent={true}
-              uAspect={aspect}
-              uTilesX={tilesX}
-              uTilesY={tilesY}
-            />
-          </mesh>
+        friction={0}
+        onIntersectionEnter={onIntersectionEnter}
+        onIntersectionExit={onIntersectionExit}
+        collisionGroups={COLLISION_GROUPS.infoZoneSensor}
+      />
+      <group visible={true}>
+        <mesh position={[0, 0, 0.03]} renderOrder={2}>
+          <planeGeometry args={[width, height]} />
+          <InfoZoneShaderMaterial
+            key={InfoZoneShader.key}
+            transparent={true}
+            uAspect={aspect}
+            uTilesX={tilesX}
+            uTilesY={tilesY}
+          />
+        </mesh>
 
-          <InfoTile position={INFO_TILE_POSITION} showInfo={showInfo} />
-        </group>
-        {/* Mesh to show where info content is placed. */}
-        {/* <mesh position={infoPositionOffset}>
+        <Suspense fallback={null}>
+          <InfoTileIcon position={INFO_TILE_POSITION} shouldHide={!showInfo} />
+        </Suspense>
+      </group>
+      {/* Mesh to show where info content is placed. */}
+      {/* <mesh position={infoPositionOffset}>
           <sphereGeometry args={[0.5, 16, 16]} />
           <meshBasicMaterial color="white" />
         </mesh> */}
 
-        {/* Info Content */}
-        {isVisible && (
-          <Html
-            sprite={true}
-            center={true}
-            renderOrder={2}
-            occlude={false}
-            portal={htmlPortal}
-            pointerEvents="none"
-            position={infoPositionOffset}
-            className="relative z-100 select-none"
-            {...infoContentHtmlProps}>
-            <Transition
-              in={showInfo}
-              mountOnEnter={true}
-              unmountOnExit={true}
-              timeout={{ enter: 0, exit: 300 }}
-              onEnter={onInfoEnter}
-              onExit={onInfoExit}
-              nodeRef={infoContainer}>
-              <div
-                ref={infoContainer}
-                className={twMerge(
-                  'relative size-fit max-w-[calc(100vw-56px)]',
-                  infoContainerClassName,
-                )}>
-                {children}
-              </div>
-            </Transition>
-          </Html>
-        )}
-      </RigidBody>
-    </>
+      {/* Info Content */}
+      {isVisible && (
+        <Html
+          sprite={true}
+          center={true}
+          renderOrder={2}
+          occlude={false}
+          portal={htmlPortal}
+          pointerEvents="none"
+          position={infoPositionOffset}
+          className="relative z-100 select-none"
+          {...infoContentHtmlProps}>
+          <Transition
+            in={showInfo}
+            mountOnEnter={true}
+            unmountOnExit={true}
+            timeout={{ enter: 0, exit: 300 }}
+            onEnter={onInfoEnter}
+            onExit={onInfoExit}
+            nodeRef={infoContainer}>
+            <div
+              ref={infoContainer}
+              className={twMerge(
+                'relative size-fit max-w-[calc(100vw-56px)]',
+                infoContainerClassName,
+              )}>
+              {children}
+            </div>
+          </Transition>
+        </Html>
+      )}
+    </RigidBody>
   )
 }

@@ -232,8 +232,9 @@ const Platform: FC = () => {
     }
 
     setupInitialRowsAndTiles()
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, hasRows, readyState, mode, rowsData])
+  }, [resetPlatformTick, hasRows, readyState, mode, rowsData, setPlatformReady])
 
   const handleRespawnAlignment = usePlayerRespawn({
     activeRowsData,

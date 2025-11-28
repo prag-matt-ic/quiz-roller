@@ -29,8 +29,6 @@ const Timer: FC = () => {
   }, [gameStoreAPI, _isHydrated])
 
   useEffect(() => {
-    console.warn('Starting speed run timer', { isSpeedRunTiming, isSpeedRunMode })
-
     if (!isSpeedRunMode || !isSpeedRunTiming) return
     let previous = performance.now()
 

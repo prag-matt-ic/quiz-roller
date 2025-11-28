@@ -34,7 +34,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const totalCount = useGameStore((s) => s.totalCounts.infoZones)
 
   const { refs, isVisibleStates, translation, applyPlacement, hideRigidBodyAtIndex } =
-    useDynamicRigidBodies(totalCount)
+    useDynamicRigidBodies(totalCount, 'InfoZones')
 
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {

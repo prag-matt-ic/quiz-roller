@@ -8,11 +8,14 @@ const createRigidBodyRefsFromCount = (count: number): RefObject<RapierRigidBody 
 const createInitialVisibilityState = (count: number): boolean[] =>
   Array.from({ length: count }, () => false)
 
-function useDynamicRigidBodies(totalCount: number) {
+function useDynamicRigidBodies(totalCount: number, label?: string) {
   const [refs, setRefs] = useState(() => createRigidBodyRefsFromCount(totalCount))
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
     createInitialVisibilityState(totalCount),
   )
+
+  if (!!label)
+    console.log('useDynamicRigidBodies', { label, totalCount, refs, isVisibleStates })
 
   useEffect(() => {
     if (refs.length === totalCount) return

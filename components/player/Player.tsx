@@ -91,10 +91,6 @@ const Player: FC = () => {
     // Wait for platform to calculate safe position
     if (!respawnPosition) return
 
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[Player] Respawning at:', respawnPosition)
-    }
-
     // Reset position, player drops in from Y height to land on the surface.
     body.setTranslation(
       {

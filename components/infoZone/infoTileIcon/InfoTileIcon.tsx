@@ -2,7 +2,7 @@ import { useGSAP } from '@gsap/react'
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, Suspense, useRef } from 'react'
+import { type FC, useRef } from 'react'
 import { BoxGeometry, Texture, type Vector3Tuple } from 'three'
 
 import { TILE_SIZE, TILE_THICKNESS } from '@/utils/tiles'
@@ -47,13 +47,12 @@ export type InfoTileShaderRef = typeof InfoTileShaderMaterial & InfoTileShaderUn
 
 type InfoTileProps = {
   position: Vector3Tuple
-  showInfo: boolean
+  shouldHide: boolean
 }
 
-export const InfoTile: FC<InfoTileProps> = ({ position, showInfo }) => {
+export const InfoTileIcon: FC<InfoTileProps> = ({ position, shouldHide }) => {
   const shaderRef = useRef<InfoTileShaderRef | null>(null)
   const hasInitialized = useRef(false)
-
   const colourTexture = useTexture(infoIcon.src)
 
   useGSAP(
@@ -61,7 +60,7 @@ export const InfoTile: FC<InfoTileProps> = ({ position, showInfo }) => {
       const material = shaderRef.current
       if (!material) return
 
-      const target = showInfo ? 0 : 1
+      const target = shouldHide ? 1 : 0
 
       if (!hasInitialized.current) {
         material.uExitProgress = target
@@ -76,7 +75,7 @@ export const InfoTile: FC<InfoTileProps> = ({ position, showInfo }) => {
         overwrite: true,
       })
     },
-    { dependencies: [showInfo] },
+    { dependencies: [shouldHide] },
   )
 
   return (
