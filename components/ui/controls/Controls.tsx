@@ -34,9 +34,10 @@ function useControls() {
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const DISABLED_STAGES: SpeedRunStage[] = ['username', 'countdown', 'leaderboard']
   const isDisabledStage = DISABLED_STAGES.includes(speedRunStage || '')
-  const isRespawningPlayer = useGameStore((s) => s.isRespawning)
+  const playerStatus = useGameStore((s) => s.playerStatus)
+  const isPlayerLocked = playerStatus !== 'normal'
 
-  const disableInput = isRespawningPlayer || (isSpeedRunMode && isDisabledStage)
+  const disableInput = isPlayerLocked || (isSpeedRunMode && isDisabledStage)
 
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { type FC, useId } from 'react'
 import { PlayIcon } from 'lucide-react'
+import { type FC, useId } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 export type StartExperienceButtonProps = {

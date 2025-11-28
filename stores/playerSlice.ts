@@ -1,13 +1,21 @@
 import gsap from 'gsap'
 import { Vector3, type Vector3Tuple } from 'three'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+
 import { SoundFX } from '@/components/SoundProvider'
-import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { CollectibleID } from '@/model/schema'
-import { GameSliceCreator, PlayerSlice, SliceDeps, type RingIndex } from './types'
+import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
 import { ringIndexToKey } from '@/utils/rings'
 
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, PLAYER_RADIUS + 4, 0]
+import {
+  GameSliceCreator,
+  PlayerSlice,
+  type PlayerStatus,
+  type RingIndex,
+  SliceDeps,
+} from './types'
+
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, 4.5, 0]
 export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[0],
   PLAYER_INITIAL_POSITION[1],
@@ -17,6 +25,15 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
 const COLLECTIBLE_DURATION_S = 1.5
 
 const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
+
+const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void => {
+  if (process.env.NODE_ENV === 'production') return
+  if (payload) {
+    console.warn(`[PlayerStore] ${event}`, payload)
+    return
+  }
+  console.warn(`[PlayerStore] ${event}`)
+}
 
 export const INITIAL_PLAYER_STATE = {
   playerInput: {
@@ -35,8 +52,8 @@ export const INITIAL_PLAYER_STATE = {
   collectedCollectibles: [],
   collectedRings: {},
   confirmationProgress: 0,
-  respawnPlayerTick: 0,
-  isRespawning: false,
+  respawnPosition: null,
+  playerStatus: 'normal' as PlayerStatus,
 }
 
 export const createPlayerSlice =
@@ -100,12 +117,6 @@ export const createPlayerSlice =
           playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
         }))
       },
-      respawnPosition: null,
-      setRespawnPosition: (position) => {
-        set({
-          respawnPosition: position ? new Vector3(position.x, position.y, position.z) : null,
-        })
-      },
       setEdgeWarningIntensities: (intensities) => {
         set({
           edgeWarningIntensities: {
@@ -160,13 +171,29 @@ export const createPlayerSlice =
 
         startConfirmation(onConfirmed, COLLECTIBLE_DURATION_S)
       },
-      setIsRespawning: (isRespawning: boolean) => {
-        set({ isRespawning })
+      stopConfirmation: () => {
+        confirmationTween?.kill()
+        confirmationTween = null
+        confirmationTweenTarget.value = 0
       },
-      respawnPlayer: () => {
-        set((s) => ({
-          isRespawning: true,
-          respawnPlayerTick: s.respawnPlayerTick + 1,
+      respawnPlayer: (position) => {
+        set({
+          playerStatus: 'respawning',
+          respawnPosition: new Vector3(position.x, position.y, position.z),
+        })
+        logPlayerStatus('Respawn queued', position)
+      },
+      onRespawnComplete: () => {
+        set({
+          playerStatus: 'normal',
+          respawnPosition: null,
+        })
+        logPlayerStatus('Respawn complete')
+      },
+      onOutOfBounds: () => {
+        playSoundFX(SoundFX.OUT_OF_BOUNDS)
+        set({
+          playerStatus: 'out-of-bounds',
           respawnPosition: null,
           playerInput: {
             up: 0,
@@ -175,16 +202,8 @@ export const createPlayerSlice =
             right: 0,
           },
           collectedRings: {},
-        }))
-      },
-      stopConfirmation: () => {
-        confirmationTween?.kill()
-        confirmationTween = null
-        confirmationTweenTarget.value = 0
-      },
-      onOutOfBounds: () => {
-        playSoundFX(SoundFX.OUT_OF_BOUNDS)
-        get().respawnPlayer()
+        })
+        logPlayerStatus('Player out of bounds')
       },
     }
   }

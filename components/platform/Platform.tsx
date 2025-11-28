@@ -4,43 +4,44 @@ import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, useEffect, useLayoutEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import FloatingHeadings, {
-  type FloatingHeadingsHandle,
-} from '@/components/platform/floatingHeadings/FloatingHeadings'
-import Collectibles, {
-  type CollectiblesHandle,
-} from '@/components/platform/collectibles/Collectibles'
-import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones/InfoZones'
-import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
-import Rings, { type RingsHandle } from '@/components/platform/Rings'
 import FloatingTiles, {
   type FloatingTilesHandle,
 } from '@/components/floatingTiles/FloatingTiles'
+import Rings, { type RingsHandle } from '@/components/platform/Rings'
+import Collectibles, {
+  type CollectiblesHandle,
+} from '@/components/platform/collectibles/Collectibles'
+import FloatingHeadings, {
+  type FloatingHeadingsHandle,
+} from '@/components/platform/floatingHeadings/FloatingHeadings'
+import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones/InfoZones'
+import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
+import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
+import { GameMode } from '@/stores/types'
 import {
-  colToX,
   COLUMNS,
   EPSILON,
-  clamp,
-  TERRAIN_SPEED_UNITS,
-  lerp,
-  type RowData,
   ROWS_RENDERED,
+  ROW_VISIBILITY_HALF_SPAN,
+  type RowData,
   SAFE_HEIGHT,
+  TERRAIN_SPEED_UNITS,
   TILE_PLAYER_FADE_FULL_RADIUS,
   TILE_PLAYER_FADE_MIN_ALPHA,
   TILE_PLAYER_FADE_MIN_RADIUS,
   TILE_SIZE,
   UNSAFE_HEIGHT,
-  ROW_VISIBILITY_HALF_SPAN,
+  clamp,
+  colToX,
+  lerp,
 } from '@/utils/tiles'
-import usePlayerInput from '@/hooks/usePlayerInput'
+
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 import { EMPTY_ROW_INDEX, usePlayerRespawn } from './usePlayerRespawn'
 import useReadyState, { ReadyStateKey } from './useReadyState'
-import { GameMode } from '@/stores/types'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -238,10 +239,11 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick, hasRows, readyState, mode, rowsData, setPlatformReady])
 
-  const handleRespawnAlignment = usePlayerRespawn({
+  const { targetScrollPosition, onScrollComplete } = usePlayerRespawn({
     activeRowsData,
     rowZByIndex,
     currentScrollPosition,
+    isPlatformReady,
   })
 
   function updateInstanceAttributesForRow(rowIndex: number, newRowData?: RowData) {
@@ -410,11 +412,11 @@ const Platform: FC = () => {
     }
   }
 
-  function updateTiles(playerZ: number) {
+  function updateTiles() {
     if (!tiles.current?.rigidBodies) return
     const cycleDistance = ROW_CYCLE_DISTANCE
-    const maxZ = playerZ + ROW_VISIBILITY_HALF_SPAN
-    const minZ = playerZ - ROW_VISIBILITY_HALF_SPAN
+    const maxZ = ROW_VISIBILITY_HALF_SPAN
+    const minZ = -ROW_VISIBILITY_HALF_SPAN
     let rowBasesChanged = false
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
@@ -448,7 +450,7 @@ const Platform: FC = () => {
       }
 
       const wasVisible = rowIsVisible.current[rowIndex] === true
-      const rowAlpha = getRowAlpha(rowZ, playerZ)
+      const rowAlpha = getRowAlpha(rowZ, 0)
       const isVisible = rowAlpha > TILE_PLAYER_FADE_MIN_ALPHA
       if (wasVisible !== isVisible) {
         rowIsVisible.current[rowIndex] = isVisible
@@ -491,14 +493,24 @@ const Platform: FC = () => {
 
     const previousScroll = currentScrollPosition.current
 
-    handleRespawnAlignment(delta, zStep)
-
     currentScrollPosition.current += zStep
 
     const totalScrollDelta = currentScrollPosition.current - previousScroll
 
-    const playerZ = playerPosition.current.z
-    updateTiles(playerZ)
+    if (!!targetScrollPosition.current) {
+      currentScrollPosition.current = lerp(
+        currentScrollPosition.current,
+        targetScrollPosition.current,
+        4.0 * delta,
+      )
+      if (Math.abs(currentScrollPosition.current - targetScrollPosition.current) < 0.01) {
+        currentScrollPosition.current = targetScrollPosition.current
+        targetScrollPosition.current = null
+        onScrollComplete()
+      }
+    }
+
+    updateTiles()
     floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
     floatingTilesHandle.current?.step(delta)
 

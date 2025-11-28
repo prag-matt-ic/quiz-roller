@@ -18,20 +18,20 @@ import {
   useGameStore,
 } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
+import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import {
   COLUMNS,
   ENTRY_END_Z,
-  EXIT_START_Z,
-  TILE_SIZE,
   EPSILON,
+  EXIT_START_Z,
   PLAYER_MOVE_UNITS,
   TERRAIN_SPEED_UNITS,
+  TILE_SIZE,
 } from '@/utils/tiles'
-import { Marble } from '@/components/player/marble/Marble'
-import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -55,12 +55,11 @@ const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   // const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
-
-  const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
-  const setIsRespawning = useGameStore((s) => s.setIsRespawning)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
-  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
+  const playerStatus = useGameStore((s) => s.playerStatus)
+  const respawnPosition = useGameStore((s) => s.respawnPosition)
+  const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
 
   const { controllerRef, input } = usePlayerController()
 
@@ -80,20 +79,19 @@ const Player: FC = () => {
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
-  const respawnPosition = useGameStore((s) => s.respawnPosition)
-  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
-
   useEffect(() => {
     if (!isPlatformReady) return
+
+    console.log('Player', { isPlatformReady, playerStatus, respawnPosition })
+    if (playerStatus !== 'respawning') return
     const body = bodyRef.current
     if (!body) return
+    if (!respawnPosition) {
+      console.error('Trying to respawn with no respawn position.')
+      return
+    }
 
-    // Wait for platform to calculate safe position
-    if (!respawnPosition) return
-
-    console.warn('[Player] Respawn:', respawnPosition)
-
-    // Reset position, player drops in from Y height to land on the surface.
+    console.warn('Player respawning at:', respawnPosition)
     body.setTranslation(
       {
         x: respawnPosition.x,
@@ -103,10 +101,8 @@ const Player: FC = () => {
       true,
     )
 
-    // Clear the position so we don't keep teleporting
-    setRespawnPosition(null)
-    setIsRespawning(false)
-  }, [isPlatformReady, respawnPosition, setIsRespawning, setRespawnPosition])
+    onRespawnComplete()
+  }, [isPlatformReady, playerStatus, respawnPosition, onRespawnComplete])
 
   useGameFrame((_, deltaTime) => {
     if (
@@ -119,7 +115,6 @@ const Player: FC = () => {
       return
 
     const currentPosition = bodyRef.current.translation()
-    // if (currentPosition.y > 1.0 ) return
 
     // Resolve player input into a clamped direction vector
     const inputDirectionX = input.current.right - input.current.left
@@ -193,13 +188,6 @@ const Player: FC = () => {
     // const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
     // setEdgeWarningIntensities(edgeWarnings)
   })
-
-  useEffect(() => {
-    // Handle initial player respawn
-    if (!isPlatformReady) return
-    if (respawnPlayerTick !== 0) return
-    respawnPlayer()
-  }, [isPlatformReady, respawnPlayer, respawnPlayerTick])
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
     const otherUserData = event.other.rigidBodyObject?.userData as RigidBodyUserData

@@ -1,22 +1,23 @@
 import {
   type FC,
+  type RefObject,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
-  type RefObject,
 } from 'react'
 
-import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
-import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
-import { InfoZone } from '@/components/platform/infoZones/infoZone/InfoZone'
 import { useGameStore } from '@/components/GameProvider'
+import { InfoZone } from '@/components/platform/infoZones/infoZone/InfoZone'
 import Card from '@/components/ui/Card'
 import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import useTime from '@/hooks/useTime'
+import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
+import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
+
 import useDynamicRigidBodies from '../useDynamicRigidBodies'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'

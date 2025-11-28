@@ -28,15 +28,15 @@ import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
-import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
+import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
-import { TILE_SIZE } from '@/utils/tiles'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+import { TILE_SIZE } from '@/utils/tiles'
 
+import IconSphere from './iconSphere/IconSphere'
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
-import IconSphere from './iconSphere/IconSphere'
 
 gsap.registerPlugin(EasePack)
 

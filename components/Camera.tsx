@@ -60,13 +60,15 @@ type Props = {
 const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
-  const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
+  const playerStatus = useGameStore((s) => s.playerStatus)
 
   const lastMovedBackward = useRef(false)
 
   useEffect(() => {
-    lastMovedBackward.current = false
-  }, [respawnPlayerTick])
+    if (playerStatus !== 'normal') {
+      lastMovedBackward.current = false
+    }
+  }, [playerStatus])
 
   usePlayerInput((input) => {
     if (input.down > 0) lastMovedBackward.current = true

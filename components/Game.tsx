@@ -7,8 +7,6 @@ import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
 import { type FC, Suspense, useMemo } from 'react'
 
-import Platform from '@/components/platform/Platform'
-import Player from '@/components/player/Player'
 import Camera, {
   CAMERA_POSITION_FOR_STAGE_DESKTOP,
   CAMERA_POSITION_FOR_STAGE_MOBILE,
@@ -17,6 +15,8 @@ import { Stage } from '@/components/GameProvider'
 import OutOfBounds from '@/components/OutOfBounds'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
+import Platform from '@/components/platform/Platform'
+import Player from '@/components/player/Player'
 import usePlatformRows from '@/hooks/usePlatformRows'
 
 gsap.registerPlugin(useGSAP)
@@ -68,8 +68,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         onDecline={() => onPerformanceChange(false)}
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
-        {/* <OrbitControls /> */}
-        <Camera isMobile={isMobile} positions={cameraPositions} />
+        <OrbitControls />
+        {/* <Camera isMobile={isMobile} positions={cameraPositions} /> */}
         {isDebug && <Stats />}
         <Backdrop />
         <Suspense>

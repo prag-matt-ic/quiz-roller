@@ -31,7 +31,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   })
 
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
-  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
+  const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const { canInstall, isInstalled, isPrompting, isPromptSupported, promptInstall } = usePWA()
   const [isIOSDevice, setIsIOSDevice] = useState(false)
 
@@ -76,7 +76,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
     setIsExiting(true)
-    respawnPlayer()
+    onOutOfBounds({ silent: true })
   }
 
   const onInstallClick = () => {

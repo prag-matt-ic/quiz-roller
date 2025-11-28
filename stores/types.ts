@@ -1,10 +1,11 @@
 import { type ReactNode } from 'react'
 import { Vector3 } from 'three'
 import { type StateCreator } from 'zustand'
-import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
+
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
-import type { RowData } from '@/utils/tiles'
+import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
 import type { TotalCounts } from '@/stores/totalCounts'
+import type { RowData } from '@/utils/tiles'
 
 export enum Stage {
   HOME = 1,
@@ -29,6 +30,8 @@ export type PlayerInput = {
   right: number
 }
 
+export type PlayerStatus = 'normal' | 'out-of-bounds' | 'respawning'
+
 export type HudIndicatorConfig = {
   content: ReactNode
   autoDismissS?: number
@@ -38,6 +41,7 @@ export type RingIndex = [row: number, column: number]
 export type RingCollection = Record<string, true>
 
 export type SpeedRunStage = 'username' | 'countdown' | 'running' | 'submitting' | 'leaderboard'
+
 export enum GameMode {
   MAIN = 'main',
   TEST = 'test',
@@ -72,7 +76,7 @@ export type PlayerSlice = {
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
   respawnPosition: Vector3 | null
-  setRespawnPosition: (pos: { x: number; y: number; z: number } | null) => void
+  playerStatus: PlayerStatus
 
   edgeWarningIntensities: EdgeWarningIntensities
   setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
@@ -86,12 +90,10 @@ export type PlayerSlice = {
   collectedRings: RingCollection
   onRingCollected: (indexes: RingIndex) => void
 
-  respawnPlayerTick: number
-  isRespawning: boolean
-  setIsRespawning: (isRespawning: boolean) => void
-  respawnPlayer: () => void
+  respawnPlayer: (position: { x: number; y: number; z: number }) => void
+  onRespawnComplete: () => void
   stopConfirmation: () => void
-  onOutOfBounds: () => void
+  onOutOfBounds: (options?: { silent?: boolean }) => void
 }
 
 export type GameSlice = {

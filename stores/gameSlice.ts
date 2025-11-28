@@ -1,9 +1,10 @@
 import { MOVE_HUD_INDICATOR } from '@/resources/content'
-import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
-import { INITIAL_TIME_STATE } from './timeSlice'
-import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
 import type { RowData } from '@/utils/tiles'
+
+import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
+import { INITIAL_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
+import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
 
 export const INITIAL_GAME_STATE = {
   stage: Stage.HOME,
@@ -89,7 +90,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         totalTimeS: s.totalTimeS,
         isPlatformReady: false,
         resetPlatformTick: s.resetPlatformTick + 1,
-        respawnPlayerTick: s.respawnPlayerTick + 1,
+        playerStatus: 'respawning',
+        respawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
       }
     })
   },

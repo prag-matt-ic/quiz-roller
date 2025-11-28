@@ -14,22 +14,22 @@ const OutOfBounds: FC = () => {
     <RigidBody
       type="fixed"
       friction={0}
-      colliders={false}
-      position={[0, 0, 0]}
+      colliders={'cuboid'}
+      position={[0, -4, 0]}
       userData={userData}>
       {/* Large, sensor plane below the playable tiles to trigger game over / reset */}
       <CuboidCollider
-        position={[0, -4, 0]}
+        position={[0, 0, 0]}
         args={[COLUMNS * TILE_SIZE + 10, 1, ROWS_RENDERED * TILE_SIZE + 10]}
         sensor={true}
         activeCollisionTypes={
           ActiveCollisionTypes.DEFAULT | ActiveCollisionTypes.KINEMATIC_FIXED
         }
       />
-      {/* <mesh position={[0, -6, 0]}>
+      <mesh position={[0, 0, 0]}>
         <boxGeometry args={[COLUMNS * TILE_SIZE + 10, 1, ROWS_RENDERED * TILE_SIZE + 10]} />
         <meshBasicMaterial color="red" />
-      </mesh> */}
+      </mesh>
     </RigidBody>
   )
 }

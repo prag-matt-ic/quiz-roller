@@ -1,14 +1,16 @@
-import { type RefObject, useCallback, useEffect, useRef } from 'react'
+import { type RefObject, useCallback, useRef } from 'react'
 
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import usePlayerStatus from '@/hooks/usePlayerStatus'
+import { PlayerStatus } from '@/stores/types'
 import {
-  colToX,
   COLUMNS,
   EPSILON,
-  type RowData,
   ROWS_RENDERED,
+  type RowData,
   SAFE_HEIGHT,
+  colToX,
   lerp,
 } from '@/utils/tiles'
 
@@ -24,12 +26,6 @@ type SafeRowSelection = {
   safeX: number
   rowZ: number
   absoluteRowIndex: number
-}
-
-type UsePlayerRespawnProps = {
-  activeRowsData: RefObject<RowData[]>
-  rowZByIndex: RefObject<number[]>
-  currentScrollPosition: RefObject<number>
 }
 
 function findSafeColumnX(row: RowData, preferredX: number): number | null {
@@ -148,9 +144,14 @@ export function usePlayerRespawn({
   activeRowsData,
   rowZByIndex,
   currentScrollPosition,
-}: UsePlayerRespawnProps) {
-  const respawnPlayerTick = useGameStore((s) => s.respawnPlayerTick)
-  const setRespawnPosition = useGameStore((s) => s.setRespawnPosition)
+  isPlatformReady,
+}: {
+  activeRowsData: RefObject<RowData[]>
+  rowZByIndex: RefObject<number[]>
+  currentScrollPosition: RefObject<number>
+  isPlatformReady: boolean
+}) {
+  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const targetScrollPosition = useRef<number | null>(null)
   const pendingRespawnX = useRef<number | null>(null)
   const preferredRespawnX = useRef(PLAYER_INITIAL_POSITION[0])
@@ -159,48 +160,18 @@ export function usePlayerRespawn({
     preferredRespawnX.current = pos.x
   })
 
-  const handleRespawnAlignment = useCallback(
-    (delta: number, zStep: number) => {
-      if (Math.abs(zStep) > EPSILON.SMALL) {
-        return
-      }
-
-      if (targetScrollPosition.current === null) return
-
-      currentScrollPosition.current = lerp(
-        currentScrollPosition.current,
-        targetScrollPosition.current,
-        RESPAWN_ALIGN_SPEED * delta,
-      )
-
-      if (
-        Math.abs(currentScrollPosition.current - targetScrollPosition.current) <
-        RESPAWN_SNAP_THRESHOLD
-      ) {
-        currentScrollPosition.current = targetScrollPosition.current
-        targetScrollPosition.current = null
-
-        if (pendingRespawnX.current !== null) {
-          setRespawnPosition({
-            x: pendingRespawnX.current,
-            y: PLAYER_INITIAL_POSITION[1],
-            z: PLAYER_INITIAL_POSITION[2],
-          })
-          pendingRespawnX.current = null
-        }
-      }
-    },
-    [currentScrollPosition, setRespawnPosition],
-  )
-
-  useEffect(() => {
-    if (respawnPlayerTick === 0) return
+  const onPlayerOutOfBounds = (playerStatus: PlayerStatus) => {
+    if (playerStatus !== 'out-of-bounds') return
+    if (!isPlatformReady) return
 
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
     const scrollPos = currentScrollPosition.current
 
     if (!rows || !zValues) return
+
+    targetScrollPosition.current = null
+    pendingRespawnX.current = null
 
     const playerZ = PLAYER_INITIAL_POSITION[2]
     const preferredX = preferredRespawnX.current
@@ -277,13 +248,19 @@ export function usePlayerRespawn({
     }
 
     queueRespawn(bestSelection, 'Snapping to nearest safe row')
-  }, [
-    respawnPlayerTick,
-    activeRowsData,
-    rowZByIndex,
-    setRespawnPosition,
-    currentScrollPosition,
-  ])
+  }
 
-  return handleRespawnAlignment
+  usePlayerStatus(onPlayerOutOfBounds)
+
+  const onScrollComplete = () => {
+    if (pendingRespawnX.current === null) return
+    respawnPlayer({
+      x: pendingRespawnX.current,
+      y: PLAYER_INITIAL_POSITION[1],
+      z: PLAYER_INITIAL_POSITION[2],
+    })
+    pendingRespawnX.current = null
+  }
+
+  return { targetScrollPosition, onScrollComplete }
 }
