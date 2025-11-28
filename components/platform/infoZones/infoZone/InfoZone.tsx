@@ -71,6 +71,7 @@ export type InfoZoneProps = PropsWithChildren<{
   alwaysShowInfo?: boolean
   infoContentHtmlProps?: HtmlProps
   iconSrc: string
+  sphereColour?: string // If other than default
 }>
 
 // Shows HTML content when the player enters the zone
@@ -84,6 +85,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
   iconSrc,
+  sphereColour,
 }) => {
   const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
@@ -194,7 +196,12 @@ export const InfoZone: FC<InfoZoneProps> = ({
 
         {/* Floating Icon Sphere */}
         <Suspense fallback={null}>
-          <IconSphere iconSrc={iconSrc} isVisible={isVisible} shouldHide={showInfo} />
+          <IconSphere
+            iconSrc={iconSrc}
+            colour={sphereColour}
+            isVisible={isVisible}
+            shouldHide={showInfo}
+          />
         </Suspense>
       </group>
       {/* Mesh to show where info content is placed. */}

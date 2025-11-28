@@ -145,7 +145,6 @@ const LeaderboardRow: FC<{
 
   return (
     <div
-      data-latestRun={isLatestRun ? 'true' : 'false'}
       className={twMerge(
         ROW_CONTAINER_CLASSES,
         index % 2 === 0 && 'bg-[#000]/20',

@@ -103,6 +103,8 @@ const Gem: FC<GemShellProps> = ({
   isVisible,
   ...props
 }) => {
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
+
   const gemConfig: GemConfig = GEMS_BY_ID[id] ?? GEMS_BY_ID[CollectibleID.AI_Prompts]
   const surfaceColor = useMemo(() => new Color(gemConfig.colour), [gemConfig])
   const lineColor = useMemo(() => {
@@ -110,7 +112,6 @@ const Gem: FC<GemShellProps> = ({
     colour.offsetHSL(0, 0, 0.2)
     return colour
   }, [gemConfig])
-  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   return (
     <group

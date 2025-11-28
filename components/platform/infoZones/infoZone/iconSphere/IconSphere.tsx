@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react'
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, Suspense, useRef } from 'react'
+import { type FC, Suspense, useMemo, useRef } from 'react'
 import {
   AdditiveBlending,
   Color,
@@ -24,7 +24,6 @@ const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 32, 16).toNonIndexe
 const ICON_SPHERE_LINE_WIDTH = 1.0
 const ICON_SPHERE_GLOW_STRENGTH = 3.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
-const DEFAULT_SURFACE_COLOR = new Color('teal')
 
 const ICON_SPHERE_SURFACE_GEOMETRY = (() => {
   const geometry = BASE_GEOMETRY.clone()
@@ -62,6 +61,7 @@ type IconSphereUniforms = {
   uDistanceFadeEnabled: number
 }
 
+const DEFAULT_SURFACE_COLOR = new Color('teal')
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
 DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 
@@ -87,9 +87,10 @@ export type IconSphereProps = {
   iconSrc: string
   shouldHide: boolean
   isVisible: boolean
+  colour?: string
 }
 
-const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => {
+const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colour }) => {
   const shader = useRef<typeof GemShellShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
@@ -97,6 +98,19 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
 
   const iconTexture = useTexture(iconSrc)
   const spriteMaterialRef = useRef<SpriteMaterial>(null)
+
+  const { surfaceColour, lineColour } = useMemo(() => {
+    if (!colour) {
+      return {
+        surfaceColour: DEFAULT_SURFACE_COLOR,
+        lineColour: DEFAULT_LINE_COLOR,
+      }
+    }
+    const surfaceColour = new Color(colour)
+    const lineColour = surfaceColour.clone()
+    lineColour.offsetHSL(0, 0, 0.16)
+    return { surfaceColour, lineColour }
+  }, [colour])
 
   useGSAP(
     () => {
@@ -146,6 +160,8 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
           depthTest={true}
           toneMapped={false}
           blending={AdditiveBlending}
+          uSurfaceColor={surfaceColour}
+          uLineColor={lineColour}
           uDistanceFadeEnabled={isDistanceFadeEnabled ? 1 : 0}
         />
       </mesh>

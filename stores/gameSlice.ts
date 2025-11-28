@@ -76,6 +76,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
         playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
         totalTimeS: s.totalTimeS,
+        _isHydrated: s._isHydrated,
         isPlatformReady: false,
         resetPlatformTick: s.resetPlatformTick + 1,
         playerStatus: 'respawning',

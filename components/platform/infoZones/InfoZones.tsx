@@ -123,11 +123,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   const onTimeChange = useCallback(
     (elapsedSeconds: number) => {
-      console.log('Elapsed seconds:', {
-        elapsedSeconds,
-        isVisible: isVisibleStates[3],
-        timeContainer,
-      })
+      if (!isVisibleStates[3]) return
       if (!timeContainer.current) return
       timeContainer.current.textContent = formatTotalTime(elapsedSeconds)
     },
@@ -203,7 +199,11 @@ function getInfoZonePropsForIndex(
   placementIndex: number,
 ): Pick<
   InfoZoneProps,
-  'infoContainerClassName' | 'iconSrc' | 'infoContentHtmlProps' | 'infoPositionOffset'
+  | 'infoContainerClassName'
+  | 'iconSrc'
+  | 'infoContentHtmlProps'
+  | 'infoPositionOffset'
+  | 'sphereColour'
 > {
   if (placementIndex === 3) {
     // Total time display
@@ -212,6 +212,7 @@ function getInfoZonePropsForIndex(
       iconSrc: timerIcon.src,
       infoPositionOffset: [0, 8, 4],
       infoContentHtmlProps: { transform: true },
+      sphereColour: 'green',
     }
   }
   if (placementIndex === 4) {
@@ -221,6 +222,7 @@ function getInfoZonePropsForIndex(
       iconSrc: trophyIcon.src,
       infoPositionOffset: [0, 12, 5],
       infoContentHtmlProps: { transform: true },
+      sphereColour: 'purple',
     }
   }
   // Info Card
