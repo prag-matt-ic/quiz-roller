@@ -16,7 +16,7 @@ import {
 import { type ShaderMaterial } from 'three'
 
 import { type RingIndex, useGameStore } from '@/components/GameProvider'
-import Ring, { type RingUniforms } from '@/components/ring/Ring'
+import Ring, { type RingUniforms } from '@/components/platform/rings/ring/Ring'
 import useGameFrame from '@/hooks/useGameFrame'
 import type { RigidBodyUserData, RingUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
@@ -209,7 +209,16 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   useGameFrame(({ clock }) => {
     const time = clock.elapsedTime
     const materials = ringShaderRefs.current
+    const assignments = slotAssignments.current
+
     for (let index = 0; index < materials.length; index++) {
+      const assignment = assignments[index]
+      if (!assignment) continue
+
+      const [rowIndex, colIndex] = assignment
+      const ringKey = getRingKey(rowIndex, colIndex)
+      if (collectedRings[ringKey]) continue
+
       const material = materials[index]
       if (!material) continue
       material.uTime = time
@@ -247,7 +256,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
               collisionGroups={COLLISION_GROUPS.ringSensor}
             />
             <Ring
-              visible={!isCollected}
+              isVisible={!isCollected}
               shaderRef={(material) => {
                 ringShaderRefs.current[slotIndex] = material
               }}

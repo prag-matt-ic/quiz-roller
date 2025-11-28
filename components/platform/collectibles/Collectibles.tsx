@@ -7,13 +7,12 @@ import {
   useMemo,
 } from 'react'
 
+import { useGameStore } from '@/components/GameProvider'
 import Collectible from '@/components/platform/collectibles/collectible/Collectible'
+import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
 import { COLLECTIBLE_IDS, type CollectibleID } from '@/model/schema'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
-
-import { useGameStore } from '../../GameProvider'
-import useDynamicRigidBodies from '../useDynamicRigidBodies'
 
 export type CollectiblesHandle = {
   moveElements: (zStep: number) => void

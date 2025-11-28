@@ -7,7 +7,6 @@ import { Stage, useGameStore } from '@/components/GameProvider'
 import FloatingTiles, {
   type FloatingTilesHandle,
 } from '@/components/floatingTiles/FloatingTiles'
-import Rings, { type RingsHandle } from '@/components/platform/Rings'
 import Collectibles, {
   type CollectiblesHandle,
 } from '@/components/platform/collectibles/Collectibles'
@@ -15,6 +14,7 @@ import FloatingHeadings, {
   type FloatingHeadingsHandle,
 } from '@/components/platform/floatingHeadings/FloatingHeadings'
 import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones/InfoZones'
+import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerInput from '@/hooks/usePlayerInput'

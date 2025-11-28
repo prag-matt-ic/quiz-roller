@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { RefObject, useEffect, useRef } from 'react'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
 
@@ -9,7 +9,7 @@ type TimeSelector = (state: { totalTimeS: number; speedRunTimeCS: number }) => n
 const selectTotalTime: TimeSelector = (state) => state.totalTimeS
 const selectSpeedRunTime: TimeSelector = (state) => state.speedRunTimeCS / 100
 
-function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler) {
+function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler): RefObject<number> {
   const gameStoreAPI = useGameStoreAPI()
   const value = useRef(selector(gameStoreAPI.getState()))
 
@@ -17,7 +17,6 @@ function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler) {
     onChange?.(value.current)
 
     const unsubscribe = gameStoreAPI.subscribe(selector, (nextTime) => {
-      if (value.current === nextTime) return
       value.current = nextTime
       onChange?.(nextTime)
     })
@@ -29,14 +28,12 @@ function useTimeRef(selector: TimeSelector, onChange?: TimeChangeHandler) {
 }
 
 // Subscribes to the total time spent in the experience (in seconds).
-export function useTime(onChange?: TimeChangeHandler) {
+export function useTotalTime(onChange?: TimeChangeHandler): RefObject<number> {
   const totalTime = useTimeRef(selectTotalTime, onChange)
-  return { totalTime }
+  return totalTime
 }
 
 export function useSpeedRunTime(onChange?: TimeChangeHandler) {
   const speedRunTime = useTimeRef(selectSpeedRunTime, onChange)
   return { speedRunTime }
 }
-
-export default useTime

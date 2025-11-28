@@ -1,19 +1,21 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
-import type { FC, PropsWithChildren, RefObject } from 'react'
 import {
   CuboidCollider,
   type IntersectionEnterHandler,
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import fragmentShader from './finishLine.frag'
-import vertexShader from './finishLine.vert'
-import { HIDDEN_POSITION, TILE_SIZE } from '@/utils/tiles'
-import type { FinishLineUserData, RigidBodyUserData } from '@/model/schema'
+import type { FC, PropsWithChildren, RefObject } from 'react'
+
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import type { FinishLineUserData, RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
+import { HIDDEN_POSITION, TILE_SIZE } from '@/utils/tiles'
+
+import fragmentShader from './finishLine.frag'
+import vertexShader from './finishLine.vert'
 
 type FinishLineShaderUniforms = {
   uAspect: number

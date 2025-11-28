@@ -1,12 +1,12 @@
 import { shaderMaterial } from '@react-three/drei'
-
-import ringVert from './ring.vert'
-import ringFrag from './ring.frag'
-
-import { type Ref, type FC } from 'react'
-import { usePerformanceStore } from '../PerformanceProvider'
-import { Color, type ShaderMaterial } from 'three'
 import { extend } from '@react-three/fiber'
+import { type FC, type Ref } from 'react'
+import { Color, type ShaderMaterial } from 'three'
+
+import { usePerformanceStore } from '@/components/PerformanceProvider'
+
+import ringFrag from './ring.frag'
+import ringVert from './ring.vert'
 
 export type RingUniforms = {
   uTime: number
@@ -29,7 +29,7 @@ const RingsShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
 const RingsShaderMaterial = extend(RingsShader)
 
 type Props = {
-  visible: boolean
+  isVisible: boolean
   shaderRef: Ref<ShaderMaterial & RingUniforms>
   rotationSpeed: number
   rotationPhase: number
@@ -38,7 +38,7 @@ type Props = {
 }
 
 const Ring: FC<Props> = ({
-  visible,
+  isVisible,
   shaderRef,
   rotationSpeed,
   rotationPhase,
@@ -47,7 +47,7 @@ const Ring: FC<Props> = ({
 }) => {
   const ringConfig = usePerformanceStore((s) => s.sceneConfig.ring)
   return (
-    <mesh visible={visible}>
+    <mesh visible={isVisible}>
       <torusGeometry
         args={[radius, tubeRadius, ringConfig.radialSegments, ringConfig.tubularSegments]}
       />

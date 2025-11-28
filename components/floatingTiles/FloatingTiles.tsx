@@ -1,6 +1,5 @@
 'use client'
 /* eslint-disable react-hooks/refs */
-
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import {
@@ -27,17 +26,17 @@ import {
   type Variable,
 } from 'three/addons/misc/GPUComputationRenderer.js'
 
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 import {
   COLUMNS,
   ROWS_RENDERED,
+  type RowData,
   SAFE_HEIGHT,
   TILE_SIZE,
   clamp,
-  type RowData,
 } from '@/utils/tiles'
 
 type FloatingTilesUniforms = {

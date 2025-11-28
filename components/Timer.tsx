@@ -2,7 +2,7 @@
 
 import { type FC, useEffect } from 'react'
 
-import { useGameStore, useGameStoreAPI } from './GameProvider'
+import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import { GameMode } from '@/stores/types'
 
 const Timer: FC = () => {

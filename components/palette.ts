@@ -1,6 +1,5 @@
 // Typescript colour helpers aligned with GLSL palettes
-
-import { css, CSS_LEVEL4, oklch, rgb as toLinearRgb, srgb } from '@thi.ng/color'
+import { CSS_LEVEL4, css, oklch, srgb, rgb as toLinearRgb } from '@thi.ng/color'
 import { type Vector3Tuple } from 'three'
 
 type PaletteGradientMode = 'rgb' | 'oklch'

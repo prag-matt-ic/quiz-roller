@@ -17,6 +17,7 @@ import {
 import { type InstancedBufferAttribute, Vector2 } from 'three'
 
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
@@ -32,7 +33,6 @@ import {
 
 import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 const INSTANCE_COUNT = COLUMNS * ROWS_RENDERED
 
@@ -127,10 +127,7 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
 
   useGameFrame(() => {
     if (!tileShader.current) return
-    tileShader.current.uPlayerWorldPos.set(
-      playerPosition.current.x,
-      playerPosition.current.z,
-    )
+    tileShader.current.uPlayerWorldPos.set(playerPosition.current.x, playerPosition.current.z)
   })
 
   useEffect(() => {

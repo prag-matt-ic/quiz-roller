@@ -8,21 +8,26 @@ uniform vec3 uEmissive;
 
 varying mediump vec3 vColor;
 
-void main() {
-  vec3 pos = position;
-  vec3 n = normal;
+// Normalized direction from (0.46, 0.8, 0.5)
+const vec3 LIGHT_DIR = vec3(0.4383, 0.7622, 0.4764);
 
+void main() {
+  // Rotation
   float angle = uTime * uRotationSpeed + uRotationPhase;
   float s = sin(angle);
   float c = cos(angle);
   mat2 rot = mat2(c, -s, s, c);
 
+  // Transform
+  vec3 pos = position;
+  vec3 n = normal;
+
   pos.xz = rot * pos.xz;
   n.xz = rot * n.xz;
 
+  // Lighting
   vec3 vNormal = normalize(normalMatrix * n);
-  const vec3 lightDir = vec3(0.46, 0.8, 0.5);
-  float diff = max(dot(vNormal, lightDir), 0.0);
+  float diff = max(dot(vNormal, LIGHT_DIR), 0.0);
   float lighting = 0.5 + 0.5 * diff;
 
   vColor = uColor * lighting + uEmissive * 0.4;

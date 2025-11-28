@@ -1,11 +1,13 @@
 import { createStore } from 'zustand'
-import { persist, subscribeWithSelector, type PersistOptions } from 'zustand/middleware'
+import { type PersistOptions, persist, subscribeWithSelector } from 'zustand/middleware'
+
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
-import { GameStore } from './types'
-import { createTimeSlice } from './timeSlice'
-import { createPlayerSlice } from './playerSlice'
+import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
+
 import { createGameSlice } from './gameSlice'
-import type { ServerSpeedRunSubmission, InsertSpeedRunResponse } from '@/model/schema'
+import { createPlayerSlice } from './playerSlice'
+import { createTimeSlice } from './timeSlice'
+import { GameStore } from './types'
 
 type PersistedStore = Pick<GameStore, 'username' | 'totalTimeS' | 'completedSpeedRuns'>
 

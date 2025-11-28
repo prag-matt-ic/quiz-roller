@@ -18,7 +18,7 @@ import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
-import useTime from '@/hooks/useTime'
+import { useTotalTime } from '@/hooks/useTime'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
@@ -121,11 +121,20 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   const timeContainer = useRef<HTMLDivElement | null>(null)
 
-  useTime((elapsedSeconds: number) => {
-    if (isVisibleStates[3] === false) return
-    if (!timeContainer.current) return
-    timeContainer.current.textContent = formatTotalTime(elapsedSeconds)
-  })
+  const onTimeChange = useCallback(
+    (elapsedSeconds: number) => {
+      console.log('Elapsed seconds:', {
+        elapsedSeconds,
+        isVisible: isVisibleStates[3],
+        timeContainer,
+      })
+      if (!timeContainer.current) return
+      timeContainer.current.textContent = formatTotalTime(elapsedSeconds)
+    },
+    [isVisibleStates],
+  )
+
+  const totalTime = useTotalTime(onTimeChange)
 
   function getContentForPlacementIndex(placementIndex: number) {
     if (placementIndex === 0)
@@ -163,7 +172,8 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
         </Card>
       )
 
-    if (placementIndex === 3) return <TotalTimeDisplay timeContainer={timeContainer} />
+    if (placementIndex === 3)
+      return <TotalTimeDisplay initialValue={totalTime} timeContainer={timeContainer} />
     if (placementIndex === 4) return <LeaderboardTable {...tableData} />
 
     return null
@@ -209,7 +219,7 @@ function getInfoZonePropsForIndex(
     return {
       infoContainerClassName: 'w-[328px] sm:w-[450px]',
       iconSrc: trophyIcon.src,
-      infoPositionOffset: [0, 12, 3],
+      infoPositionOffset: [0, 12, 5],
       infoContentHtmlProps: { transform: true },
     }
   }
@@ -235,16 +245,17 @@ const formatTotalTime = (elapsedSeconds: number): string => {
 }
 
 type TotalTimeDisplayProps = {
+  initialValue: RefObject<number>
   timeContainer: RefObject<HTMLDivElement | null>
 }
 
-const TotalTimeDisplay: FC<TotalTimeDisplayProps> = ({ timeContainer }) => {
+const TotalTimeDisplay: FC<TotalTimeDisplayProps> = ({ initialValue, timeContainer }) => {
   return (
     <section className="relative flex flex-col items-center justify-center gap-3 py-5 text-center">
       <div>
         <p className="text-sm font-medium text-white/80">TOTAL TIME</p>
-        <div ref={timeContainer} aria-live="polite" className="text-5xl font-bold">
-          00:00
+        <div ref={timeContainer} aria-live="polite" className="text-5xl font-bold sm:text-6xl">
+          {formatTotalTime(initialValue.current ?? 0)}
         </div>
       </div>
 

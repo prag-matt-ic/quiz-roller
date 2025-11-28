@@ -1,16 +1,19 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 
 import { useProgress } from '@react-three/drei'
-import { type FC, type TransitionEvent, useEffect, useState } from 'react'
-import { twJoin } from 'tailwind-merge'
-import { useSoundStore } from '@/components/SoundProvider'
 import { DownloadIcon, PlusIcon, RotateCw, Share2Icon, VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { type FC, type TransitionEvent, useEffect, useState } from 'react'
+import { twJoin } from 'tailwind-merge'
+
 import { useGameStore } from '@/components/GameProvider'
-import { GradientText } from '../ui/GradientText'
+import { useSoundStore } from '@/components/SoundProvider'
 import type { ButtonProps } from '@/components/ui/Button'
 import StartExperienceButton from '@/components/ui/StartExperienceButton'
 import { usePWA } from '@/hooks/usePWA'
+
+import { GradientText } from '../ui/GradientText'
 
 const Button = dynamic<ButtonProps>(() => import('@/components/ui/Button'))
 
