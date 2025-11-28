@@ -1,11 +1,11 @@
 // AnswerTile vertex shader (pass-through)
-#pragma glslify: fadeDistance = require('../../resources/glsl/fadeDistance.glsl')
+#pragma glslify: fadeDistance = require('../../../../resources/glsl/fadeDistance.glsl')
 
 precision mediump float;
 precision mediump int;
 
 uniform mediump float uAspect; // matches fragment shader expectation
-uniform mediump float uUseDistanceFade;
+uniform mediump float uDistanceFadeEnabled;
 
 varying mediump vec2 vUv;
 varying mediump vec2 vHeightSpacePosition;
@@ -21,7 +21,7 @@ void main() {
   vec4 worldPosition = modelMatrix * vec4(position, 1.0);
   vec4 viewPosition = viewMatrix * worldPosition;
 
-  if (uUseDistanceFade > 0.5) {
+  if (uDistanceFadeEnabled > 0.5) {
     vDistanceFade = fadeDistance(worldPosition.z);
   } else {
     vDistanceFade = 1.0;

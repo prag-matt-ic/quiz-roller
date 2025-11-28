@@ -1,7 +1,7 @@
 // Collectible Particle Point Vertex Shader (gem focused) - Optimized
 precision highp float;
 
-#pragma glslify: fadeDistance = require('../../../../resources/glsl/fadeDistance.glsl')
+#pragma glslify: fadeDistance = require('../../../../../../resources/glsl/fadeDistance.glsl')
 
 uniform float uBurstProgress; // 0.0 to 1.0
 uniform vec3 uGemPosition;

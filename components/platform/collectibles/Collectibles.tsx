@@ -7,12 +7,12 @@ import {
   type RefObject,
 } from 'react'
 
-import Collectible from '@/components/collectible/Collectible'
+import Collectible from '@/components/platform/collectibles/collectible/Collectible'
 import { COLLECTIBLE_IDS, type CollectibleID } from '@/model/schema'
-import { useGameStore } from '../GameProvider'
+import { useGameStore } from '../../GameProvider'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
-import useDynamicRigidBodies from './useDynamicRigidBodies'
+import useDynamicRigidBodies from '../useDynamicRigidBodies'
 
 export type CollectiblesHandle = {
   moveElements: (zStep: number) => void

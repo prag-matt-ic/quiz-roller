@@ -13,7 +13,7 @@ export const INITIAL_GAME_STATE = {
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
   isPlatformReady: false,
-  mode: GameMode.TEST,
+  mode: GameMode.MAIN,
   rowsData: [] as RowData[],
   htmlPortal: undefined,
   _isHydrated: false,

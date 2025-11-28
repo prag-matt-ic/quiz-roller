@@ -1,11 +1,12 @@
 precision highp float;
 
-#pragma glslify: fadeDistance = require('../../../resources/glsl/fadeDistance.glsl')
+#pragma glslify: fadeDistance = require('../../../../../resources/glsl/fadeDistance.glsl')
 
 attribute vec3 aBarycentric;
 
 uniform mediump float uConfirmingProgress;
 uniform highp float uTime;
+uniform mediump float uDistanceFadeEnabled;
 
 varying mediump vec3 vBarycentric;
 varying mediump vec3 vNormal;
@@ -27,11 +28,11 @@ void main() {
 
   vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 
-  #ifdef USE_DISTANCE_FADE
-    vCameraFade = fadeDistance(worldPosition.z);
-  #else
+  if (uDistanceFadeEnabled < 0.5) {
     vCameraFade = 1.0;
-  #endif
+  } else {
+    vCameraFade = fadeDistance(worldPosition.z);
+  }
 
   vec4 mvPosition = viewMatrix * worldPosition;
   vViewPosition = -mvPosition.xyz;

@@ -2,7 +2,7 @@
 precision mediump float;
 precision mediump int;
 
-#pragma glslify: paintCorners = require(../../resources/glsl/paintCorners.glsl)
+#pragma glslify: paintCorners = require(../../../../resources/glsl/paintCorners.glsl)
 
 uniform mediump float uConfirmingProgress;
 uniform mediump float uIsConfirming;

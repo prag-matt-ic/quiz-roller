@@ -10,7 +10,7 @@ export enum SceneQuality {
 }
 
 export type SceneConfig = {
-  useDistanceFade: boolean
+  isDistanceFadeEnabled: boolean
   player: {
     segments: number
     isFlat: boolean
@@ -49,7 +49,7 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
-    useDistanceFade: true,
+    isDistanceFadeEnabled: true,
     player: { segments: 64, isFlat: false },
     ring: { radialSegments: 12, tubularSegments: 24 },
     gem: { particleCount: 120 },
@@ -60,7 +60,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingHeading: { shouldRotate: true, useNoiseReveal: true, usePlayerFade: true },
   },
   [SceneQuality.MEDIUM]: {
-    useDistanceFade: true,
+    isDistanceFadeEnabled: true,
     player: { segments: 40, isFlat: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
     gem: { particleCount: 64 },
@@ -71,7 +71,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingHeading: { shouldRotate: false, useNoiseReveal: false, usePlayerFade: true },
   },
   [SceneQuality.LOW]: {
-    useDistanceFade: false,
+    isDistanceFadeEnabled: false,
     player: { segments: 24, isFlat: true },
     ring: { radialSegments: 6, tubularSegments: 12 },
     gem: { particleCount: 36 },

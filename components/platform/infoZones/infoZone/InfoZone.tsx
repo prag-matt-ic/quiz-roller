@@ -34,9 +34,9 @@ import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 
-import { InfoTileIcon, INFO_TILE_HEIGHT } from './infoTileIcon/InfoTileIcon'
 import fragmentShader from './infoZone.frag'
 import vertexShader from './infoZone.vert'
+import IconSphere from './iconSphere/IconSphere'
 
 gsap.registerPlugin(EasePack)
 
@@ -69,13 +69,12 @@ type Props = PropsWithChildren<{
   infoContentHtmlProps?: HtmlProps
 }>
 
-const ICON_BASE_CLEARANCE = TILE_SIZE * 0.5
-const INFO_TILE_POSITION: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
+const ICON_SPHERE_POSITION: Vector3Tuple = [0, 0, 3]
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
-  isVisible = false,
+  isVisible,
   position,
   width,
   height,
@@ -179,7 +178,8 @@ export const InfoZone: FC<Props> = ({
         onIntersectionExit={onIntersectionExit}
         collisionGroups={COLLISION_GROUPS.infoZoneSensor}
       />
-      <group visible={true}>
+      <group visible={isVisible}>
+        {/* Floor tile */}
         <mesh position={[0, 0, 0.03]} renderOrder={2}>
           <planeGeometry args={[width, height]} />
           <InfoZoneShaderMaterial
@@ -191,8 +191,13 @@ export const InfoZone: FC<Props> = ({
           />
         </mesh>
 
+        {/* Floating Icon Sphere */}
         <Suspense fallback={null}>
-          <InfoTileIcon position={INFO_TILE_POSITION} shouldHide={!showInfo} />
+          <IconSphere
+            position={ICON_SPHERE_POSITION}
+            isVisible={isVisible}
+            shouldHide={showInfo}
+          />
         </Suspense>
       </group>
       {/* Mesh to show where info content is placed. */}

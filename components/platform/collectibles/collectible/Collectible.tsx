@@ -14,7 +14,7 @@ import {
 import { shaderMaterial } from '@react-three/drei'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import Gem, { type GemShellRef } from '@/components/collectible/gem/Gem'
+import Gem, { type GemShellRef } from '@/components/platform/collectibles/collectible/gem/Gem'
 import { CollectibleID, type CollectibleUserData } from '@/model/schema'
 import { TILE_SIZE } from '@/utils/tiles'
 import vertexShader from './collectibleTile.vert'
@@ -36,7 +36,7 @@ type TileShaderUniforms = {
   uAspect: number
   uTilesX: number
   uTilesY: number
-  uUseDistanceFade: number
+  uDistanceFadeEnabled: number
 }
 
 const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
@@ -47,7 +47,7 @@ const INITIAL_ANSWER_TILE_UNIFORMS: TileShaderUniforms = {
   uAspect: 1,
   uTilesX: 5,
   uTilesY: 5,
-  uUseDistanceFade: 1,
+  uDistanceFadeEnabled: 1,
 }
 
 const CollectibleTileShader = shaderMaterial(
@@ -70,7 +70,7 @@ type Props = {
 export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVisible }) => {
   const isCollected = useGameStore((s) => s.collectedCollectibles.includes(id))
   const isConfirming = useGameStore((s) => s.confirmingCollectible === id)
-  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   const shader = useRef<typeof CollectibleTileShaderMaterial & TileShaderUniforms>(null)
   const gemShaderRef = useRef<GemShellRef>(null)
@@ -155,7 +155,7 @@ export const Collectible: FC<Props> = ({ ref, position, width, height, id, isVis
           uAspect={tileAspect}
           uTilesX={tilesX}
           uTilesY={tilesY}
-          uUseDistanceFade={useDistanceFade ? 1 : 0}
+          uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         />
       </mesh>
 

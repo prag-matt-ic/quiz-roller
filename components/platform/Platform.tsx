@@ -6,9 +6,11 @@ import { type FC, useEffect, useLayoutEffect, useRef } from 'react'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import FloatingHeadings, {
   type FloatingHeadingsHandle,
-} from '@/components/platform/FloatingHeadings'
-import Collectibles, { type CollectiblesHandle } from '@/components/platform/Collectibles'
-import InfoZones, { type InfoZonesHandle } from '@/components/platform/InfoZones'
+} from '@/components/platform/floatingHeadings/FloatingHeadings'
+import Collectibles, {
+  type CollectiblesHandle,
+} from '@/components/platform/collectibles/Collectibles'
+import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones/InfoZones'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import Rings, { type RingsHandle } from '@/components/platform/Rings'
 import FloatingTiles, {

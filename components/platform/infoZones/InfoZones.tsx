@@ -9,15 +9,17 @@ import {
 
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
-import { InfoZone } from '@/components/infoZone/InfoZone'
-import { useGameStore } from '../GameProvider'
+import { InfoZone } from '@/components/platform/infoZones/infoZone/InfoZone'
+import { useGameStore } from '@/components/GameProvider'
 import Card from '@/components/ui/Card'
 import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import useTime from '@/hooks/useTime'
-import useDynamicRigidBodies from './useDynamicRigidBodies'
+import useDynamicRigidBodies from '../useDynamicRigidBodies'
+
+const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 export type InfoZonesHandle = {
   moveElements: (zStep: number) => void
@@ -39,6 +41,17 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
       if (!row?.infoZonePlacements?.length) return
+      if (IS_DEV_ENV) {
+        console.warn('[InfoZones] Position requested', {
+          rowIndex: row.rowIndex,
+          stage: row.stage,
+          rowZ,
+          placements: row.infoZonePlacements.map(([, , relativeZ, contentIndex]) => ({
+            relativeZ,
+            contentIndex,
+          })),
+        })
+      }
       row.infoZonePlacements.forEach((placement) => {
         applyPlacement(placement, rowZ)
       })
@@ -50,6 +63,15 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
     (row: RowData | undefined) => {
       const placements = row?.infoZonePlacements
       if (!placements?.length) return
+      if (IS_DEV_ENV) {
+        console.log('[InfoZones] Hiding placements', {
+          rowIndex: row?.rowIndex,
+          stage: row?.stage,
+          placementIndexes: placements
+            .map((placement) => placement[3])
+            .filter((index): index is number => typeof index === 'number'),
+        })
+      }
       placements.forEach((placement) => {
         const contentIndex = placement[3]
         if (contentIndex == null) return

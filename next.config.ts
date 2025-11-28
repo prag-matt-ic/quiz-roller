@@ -13,7 +13,7 @@ const allowedDevOrigins = Array.from(new Set([...localNetworkOrigins, ...envOrig
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
-  reactCompiler: true,
+  reactCompiler: false,
   allowedDevOrigins,
   experimental: {
     cssChunking: true,

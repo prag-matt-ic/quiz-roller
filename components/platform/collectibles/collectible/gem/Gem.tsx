@@ -7,7 +7,13 @@ import { shaderMaterial } from '@react-three/drei'
 import gemShellVertex from './gemShell.vert'
 import gemShellFragment from './gemShell.frag'
 import Particles from './particles/Particles'
-import { OctahedronGeometry, Color, type Vector3Tuple, Float32BufferAttribute } from 'three'
+import {
+  OctahedronGeometry,
+  Color,
+  type Vector3Tuple,
+  Float32BufferAttribute,
+  AdditiveBlending,
+} from 'three'
 import { CollectibleID } from '@/model/schema'
 import { GEMS_BY_ID } from '@/resources/content'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
@@ -53,6 +59,7 @@ type GemShellUniforms = {
   uGlowStrength: number
   uConfirmingProgress: number
   uTime: number
+  uDistanceFadeEnabled: number
 }
 
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
@@ -68,6 +75,7 @@ const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
   uGlowStrength: GEM_GLOW_STRENGTH,
   uConfirmingProgress: 0,
   uTime: 0,
+  uDistanceFadeEnabled: 1,
 }
 
 const GemShellShader = shaderMaterial(
@@ -107,7 +115,7 @@ const Gem: FC<GemShellProps> = ({
     colour.offsetHSL(0, 0, 0.2)
     return colour
   }, [gemConfig])
-  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   return (
     <group
@@ -140,10 +148,10 @@ const Gem: FC<GemShellProps> = ({
           uOpacity={isCollected ? 0.35 : 0.15}
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}
+          blending={AdditiveBlending}
           uConfirmingProgress={isCollected ? 1 : 0}
           uTime={INITIAL_GEM_SHELL_UNIFORMS.uTime}
-          // TODO: having no effect when quality changes, move to a uniform instead.
-          defines={{ USE_DISTANCE_FADE: useDistanceFade ? 1 : 0 }}
+          uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         />
       </mesh>
     </group>

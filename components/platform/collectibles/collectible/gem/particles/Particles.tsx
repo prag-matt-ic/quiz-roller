@@ -97,7 +97,7 @@ const Particles: FC<Props> = ({
   isVisible,
 }) => {
   const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
-  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.useDistanceFade)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
   const dpr = useThree((s) => s.viewport.dpr)
   const materialRef = useRef<(typeof PointsShaderMaterial & PointsShaderUniforms) | null>(null)
 

@@ -1,11 +1,11 @@
 import { type FC, useEffect, useImperativeHandle, type RefObject, useCallback } from 'react'
 
-import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
+import { FloatingHeading } from '@/components/platform/floatingHeadings/floatingHeading/FloatingHeading'
 import { FLOATING_HEADINGS_CONTENT } from '@/resources/content'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
 import { HEADING_HEIGHT, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { useGameStore } from '@/components/GameProvider'
-import useDynamicMeshes from './useDynamicMeshes'
+import useDynamicMeshes from '../useDynamicMeshes'
 import { type Vector3Tuple } from 'three'
 
 export type FloatingHeadingsHandle = {
