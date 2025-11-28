@@ -14,7 +14,6 @@ import {
   type Vector3Tuple,
 } from 'three'
 
-import infoIcon from '@/assets/icons/info-icon.png'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 
 import sphereFragment from './iconSphere.frag'
@@ -85,17 +84,18 @@ const GemShellShader = shaderMaterial(
 const GemShellShaderMaterial = extend(GemShellShader)
 
 export type IconSphereProps = {
+  iconSrc: string
   shouldHide: boolean
   isVisible: boolean
 }
 
-const IconSphere: FC<IconSphereProps> = ({ shouldHide, isVisible }) => {
+const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => {
   const shader = useRef<typeof GemShellShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   const hasInitialized = useRef(false)
 
-  const iconTexture = useTexture(infoIcon.src)
+  const iconTexture = useTexture(iconSrc)
   const spriteMaterialRef = useRef<SpriteMaterial>(null)
 
   useGSAP(

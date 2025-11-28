@@ -32,7 +32,12 @@ import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import { TILE_SIZE } from '@/utils/tiles'
+import {
+  INFO_ZONE_COLS,
+  INFO_ZONE_HEIGHT,
+  INFO_ZONE_ROWS,
+  INFO_ZONE_WIDTH,
+} from '@/utils/platform/infoZoneDimensions'
 
 import IconSphere from './iconSphere/IconSphere'
 import fragmentShader from './infoZone.frag'
@@ -61,28 +66,24 @@ type Props = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
   isVisible: boolean
   position: Vector3Tuple
-  width: number
-  height: number
   infoContainerClassName?: string
   infoPositionOffset?: Vector3Tuple
   alwaysShowInfo?: boolean
   infoContentHtmlProps?: HtmlProps
+  iconSrc: string
 }>
-
-const ICON_SPHERE_POSITION: Vector3Tuple = [0, 0, 3]
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
   ref,
   isVisible,
   position,
-  width,
-  height,
   infoContainerClassName,
   children,
   infoPositionOffset = [0, 0, 4],
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
+  iconSrc,
 }) => {
   const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
@@ -153,9 +154,9 @@ export const InfoZone: FC<Props> = ({
     type: 'info-zone',
   }
 
-  const aspect = width / height
-  const tilesX = width / TILE_SIZE
-  const tilesY = height / TILE_SIZE
+  const aspect = INFO_ZONE_WIDTH / INFO_ZONE_HEIGHT
+  const tilesX = INFO_ZONE_COLS
+  const tilesY = INFO_ZONE_ROWS
 
   return (
     <RigidBody
@@ -170,7 +171,7 @@ export const InfoZone: FC<Props> = ({
       colliders={false}
       userData={userData}>
       <CuboidCollider
-        args={[width / 2, height / 2, PLAYER_RADIUS * 2]}
+        args={[INFO_ZONE_WIDTH / 2, INFO_ZONE_HEIGHT / 2, PLAYER_RADIUS * 2]}
         sensor={true}
         mass={0}
         friction={0}
@@ -181,7 +182,7 @@ export const InfoZone: FC<Props> = ({
       <group visible={isVisible}>
         {/* Floor tile */}
         <mesh position={[0, 0, 0.03]} renderOrder={2}>
-          <planeGeometry args={[width, height]} />
+          <planeGeometry args={[INFO_ZONE_WIDTH, INFO_ZONE_HEIGHT]} />
           <InfoZoneShaderMaterial
             key={InfoZoneShader.key}
             transparent={true}
@@ -193,11 +194,7 @@ export const InfoZone: FC<Props> = ({
 
         {/* Floating Icon Sphere */}
         <Suspense fallback={null}>
-          <IconSphere
-            position={ICON_SPHERE_POSITION}
-            isVisible={isVisible}
-            shouldHide={showInfo}
-          />
+          <IconSphere iconSrc={iconSrc} isVisible={isVisible} shouldHide={showInfo} />
         </Suspense>
       </group>
       {/* Mesh to show where info content is placed. */}

@@ -3,13 +3,12 @@
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import { type FC, Suspense, useLayoutEffect, useRef } from 'react'
-import { BufferAttribute, Texture, type PlaneGeometry } from 'three'
+import { BufferAttribute, type PlaneGeometry, Texture } from 'three'
 
-import { TILE_SIZE } from '@/utils/tiles'
-
+import backdrop from '@/assets/textures/backdrop/bg-1.webp'
 import fragmentShader from '@/components/backdrop/backdrop.frag'
 import vertexShader from '@/components/backdrop/backdrop.vert'
-import backdrop from '@/assets/textures/backdrop/bg-1.webp'
+import { TILE_SIZE } from '@/utils/tiles'
 
 const BACKDROP_SEGMENT_COUNT = 6
 const BACKDROP_FLOOR_RATIO = 1

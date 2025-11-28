@@ -7,18 +7,19 @@ import {
   useRef,
 } from 'react'
 
+import infoIcon from '@/assets/icons/info-icon.png'
+import timerIcon from '@/assets/icons/timer-icon.png'
+import trophyIcon from '@/assets/icons/trophy-icon.png'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone } from '@/components/platform/infoZones/infoZone/InfoZone'
+import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
 import Card from '@/components/ui/Card'
 import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import useTime from '@/hooks/useTime'
-import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
-
-import useDynamicRigidBodies from '../useDynamicRigidBodies'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
@@ -65,7 +66,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
       const placements = row?.infoZonePlacements
       if (!placements?.length) return
       if (IS_DEV_ENV) {
-        console.log('[InfoZones] Hiding placements', {
+        console.warn('[InfoZones] Hiding placements', {
           rowIndex: row?.rowIndex,
           stage: row?.stage,
           placementIndexes: placements
@@ -121,9 +122,8 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const timeContainer = useRef<HTMLDivElement | null>(null)
 
   useTime((elapsedSeconds: number) => {
-    if (!timeContainer.current) return
     if (isVisibleStates[3] === false) return
-    console.log('[InfoZones] Updating total time display:', elapsedSeconds)
+    if (!timeContainer.current) return
     timeContainer.current.textContent = formatTotalTime(elapsedSeconds)
   })
 
@@ -177,8 +177,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
             key={`info-zone-${index}`}
             ref={ref}
             position={HIDDEN_POSITION}
-            width={INFO_ZONE_WIDTH}
-            height={INFO_ZONE_HEIGHT}
+            iconSrc={getIconSrcForPlacementIndex(index)}
             infoContainerClassName={getInfoContainerClassNameForPlacementIndex(index)}
             isVisible={isVisibleStates[index]}>
             {getContentForPlacementIndex(index)}
@@ -194,6 +193,12 @@ export default InfoZones
 function getInfoContainerClassNameForPlacementIndex(placementIndex: number): string {
   if (placementIndex < 3) return 'grid w-[328px] sm:w-160 grid-cols-1 gap-3'
   return 'w-[328px] sm:w-[450px]'
+}
+
+function getIconSrcForPlacementIndex(placementIndex: number): string {
+  if (placementIndex === 3) return timerIcon.src
+  if (placementIndex === 4) return trophyIcon.src
+  return infoIcon.src
 }
 
 const pad = (value: number): string => value.toString().padStart(2, '0')
@@ -219,7 +224,9 @@ const TotalTimeDisplay: FC<TotalTimeDisplayProps> = ({ timeContainer }) => {
     <section className="relative flex flex-col items-center justify-center gap-3 py-5 text-center">
       <div>
         <p className="text-sm font-medium text-white/80">TOTAL TIME</p>
-        <div ref={timeContainer} aria-live="polite" className="text-5xl font-bold"></div>
+        <div ref={timeContainer} aria-live="polite" className="text-5xl font-bold">
+          00:00
+        </div>
       </div>
 
       <div className="h-px w-40 bg-white/20" />

@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, type RefObject, Suspense, useEffect, useMemo, useRef } from 'react'
+import { type FC, type RefObject, useEffect, useMemo, useRef } from 'react'
 import { BackSide, Mesh, type Texture, Vector2, Vector3, type Vector3Tuple } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
@@ -65,10 +65,6 @@ const FloatingHeadingShader = shaderMaterial(
 )
 
 const FloatingHeadingMaterial = extend(FloatingHeadingShader)
-
-// TODO:
-// - only the first floating heading (content index=0) should fade-in automatically using GSAP - because it is already in view
-// - other headings will fade in using the distance fade shader logic
 
 export const FloatingHeading: FC<Props> = ({
   text,
