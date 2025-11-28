@@ -495,8 +495,6 @@ const Platform: FC = () => {
 
     currentScrollPosition.current += zStep
 
-    const totalScrollDelta = currentScrollPosition.current - previousScroll
-
     if (!!targetScrollPosition.current) {
       currentScrollPosition.current = lerp(
         currentScrollPosition.current,
@@ -509,6 +507,8 @@ const Platform: FC = () => {
         onScrollComplete()
       }
     }
+
+    const totalScrollDelta = currentScrollPosition.current - previousScroll
 
     updateTiles()
     floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
