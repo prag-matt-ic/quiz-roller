@@ -39,7 +39,7 @@ void main() {
   vec3 litSurface = uSurfaceColor * (0.6 + 0.4 * lambert + glowContribution);
 
   vec3 finalColor = mix(litSurface, uLineColor, wire);
-  float alpha = clamp(uOpacity + wire * 0.35 + glowContribution * 0.3, 0.0, 1.0);
+  float alpha = clamp(uOpacity + wire * 0.4 + glowContribution * 0.3, 0.0, 1.0);
 
   // Vertical reveal logic
   // Range approx -1.75 to 1.75

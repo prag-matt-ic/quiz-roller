@@ -1,22 +1,23 @@
 'use client'
 
-import { type RefObject, type FC, useMemo } from 'react'
-import { extend } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
-
-import gemShellVertex from './gemShell.vert'
-import gemShellFragment from './gemShell.frag'
-import Particles from './particles/Particles'
+import { extend } from '@react-three/fiber'
+import { type FC, type RefObject, useMemo } from 'react'
 import {
-  OctahedronGeometry,
-  Color,
-  type Vector3Tuple,
-  Float32BufferAttribute,
   AdditiveBlending,
+  Color,
+  Float32BufferAttribute,
+  OctahedronGeometry,
+  type Vector3Tuple,
 } from 'three'
+
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { CollectibleID } from '@/model/schema'
 import { GEMS_BY_ID } from '@/resources/content'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
+
+import gemShellFragment from './gemShell.frag'
+import gemShellVertex from './gemShell.vert'
+import Particles from './particles/Particles'
 
 const GEM_RADIUS = 1.25
 const BASE_GEOMETRY = new OctahedronGeometry(GEM_RADIUS, 0)
@@ -145,7 +146,7 @@ const Gem: FC<GemShellProps> = ({
           toneMapped={false}
           uSurfaceColor={surfaceColor}
           uLineColor={lineColor}
-          uOpacity={isCollected ? 0.35 : 0.15}
+          uOpacity={isCollected ? 0.4 : 0.2}
           uLineWidth={GEM_LINE_WIDTH}
           uGlowStrength={GEM_GLOW_STRENGTH}
           uConfirmingProgress={isCollected ? 1 : 0}

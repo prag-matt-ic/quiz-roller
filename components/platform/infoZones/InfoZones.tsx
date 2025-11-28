@@ -11,7 +11,7 @@ import infoIcon from '@/assets/icons/info-icon.png'
 import timerIcon from '@/assets/icons/timer-icon.png'
 import trophyIcon from '@/assets/icons/trophy-icon.png'
 import { useGameStore } from '@/components/GameProvider'
-import { InfoZone } from '@/components/platform/infoZones/infoZone/InfoZone'
+import { InfoZone, InfoZoneProps } from '@/components/platform/infoZones/infoZone/InfoZone'
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
 import Card from '@/components/ui/Card'
 import {
@@ -177,9 +177,8 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
             key={`info-zone-${index}`}
             ref={ref}
             position={HIDDEN_POSITION}
-            iconSrc={getIconSrcForPlacementIndex(index)}
-            infoContainerClassName={getInfoContainerClassNameForPlacementIndex(index)}
-            isVisible={isVisibleStates[index]}>
+            isVisible={isVisibleStates[index]}
+            {...getInfoZonePropsForIndex(index)}>
             {getContentForPlacementIndex(index)}
           </InfoZone>
         )
@@ -190,15 +189,35 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
 export default InfoZones
 
-function getInfoContainerClassNameForPlacementIndex(placementIndex: number): string {
-  if (placementIndex < 3) return 'grid w-[328px] sm:w-160 grid-cols-1 gap-3'
-  return 'w-[328px] sm:w-[450px]'
-}
-
-function getIconSrcForPlacementIndex(placementIndex: number): string {
-  if (placementIndex === 3) return timerIcon.src
-  if (placementIndex === 4) return trophyIcon.src
-  return infoIcon.src
+function getInfoZonePropsForIndex(
+  placementIndex: number,
+): Pick<
+  InfoZoneProps,
+  'infoContainerClassName' | 'iconSrc' | 'infoContentHtmlProps' | 'infoPositionOffset'
+> {
+  if (placementIndex === 3) {
+    // Total time display
+    return {
+      infoContainerClassName: 'w-[280px] sm:w-[320px]',
+      iconSrc: timerIcon.src,
+      infoPositionOffset: [0, 8, 4],
+      infoContentHtmlProps: { transform: true },
+    }
+  }
+  if (placementIndex === 4) {
+    // Leaderboard
+    return {
+      infoContainerClassName: 'w-[328px] sm:w-[450px]',
+      iconSrc: trophyIcon.src,
+      infoPositionOffset: [0, 12, 3],
+      infoContentHtmlProps: { transform: true },
+    }
+  }
+  // Info Card
+  return {
+    infoContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
+    iconSrc: infoIcon.src,
+  }
 }
 
 const pad = (value: number): string => value.toString().padStart(2, '0')

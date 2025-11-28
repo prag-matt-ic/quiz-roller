@@ -62,7 +62,7 @@ const INITIAL_UNIFORMS: InfoZoneShaderUniforms = {
 const InfoZoneShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentShader)
 const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
-type Props = PropsWithChildren<{
+export type InfoZoneProps = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
   isVisible: boolean
   position: Vector3Tuple
@@ -74,7 +74,7 @@ type Props = PropsWithChildren<{
 }>
 
 // Shows HTML content when the player enters the zone
-export const InfoZone: FC<Props> = ({
+export const InfoZone: FC<InfoZoneProps> = ({
   ref,
   isVisible,
   position,
