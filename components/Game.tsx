@@ -68,8 +68,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         onDecline={() => onPerformanceChange(false)}
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
-        <OrbitControls />
-        {/* <Camera isMobile={isMobile} positions={cameraPositions} /> */}
+        {/* <OrbitControls /> */}
+        <Camera isMobile={isMobile} positions={cameraPositions} />
         {isDebug && <Stats />}
         <Backdrop />
         <Suspense>
