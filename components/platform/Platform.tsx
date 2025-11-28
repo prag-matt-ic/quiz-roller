@@ -10,7 +10,6 @@ import FloatingHeadings, {
 import Collectibles, { type CollectiblesHandle } from '@/components/platform/Collectibles'
 import InfoZones, { type InfoZonesHandle } from '@/components/platform/InfoZones'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
-import CTAElements, { type CTAElementsHandle } from '@/components/platform/cta/CTAElements' // changed from lowercase and wont allow name CTAElements
 import Rings, { type RingsHandle } from '@/components/platform/Rings'
 import FloatingTiles, {
   type FloatingTilesHandle,
@@ -75,7 +74,7 @@ const warnVisibilityCoverageIfNeeded = (() => {
   }
 })()
 
-function getRowAlpha(rowZ: number, playerZ: number) {
+function getRowAlpha(rowZ: number, playerZ: number): number {
   const dz = rowZ - playerZ
   const distSq = dz * dz
   const fadeT = clamp((distSq - FADE_FULL_RADIUS_SQ) / ROW_FADE_DENOM, 0, 1)
@@ -119,7 +118,6 @@ const Platform: FC = () => {
   const floatingHeadings = useRef<FloatingHeadingsHandle | null>(null)
   const collectibles = useRef<CollectiblesHandle | null>(null)
   const infoZones = useRef<InfoZonesHandle | null>(null)
-  const ctaElements = useRef<CTAElementsHandle | null>(null)
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
@@ -130,7 +128,6 @@ const Platform: FC = () => {
     if (!hasRows) return
 
     const shouldSkipReadyCheck = (key: ReadyStateKey) => {
-      if (isSpeedRunMode && key === 'cta') return true
       if (!isSpeedRunMode && key === 'speedRun') return true
       return false
     }
@@ -279,9 +276,6 @@ const Platform: FC = () => {
     infoZones.current?.hideElementsIfNeeded(row)
 
     switch (row.stage) {
-      case Stage.CTA:
-        ctaElements.current?.hideElementsIfNeeded(row)
-        break
       case Stage.SPEED_RUN_FINISH:
         speedRunElements.current?.hideElementsIfNeeded(row)
         break
@@ -299,9 +293,6 @@ const Platform: FC = () => {
     infoZones.current?.positionElementsIfNeeded(row, rowZ)
 
     switch (row.stage) {
-      case Stage.CTA:
-        ctaElements.current?.positionElementsIfNeeded(row, rowZ)
-        break
       case Stage.SPEED_RUN_FINISH:
         speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
         break
@@ -488,7 +479,6 @@ const Platform: FC = () => {
     ) {
       return
     }
-    if (!isSpeedRunMode && !ctaElements.current) return
     if (isSpeedRunMode && !speedRunElements.current) return
 
     tiles.current.shader.uScrollZ = currentScrollPosition.current
@@ -518,8 +508,6 @@ const Platform: FC = () => {
 
     if (isSpeedRunMode) {
       speedRunElements.current?.moveElements(totalScrollDelta)
-    } else {
-      ctaElements.current?.moveElements(totalScrollDelta)
     }
   })
 
@@ -564,14 +552,6 @@ const Platform: FC = () => {
         key={`${resetPlatformTick}-rings`}
         onReadyChange={readyChangeHandlers.rings}
       />
-
-      {!isSpeedRunMode && (
-        <CTAElements
-          ref={ctaElements}
-          key={`${resetPlatformTick}-cta`}
-          onReadyChange={readyChangeHandlers.cta}
-        />
-      )}
 
       {isSpeedRunMode && (
         <SpeedRunElements

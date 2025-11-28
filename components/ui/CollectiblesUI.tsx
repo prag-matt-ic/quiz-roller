@@ -19,7 +19,7 @@ import { COLLECTIBLES_CONTENT, GEMS_BY_ID } from '@/resources/content'
 
 export const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
-  const totalRingsCount = useGameStore((s) => s.totalRingsCount)
+  const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (

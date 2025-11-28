@@ -3,12 +3,12 @@ import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
 import { INITIAL_TIME_STATE } from './timeSlice'
 import { INITIAL_PLAYER_STATE, PLAYER_INITIAL_POSITION_VEC3 } from './playerSlice'
 import type { RowData } from '@/utils/tiles'
+import { createTotalCounts } from './totalCounts'
 
 export const INITIAL_GAME_STATE = {
   stage: Stage.HOME,
   hudIndicator: MOVE_HUD_INDICATOR,
-  totalRows: 100,
-  totalRingsCount: 0,
+  totalCounts: createTotalCounts(),
   currentRow: 0,
   cameraLookAtPosition: null,
   resetPlatformTick: 0,
@@ -39,8 +39,11 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   setPlatformReady: (isPlatformReady) => {
     set({ isPlatformReady })
   },
-  setRowsData: (rowsData) => {
-    set({ rowsData, totalRows: rowsData.length, isPlatformReady: false })
+  setRowsData: (rowsData, totalCounts) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[GameSlice] Setting rows data`, { totalCounts })
+    }
+    set({ rowsData, totalCounts, isPlatformReady: false })
   },
   setMode: (mode) => {
     set((state) => {
@@ -48,15 +51,11 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       return {
         mode,
         rowsData: [],
-        totalRows: 0,
-        totalRingsCount: 0,
+        totalCounts: createTotalCounts(),
         isPlatformReady: false,
         resetPlatformTick: state.resetPlatformTick + 1,
       }
     })
-  },
-  setTotalRingsCount: (totalRingsCount) => {
-    set({ totalRingsCount })
   },
   goToStage: (newStage: Stage) => {
     if (newStage === Stage.HOME) {
@@ -83,8 +82,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         ...INITIAL_PLAYER_STATE,
         mode,
         rowsData: nextRowsData,
-        totalRows: nextRowsData.length,
-        totalRingsCount: isModeChange ? 0 : s.totalRingsCount,
+        totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         completedSpeedRuns: s.completedSpeedRuns,
         speedRunStage: speedRunStage ?? INITIAL_TIME_STATE.speedRunStage,
         playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),

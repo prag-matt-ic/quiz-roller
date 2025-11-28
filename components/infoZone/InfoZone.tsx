@@ -63,7 +63,7 @@ type Props = PropsWithChildren<{
 }>
 
 const ICON_BASE_CLEARANCE = TILE_SIZE * 0.5
-const infoTilePositionOffset: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
+const INFO_TILE_POSITION: Vector3Tuple = [0, 0, INFO_TILE_HEIGHT / 2 + ICON_BASE_CLEARANCE]
 
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<Props> = ({
@@ -186,7 +186,7 @@ export const InfoZone: FC<Props> = ({
             />
           </mesh>
 
-          {/* <InfoTile position={infoTilePositionOffset} showInfo={showInfo} /> */}
+          <InfoTile position={INFO_TILE_POSITION} showInfo={showInfo} />
         </group>
         {/* Mesh to show where info content is placed. */}
         {/* <mesh position={infoPositionOffset}>

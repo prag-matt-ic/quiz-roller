@@ -6,7 +6,6 @@ type ReadyState = {
   headings: boolean
   collectibles: boolean
   infoZones: boolean
-  cta: boolean
   speedRun: boolean
   floatingTiles: boolean
 }
@@ -19,7 +18,6 @@ const INITIAL_READY_STATE: ReadyState = {
   headings: false,
   collectibles: false,
   infoZones: false,
-  cta: false,
   speedRun: false,
   floatingTiles: false,
 }

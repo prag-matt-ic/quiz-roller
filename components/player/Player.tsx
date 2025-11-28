@@ -192,8 +192,8 @@ const Player: FC = () => {
 
     setPlayerPosition(nextPosition.current)
 
-    const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
-    setEdgeWarningIntensities(edgeWarnings)
+    // const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
+    // setEdgeWarningIntensities(edgeWarnings)
   })
 
   useEffect(() => {

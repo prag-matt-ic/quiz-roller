@@ -4,6 +4,7 @@ import { type StateCreator } from 'zustand'
 import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
 import type { RowData } from '@/utils/tiles'
+import type { TotalCounts } from '@/stores/totalCounts'
 
 export enum Stage {
   HOME = 1,
@@ -101,10 +102,9 @@ export type GameSlice = {
   setHudIndicator: (indicator: HudIndicatorConfig | null) => void
 
   rowsData: RowData[]
-  setRowsData: (rows: RowData[]) => void
-  totalRows: number
-  totalRingsCount: number
-  setTotalRingsCount: (count: number) => void
+  totalCounts: TotalCounts
+  setRowsData: (rows: RowData[], totalCounts: TotalCounts) => void
+
   currentRow: number
   setCurrentRow: (row: number) => void
   mode: GameMode

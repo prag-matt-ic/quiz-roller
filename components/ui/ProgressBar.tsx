@@ -4,7 +4,7 @@ import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import { EMPTY_ROW_INDEX } from '../platform/usePlayerRespawn'
 
 const ProgressBar: FC = () => {
-  const totalRows = useGameStore((s) => s.totalRows)
+  const totalRows = useGameStore((s) => s.totalCounts.rows)
   const gameStoreAPI = useGameStoreAPI()
   const barRef = useRef<HTMLDivElement | null>(null)
   const totalRowsRef = useRef(totalRows)

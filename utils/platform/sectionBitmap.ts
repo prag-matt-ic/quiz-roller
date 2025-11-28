@@ -1,4 +1,5 @@
 import { Stage } from '@/stores/types'
+import type { TotalCounts } from '@/stores/totalCounts'
 import {
   colToX,
   COLUMNS,
@@ -31,25 +32,10 @@ type BitmapRow = {
   floatingHeadingPlacement?: BitmapPlacement | null
 }
 
-export type RowContentIndexes = {
-  row: number
-  heading: number
-  infoZone: number
-  collectible: number
-}
-
-type PlacementIndexKey = Exclude<keyof RowContentIndexes, 'row'>
-
-export const createRowContentIndexes = (): RowContentIndexes => ({
-  row: 0,
-  heading: 0,
-  infoZone: 0,
-  collectible: 0,
-})
+type PlacementIndexKey = Exclude<keyof TotalCounts, 'rows' | 'rings'>
 
 export type SectionBitmapParseResult = {
   rows: RowData[]
-  totalRingsCount: number
 }
 
 const COLOUR_CODES = {
@@ -68,7 +54,7 @@ const isColour = (r: number, g: number, b: number, [cr, cg, cb]: readonly number
 export function parseSectionBitmap(
   image: HTMLImageElement,
   stage: Stage,
-  globalIndexes: RowContentIndexes,
+  totalCounts: TotalCounts,
 ): SectionBitmapParseResult {
   if (typeof window === 'undefined') {
     throw new Error('parseSectionBitmap must run in the browser')
@@ -193,11 +179,11 @@ export function parseSectionBitmap(
   context.canvas.height = 0
 
   const totalRingsCount = rows.reduce((count, row) => count + row.ringColumns.length, 0)
-  const rowData = buildRowDataFromBitmapRows({ rows, stage, globalIndexes })
+  const rowData = buildRowDataFromBitmapRows({ rows, stage, globalIndexes: totalCounts })
+  totalCounts.rings += totalRingsCount
 
   return {
     rows: rowData,
-    totalRingsCount,
   }
 }
 
@@ -302,7 +288,7 @@ function buildRowDataFromBitmapRows({
 }: {
   rows: BitmapRow[]
   stage: Stage
-  globalIndexes: RowContentIndexes
+  globalIndexes: TotalCounts
 }): RowData[] {
   const rowCount = rows.length
   if (rowCount <= 0) return []
@@ -318,10 +304,10 @@ function buildRowDataFromBitmapRows({
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === rowCount - 1,
       isHighlighted: [],
-      rowIndex: globalIndexes.row,
+      rowIndex: globalIndexes.rows,
     }
 
-    globalIndexes.row++
+    globalIndexes.rows++
 
     applyRingColumns(baseRow, layoutRow.ringColumns)
     applyInfoColumns(baseRow, layoutRow, globalIndexes)
@@ -346,15 +332,15 @@ function applyRingColumns(row: RowData, columns?: number[]) {
   row.ringPositions = ringPositions
 }
 
-function applyInfoColumns(row: RowData, layoutRow: BitmapRow, globalIndexes: RowContentIndexes) {
+function applyInfoColumns(row: RowData, layoutRow: BitmapRow, globalIndexes: TotalCounts) {
   const placements =
     buildPlacementsFromBitmap(
       layoutRow.infoZonePlacements,
       ON_TILE_Y,
-      'infoZone',
+      'infoZones',
       globalIndexes,
     ) ??
-    buildPlacementsFromColumns(layoutRow.infoZoneColumns, ON_TILE_Y, 'infoZone', globalIndexes)
+    buildPlacementsFromColumns(layoutRow.infoZoneColumns, ON_TILE_Y, 'infoZones', globalIndexes)
 
   if (placements?.length) {
     row.infoZonePlacements = placements
@@ -364,19 +350,19 @@ function applyInfoColumns(row: RowData, layoutRow: BitmapRow, globalIndexes: Row
 function applyCollectiblePlacements(
   row: RowData,
   layoutRow: BitmapRow,
-  globalIndexes: RowContentIndexes,
+  globalIndexes: TotalCounts,
 ) {
   const placements =
     buildPlacementsFromBitmap(
       layoutRow.collectiblePlacements,
       ON_TILE_Y,
-      'collectible',
+      'collectibles',
       globalIndexes,
     ) ??
     buildPlacementsFromColumns(
       layoutRow.collectibleColumns,
       ON_TILE_Y,
-      'collectible',
+      'collectibles',
       globalIndexes,
     )
 
@@ -412,7 +398,7 @@ function applyHighlightColumns(row: RowData, columns?: number[]) {
 function applyFloatingHeadingPlacement(
   row: RowData,
   layoutRow: BitmapRow,
-  globalIndexes: RowContentIndexes,
+  globalIndexes: TotalCounts,
 ) {
   const placement = layoutRow.floatingHeadingPlacement
   if (!placement) return
@@ -421,7 +407,7 @@ function applyFloatingHeadingPlacement(
     columnIndex,
     zOffset,
     HEADING_Y,
-    'heading',
+    'headings',
     globalIndexes,
   )
   if (indexedPlacement) {
@@ -433,7 +419,7 @@ function buildPlacementsFromBitmap(
   placements: BitmapPlacement[] | undefined,
   y: number,
   indexKey: PlacementIndexKey,
-  globalIndexes: RowContentIndexes,
+  globalIndexes: TotalCounts,
 ): IndexedPlacement[] | undefined {
   if (!placements?.length) return undefined
   const indexedPlacements: IndexedPlacement[] = []
@@ -450,7 +436,7 @@ function buildPlacementsFromColumns(
   columns: number[] | undefined,
   y: number,
   indexKey: PlacementIndexKey,
-  globalIndexes: RowContentIndexes,
+  globalIndexes: TotalCounts,
 ): IndexedPlacement[] | undefined {
   if (!columns?.length) return undefined
   const indexedPlacements: IndexedPlacement[] = []
@@ -468,7 +454,7 @@ function createIndexedPlacement(
   zOffset: number,
   y: number,
   indexKey: PlacementIndexKey,
-  globalIndexes: RowContentIndexes,
+  globalIndexes: TotalCounts,
 ): IndexedPlacement | null {
   if (columnIndex < 0 || columnIndex >= COLUMNS) return null
   const placementIndex = globalIndexes[indexKey]

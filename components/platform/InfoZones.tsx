@@ -18,7 +18,13 @@ import {
 } from '@/utils/tiles'
 import { INFO_ZONE_HEIGHT, INFO_ZONE_WIDTH } from '@/utils/platform/infoZoneDimensions'
 import { InfoZone } from '@/components/infoZone/InfoZone'
-import { INFO_ZONES_CONTENT } from '@/resources/content'
+import { useGameStore } from '../GameProvider'
+import Card from '@/components/ui/Card'
+import {
+  LeaderboardTable,
+  useLeaderboardTableData,
+} from '@/components/ui/speedRun/LeaderboardTable'
+import useTime from '@/hooks/useTime'
 
 const INITIAL_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
@@ -38,25 +44,48 @@ type Props = {
   onReadyChange: (isReady: boolean) => void
 }
 
+const createRefsFromCount = (count: number): RefObject<RapierRigidBody | null>[] => {
+  return Array.from({ length: count }, () => createRef<RapierRigidBody | null>())
+}
+
+const createIsVisibleStatesFromCount = (count: number): boolean[] => {
+  return Array.from({ length: count }, () => false)
+}
+
+const createAssignmentsFromCount = (count: number): Assignment[] => {
+  return Array.from({ length: count }, () => ({ rowIndex: null, placementIndex: null }))
+}
+
 const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
-  const [refs] = useState(INFO_ZONES_CONTENT.map(() => createRef<RapierRigidBody | null>()))
+  const totalCount = useGameStore((s) => s.totalCounts.infoZones)
+  const [refs, setRefs] = useState(() => createRefsFromCount(totalCount))
   const [isVisibleStates, setIsVisibleStates] = useState<boolean[]>(() =>
-    INFO_ZONES_CONTENT.map(() => false),
+    createIsVisibleStatesFromCount(totalCount),
   )
-  const assignments = useRef<Assignment[]>(
-    INFO_ZONES_CONTENT.map(() => ({ rowIndex: null, placementIndex: null })),
-  )
+  const assignments = useRef<Assignment[]>(createAssignmentsFromCount(totalCount))
+
+  useEffect(() => {
+    console.log('[InfoZones] Adjusting pool size to', totalCount)
+    if (assignments.current.length === totalCount) return
+    assignments.current = createAssignmentsFromCount(totalCount)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsVisibleStates(createIsVisibleStatesFromCount(totalCount))
+    setRefs(createRefsFromCount(totalCount))
+  }, [totalCount])
 
   const translation = useRef({ x: 0, y: 0, z: 0 })
 
-  const setIsVisibleState = useCallback((index: number, value: boolean) => {
-    setIsVisibleStates((prev) => {
-      if (prev[index] === value) return prev
-      const next = [...prev]
-      next[index] = value
-      return next
-    })
-  }, [])
+  const setIsVisibleState = useCallback(
+    (index: number, value: boolean) => {
+      setIsVisibleStates((prev) => {
+        if (prev[index] === value) return prev
+        const next = [...prev]
+        next[index] = value
+        return next
+      })
+    },
+    [setIsVisibleStates],
+  )
 
   const setPosition = useCallback(
     (index: number, x: number, y: number, z: number) => {
@@ -184,7 +213,6 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   return (
     <>
       {refs.map((ref, index) => {
-        const content = INFO_ZONES_CONTENT[index]
         return (
           <InfoZone
             key={`info-zone-${index}`}
@@ -192,9 +220,9 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
             position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
             width={INFO_ZONE_WIDTH}
             height={INFO_ZONE_HEIGHT}
-            infoContainerClassName={content.containerClassName}
+            infoContainerClassName={getInfoContainerClassNameForPlacementIndex(index)}
             isVisible={isVisibleStates[index]}>
-            {content.content ?? null}
+            {getContentForPlacementIndex(index)}
           </InfoZone>
         )
       })}
@@ -203,3 +231,101 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 }
 
 export default InfoZones
+
+function getInfoContainerClassNameForPlacementIndex(placementIndex: number): string {
+  if (placementIndex < 3) return 'grid w-[328px] sm:w-160 grid-cols-1 gap-3'
+  return 'w-[328px] sm:w-[450px]'
+}
+
+function getContentForPlacementIndex(placementIndex: number) {
+  if (placementIndex === 0)
+    return (
+      <Card className="w-full">
+        <h2 className="info-header">About</h2>
+        <p className="paragraph-sm max-w-md">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+          incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+          exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </p>
+      </Card>
+    )
+
+  if (placementIndex === 1)
+    return (
+      <Card className="w-full">
+        <h2 className="info-header">Placeholder 1</h2>
+        <p className="paragraph-sm max-w-md">
+          This experience is built using React Three Fiber, Rapier physics and WebGL for
+          immersive graphics.
+        </p>
+      </Card>
+    )
+
+  if (placementIndex === 2)
+    return (
+      <Card className="w-full">
+        <h2 className="info-header">Placeholder 2</h2>
+        <p className="paragraph-sm max-w-md">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+          incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+          exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </p>
+      </Card>
+    )
+
+  if (placementIndex === 3) return <TotalTimeDisplay />
+  if (placementIndex === 4) return <LeaderboardTableWrapper />
+
+  return null
+}
+
+const TotalTimeDisplay: FC = () => {
+  const totalTimeContainer = useRef<HTMLDivElement>(null)
+
+  const pad = (value: number): string => value.toString().padStart(2, '0')
+
+  const formatTotalTime = (elapsedSeconds: number): string => {
+    const totalSeconds = Math.floor(elapsedSeconds)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    if (hours > 0) {
+      const remainingMinutes = minutes % 60
+      return `${pad(hours)}:${pad(remainingMinutes)}:${pad(seconds)}`
+    }
+    return `${pad(minutes)}:${pad(seconds)}`
+  }
+
+  const { totalTime } = useTime((elapsedSeconds: number) => {
+    if (!totalTimeContainer.current) return
+    totalTimeContainer.current.textContent = formatTotalTime(elapsedSeconds)
+  })
+
+  return (
+    <section className="relative flex flex-col items-center justify-center gap-3 py-5 text-center">
+      <div>
+        <p className="text-sm font-medium text-white/80">TOTAL TIME</p>
+        <div ref={totalTimeContainer} aria-live="polite" className="text-5xl font-bold">
+          {formatTotalTime(totalTime.current)}
+        </div>
+      </div>
+
+      <div className="h-px w-40 bg-white/20" />
+
+      <div>
+        <p className="text-sm font-medium text-white/80">AVERAGE TIME ON A WEBSITE</p>
+        <p className="text-3xl font-bold">00:53</p>
+      </div>
+
+      <div className="h-px w-40 bg-white/20" />
+
+      <p>Ready to take the next step?</p>
+      <button>Book an intro call</button>
+    </section>
+  )
+}
+
+const LeaderboardTableWrapper: FC = () => {
+  const tableData = useLeaderboardTableData(5, false)
+  return <LeaderboardTable {...tableData} />
+}
