@@ -2,9 +2,9 @@
 import { type FC, useEffect, useMemo, useState } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
-import type { SpeedRunDatabase } from '@/model/schema'
 import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
+import type { SpeedRunDatabase } from '@/model/schema'
 
 export function useLeaderboardTableData(
   count: number = 10,
@@ -66,7 +66,7 @@ export function useLeaderboardTableData(
     }
   }, [count, latestRunId, showPlayerPosition])
 
-  return { count, isLoading, speedRuns, userSpeedRunIds, playerPosition }
+  return { count, isLoading, speedRuns, latestRunId, userSpeedRunIds, playerPosition }
 }
 
 type TableProps = {
@@ -75,6 +75,7 @@ type TableProps = {
   speedRuns: SpeedRunDatabase[]
   userSpeedRunIds: number[]
   playerPosition: number | null
+  latestRunId?: number
 }
 
 export const LeaderboardTable: FC<TableProps> = ({
@@ -83,6 +84,7 @@ export const LeaderboardTable: FC<TableProps> = ({
   speedRuns,
   userSpeedRunIds,
   playerPosition,
+  latestRunId,
 }) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
 
@@ -110,6 +112,7 @@ export const LeaderboardTable: FC<TableProps> = ({
                 entry={entry}
                 index={index}
                 isCurrentUser={userSpeedRunIds.includes(entry.id)}
+                isLatestRun={entry.id === latestRunId}
               />
             ))}
 
@@ -119,6 +122,7 @@ export const LeaderboardTable: FC<TableProps> = ({
             entry={playerRunBelowLeaderboard}
             index={playerPosition! - 1}
             isCurrentUser={true}
+            isLatestRun={playerRunBelowLeaderboard.id === latestRunId}
             className="mt-4"
           />
         )}
@@ -134,17 +138,20 @@ const LeaderboardRow: FC<{
   entry: SpeedRunDatabase
   index: number
   isCurrentUser: boolean
+  isLatestRun?: boolean
   className?: string
-}> = ({ entry, index, isCurrentUser, className }) => {
+}> = ({ entry, index, isCurrentUser, isLatestRun = false, className }) => {
   const isTopThree = index < 3
 
   return (
     <div
+      data-latestRun={isLatestRun ? 'true' : 'false'}
       className={twMerge(
         ROW_CONTAINER_CLASSES,
         index % 2 === 0 && 'bg-[#000]/20',
-        isCurrentUser && 'text-leaderboard bg-leaderboard/12',
+        isCurrentUser && 'text-leaderboard bg-leaderboard/10',
         isTopThree ? 'h-14' : 'h-11',
+        isLatestRun && 'border-leaderboard z-40 border!',
         className,
       )}>
       {isTopThree ? (
