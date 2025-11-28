@@ -50,6 +50,7 @@
     "@types/react-dom": "19.2.3",
     "@types/react-transition-group": "^4.4.12",
     "babel-plugin-react-compiler": "^1.0.0",
+    "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "eslint-config-prettier": "^10.1.8",

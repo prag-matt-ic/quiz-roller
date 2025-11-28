@@ -1,19 +1,20 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
+import { FlagIcon } from 'lucide-react'
 import { type FC, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
-import { FlagIcon } from 'lucide-react'
+import { twJoin } from 'tailwind-merge'
 
+import { useGameStore } from '@/components/GameProvider'
 import AudioToggle from '@/components/ui/AudioToggle'
-import Controls from '@/components/ui/controls/Controls'
 import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
-import { useGameStore } from '@/components/GameProvider'
-import { twJoin } from 'tailwind-merge'
+import Controls from '@/components/ui/controls/Controls'
+import { GameMode } from '@/stores/types'
+
 import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
 import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
-import { GameMode } from '@/stores/types'
 
 gsap.registerPlugin(useGSAP)
 
@@ -58,7 +59,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'pointer-events-none flex h-fit items-center justify-center gap-2 opacity-0 transition-opacity duration-200',
+                    'pointer-events-none flex h-fit items-center justify-center gap-2.5 opacity-0 transition-opacity duration-200',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',

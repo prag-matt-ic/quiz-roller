@@ -1,7 +1,4 @@
 'use client'
-import { GemIcon } from 'lucide-react'
-import { type CSSProperties, useState, type FC } from 'react'
-import { twJoin } from 'tailwind-merge'
 import {
   offset,
   safePolygon,
@@ -12,6 +9,9 @@ import {
   useInteractions,
   useTransitionStatus,
 } from '@floating-ui/react'
+import { GemIcon } from 'lucide-react'
+import { type CSSProperties, type FC, useState } from 'react'
+import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { COLLECTIBLE_IDS, CollectibleID } from '@/model/schema'
@@ -39,7 +39,6 @@ const CollectiblesUI: FC = () => {
 
   return (
     <>
-      {/* Collectibles */}
       {COLLECTIBLE_IDS.map((id) => {
         return (
           <CollectibleIcon key={id} id={id} isCollected={collectedCollectibles.includes(id)} />
@@ -103,7 +102,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           strokeWidth={0.25}
           className={twJoin(
             'absolute inset-0 size-8 text-transparent transition-opacity md:size-10',
-            isCollected ? 'fill-(--icon-colour)/60' : 'fill-(--icon-colour)/10',
+            isCollected ? 'scale-120 fill-(--icon-colour)/60' : 'fill-(--icon-colour)/10',
           )}
         />
         <GemIcon
@@ -111,7 +110,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           strokeWidth={0.75}
           className={twJoin(
             'relative size-8 text-white md:size-10',
-            isCollected ? 'opacity-80' : 'opacity-30',
+            isCollected ? 'scale-120 opacity-80' : 'opacity-30',
           )}
         />
       </div>

@@ -1,6 +1,7 @@
-import { useEffect, useRef, type FC } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
+
 import { EMPTY_ROW_INDEX } from '../platform/usePlayerRespawn'
 
 const ProgressBar: FC = () => {
@@ -35,10 +36,12 @@ const ProgressBar: FC = () => {
   }, [gameStoreAPI])
 
   return (
-    <div id="progress-bar" className="fixed right-0 z-100 h-full w-1 overflow-hidden bg-black">
+    <div
+      id="progress-bar"
+      className="fixed top-1/2 right-1 z-100 h-48 w-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black">
       <div
         ref={barRef}
-        className="absolute bottom-0 h-full w-1 bg-white transition-transform duration-100 ease-linear"
+        className="absolute bottom-0 size-full bg-white/60 transition-transform duration-100 ease-linear"
         style={{
           transform: 'translate3d(0,100%,0)',
         }}

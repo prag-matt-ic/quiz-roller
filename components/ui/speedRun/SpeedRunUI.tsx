@@ -3,10 +3,10 @@ import gsap from 'gsap'
 import { RotateCcw, X } from 'lucide-react'
 import { type FC, type Ref, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
+import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
-import { twJoin } from 'tailwind-merge'
 
 export const SpeedRunTimer: FC = () => {
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
