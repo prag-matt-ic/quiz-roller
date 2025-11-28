@@ -14,7 +14,7 @@ import {
   SliceDeps,
 } from './types'
 
-export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0.0, 4.5, 0]
+export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
 
 export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
   PLAYER_INITIAL_POSITION[0],
@@ -52,8 +52,9 @@ export const INITIAL_PLAYER_STATE = {
   collectedCollectibles: [],
   collectedRings: {},
   confirmationProgress: 0,
-  respawnPosition: null,
-  playerStatus: 'normal' as PlayerStatus,
+  spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
+  playerRespawnTick: 0,
+  playerStatus: 'respawning' as PlayerStatus,
 }
 
 export const createPlayerSlice =
@@ -177,16 +178,16 @@ export const createPlayerSlice =
         confirmationTweenTarget.value = 0
       },
       respawnPlayer: (position) => {
-        set({
+        set((s) => ({
           playerStatus: 'respawning',
-          respawnPosition: new Vector3(position.x, position.y, position.z),
-        })
+          playerRespawnTick: s.playerRespawnTick + 1,
+          spawnPosition: new Vector3(position.x, position.y, position.z),
+        }))
         logPlayerStatus('Respawn queued', position)
       },
       onRespawnComplete: () => {
         set({
           playerStatus: 'normal',
-          respawnPosition: null,
         })
         logPlayerStatus('Respawn complete')
       },
@@ -194,7 +195,7 @@ export const createPlayerSlice =
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
         set({
           playerStatus: 'out-of-bounds',
-          respawnPosition: null,
+          spawnPosition: null, // Calculated in usePlayerRespawn hook
           playerInput: {
             up: 0,
             down: 0,

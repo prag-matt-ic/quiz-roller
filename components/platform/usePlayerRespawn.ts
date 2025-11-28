@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef } from 'react'
+import { type RefObject, useRef } from 'react'
 
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -11,14 +11,11 @@ import {
   type RowData,
   SAFE_HEIGHT,
   colToX,
-  lerp,
 } from '@/utils/tiles'
 
 export const EMPTY_ROW_INDEX = 10000
 const CENTER_COL_INDEX = Math.floor(COLUMNS / 2)
 const UNSAFE_ROW_SHIFT = 1
-const RESPAWN_ALIGN_SPEED = 5
-const RESPAWN_SNAP_THRESHOLD = 0.01
 const MIN_RESPAWN_ABSOLUTE_ROW = UNSAFE_ROW_SHIFT
 
 type SafeRowSelection = {
@@ -252,7 +249,8 @@ export function usePlayerRespawn({
 
   usePlayerStatus(onPlayerOutOfBounds)
 
-  const onScrollComplete = () => {
+  const onRespawnScrollComplete = () => {
+    targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
     respawnPlayer({
       x: pendingRespawnX.current,
@@ -262,5 +260,5 @@ export function usePlayerRespawn({
     pendingRespawnX.current = null
   }
 
-  return { targetScrollPosition, onScrollComplete }
+  return { targetScrollPosition, onRespawnScrollComplete }
 }

@@ -9,14 +9,10 @@ import {
   RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
-import { type FC, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
-import {
-  type EdgeWarningIntensities,
-  PLAYER_INITIAL_POSITION,
-  useGameStore,
-} from '@/components/GameProvider'
+import { type EdgeWarningIntensities, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -58,7 +54,8 @@ const Player: FC = () => {
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const playerStatus = useGameStore((s) => s.playerStatus)
-  const respawnPosition = useGameStore((s) => s.respawnPosition)
+  const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
+  const spawnPosition = useGameStore((s) => s.spawnPosition)
   const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
 
   const { controllerRef, input } = usePlayerController()
@@ -79,34 +76,6 @@ const Player: FC = () => {
   const nextPosition = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
   const desiredMovement = useRef<{ x: number; y: number; z: number }>({ x: 0, y: 0, z: 0 })
 
-  const [playerKey, setPlayerKey] = useState(0)
-
-  useEffect(() => {
-    if (!isPlatformReady) return
-
-    console.log('Player', { isPlatformReady, playerStatus, respawnPosition })
-    if (playerStatus !== 'respawning') return
-    const body = bodyRef.current
-    if (!body) return
-    if (!respawnPosition) {
-      console.error('Trying to respawn with no respawn position.')
-      return
-    }
-
-    console.warn('Player respawning at:', respawnPosition)
-    body.setTranslation(
-      {
-        x: respawnPosition.x,
-        y: respawnPosition.y,
-        z: respawnPosition.z,
-      },
-      true,
-    )
-
-    onRespawnComplete()
-    setPlayerKey((k) => k + 1)
-  }, [isPlatformReady, playerStatus, respawnPosition, onRespawnComplete, setPlayerKey])
-
   useGameFrame((_, deltaTime) => {
     if (
       !bodyRef.current ||
@@ -117,15 +86,14 @@ const Player: FC = () => {
     )
       return
 
-    if (playerStatus !== 'normal') return
-
     const currentPosition = bodyRef.current.translation()
 
     // Resolve player input into a clamped direction vector
     const inputDirectionX = input.current.right - input.current.left
     const inputDirectionZ = input.current.down - input.current.up
     const platformScrollDirection = input.current.up - input.current.down
-    const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ)
+    const canMove = playerStatus === 'normal'
+    const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ, canMove)
 
     // Calculate desired movement including gravity
     const movement = calculateDesiredMovement(
@@ -217,16 +185,26 @@ const Player: FC = () => {
     }
   }
 
+  useEffect(() => {
+    if (!isPlatformReady) return
+    const timeout = setTimeout(() => {
+      onRespawnComplete()
+    }, 200)
+    return () => clearTimeout(timeout)
+  }, [isPlatformReady, playerRespawnTick, onRespawnComplete])
+
   const userData: PlayerUserData = { type: 'player' }
+
+  if (!isPlatformReady || !spawnPosition) return null
 
   return (
     <RigidBody
-      key={playerKey}
       ref={bodyRef}
+      key={playerRespawnTick} // reposition to spawn position on respawn tick change
       type="kinematicPosition"
       userData={userData}
       colliders={false}
-      position={PLAYER_INITIAL_POSITION}
+      position={spawnPosition}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider
@@ -243,9 +221,13 @@ const Player: FC = () => {
 export default Player
 
 // Helper functions for player movement calculation
-function resolveInputDirection(inputX: number, inputZ: number): { x: number; z: number } {
+function resolveInputDirection(
+  inputX: number,
+  inputZ: number,
+  canMove: boolean,
+): { x: number; z: number } {
   const magnitude = Math.hypot(inputX, inputZ)
-  if (magnitude === 0) {
+  if (magnitude === 0 || !canMove) {
     return { x: 0, z: 0 }
   }
 

@@ -80,7 +80,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         isPlatformReady: false,
         resetPlatformTick: s.resetPlatformTick + 1,
         playerStatus: 'respawning',
-        respawnPosition: PLAYER_INITIAL_POSITION_VEC3,
+        spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
       }
     })
   },

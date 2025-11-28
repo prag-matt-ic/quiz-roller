@@ -75,8 +75,11 @@ export type PlayerSlice = {
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
-  respawnPosition: Vector3 | null
+  spawnPosition: Vector3 | null
+  playerRespawnTick: number
   playerStatus: PlayerStatus
+  respawnPlayer: (position: { x: number; y: number; z: number }) => void
+  onRespawnComplete: () => void
 
   edgeWarningIntensities: EdgeWarningIntensities
   setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
@@ -90,8 +93,6 @@ export type PlayerSlice = {
   collectedRings: RingCollection
   onRingCollected: (indexes: RingIndex) => void
 
-  respawnPlayer: (position: { x: number; y: number; z: number }) => void
-  onRespawnComplete: () => void
   stopConfirmation: () => void
   onOutOfBounds: (options?: { silent?: boolean }) => void
 }

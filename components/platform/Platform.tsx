@@ -239,7 +239,7 @@ const Platform: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetPlatformTick, hasRows, readyState, mode, rowsData, setPlatformReady])
 
-  const { targetScrollPosition, onScrollComplete } = usePlayerRespawn({
+  const { targetScrollPosition, onRespawnScrollComplete } = usePlayerRespawn({
     activeRowsData,
     rowZByIndex,
     currentScrollPosition,
@@ -495,16 +495,16 @@ const Platform: FC = () => {
 
     currentScrollPosition.current += zStep
 
+    // Scroll platform towards target position if set
     if (!!targetScrollPosition.current) {
       currentScrollPosition.current = lerp(
         currentScrollPosition.current,
         targetScrollPosition.current,
-        4.0 * delta,
+        10.0 * delta,
       )
       if (Math.abs(currentScrollPosition.current - targetScrollPosition.current) < 0.01) {
         currentScrollPosition.current = targetScrollPosition.current
-        targetScrollPosition.current = null
-        onScrollComplete()
+        onRespawnScrollComplete()
       }
     }
 
