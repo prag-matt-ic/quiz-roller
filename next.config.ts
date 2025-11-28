@@ -1,5 +1,5 @@
-import path from 'path'
 import type { NextConfig } from 'next'
+import path from 'path'
 
 const envOrigins =
   process.env.NEXT_DEV_ALLOWED_ORIGINS?.split(',')

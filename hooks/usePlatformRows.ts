@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import ctaTexture from '@/assets/platform/cta.png'
 import homeTexture from '@/assets/platform/home.png'
 import info1Texture from '@/assets/platform/info-1.png'
 import info2Texture from '@/assets/platform/info-2.png'
@@ -10,13 +10,13 @@ import obstacle2Texture from '@/assets/platform/obstacles-2.png'
 import obstacle3Texture from '@/assets/platform/obstacles-3.png'
 import obstacle4Texture from '@/assets/platform/obstacles-4.png'
 import speedRunTexture from '@/assets/platform/speed-run-finish.png'
-import ctaTexture from '@/assets/platform/cta.png'
 import testTexture from '@/assets/platform/test.png'
+import { Stage, useGameStore } from '@/components/GameProvider'
+import { createTotalCounts } from '@/stores/totalCounts'
+import { GameMode } from '@/stores/types'
 import { loadHtmlImage } from '@/utils/loadImage'
 import { parseSectionBitmap } from '@/utils/platform/sectionBitmap'
 import type { RowData } from '@/utils/tiles'
-import { GameMode } from '@/stores/types'
-import { createTotalCounts } from '@/stores/totalCounts'
 
 type TextureDescriptor = {
   src: string
@@ -34,7 +34,7 @@ const CORE_TEXTURES: TextureDescriptor[] = [
   { src: obstacle4Texture.src, stage: Stage.OBSTACLES },
 ]
 
-const MAIN_TEXTURES: TextureDescriptor[] = [
+const MAIN_RUN_TEXTURES: TextureDescriptor[] = [
   ...CORE_TEXTURES,
   { src: ctaTexture.src, stage: Stage.CTA },
 ]
@@ -44,19 +44,18 @@ const SPEED_RUN_TEXTURES: TextureDescriptor[] = [
   { src: speedRunTexture.src, stage: Stage.SPEED_RUN_FINISH },
 ]
 
-// Use these when mode === GameMode.TEST
-const TEST_TEXTURES: TextureDescriptor[] = [
+const TEST_MODE_TEXTURES: TextureDescriptor[] = [
   {
     src: testTexture.src,
-    stage: Stage.TEST,
+    stage: Stage.HOME,
   },
   { src: ctaTexture.src, stage: Stage.CTA },
 ]
 
 const MODE_TEXTURES_MAP: Record<GameMode, TextureDescriptor[]> = {
-  [GameMode.MAIN]: MAIN_TEXTURES,
+  [GameMode.MAIN]: MAIN_RUN_TEXTURES,
   [GameMode.SPEEDRUN]: SPEED_RUN_TEXTURES,
-  [GameMode.TEST]: TEST_TEXTURES,
+  [GameMode.TEST]: TEST_MODE_TEXTURES,
 }
 
 function usePlatformRows() {
@@ -65,7 +64,7 @@ function usePlatformRows() {
 
   useEffect(() => {
     let isMounted = true
-    const textures = MODE_TEXTURES_MAP[mode] || MAIN_TEXTURES
+    const textures = MODE_TEXTURES_MAP[mode] || MAIN_RUN_TEXTURES
 
     const textureSources = textures.map((descriptor) => descriptor.src)
     const totalCounts = createTotalCounts()
