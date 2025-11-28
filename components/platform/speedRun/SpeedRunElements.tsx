@@ -8,7 +8,7 @@ import {
   type RefObject,
 } from 'react'
 
-import { HIDE_POSITION_Y, HIDE_POSITION_Z, TILE_SIZE, type RowData } from '@/utils/tiles'
+import { HIDDEN_POSITION, TILE_SIZE, type RowData } from '@/utils/tiles'
 
 import FinishLine from './FinishLine'
 import { Stage } from '@/stores/types'
@@ -55,8 +55,8 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
 
     if (shouldHideFinishLine && finishLine.current) {
       translation.current.x = 0
-      translation.current.y = HIDE_POSITION_Y
-      translation.current.z = HIDE_POSITION_Z
+      translation.current.y = HIDDEN_POSITION[1]
+      translation.current.z = HIDDEN_POSITION[2]
       finishLine.current.setTranslation(translation.current, true)
       positionedRowIndex.current = null
     }

@@ -171,12 +171,17 @@ export const FloatingHeading: FC<Props> = ({
   })
 
   return (
-    <mesh ref={ref} position={position} renderOrder={2} rotation={[0, Math.PI / 2, 0]}>
+    <mesh
+      ref={ref}
+      visible={isVisible}
+      position={position}
+      renderOrder={2}
+      rotation={[0, Math.PI / 2, 0]}>
       <cylinderGeometry args={[radius, radius, height, 32, 1, true, thetaStart, thetaLength]} />
       <FloatingHeadingMaterial
         key={FloatingHeadingShader.key}
         ref={shaderRef}
-        uOpacity={1}
+        uOpacity={0}
         uTime={0}
         uEnableRotation={shouldRotate ? 1 : 0}
         uEnableNoise={useNoise ? 1 : 0}

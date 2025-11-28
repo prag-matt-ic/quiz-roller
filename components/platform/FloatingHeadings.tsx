@@ -10,12 +10,11 @@ import { Mesh } from 'three'
 
 import { FloatingHeading } from '@/components/floatingHeading/FloatingHeading'
 import { FLOATING_HEADINGS_CONTENT } from '@/resources/content'
-import { HIDE_POSITION_Z, type IndexedPlacement, type RowData } from '@/utils/tiles'
+import { HIDDEN_POSITION, type IndexedPlacement, type RowData } from '@/utils/tiles'
 import { HEADING_HEIGHT, HEADING_WIDTH, HEADING_Y } from '@/utils/platform/floatingHeading'
 import { useSlotPool } from './useSlotPool'
 
 const MAX_FLOATING_HEADINGS = 4
-const INITIAL_HEADING_POSITION: [number, number, number] = [0, HEADING_Y, HIDE_POSITION_Z]
 const HEADING_CONTENT_LENGTH = Math.max(1, FLOATING_HEADINGS_CONTENT.length)
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
@@ -169,9 +168,9 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
         updateSlotState(slotIndex, { isVisible: false })
         setHeadingPosition(
           slotIndex,
-          INITIAL_HEADING_POSITION[0],
-          INITIAL_HEADING_POSITION[1],
-          INITIAL_HEADING_POSITION[2],
+          HIDDEN_POSITION[0],
+          HIDDEN_POSITION[1],
+          HIDDEN_POSITION[2],
         )
         resetSlotState(slotIndex)
       })
@@ -218,7 +217,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
             key={`info-floating-heading-${slotIndex}`}
             ref={refs[slotIndex]}
             text={text}
-            position={INITIAL_HEADING_POSITION}
+            position={HIDDEN_POSITION}
             width={HEADING_WIDTH}
             height={HEADING_HEIGHT}
             isVisible={slotState.isVisible}

@@ -14,13 +14,7 @@ import {
   useEffect,
 } from 'react'
 
-import {
-  colToX,
-  HIDE_POSITION_Y,
-  HIDE_POSITION_Z,
-  ON_TILE_Y,
-  type RowData,
-} from '@/utils/tiles'
+import { colToX, HIDDEN_POSITION, ON_TILE_Y, type RowData } from '@/utils/tiles'
 
 import type { RigidBodyUserData, RingUserData } from '@/model/schema'
 import { type RingIndex, useGameStore } from '@/components/GameProvider'
@@ -34,7 +28,7 @@ const MAX_RING_INSTANCES = 10
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
 const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
-const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
+
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 const RAND_SEED_X = 12.98
 const RAND_SEED_Y = 43758.54

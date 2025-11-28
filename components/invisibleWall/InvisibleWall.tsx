@@ -1,4 +1,4 @@
-import { COLUMNS, HIDE_POSITION_Y, HIDE_POSITION_Z, TILE_SIZE } from '@/utils/tiles'
+import { COLUMNS, HIDDEN_POSITION, TILE_SIZE } from '@/utils/tiles'
 import { RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import { useEffect, type FC, type RefObject } from 'react'
 import { type Vector3Tuple } from 'three'
@@ -19,7 +19,10 @@ const InvisibleWall: FC<Props> = ({ ref, position }) => {
     if (!ref.current) return
     if (!isTerrainStage) return
     // Hide the wall during terrain stage
-    ref.current.setTranslation({ x: 0, y: HIDE_POSITION_Y, z: HIDE_POSITION_Z }, false)
+    ref.current.setTranslation(
+      { x: HIDDEN_POSITION[0], y: HIDDEN_POSITION[1], z: HIDDEN_POSITION[2] },
+      false,
+    )
   }, [isTerrainStage, ref])
 
   return (

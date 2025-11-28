@@ -9,7 +9,7 @@ import {
 } from '@react-three/rapier'
 import fragmentShader from './finishLine.frag'
 import vertexShader from './finishLine.vert'
-import { HIDE_POSITION_Y, HIDE_POSITION_Z, TILE_SIZE } from '@/utils/tiles'
+import { HIDDEN_POSITION, TILE_SIZE } from '@/utils/tiles'
 import type { FinishLineUserData, RigidBodyUserData } from '@/model/schema'
 import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
@@ -72,7 +72,7 @@ const FinishLine: FC<Props> = ({ ref, width, height }) => {
       gravityScale={0}
       friction={0}
       mass={0}
-      position={[0, HIDE_POSITION_Y, HIDE_POSITION_Z]}
+      position={HIDDEN_POSITION}
       rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={userData}>

@@ -87,7 +87,7 @@ export const FLOATING_HEADINGS_CONTENT: string[] = [
   'From scroll-driven storytelling to fully interactive worlds',
   'Bring your ideas to life with stunning 3D web experiences',
   'Senior Three.js developers supercharged with AI capabilities',
-  'Elevate your brand with cutting-edge 3D web solutions',
+  'Ready to take the next step?',
 ]
 
 type InfoZoneContent = {
