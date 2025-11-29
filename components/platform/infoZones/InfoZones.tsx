@@ -11,7 +11,7 @@ import infoIcon from '@/assets/icons/info-icon.png'
 import timerIcon from '@/assets/icons/timer-icon.png'
 import trophyIcon from '@/assets/icons/trophy-icon.png'
 import { useGameStore } from '@/components/GameProvider'
-import { InfoZone, InfoZoneProps } from '@/components/platform/infoZones/infoZone/InfoZone'
+import { InfoZone, type InfoZoneProps } from '@/components/platform/infoZones/infoZone/InfoZone'
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
 import Card from '@/components/ui/Card'
 import {
@@ -171,7 +171,6 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
           <InfoZone
             key={`info-zone-${index}`}
             ref={ref}
-            index={index}
             isVisible={isVisibleStates[index]}
             {...getInfoZonePropsForIndex(index)}>
             {getContentForPlacementIndex(index)}

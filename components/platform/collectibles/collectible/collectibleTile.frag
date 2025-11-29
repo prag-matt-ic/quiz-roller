@@ -15,8 +15,9 @@ varying mediump vec2 vUv;
 varying mediump vec2 vHeightSpacePosition;
 varying mediump float vDistanceFade;
 
-const float BORDER_THICKNESS_TILES = 0.1; // thickness relative to a tile height
+const float BORDER_THICKNESS_TILES = 0.25; // thickness relative to a tile height
 const float CORNER_LENGTH_TILES = 0.5; // fraction of tile to extend from each corner
+const float CORNER_LENGTH_CONFIRM_TILES = 2.5; // fraction of tile to extend from each corner when confirming
 
 void main() {
   float progress = clamp(uConfirmingProgress, 0.0, 1.0);
@@ -24,7 +25,7 @@ void main() {
   // Start at original size, expand to 6x during confirmation (reaches neighboring corners)
   // When confirmed, lock at full extension
   bool shouldBeExtended = uIsConfirming > 0.5 || uWasConfirmed > 0.5;
-  float targetLength = shouldBeExtended ? CORNER_LENGTH_TILES * 6.0 : CORNER_LENGTH_TILES;
+  float targetLength = shouldBeExtended ? CORNER_LENGTH_CONFIRM_TILES : CORNER_LENGTH_TILES;
   float animatedCornerLength = mix(CORNER_LENGTH_TILES, targetLength, progress);
 
   float bracketMask = paintCorners(

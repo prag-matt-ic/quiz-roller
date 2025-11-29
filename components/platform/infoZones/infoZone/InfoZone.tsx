@@ -53,6 +53,7 @@ type InfoZoneShaderUniforms = {
   uOpacity: number
   uTilesX: number
   uTilesY: number
+  uShowProgress: number
 }
 
 const INITIAL_UNIFORMS: InfoZoneShaderUniforms = {
@@ -60,6 +61,7 @@ const INITIAL_UNIFORMS: InfoZoneShaderUniforms = {
   uOpacity: 1,
   uTilesX: 1,
   uTilesY: 1,
+  uShowProgress: 0,
 }
 
 const InfoZoneShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentShader)
@@ -67,7 +69,6 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 export type InfoZoneProps = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
-  index: number
   isVisible: boolean
   infoContainerClassName?: string
   infoPositionOffset?: Vector3Tuple
@@ -84,7 +85,6 @@ const userData: InfoZoneUserData = {
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<InfoZoneProps> = ({
   ref,
-  index,
   isVisible,
   infoContainerClassName,
   children,
@@ -100,6 +100,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
 
   const [showInfo, setShowInfo] = useState(alwaysShowInfo)
   const infoContainer = useRef<HTMLDivElement>(null)
+  const tileShader = useRef<typeof InfoZoneShaderMaterial & InfoZoneShaderUniforms>(null)
 
   const lookAtInfo = () => {
     if (!isVisible) return
@@ -148,6 +149,11 @@ export const InfoZone: FC<InfoZoneProps> = ({
         ease: 'expoScale(0.8,1.0,power1.out)',
       },
     )
+    gsap.to(tileShader.current, {
+      duration: 0.4,
+      uShowProgress: 1,
+      ease: 'power2.out',
+    })
   })
 
   const onInfoExit = contextSafe(() => {
@@ -156,6 +162,11 @@ export const InfoZone: FC<InfoZoneProps> = ({
       scale: 0.8,
       duration: 0.28,
       ease: 'expoScale(0.8,1.0,power1.out)',
+    })
+    gsap.to(tileShader.current, {
+      duration: 0.3,
+      uShowProgress: 0,
+      ease: 'power2.in',
     })
   })
 
@@ -189,6 +200,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
         <mesh position={[0, 0, 0.01]} renderOrder={2}>
           <planeGeometry args={[INFO_ZONE_WIDTH, INFO_ZONE_HEIGHT]} />
           <InfoZoneShaderMaterial
+            ref={tileShader}
             key={InfoZoneShader.key}
             transparent={true}
             uAspect={aspect}

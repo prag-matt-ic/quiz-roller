@@ -1,13 +1,13 @@
 'use client'
 import {
-  createContext,
   type FC,
   type PropsWithChildren,
+  createContext,
   useContext,
   useEffect,
   useState,
 } from 'react'
-import { createStore, type StoreApi, useStore } from 'zustand'
+import { type StoreApi, createStore, useStore } from 'zustand'
 
 export enum SoundFX {
   BACKGROUND = 'BACKGROUND',
@@ -185,7 +185,7 @@ const createSoundStore = () => {
     },
 
     playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
-      const { isMuted } = get()
+      if (get().isMuted) return
 
       const startPlayback = async () => {
         await ensureContext()
@@ -207,8 +207,6 @@ const createSoundStore = () => {
         registerSource(bufferSource, gainNode)
         bufferSource.start(0)
       }
-
-      if (isMuted) return
 
       try {
         await startPlayback()

@@ -250,8 +250,9 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     <>
       {rigidBodyRefs.map((rigidBody, slotIndex) => {
         const assignedIndexes = slots[slotIndex]
-        const ringKey =
-          assignedIndexes != null ? getRingKey(assignedIndexes[0], assignedIndexes[1]) : null
+        const ringKey = !!assignedIndexes
+          ? getRingKey(assignedIndexes[0], assignedIndexes[1])
+          : null
         const isCollected = ringKey ? Boolean(collectedRings[ringKey]) : false
         const baseSeed = hashSlotIndex(slotIndex)
         const rotationSpeed = 0.6 + baseSeed * 0.7

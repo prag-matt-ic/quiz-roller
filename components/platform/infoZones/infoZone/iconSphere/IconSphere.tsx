@@ -15,13 +15,14 @@ import {
 } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
+import useGameFrame from '@/hooks/useGameFrame'
 
 import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
 const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 32, 16).toNonIndexed()
-const ICON_SPHERE_LINE_WIDTH = 1.0
+const ICON_SPHERE_LINE_WIDTH = 0.5
 const ICON_SPHERE_GLOW_STRENGTH = 3.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 
@@ -58,6 +59,7 @@ type IconSphereUniforms = {
   uGlowStrength: number
   uHiddenProgress: number
   uDistanceFadeEnabled: number
+  uTime: number
 }
 
 const DEFAULT_SURFACE_COLOR = new Color('#37D6C7') // teal accent
@@ -69,6 +71,7 @@ const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
   uLineColor: DEFAULT_LINE_COLOR,
   uOpacity: 0.4,
   uHiddenProgress: 0,
+  uTime: 0,
   uLineWidth: ICON_SPHERE_LINE_WIDTH,
   uGlowStrength: ICON_SPHERE_GLOW_STRENGTH,
   uDistanceFadeEnabled: 1,
@@ -137,6 +140,14 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
     { dependencies: [shouldHide] },
   )
 
+  useGameFrame(({ clock }) => {
+    if (!isVisible) return
+    const sphereShader = shader.current
+    if (!sphereShader) return
+    // Pass time so it can rotate
+    sphereShader.uTime = clock.elapsedTime
+  })
+
   return (
     <group
       renderOrder={2}
@@ -162,7 +173,7 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
       </mesh>
 
       <Suspense>
-        <sprite position={ICON_SPHERE_POSITION}>
+        <sprite position={ICON_SPHERE_POSITION} scale={[0.8, 0.8, 1]}>
           <spriteMaterial
             ref={spriteMaterialRef}
             map={iconTexture}
