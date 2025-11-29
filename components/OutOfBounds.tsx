@@ -8,9 +8,9 @@ import type { OutOfBoundsUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { COLUMNS, ROWS_RENDERED, TILE_SIZE } from '@/utils/tiles'
 
-const OutOfBounds: FC = () => {
-  const userData: OutOfBoundsUserData = { type: 'out-of-bounds' }
+const userData: OutOfBoundsUserData = { type: 'out-of-bounds' }
 
+const OutOfBounds: FC = () => {
   return (
     <RigidBody
       type="fixed"

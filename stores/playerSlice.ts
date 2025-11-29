@@ -137,7 +137,6 @@ export const createPlayerSlice =
             [ringKey]: true,
           },
         }))
-        playSoundFX(SoundFX.COIN_COLLECTED)
       },
       setConfirmingCollectible: (collectibleType: CollectibleID | null) => {
         confirmationTween?.kill()

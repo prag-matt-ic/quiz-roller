@@ -163,11 +163,6 @@ export const InfoZone: FC<InfoZoneProps> = ({
   const tilesX = INFO_ZONE_COLS
   const tilesY = INFO_ZONE_ROWS
 
-  console.warn(`[InfoZone ${index}] Rendering :`, {
-    isVisible,
-    position: ref?.current?.translation(),
-  })
-
   return (
     <RigidBody
       ref={ref}

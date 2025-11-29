@@ -1,6 +1,6 @@
 import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
-import { type FC, type Ref } from 'react'
+import { type FC, type RefObject } from 'react'
 import { Color, type ShaderMaterial } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
@@ -14,6 +14,7 @@ export type RingUniforms = {
   uEmissive: Color
   uRotationSpeed: number
   uRotationPhase: number
+  uExitProgress: number
 }
 
 const DEFAULT_UNIFORMS: RingUniforms = {
@@ -22,6 +23,7 @@ const DEFAULT_UNIFORMS: RingUniforms = {
   uEmissive: new Color('#ffd43b'),
   uRotationSpeed: 1,
   uRotationPhase: 0,
+  uExitProgress: 0,
 }
 
 const RingsShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
@@ -30,7 +32,7 @@ const RingsShaderMaterial = extend(RingsShader)
 
 type Props = {
   isVisible: boolean
-  shaderRef: Ref<ShaderMaterial & RingUniforms>
+  shaderRef: RefObject<(ShaderMaterial & RingUniforms) | null>
   rotationSpeed: number
   rotationPhase: number
   radius: number
@@ -54,6 +56,7 @@ const Ring: FC<Props> = ({
       <RingsShaderMaterial
         ref={shaderRef}
         key={RingsShader.key}
+        transparent
         {...DEFAULT_UNIFORMS}
         uRotationSpeed={rotationSpeed}
         uRotationPhase={rotationPhase}

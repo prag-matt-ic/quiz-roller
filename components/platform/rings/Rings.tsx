@@ -1,21 +1,24 @@
-/* eslint-disable react-hooks/refs */
 import {
   BallCollider,
   type IntersectionEnterHandler,
   type RapierRigidBody,
   RigidBody,
 } from '@react-three/rapier'
+import gsap from 'gsap'
 import {
   type FC,
   type RefObject,
+  createRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from 'react'
 import { type ShaderMaterial } from 'three'
 
 import { type RingIndex, useGameStore } from '@/components/GameProvider'
+import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import Ring, { type RingUniforms } from '@/components/platform/rings/ring/Ring'
 import useGameFrame from '@/hooks/useGameFrame'
 import type { RigidBodyUserData, RingUserData } from '@/model/schema'
@@ -24,13 +27,14 @@ import { getRingKey } from '@/utils/rings'
 import { HIDDEN_POSITION, ON_TILE_Y, type RowData, colToX } from '@/utils/tiles'
 
 const MAX_RING_INSTANCES = 10
+const instancesArray = Array.from({ length: MAX_RING_INSTANCES }, (_, i) => i)
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
 const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 const RAND_SEED_X = 12.98
-const RAND_SEED_Y = 43758.54
+const RAND_SEED_Y = 4375.54
 const TAU = Math.PI * 2
 
 const hashSlotIndex = (slotIndex: number): number => {
@@ -51,11 +55,16 @@ type Props = {
 }
 
 const Rings: FC<Props> = ({ ref, onReadyChange }) => {
+  const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const collectedRings = useGameStore((s) => s.collectedRings)
   const onRingCollected = useGameStore((s) => s.onRingCollected)
 
-  const rigidBodies = useRef<Array<RapierRigidBody | null>>(
-    Array(MAX_RING_INSTANCES).fill(null),
+  const [rigidBodyRefs] = useState<RefObject<RapierRigidBody | null>[]>(
+    instancesArray.map(() => createRef<RapierRigidBody | null>()),
+  )
+
+  const [shaderRefs] = useState<RefObject<(ShaderMaterial & RingUniforms) | null>[]>(() =>
+    instancesArray.map(() => createRef<ShaderMaterial & RingUniforms>()),
   )
 
   const slotAssignments = useRef<(RingIndex | null)[]>(Array(MAX_RING_INSTANCES).fill(null))
@@ -64,14 +73,14 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
 
   const setBodyTranslation = useCallback(
     (slotIndex: number, x: number, y: number, z: number) => {
-      const body = rigidBodies.current[slotIndex]
+      const body = rigidBodyRefs[slotIndex].current
       if (!body) return
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
       body.setTranslation(translation.current, true)
     },
-    [],
+    [rigidBodyRefs],
   )
 
   const releaseRow = useCallback(
@@ -161,7 +170,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
       if (zStep === 0) return
       for (let slotIndex = 0; slotIndex < slotAssignments.current.length; slotIndex++) {
         if (!slotAssignments.current[slotIndex]) continue
-        const body = rigidBodies.current[slotIndex]
+        const body = rigidBodyRefs[slotIndex].current
         if (!body) continue
         const currentTranslation = body.translation()
         setBodyTranslation(
@@ -172,7 +181,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
         )
       }
     },
-    [setBodyTranslation],
+    [rigidBodyRefs, setBodyTranslation],
   )
 
   useImperativeHandle(
@@ -199,19 +208,30 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     const slotIndex = (event.target.rigidBodyObject?.userData as RingUserData).slotIndex
     const indexes = slotAssignments.current[slotIndex]
     if (!indexes) return
-    onRingCollected(indexes)
-  }
 
-  const ringShaderRefs = useRef<Array<(ShaderMaterial & RingUniforms) | null>>(
-    Array(MAX_RING_INSTANCES).fill(null),
-  )
+    const material = shaderRefs[slotIndex].current
+    if (!material) return
+
+    playSoundFX(SoundFX.COIN_COLLECTED)
+    // Animate the ring out and then mark it as collected
+    gsap.to(material, {
+      uExitProgress: 1,
+      duration: 0.4,
+      ease: 'power1.out',
+      onComplete: () => {
+        onRingCollected(indexes)
+        setTimeout(() => {
+          material.uExitProgress = 0
+        }, 200)
+      },
+    })
+  }
 
   useGameFrame(({ clock }) => {
     const time = clock.elapsedTime
-    const materials = ringShaderRefs.current
     const assignments = slotAssignments.current
 
-    for (let index = 0; index < materials.length; index++) {
+    for (let index = 0; index < shaderRefs.length; index++) {
       const assignment = assignments[index]
       if (!assignment) continue
 
@@ -219,8 +239,9 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
       const ringKey = getRingKey(rowIndex, colIndex)
       if (collectedRings[ringKey]) continue
 
-      const material = materials[index]
+      const material = shaderRefs[index].current
       if (!material) continue
+      // eslint-disable-next-line react-hooks/immutability
       material.uTime = time
     }
   })
@@ -228,8 +249,8 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   const slots = slotAssignments.current
 
   return (
-    <group>
-      {Array.from({ length: MAX_RING_INSTANCES }).map((_, slotIndex) => {
+    <>
+      {rigidBodyRefs.map((rigidBody, slotIndex) => {
         const assignedIndexes = slots[slotIndex]
         const ringKey =
           assignedIndexes != null ? getRingKey(assignedIndexes[0], assignedIndexes[1]) : null
@@ -237,16 +258,15 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
         const baseSeed = hashSlotIndex(slotIndex)
         const rotationSpeed = 0.6 + baseSeed * 0.7
         const rotationPhase = baseSeed * TAU
+        const userData = { type: 'ring', slotIndex: slotIndex } as RingUserData
         return (
           <RigidBody
             key={`ring-slot-${slotIndex}`}
-            ref={(body) => {
-              rigidBodies.current[slotIndex] = body
-            }}
+            ref={rigidBody}
             type="dynamic"
             canSleep={true}
             position={HIDDEN_POSITION}
-            userData={{ type: 'ring', slotIndex: slotIndex } as RingUserData}
+            userData={userData}
             colliders={false}
             gravityScale={0}>
             <BallCollider
@@ -257,9 +277,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
             />
             <Ring
               isVisible={!isCollected}
-              shaderRef={(material) => {
-                ringShaderRefs.current[slotIndex] = material
-              }}
+              shaderRef={shaderRefs[slotIndex]}
               rotationSpeed={rotationSpeed}
               rotationPhase={rotationPhase}
               radius={RING_MAJOR_RADIUS}
@@ -268,7 +286,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
           </RigidBody>
         )
       })}
-    </group>
+    </>
   )
 }
 
