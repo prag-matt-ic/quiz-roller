@@ -29,9 +29,6 @@ function useDynamicRigidBodies(totalCount: number) {
       next[index] = isVisible
       return next
     })
-    // const body = refs[index]
-    // if (!body?.current) return
-    // body.current.setEnabled(isVisible)
   }, [])
 
   const translation = useRef({

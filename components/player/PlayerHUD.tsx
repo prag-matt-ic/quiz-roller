@@ -15,8 +15,8 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 
 import { useGameStore } from '@/components/GameProvider'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
-import { GEMS_BY_ID } from '@/resources/content'
 import { CollectibleID } from '@/model/schema'
+import { GEMS_BY_ID } from '@/resources/content'
 
 export const PLAYER_RADIUS = 0.45
 

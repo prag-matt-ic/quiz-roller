@@ -1,13 +1,13 @@
 'use client'
 
 import { useThree } from '@react-three/fiber'
-import { FC, type RefObject, Suspense } from 'react'
+import { type FC, type RefObject, Suspense } from 'react'
 import { Mesh, type Vector3Tuple } from 'three'
 
 import {
   TEXT_CANVAS_SCALE,
-  type TextCanvasOptions,
   TRANSPARENT_TEXTURE,
+  type TextCanvasOptions,
   useTextCanvas,
 } from '@/hooks/useTextCanvas'
 

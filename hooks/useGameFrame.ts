@@ -1,4 +1,4 @@
-import { RootState, useFrame } from '@react-three/fiber'
+import { type RootState, useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 
 import { type RapierSimFPS, usePerformanceStore } from '@/components/PerformanceProvider'

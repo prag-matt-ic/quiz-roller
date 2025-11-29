@@ -1,13 +1,12 @@
 'use client'
-
 import { type FC } from 'react'
 
-import Game from './Game'
-import { PerformanceProvider } from './PerformanceProvider'
-import Timer from './Timer'
-import DebugControls from './debug/DebugControls'
-import HtmlPortal from './ui/HtmlPortal'
-import UI from './ui/UI'
+import Game from '@/components/Game'
+import { PerformanceProvider } from '@/components/PerformanceProvider'
+import Timer from '@/components/Timer'
+import DebugControls from '@/components/debug/DebugControls'
+import HtmlPortal from '@/components/ui/HtmlPortal'
+import UI from '@/components/ui/UI'
 
 type Props = {
   isMobile: boolean

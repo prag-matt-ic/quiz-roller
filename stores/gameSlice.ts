@@ -4,7 +4,7 @@ import type { RowData } from '@/utils/tiles'
 import { PLAYER_INITIAL_POSITION_VEC3, RESET_PLAYER_STATE } from './playerSlice'
 import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
-import { GameMode, GameSlice, GameSliceCreator, Stage } from './types'
+import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
 
 export const RESET_GAME_STATE = {
   stage: Stage.HOME,

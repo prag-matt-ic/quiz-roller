@@ -7,7 +7,7 @@ import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/s
 import { createGameSlice } from './gameSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createTimeSlice } from './timeSlice'
-import { GameStore } from './types'
+import type { GameStore } from './types'
 
 type PersistedStore = Pick<GameStore, 'username' | 'totalTimeS' | 'completedSpeedRuns'>
 

@@ -7,8 +7,8 @@ import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
 import { ringIndexToKey } from '@/utils/rings'
 
 import {
-  GameSliceCreator,
-  PlayerSlice,
+  type GameSliceCreator,
+  type PlayerSlice,
   type PlayerStatus,
   type RingIndex,
   SliceDeps,

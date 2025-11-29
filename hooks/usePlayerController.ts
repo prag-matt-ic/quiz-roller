@@ -5,7 +5,7 @@ import { useRapier } from '@react-three/rapier'
 import { useLayoutEffect, useRef } from 'react'
 
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
-import usePlayerInput from './usePlayerInput'
+import usePlayerInput from '@/hooks/usePlayerInput'
 
 function usePlayerController() {
   const { world } = useRapier()
