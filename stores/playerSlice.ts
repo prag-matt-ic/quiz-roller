@@ -187,7 +187,7 @@ export const createPlayerSlice =
       },
       onRespawnComplete: () => {
         set({
-          playerStatus: 'normal',
+          playerStatus: 'safe',
         })
         logPlayerStatus('Respawn complete')
       },

@@ -92,7 +92,7 @@ const Player: FC = () => {
     const inputDirectionX = input.current.right - input.current.left
     const inputDirectionZ = input.current.down - input.current.up
     const platformScrollDirection = input.current.up - input.current.down
-    const canMove = playerStatus === 'normal'
+    const canMove = playerStatus === 'safe'
     const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ, canMove)
 
     // Calculate desired movement including gravity

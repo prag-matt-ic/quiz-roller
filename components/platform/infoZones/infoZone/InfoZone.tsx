@@ -165,7 +165,6 @@ export const InfoZone: FC<InfoZoneProps> = ({
       // KEEP DYNAMIC
       type="dynamic"
       gravityScale={0}
-      position={HIDDEN_POSITION}
       friction={0}
       mass={0}
       rotation={[-Math.PI / 2, 0, 0]}

@@ -1,7 +1,7 @@
 'use client'
 
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Move, type LucideIcon } from 'lucide-react'
-import { useCallback, useEffect, useRef, type FC } from 'react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, type LucideIcon, Move } from 'lucide-react'
+import { type FC, useCallback, useEffect, useRef } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { type PlayerInput, useGameStore } from '@/components/GameProvider'
@@ -34,8 +34,7 @@ function useControls() {
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const DISABLED_STAGES: SpeedRunStage[] = ['username', 'countdown', 'leaderboard']
   const isDisabledStage = DISABLED_STAGES.includes(speedRunStage || '')
-  const playerStatus = useGameStore((s) => s.playerStatus)
-  const isPlayerLocked = playerStatus !== 'normal'
+  const isPlayerLocked = useGameStore((s) => s.playerStatus !== 'safe')
 
   const disableInput = isPlayerLocked || (isSpeedRunMode && isDisabledStage)
 

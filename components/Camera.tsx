@@ -7,6 +7,7 @@ import { type FC, useCallback, useEffect, useRef } from 'react'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import usePlayerStatus from '@/hooks/usePlayerStatus'
 import useStage from '@/hooks/useStage'
 
 const { ACTION } = CameraControlsImpl
@@ -22,7 +23,6 @@ export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPositio
   [Stage.OBSTACLES]: { y: 6, z: 8 },
   [Stage.CTA]: { y: 4, z: 10 },
   [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
-  [Stage.TEST]: { y: 4, z: 8 },
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
@@ -31,7 +31,6 @@ export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition
   [Stage.OBSTACLES]: { y: 6, z: 9 },
   [Stage.CTA]: { y: 6, z: 9 },
   [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
-  [Stage.TEST]: { y: 4, z: 9 },
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
@@ -40,7 +39,6 @@ export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
   [Stage.OBSTACLES]: 1.3,
   [Stage.CTA]: 1.1,
   [Stage.SPEED_RUN_FINISH]: 1.1,
-  [Stage.TEST]: 1.1,
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
@@ -49,7 +47,6 @@ export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
   [Stage.OBSTACLES]: 1.3,
   [Stage.CTA]: 1.25,
   [Stage.SPEED_RUN_FINISH]: 1.25,
-  [Stage.TEST]: 1.25,
 }
 
 type Props = {
@@ -60,39 +57,47 @@ type Props = {
 const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
-  const playerStatus = useGameStore((s) => s.playerStatus)
-
-  const lastMovedBackward = useRef(false)
-
-  useEffect(() => {
-    if (playerStatus !== 'normal') {
-      lastMovedBackward.current = false
-    }
-  }, [playerStatus])
-
-  usePlayerInput((input) => {
-    if (input.down > 0) lastMovedBackward.current = true
-    else if (input.up > 0) lastMovedBackward.current = false
-  })
-
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
+  const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
+
+  const isMovingBackward = useRef(false)
+  const hasLookAtPosition = !!cameraLookAtPosition
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE
     : CAMERA_ZOOM_FOR_STAGE_DESKTOP
 
+  const currentZoom = useRef<number>(cameraZoomForStage[Stage.HOME])
+
+  usePlayerStatus((status) => {
+    if (status === 'respawning') isMovingBackward.current = false
+  })
+
+  usePlayerInput((input) => {
+    if (input.down > 0) isMovingBackward.current = true
+    else if (input.up > 0) isMovingBackward.current = false
+  })
+
   const handleStageChange = useCallback(
-    (nextStage: Stage, previousStage: Stage) => {
-      void previousStage
+    (nextStage: Stage) => {
       if (!cameraControls.current) return
-      cameraControls.current.zoomTo(cameraZoomForStage[nextStage], true)
+      const zoom = cameraZoomForStage[nextStage]
+      currentZoom.current = zoom
+      cameraControls.current.zoomTo(zoom, true)
     },
     [cameraZoomForStage],
   )
 
   const stage = useStage(handleStageChange)
 
-  const hasLookAtPosition = !!cameraLookAtPosition
+  useEffect(() => {
+    if (!cameraControls.current) return
+    if (isConfirmingCollectible) {
+      cameraControls.current.zoomTo(currentZoom.current + 0.3, true)
+    } else {
+      cameraControls.current.zoomTo(currentZoom.current, true)
+    }
+  }, [isConfirmingCollectible])
 
   useFrame(() => {
     if (!cameraControls.current) return
@@ -103,7 +108,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
 
     // Adjust the look based on whether player is moving back or not
-    zOffset += lastMovedBackward.current ? (isMobile ? 3 : 4) : 0
+    zOffset += isMovingBackward.current ? (isMobile ? 3 : 4) : 0
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,

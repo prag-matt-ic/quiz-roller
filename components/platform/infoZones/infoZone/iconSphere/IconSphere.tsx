@@ -47,7 +47,6 @@ const ICON_SPHERE_SURFACE_GEOMETRY = (() => {
 
   geometry.setAttribute('aBarycentric', new Float32BufferAttribute(barycentric, 3))
   geometry.computeVertexNormals()
-
   return geometry
 })()
 

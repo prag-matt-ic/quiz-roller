@@ -13,7 +13,6 @@ export enum Stage {
   OBSTACLES = 3,
   CTA = 4,
   SPEED_RUN_FINISH = 5,
-  TEST = 6,
 }
 
 export type EdgeWarningIntensities = {
@@ -30,7 +29,7 @@ export type PlayerInput = {
   right: number
 }
 
-export type PlayerStatus = 'normal' | 'out-of-bounds' | 'respawning'
+export type PlayerStatus = 'safe' | 'out-of-bounds' | 'respawning'
 
 export type HudIndicatorConfig = {
   content: ReactNode
