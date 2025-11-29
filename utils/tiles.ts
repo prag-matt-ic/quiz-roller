@@ -41,7 +41,7 @@ export const ROWS_RENDERED = 31
 export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
 export const UNSAFE_HEIGHT = -100 // sunken obstacles (out of sight)
 
-const HIDE_POSITION_Y = -10 as const
+const HIDE_POSITION_Y = -20 as const
 const HIDE_POSITION_Z = 10 as const
 export const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 

@@ -51,8 +51,6 @@ export const RESET_PLAYER_STATE = {
   confirmingCollectible: null,
   collectedRings: {},
   confirmationProgress: 0,
-  spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
-  playerStatus: 'respawning' as PlayerStatus,
 }
 
 export const createPlayerSlice =
@@ -105,6 +103,8 @@ export const createPlayerSlice =
       ...RESET_PLAYER_STATE,
       collectedCollectibles: [],
       playerRespawnTick: 0,
+      spawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+      playerStatus: 'respawning' as PlayerStatus,
       username: null,
       setUsername: (username: string) => {
         set({ username })

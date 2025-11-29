@@ -527,7 +527,7 @@ const Platform: FC = () => {
     }
   })
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     floatingTilesHandle.current?.reset()
   }, [resetPlatformTick])
 

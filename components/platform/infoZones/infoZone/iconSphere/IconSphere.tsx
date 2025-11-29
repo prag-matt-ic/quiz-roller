@@ -60,7 +60,7 @@ type IconSphereUniforms = {
   uDistanceFadeEnabled: number
 }
 
-const DEFAULT_SURFACE_COLOR = new Color('teal')
+const DEFAULT_SURFACE_COLOR = new Color('#37D6C7') // teal accent
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
 DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 

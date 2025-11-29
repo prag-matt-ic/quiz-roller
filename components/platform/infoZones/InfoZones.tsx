@@ -19,7 +19,7 @@ import {
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import { useTotalTime } from '@/hooks/useTime'
-import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
+import { type RowData } from '@/utils/tiles'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
@@ -43,18 +43,15 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const positionElementsIfNeeded = useCallback(
     (row: RowData, rowZ: number) => {
       if (!row.infoZonePlacements?.length) return
-      if (IS_DEV_ENV) {
-        console.warn('[InfoZones] Position requested', {
-          rowIndex: row.rowIndex,
-          stage: row.stage,
-          rowZ,
-          placements: row.infoZonePlacements.map(([, , relativeZ, contentIndex]) => ({
-            relativeZ,
-            contentIndex,
-          })),
-        })
-      }
+
       row.infoZonePlacements.forEach((placement) => {
+        if (IS_DEV_ENV) {
+          const [, , , contentIndex] = placement
+          console.warn('[InfoZones] Position requested for', {
+            contentIndex,
+            placement,
+          })
+        }
         applyPlacement(placement, rowZ)
       })
     },
@@ -65,15 +62,6 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
     (row: RowData) => {
       const placements = row.infoZonePlacements
       if (!placements?.length) return
-      if (IS_DEV_ENV) {
-        console.warn('[InfoZones] Hiding placements', {
-          rowIndex: row?.rowIndex,
-          stage: row?.stage,
-          placementIndexes: placements
-            .map((placement) => placement[3])
-            .filter((index): index is number => typeof index === 'number'),
-        })
-      }
       placements.forEach((placement) => {
         const contentIndex = placement[3]
         if (contentIndex == null) return
@@ -183,6 +171,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
           <InfoZone
             key={`info-zone-${index}`}
             ref={ref}
+            index={index}
             isVisible={isVisibleStates[index]}
             {...getInfoZonePropsForIndex(index)}>
             {getContentForPlacementIndex(index)}
@@ -212,7 +201,7 @@ function getInfoZonePropsForIndex(
       iconSrc: timerIcon.src,
       infoPositionOffset: [0, 8, 4],
       infoContentHtmlProps: { transform: true },
-      sphereColour: 'green',
+      sphereColour: '#7477A4', // blue mid
     }
   }
   if (placementIndex === 4) {
@@ -222,7 +211,7 @@ function getInfoZonePropsForIndex(
       iconSrc: trophyIcon.src,
       infoPositionOffset: [0, 12, 5],
       infoContentHtmlProps: { transform: true },
-      sphereColour: 'purple',
+      sphereColour: '#E97449', // orange accent
     }
   }
   // Info Card

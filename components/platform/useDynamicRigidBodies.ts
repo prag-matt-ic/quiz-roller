@@ -18,20 +18,27 @@ function useDynamicRigidBodies(totalCount: number) {
   useEffect(() => {
     if (refs.length === totalCount) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsVisibleStates(createInitialVisibilityState(totalCount))
     setRefs(createRigidBodyRefsFromCount(totalCount))
-  }, [refs.length, totalCount])
+    setIsVisibleStates(createInitialVisibilityState(totalCount))
+  }, [totalCount, refs.length])
 
-  const setIsVisibleState = useCallback((index: number, value: boolean) => {
+  const setIsVisibleState = useCallback((index: number, isVisible: boolean) => {
     setIsVisibleStates((prev) => {
-      if (prev[index] === value) return prev
+      if (prev[index] === isVisible) return prev
       const next = [...prev]
-      next[index] = value
+      next[index] = isVisible
       return next
     })
+    // const body = refs[index]
+    // if (!body?.current) return
+    // body.current.setEnabled(isVisible)
   }, [])
 
-  const translation = useRef({ x: 0, y: 0, z: 0 })
+  const translation = useRef({
+    x: HIDDEN_POSITION[0],
+    y: HIDDEN_POSITION[1],
+    z: HIDDEN_POSITION[2],
+  })
 
   const setRigidBodyPosition = useCallback(
     (index: number, x: number, y: number, z: number) => {
@@ -41,13 +48,12 @@ function useDynamicRigidBodies(totalCount: number) {
           index,
           poolSize: refs.length,
         })
-        return false
+        return
       }
       translation.current.x = x
       translation.current.y = y
       translation.current.z = z
       body.current.setTranslation(translation.current, true)
-      return true
     },
     [refs, translation],
   )
@@ -71,14 +77,14 @@ function useDynamicRigidBodies(totalCount: number) {
     (placement: IndexedPlacement, rowZ: number) => {
       const [x, y, relativeZ, contentIndex] = placement
       if (contentIndex < 0 || contentIndex >= refs.length) {
-        console.warn('[applyPlacement] Invalid placement index', {
+        console.error('[applyPlacement] Invalid placement index', {
           placement,
           poolSize: refs.length,
         })
         return
       }
       const targetZ = rowZ + relativeZ
-      if (!setRigidBodyPosition(contentIndex, x, y, targetZ)) return
+      setRigidBodyPosition(contentIndex, x, y, targetZ)
       setIsVisibleState(contentIndex, true)
     },
     [refs.length, setRigidBodyPosition, setIsVisibleState],

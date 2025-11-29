@@ -20,6 +20,8 @@ import {
   type PropsWithChildren,
   type RefObject,
   Suspense,
+  useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -65,6 +67,7 @@ const InfoZoneShaderMaterial = extend(InfoZoneShader)
 
 export type InfoZoneProps = PropsWithChildren<{
   ref: RefObject<RapierRigidBody | null>
+  index: number
   isVisible: boolean
   infoContainerClassName?: string
   infoPositionOffset?: Vector3Tuple
@@ -74,9 +77,14 @@ export type InfoZoneProps = PropsWithChildren<{
   sphereColour?: string // If other than default
 }>
 
+const userData: InfoZoneUserData = {
+  type: 'info-zone',
+}
+
 // Shows HTML content when the player enters the zone
 export const InfoZone: FC<InfoZoneProps> = ({
   ref,
+  index,
   isVisible,
   infoContainerClassName,
   children,
@@ -151,13 +159,14 @@ export const InfoZone: FC<InfoZoneProps> = ({
     })
   })
 
-  const userData: InfoZoneUserData = {
-    type: 'info-zone',
-  }
-
   const aspect = INFO_ZONE_WIDTH / INFO_ZONE_HEIGHT
   const tilesX = INFO_ZONE_COLS
   const tilesY = INFO_ZONE_ROWS
+
+  console.warn(`[InfoZone ${index}] Rendering :`, {
+    isVisible,
+    position: ref?.current?.translation(),
+  })
 
   return (
     <RigidBody
@@ -167,6 +176,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
       gravityScale={0}
       friction={0}
       mass={0}
+      position={HIDDEN_POSITION} // Overwritten dynamically in the parent
       rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={userData}>

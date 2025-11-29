@@ -74,9 +74,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         speedRunStage: speedRunStage ?? RESET_TIME_STATE.speedRunStage,
         playerStatus: 'respawning',
-        spawnPosition: PLAYER_INITIAL_POSITION_VEC3,
+        spawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
         playerRespawnTick: s.playerRespawnTick + 1,
-        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3,
+        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
         resetPlatformTick: s.resetPlatformTick + 1,
       }
     })

@@ -57,7 +57,7 @@ const DebugControls: FC = () => {
     setMaxDpr(next)
   }
 
-  const handlePlatformChange = (event: ChangeEvent<HTMLSelectElement>) => {
+  const handleModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
     resetGame({ mode: event.target.value as GameMode })
   }
@@ -105,7 +105,7 @@ const DebugControls: FC = () => {
         id="performance-debug-mode"
         label="Mode"
         value={mode}
-        onChange={handlePlatformChange}>
+        onChange={handleModeChange}>
         {GAME_MODE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
