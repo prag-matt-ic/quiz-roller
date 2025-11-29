@@ -1,13 +1,8 @@
-import './globals.css'
-
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Cinzel, Nunito_Sans, Unbounded } from 'next/font/google'
+import { Nunito_Sans, Unbounded } from 'next/font/google'
 
-const cinzel = Cinzel({
-  variable: '--font-cinzel',
-  subsets: ['latin'],
-})
+import './globals.css'
 
 const nunitoSans = Nunito_Sans({
   variable: '--font-nunito-sans',
@@ -44,7 +39,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#030b2a',
+  themeColor: '#000000',
   colorScheme: 'dark',
 }
 
@@ -56,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${cinzel.variable} ${nunitoSans.variable} ${unbounded.variable} overflow-hidden antialiased`}>
+        className={`${nunitoSans.variable} ${unbounded.variable} overflow-hidden antialiased`}>
         {children}
         <Analytics />
       </body>

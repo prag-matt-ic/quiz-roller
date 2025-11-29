@@ -21,9 +21,9 @@ import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
-const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 32, 16).toNonIndexed()
-const ICON_SPHERE_LINE_WIDTH = 0.5
-const ICON_SPHERE_GLOW_STRENGTH = 3.0
+const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 24, 12).toNonIndexed()
+const ICON_SPHERE_LINE_WIDTH = 1.0
+const ICON_SPHERE_GLOW_STRENGTH = 2.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 
 const ICON_SPHERE_SURFACE_GEOMETRY = (() => {
@@ -98,15 +98,14 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
   const spriteMaterialRef = useRef<SpriteMaterial>(null)
 
   const { surfaceColour, lineColour } = useMemo(() => {
-    if (!colour) {
+    if (!colour)
       return {
         surfaceColour: DEFAULT_SURFACE_COLOR,
         lineColour: DEFAULT_LINE_COLOR,
       }
-    }
     const surfaceColour = new Color(colour)
     const lineColour = surfaceColour.clone()
-    lineColour.offsetHSL(0, 0, 0.16)
+    lineColour.offsetHSL(0, 0, 0.12)
     return { surfaceColour, lineColour }
   }, [colour])
 
@@ -154,10 +153,7 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
       position={[0, 0, 0]}
       rotation={[Math.PI / 2, 0, 0]}
       visible={isVisible}>
-      <mesh
-        geometry={ICON_SPHERE_SURFACE_GEOMETRY}
-        dispose={null}
-        position={ICON_SPHERE_POSITION}>
+      <mesh geometry={ICON_SPHERE_SURFACE_GEOMETRY} position={ICON_SPHERE_POSITION}>
         <SphereShaderMaterial
           key={SphereShader.key}
           ref={shader}

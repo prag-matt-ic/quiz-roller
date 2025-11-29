@@ -9,6 +9,7 @@ import {
 import type { FC, PropsWithChildren, RefObject } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import type { FinishLineUserData, RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
@@ -22,6 +23,7 @@ type FinishLineShaderUniforms = {
   uOpacity: number
   uTilesX: number
   uTilesY: number
+  uDistanceFadeEnabled: number
 }
 
 const INITIAL_UNIFORMS: FinishLineShaderUniforms = {
@@ -29,6 +31,7 @@ const INITIAL_UNIFORMS: FinishLineShaderUniforms = {
   uOpacity: 1,
   uTilesX: 1,
   uTilesY: 1,
+  uDistanceFadeEnabled: 1,
 }
 
 const FinishLineShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentShader)
@@ -42,6 +45,7 @@ type Props = PropsWithChildren<{
 
 const FinishLine: FC<Props> = ({ ref, width, height }) => {
   const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   const userData: FinishLineUserData = {
     type: 'finish-line',
@@ -94,6 +98,7 @@ const FinishLine: FC<Props> = ({ ref, width, height }) => {
           uAspect={width / height}
           uTilesX={width / TILE_SIZE}
           uTilesY={height / TILE_SIZE}
+          uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         />
       </mesh>
     </RigidBody>

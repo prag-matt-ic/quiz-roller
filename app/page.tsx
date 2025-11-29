@@ -1,12 +1,14 @@
 import dynamic from 'next/dynamic'
 import { type FC } from 'react'
-
-import LoadingOverlay from '@/components/ui/LoadingOverlay'
-import isMobileServer from '@/utils/isMobileServer'
-import { SoundProvider } from '@/components/SoundProvider'
-import { GameProvider } from '@/components/GameProvider'
-import { deleteAllSpeedRuns, insertSpeedRun } from './actions'
 import { twJoin } from 'tailwind-merge'
+
+import { GameProvider } from '@/components/GameProvider'
+import { SoundProvider } from '@/components/SoundProvider'
+import LoadingOverlay from '@/components/ui/LoadingOverlay'
+import RotateDevice from '@/components/ui/RotateDevice'
+import isMobileServer from '@/utils/isMobileServer'
+
+import { insertSpeedRun } from './actions'
 
 const Main = dynamic(() => import('@/components/Main'))
 
@@ -25,6 +27,7 @@ export default async function Home(props: PageProps) {
         <SoundProvider>
           <GameProvider insertSpeedRun={insertSpeedRun}>
             {/* <LoadingOverlay isMobile={isMobile} /> */}
+            {/* <RotateDevice isMobile={isMobile} /> */}
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>
         </SoundProvider>

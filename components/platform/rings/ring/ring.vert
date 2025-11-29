@@ -1,6 +1,9 @@
 precision highp float;
 
+#pragma glslify: fadeDistance = require('../../../../resources/glsl/fadeDistance.glsl')
+
 uniform float uTime;
+uniform float uDistanceFadeEnabled;
 uniform float uRotationSpeed;
 uniform float uRotationPhase;
 uniform vec3 uColor;
@@ -34,8 +37,12 @@ void main() {
   float diff = max(dot(vNormal, LIGHT_DIR), 0.0);
   float lighting = 0.5 + 0.5 * diff;
 
-  float alpha = 1.0 - uExitProgress;
+  vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
+  float fade = fadeDistance(worldPosition.z);
+  float finalFade = mix(1.0, fade, uDistanceFadeEnabled);
+
+  float alpha = (1.0 - uExitProgress) * finalFade;
   vColor = vec4(uColor * lighting + uEmissive * 0.4, alpha);
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

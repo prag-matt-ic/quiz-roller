@@ -198,7 +198,7 @@ function getInfoZonePropsForIndex(
     return {
       infoContainerClassName: 'w-[280px] sm:w-[320px]',
       iconSrc: timerIcon.src,
-      infoPositionOffset: [0, 8, 4],
+      infoPositionOffset: [0, 6, 4],
       infoContentHtmlProps: { transform: true },
       sphereColour: '#7477A4', // blue mid
     }
@@ -208,8 +208,7 @@ function getInfoZonePropsForIndex(
     return {
       infoContainerClassName: 'w-[328px] sm:w-[450px]',
       iconSrc: trophyIcon.src,
-      infoPositionOffset: [0, 12, 5],
-      infoContentHtmlProps: { transform: true },
+      infoPositionOffset: [0, 10, 5],
       sphereColour: '#E97449', // orange accent
     }
   }

@@ -2,7 +2,7 @@
 'use client'
 
 import { useProgress } from '@react-three/drei'
-import { DownloadIcon, PlusIcon, RotateCw, Share2Icon, VolumeOffIcon } from 'lucide-react'
+import { DownloadIcon, PlusIcon, Share2Icon, VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { type FC, type TransitionEvent, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
@@ -27,36 +27,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const { active, progress } = useProgress()
   const [isMounted, setIsMounted] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
-  const [isLandscape, setIsLandscape] = useState(() => {
-    if (!isMobile) return true
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(orientation: landscape)').matches
-  })
 
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
-  const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const { canInstall, isInstalled, isPrompting, isPromptSupported, promptInstall } = usePWA()
   const [isIOSDevice, setIsIOSDevice] = useState(false)
-
-  useEffect(() => {
-    if (!isMobile) return
-
-    const mediaQuery = window.matchMedia('(orientation: landscape)')
-
-    const handleOrientationChange = (event: MediaQueryList | MediaQueryListEvent) => {
-      setIsLandscape(event.matches)
-    }
-
-    handleOrientationChange(mediaQuery)
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', handleOrientationChange)
-      return () => mediaQuery.removeEventListener('change', handleOrientationChange)
-    }
-
-    mediaQuery.addListener(handleOrientationChange)
-    return () => mediaQuery.removeListener(handleOrientationChange)
-  }, [isMobile])
 
   useEffect(() => {
     if (!isMobile) {
@@ -69,9 +43,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   }, [isMobile])
 
   const isReady = !active && progress >= 100
-  const meetsOrientationRequirement = !isMobile || isLandscape
-  const canStart = isReady && meetsOrientationRequirement
-  const showRotateMessage = isMobile && !isLandscape
+  const canStart = isReady
   const showInstallButton = isMobile && canInstall
   const showIOSInstallHint =
     isMobile && isIOSDevice && !isInstalled && !canInstall && !isPromptSupported
@@ -79,11 +51,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
     setIsExiting(true)
-    onOutOfBounds({ silent: true })
   }
 
   const onInstallClick = () => {
-    void promptInstall()
+    promptInstall()
   }
 
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
@@ -167,13 +138,6 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
           </div>
         )}
       </div>
-
-      {showRotateMessage && (
-        <div className="flex items-center gap-2 text-center text-sm font-medium tracking-wide text-white uppercase">
-          <RotateCw className="size-5" aria-hidden="true" />
-          Rotate your device to landscape to start
-        </div>
-      )}
     </div>
   )
 }

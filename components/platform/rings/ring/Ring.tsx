@@ -15,6 +15,7 @@ export type RingUniforms = {
   uRotationSpeed: number
   uRotationPhase: number
   uExitProgress: number
+  uDistanceFadeEnabled: number
 }
 
 const DEFAULT_UNIFORMS: RingUniforms = {
@@ -24,11 +25,12 @@ const DEFAULT_UNIFORMS: RingUniforms = {
   uRotationSpeed: 1,
   uRotationPhase: 0,
   uExitProgress: 0,
+  uDistanceFadeEnabled: 1,
 }
 
-const RingsShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
+const RingShader = shaderMaterial(DEFAULT_UNIFORMS, ringVert, ringFrag)
 
-const RingsShaderMaterial = extend(RingsShader)
+const RingShaderMaterial = extend(RingShader)
 
 type Props = {
   isVisible: boolean
@@ -48,18 +50,21 @@ const Ring: FC<Props> = ({
   tubeRadius,
 }) => {
   const ringConfig = usePerformanceStore((s) => s.sceneConfig.ring)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
+
   return (
     <mesh visible={isVisible}>
       <torusGeometry
         args={[radius, tubeRadius, ringConfig.radialSegments, ringConfig.tubularSegments]}
       />
-      <RingsShaderMaterial
+      <RingShaderMaterial
         ref={shaderRef}
-        key={RingsShader.key}
-        transparent
+        key={RingShader.key}
         {...DEFAULT_UNIFORMS}
+        transparent={true}
         uRotationSpeed={rotationSpeed}
         uRotationPhase={rotationPhase}
+        uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
       />
     </mesh>
   )

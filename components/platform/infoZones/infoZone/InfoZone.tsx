@@ -30,6 +30,7 @@ import { twMerge } from 'tailwind-merge'
 import { Vector3, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
@@ -54,6 +55,7 @@ type InfoZoneShaderUniforms = {
   uTilesX: number
   uTilesY: number
   uShowProgress: number
+  uDistanceFadeEnabled: number
 }
 
 const INITIAL_UNIFORMS: InfoZoneShaderUniforms = {
@@ -62,6 +64,7 @@ const INITIAL_UNIFORMS: InfoZoneShaderUniforms = {
   uTilesX: 1,
   uTilesY: 1,
   uShowProgress: 0,
+  uDistanceFadeEnabled: 1,
 }
 
 const InfoZoneShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentShader)
@@ -97,6 +100,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
   const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   const [showInfo, setShowInfo] = useState(alwaysShowInfo)
   const infoContainer = useRef<HTMLDivElement>(null)
@@ -206,6 +210,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
             uAspect={aspect}
             uTilesX={tilesX}
             uTilesY={tilesY}
+            uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
           />
         </mesh>
 

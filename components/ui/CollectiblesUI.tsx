@@ -24,10 +24,17 @@ export const RingsUI: FC = () => {
 
   return (
     <div className="flex h-fit items-center gap-1 text-sm select-none">
-      <div className="relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold">
+      <div
+        className={twJoin(
+          'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold',
+          collectedRingCount > 0 && 'text-amber-300',
+        )}>
         {collectedRingCount}
       </div>
-      <span className="font-mono font-medium">/{totalRingsCount}</span>
+      <span className="font-mono font-medium tracking-wide">
+        <span className="text-white/70">/</span>
+        {totalRingsCount}
+      </span>
 
       {/* TODO: Ring based speed boost indicator would go here... */}
     </div>

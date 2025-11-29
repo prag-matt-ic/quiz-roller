@@ -8,6 +8,7 @@ uniform mediump float uTilesX;
 uniform mediump float uTilesY;
 varying mediump vec2 vUv;
 varying mediump vec2 vTileCoord;
+varying mediump float vDistanceFade;
 
 
 void main() {
@@ -25,5 +26,5 @@ void main() {
   color = mix(color, vec3(0.75, 0.0, 0.0), redLineMask);
   alpha = mix(alpha, uOpacity, redLineMask);
 
-  gl_FragColor = vec4(color, alpha);
+  gl_FragColor = vec4(color, alpha * vDistanceFade);
 }
