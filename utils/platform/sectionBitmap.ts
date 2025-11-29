@@ -1,16 +1,17 @@
-import { Stage } from '@/stores/types'
 import type { TotalCounts } from '@/stores/totalCounts'
+import { Stage } from '@/stores/types'
 import {
-  colToX,
   COLUMNS,
-  createEmptyRingPositions,
+  type IndexedPlacement,
   ON_TILE_Y,
+  RingPositions,
+  type RowData,
   SAFE_HEIGHT,
   TILE_SIZE,
   UNSAFE_HEIGHT,
-  type IndexedPlacement,
-  type RowData,
+  colToX,
 } from '@/utils/tiles'
+
 import { HEADING_Y } from './floatingHeading'
 
 type BitmapPlacement = {
@@ -324,7 +325,7 @@ function buildRowDataFromBitmapRows({
 
 function applyRingColumns(row: RowData, columns?: number[]) {
   if (!columns || columns.length === 0) return
-  const ringPositions = row.ringPositions ?? createEmptyRingPositions()
+  const ringPositions = new Array<number>(COLUMNS).fill(0) as RingPositions
   columns.forEach((columnIndex) => {
     if (columnIndex < 0 || columnIndex >= COLUMNS) return
     ringPositions[columnIndex] = 1

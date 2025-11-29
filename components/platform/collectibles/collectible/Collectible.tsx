@@ -4,15 +4,7 @@ import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import { CuboidCollider, RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useMemo, useRef } from 'react'
-import {
-  DataTexture,
-  FloatType,
-  Group,
-  Mesh,
-  RGBAFormat,
-  Vector3,
-  type Vector3Tuple,
-} from 'three'
+import { DataTexture, FloatType, Group, Mesh, RGBAFormat, Vector3 } from 'three'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
 
 import { useGameStore } from '@/components/GameProvider'

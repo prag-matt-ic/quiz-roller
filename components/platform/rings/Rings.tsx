@@ -143,10 +143,8 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     (row: RowData | undefined, rowZ: number) => {
       if (!row) return
       if (!row.ringPositions) return
-      if (row.ringPositions.every((flag) => flag !== 1)) return
       const rowIndex = row.rowIndex ?? -1
       if (rowIndex < 0) return
-
       for (let columnIndex = 0; columnIndex < row.ringPositions.length; columnIndex++) {
         if (row.ringPositions[columnIndex] !== 1) continue
         if (collectedRings[getRingKey(rowIndex, columnIndex)]) continue
@@ -213,7 +211,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     if (!material) return
 
     playSoundFX(SoundFX.COIN_COLLECTED)
-    // Animate the ring out and then mark it as collected
+    // Animate the ring out then mark it as collected
     gsap.to(material, {
       uExitProgress: 1,
       duration: 0.4,

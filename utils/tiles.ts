@@ -64,9 +64,6 @@ export type RingLayout = Record<number, number[]>
 
 export type RingPositions = (0 | 1)[]
 
-export const createEmptyRingPositions = (): RingPositions =>
-  new Array<number>(COLUMNS).fill(0) as RingPositions
-
 export type IndexedPlacement = readonly [number, number, number, number]
 
 export type RowData = {
