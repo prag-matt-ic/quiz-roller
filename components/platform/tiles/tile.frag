@@ -21,8 +21,8 @@ varying lowp float vShade;
 const float HIGHLIGHTED_MIX_MIN = 0.16;
 const float HIGHLIGHTED_MIX_MAX = 0.32;
 
-const float REGULAR_MIX = 0.6;
-const float PLAYER_PROXIMITY_MIX = 0.88;
+const float REGULAR_MIX = 0.55;
+const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.75;
 const float SHADOW_STRENGTH = 0.5;

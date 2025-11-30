@@ -26,7 +26,7 @@ export const RingsUI: FC = () => {
     <div className="flex h-fit items-center gap-1 p-2 text-sm lg:p-4">
       <div
         className={twJoin(
-          'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold',
+          'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-bold',
           collectedRingCount > 0 && 'text-amber-300',
         )}>
         {collectedRingCount}
