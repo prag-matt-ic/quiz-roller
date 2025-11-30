@@ -132,7 +132,7 @@ export const LeaderboardTable: FC<TableProps> = ({
 }
 
 const ROW_CONTAINER_CLASSES =
-  'col-span-full grid grid-cols-subgrid items-center border-b border-white/8 px-3 select-none last-of-type:border-0'
+  'col-span-full grid grid-cols-subgrid items-center border-b border-white/8 px-3 last-of-type:border-0'
 
 const LeaderboardRow: FC<{
   entry: SpeedRunDatabase

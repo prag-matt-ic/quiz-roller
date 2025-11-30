@@ -23,11 +23,12 @@ const PWAInstall: FC<Props> = ({ isMobile }) => {
     const ua = navigator.userAgent.toLowerCase()
     const isIOS = /iphone|ipad|ipod/.test(ua)
     if (isIOS) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsIOSDevice(true)
     }
   }, [isMobile])
 
-  const showInstallButton = isMobile && canInstall
+  const showInstallButton = canInstall
   const showIOSInstallHint =
     isMobile && isIOSDevice && !isInstalled && !canInstall && !isPromptSupported
 

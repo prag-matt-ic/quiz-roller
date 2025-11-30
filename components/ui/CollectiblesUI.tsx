@@ -9,7 +9,7 @@ import {
   useInteractions,
   useTransitionStatus,
 } from '@floating-ui/react'
-import { CheckIcon, GemIcon } from 'lucide-react'
+import { GemIcon } from 'lucide-react'
 import { type CSSProperties, type FC, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
@@ -23,7 +23,7 @@ export const RingsUI: FC = () => {
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
-    <div className="flex h-fit items-center gap-1 p-2 text-sm select-none lg:p-4">
+    <div className="flex h-fit items-center gap-1 p-2 text-sm lg:p-4">
       <div
         className={twJoin(
           'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold',

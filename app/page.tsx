@@ -5,6 +5,7 @@ import { twJoin } from 'tailwind-merge'
 import { GameProvider } from '@/components/GameProvider'
 import { SoundProvider } from '@/components/SoundProvider'
 import LoadingOverlay from '@/components/ui/LoadingOverlay'
+import PWAInstall from '@/components/ui/PWAInstall'
 import isMobileServer from '@/utils/isMobileServer'
 
 import { insertSpeedRun } from './actions'
@@ -27,6 +28,7 @@ export default async function Home(props: PageProps) {
           <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
             <LoadingOverlay isMobile={isMobile} />
             <Main isMobile={isMobile} isDebug={isDebug} />
+            <PWAInstall isMobile={isMobile} />
           </GameProvider>
         </SoundProvider>
       </main>

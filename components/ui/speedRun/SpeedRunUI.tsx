@@ -37,7 +37,7 @@ export const SpeedRunControls: FC = () => {
   const resetGame = useGameStore((s) => s.resetGame)
 
   return (
-    <div className="pointer-events-auto flex size-fit items-center justify-center gap-3 select-none">
+    <div className="pointer-events-auto flex size-fit items-center justify-center gap-3">
       {showSpeedRunButtons && (
         <button
           type="button"

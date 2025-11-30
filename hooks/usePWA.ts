@@ -15,7 +15,9 @@ const supportsBeforeInstallPrompt = (): boolean =>
 
 const isStandaloneDisplay = (): boolean => {
   if (typeof window === 'undefined') return false
-  const mediaStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const mediaStandalone = window.matchMedia(
+    '(display-mode: standalone) or (display-mode: fullscreen)',
+  ).matches
   const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean }
   return mediaStandalone || Boolean(navigatorWithStandalone?.standalone)
 }

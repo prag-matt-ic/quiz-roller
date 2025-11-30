@@ -139,7 +139,7 @@ const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
     ),
   }
   return (
-    <div className="flex items-center gap-2 rounded-full bg-black px-2 py-2 pr-4 text-white">
+    <div className="flex items-center gap-2 rounded-full bg-black px-3 py-3 pr-4 text-white">
       <MoveIcon strokeWidth={1.5} size={28} />
       <span className="block text-sm font-medium whitespace-nowrap uppercase lg:text-base">
         {text[inputType]}

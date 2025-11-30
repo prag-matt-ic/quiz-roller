@@ -27,6 +27,8 @@ body {
   background: var(--background);
   color: #fff;
   font-family: var(--font-nunito-sans), sans-serif;
+  user-select: none;
+  overscroll-behavior-y: contain;
 }
 
 button,
