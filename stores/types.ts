@@ -125,6 +125,9 @@ export type GameSlice = {
   isPlatformReady: boolean
   setPlatformReady: (isReady: boolean) => void
 
+  isShowingLoadingOverlay: boolean
+  setIsShowingLoadingOverlay: (isVisible: boolean) => void
+
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
 

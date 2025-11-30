@@ -6,13 +6,12 @@ type CardProps = PropsWithChildren<{
   childrenClassName?: string
 }>
 
-// TODO: new design for this in-keeping with the grid and use a cool masked reveal effect.
 const Card: FC<CardProps> = ({ className, children, childrenClassName }) => {
   return (
     <div className={twMerge('card relative origin-bottom', className)}>
       <div
         className={twMerge(
-          'relative flex flex-col gap-2.5 rounded-lg bg-linear-160 from-white from-50% to-white/90 p-4 text-black lg:p-7',
+          'relative flex flex-col gap-2.5 rounded-lg bg-linear-160 from-white from-50% to-white/90 p-5 text-black lg:p-7',
           childrenClassName,
         )}
         style={{

@@ -14,7 +14,6 @@ export const InputConfig: FC = () => {
   return (
     <>
       <ButtonGroup
-        label="Input"
         value={inputType}
         onChange={setInputType}
         items={[
@@ -33,7 +32,6 @@ export const InputConfig: FC = () => {
 
       {inputType === InputType.JOYSTICK && (
         <ButtonGroup
-          label="Joystick position"
           value={joystickPosition}
           onChange={setJoystickPosition}
           items={[

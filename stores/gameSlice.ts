@@ -19,11 +19,15 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   stage: Stage.HOME,
   htmlPortal: undefined,
   _isHydrated: false,
+  isShowingLoadingOverlay: true,
   resetPlatformTick: 0,
   mode: GameMode.MAIN,
   hudIndicator: null,
   setHydrated: () => {
     set({ _isHydrated: true })
+  },
+  setIsShowingLoadingOverlay: (isVisible) => {
+    set({ isShowingLoadingOverlay: isVisible })
   },
   setHtmlPortal: (htmlPortal) => {
     set({ htmlPortal })

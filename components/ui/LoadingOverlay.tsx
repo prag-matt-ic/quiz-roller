@@ -21,18 +21,19 @@ type Props = {
 }
 
 const LoadingOverlay: FC<Props> = ({ isMobile }) => {
-  const [isMounted, setIsMounted] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
   const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
 
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
+  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
+  const setIsShowingLoadingOverlay = useGameStore((s) => s.setIsShowingLoadingOverlay)
   const isHydrated = useGameStore((s) => s._isHydrated)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const inputType = useGameStore((s) => s.inputType)
 
-  const isReady = isHydrated && isPlatformReady
+  const isReady = isHydrated && isPlatformReady && (!isMobile || isMobileLandscape)
 
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
@@ -42,23 +43,26 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
-    setIsMounted(false)
+    setIsShowingLoadingOverlay(false)
 
     console.log('[LoadingOverlay] Transition ended, spawning player')
     const hud = MOVE_HUD_CONFIG[inputType]
     respawnPlayer(PLAYER_INITIAL_POSITION_VEC3, hud)
   }
 
-  if (!isMounted) return null
+  if (!isShowingLoadingOverlay) return null
 
   return (
     <div
       id="loading-overlay"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% px-4 py-4',
+        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 to-120% px-4 py-4',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
+        isReady
+          ? 'bg-radial from-[#000]/90 from-20% to-transparent to-120% backdrop-blur-sm'
+          : 'bg-[#000]',
       )}>
       <header>
         <h1 className="heading-md lg:heading-xl text-white">
@@ -82,7 +86,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
           disabled={!isReady}
           onClick={() => onStartClick(false)}>
           <PlayCircleIcon className="size-6" />
-          Start experience
+          Enter experience
         </Button>
         <Button
           variant="secondary"
@@ -91,7 +95,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
           onClick={() => onStartClick(true)}
           disabled={!isReady}>
           <VolumeOffIcon className="size-6" />
-          Start muted
+          Enter in silence
         </Button>
       </div>
     </div>
