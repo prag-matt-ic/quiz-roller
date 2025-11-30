@@ -22,8 +22,6 @@ import { useTotalTime } from '@/hooks/useTime'
 import { INFO_ZONES_CARD_CONTENT } from '@/resources/content'
 import { type RowData } from '@/utils/tiles'
 
-const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
-
 export type InfoZonesHandle = {
   moveElements: (zStep: number) => void
   positionElementsIfNeeded: (row: RowData, rowZ: number) => void

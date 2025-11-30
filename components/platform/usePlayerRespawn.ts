@@ -186,11 +186,11 @@ export function usePlayerRespawn({
   const preferredRespawnX = useRef(PLAYER_INITIAL_POSITION[0])
 
   usePlayerPosition((pos) => {
-    preferredRespawnX.current = pos.x
+    preferredRespawnX.current = pos[0]
   })
 
   const onOutOfBounds = () => {
-    console.log('[Platform] Player out-of-bounds detected, initiating respawn sequence.')
+    console.warn('[Platform] Player out-of-bounds detected, initiating respawn sequence.')
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
     const scrollPos = currentScrollPosition.current
@@ -289,11 +289,11 @@ export function usePlayerRespawn({
   const onRespawnScrollComplete = useCallback(() => {
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
-    respawnPlayer({
-      x: pendingRespawnX.current,
-      y: PLAYER_INITIAL_POSITION[1],
-      z: PLAYER_INITIAL_POSITION[2],
-    })
+    respawnPlayer([
+      pendingRespawnX.current,
+      PLAYER_INITIAL_POSITION[1],
+      PLAYER_INITIAL_POSITION[2],
+    ])
     pendingRespawnX.current = null
   }, [respawnPlayer])
 

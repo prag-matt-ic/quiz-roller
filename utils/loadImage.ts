@@ -38,7 +38,7 @@ export function loadHtmlImage(
     return Promise.all(
       input.map((src) =>
         loadSingleHtmlImage(src).catch((error) => {
-          console.warn(`Failed to load texture "${src}"`, error)
+          console.error(`Failed to load texture "${src}"`, error)
           return null
         }),
       ),

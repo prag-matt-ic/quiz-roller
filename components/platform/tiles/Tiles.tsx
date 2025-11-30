@@ -127,7 +127,7 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
 
   useGameFrame(() => {
     if (!tileShader.current) return
-    tileShader.current.uPlayerWorldPos.set(playerPosition.current.x, playerPosition.current.z)
+    tileShader.current.uPlayerWorldPos.set(playerPosition.current[0], playerPosition.current[2])
   })
 
   useEffect(() => {

@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
-type ReadyState = {
+export type ReadyState = {
   tiles: boolean
   rings: boolean
   headings: boolean
@@ -24,22 +24,39 @@ const INITIAL_READY_STATE: ReadyState = {
 
 const READY_STATE_KEYS: ReadyStateKey[] = Object.keys(INITIAL_READY_STATE) as ReadyStateKey[]
 
-export default function useReadyState() {
-  const [readyState, setReadyState] = useState<ReadyState>(INITIAL_READY_STATE)
+const DEFAULT_DEPENDENCIES: unknown[] = []
+
+export default function useReadyState(
+  onStateChange?: (readyState: ReadyState) => void,
+  resetDependencies: unknown[] = DEFAULT_DEPENDENCIES,
+) {
+  const readyState = useRef<ReadyState>(INITIAL_READY_STATE)
+
+  // Reset ready state when dependencies change
+  useEffect(() => {
+    readyState.current = INITIAL_READY_STATE
+    // We don't necessarily need to notify change here if the consumer
+    // also resets their logic based on the same dependencies.
+    // But let's be safe.
+    onStateChange?.(INITIAL_READY_STATE)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, resetDependencies)
 
   const readyChangeHandlers = useMemo<Record<ReadyStateKey, ReadyChangeHandler>>(
     () =>
       READY_STATE_KEYS.reduce(
         (handlers, key) => {
           handlers[key] = (isReady: boolean) => {
-            setReadyState((prev) => ({ ...prev, [key]: isReady }))
+            if (readyState.current[key] === isReady) return
+            readyState.current = { ...readyState.current, [key]: isReady }
+            onStateChange?.(readyState.current)
           }
           return handlers
         },
         {} as Record<ReadyStateKey, ReadyChangeHandler>,
       ),
-    [setReadyState],
+    [onStateChange],
   )
 
-  return { readyState, readyChangeHandlers }
+  return { readyState: readyState.current, readyChangeHandlers }
 }

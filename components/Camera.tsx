@@ -96,11 +96,11 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     // Adjust the camera based on player input
     const positionZOffset = input.current.down > 0 ? 5 : 0
-    const lookAtX = lookAt.x + input.current.right - input.current.left
-    const lookAtZ = lookAt.z + input.current.down - input.current.up
+    const lookAtX = lookAt[0] + input.current.right - input.current.left
+    const lookAtZ = lookAt[2] + input.current.down - input.current.up
 
     cameraControls.current.setLookAt(
-      playerPosition.current.x,
+      playerPosition.current[0],
       stageCameraPosition.y,
       stageCameraPosition.z + positionZOffset,
       lookAtX,

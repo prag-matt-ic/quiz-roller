@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Vector3 } from 'three'
+import { type Vector3Tuple } from 'three'
 import { type StateCreator } from 'zustand'
 
 import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
@@ -74,17 +74,14 @@ export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
 
-  playerPosition: Vector3
+  playerPosition: Vector3Tuple
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
-  spawnPosition: Vector3 | null
+  spawnPosition: Vector3Tuple | null
   playerRespawnTick: number
   playerStatus: PlayerStatus
 
-  respawnPlayer: (
-    position: { x: number; y: number; z: number },
-    hud?: HudIndicatorConfig,
-  ) => void
+  respawnPlayer: (position: Vector3Tuple, hud?: HudIndicatorConfig) => void
   onRespawnComplete: () => void
 
   confirmingCollectible: CollectibleID | null
@@ -117,8 +114,8 @@ export type GameSlice = {
   mode: GameMode
   resetGame: (params: { mode: GameMode; speedRunStage?: SpeedRunStage }) => void
 
-  cameraLookAtPosition: Vector3 | null
-  setCameraLookAtPosition: (pos: Vector3 | null) => void
+  cameraLookAtPosition: Vector3Tuple | null
+  setCameraLookAtPosition: (pos: Vector3Tuple | null) => void
 
   resetPlatformTick: number
 

@@ -25,7 +25,7 @@ import {
 } from 'react'
 import { Transition } from 'react-transition-group'
 import { twMerge } from 'tailwind-merge'
-import { Vector3, type Vector3Tuple } from 'three'
+import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
@@ -89,7 +89,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
   isVisible,
   infoContainerClassName,
   children,
-  infoPositionOffset = [0, 0, 4],
+  infoPositionOffset = [0, 0, 3],
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
   iconSrc,
@@ -108,11 +108,11 @@ export const InfoZone: FC<InfoZoneProps> = ({
     if (!isVisible) return
     if (!ref || !ref.current) return
     const currentTranslation = ref.current.translation()
-    const targetPosition = new Vector3(
+    const targetPosition: Vector3Tuple = [
       currentTranslation.x - infoPositionOffset[0],
       currentTranslation.y - infoPositionOffset[1],
       currentTranslation.z - infoPositionOffset[2],
-    )
+    ]
     setCameraLookAtPosition(targetPosition)
   }
 
@@ -146,7 +146,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
         opacity: 1,
         scale: 1,
         duration: 0.36,
-        delay: 0.1,
+        delay: 0.3,
         stagger: -0.07,
         ease: 'expoScale(0.8,1.0,power1.out)',
       },

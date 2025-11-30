@@ -71,15 +71,14 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
-  const {
-    shouldRotate,
-    usePlayerFade,
-  } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
+  const { shouldRotate, usePlayerFade } = usePerformanceStore(
+    (s) => s.sceneConfig.floatingHeading,
+  )
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled) // for distance faded
 
-  const onPlayerPosition = (newPosition: Vector3) => {
+  const onPlayerPosition = (newPosition: Vector3Tuple) => {
     if (!shaderRef.current) return
-    shaderRef.current.uPlayerXZ.set(newPosition.x, newPosition.z)
+    shaderRef.current.uPlayerXZ.set(newPosition[0], newPosition[2])
   }
 
   usePlayerPosition(onPlayerPosition)

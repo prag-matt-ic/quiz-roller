@@ -1,7 +1,7 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, memo, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import FloatingTiles, {
@@ -40,7 +40,9 @@ import {
 
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
 import { EMPTY_ROW_INDEX, usePlayerRespawn } from './usePlayerRespawn'
-import useReadyState, { ReadyStateKey } from './useReadyState'
+import useReadyState, { type ReadyState, type ReadyStateKey } from './useReadyState'
+
+const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 const EMPTY_ROW_DATA: RowData = {
   heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
@@ -58,7 +60,7 @@ const ROWS_COVERAGE_HALF_SPAN = (ROWS_RENDERED - 1) * TILE_SIZE * 0.5
 const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
 const INITIAL_ROW_BACK_OFFSET_ROWS = 12
 const INITIAL_ROW_BACK_OFFSET = INITIAL_ROW_BACK_OFFSET_ROWS * TILE_SIZE
-const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
+
 const warnVisibilityCoverageIfNeeded = (() => {
   let hasWarned = false
   return () => {
@@ -122,126 +124,117 @@ const Platform: FC = () => {
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
-  const { readyState, readyChangeHandlers } = useReadyState()
+  const setupInitialRowsAndTiles = useCallback(() => {
+    const tilesHandle = tiles.current
 
-  useEffect(() => {
-    if (!IS_DEV_ENV) return
-    console.warn(
-      '[Platform] rowsData changed while platform was ready; triggering reinitialization.',
-      { rowCount: rowsData.length },
-    )
-  }, [rowsData])
-
-  useEffect(() => {
-    if (isPlatformReady || rowsData.length === 0) return
-    const isSpeedRunMode = mode === GameMode.SPEEDRUN
-
-    const shouldSkipReadyCheck = (key: ReadyStateKey) => {
-      if (!isSpeedRunMode && key === 'speedRun') return true
-      return false
-    }
-
-    const areElementsReady = (
-      Object.entries(readyState) as Array<[ReadyStateKey, boolean]>
-    ).every(([key, value]) => {
-      if (shouldSkipReadyCheck(key)) return true
-      return value
-    })
-
-    if (!areElementsReady) return
-
-    if (!tiles.current) {
+    if (!tilesHandle) {
       console.error('[Platform] Missing tiles handle when initializing platform.')
       return
     }
 
-    const tilesHandle = tiles.current
+    // Reset state
+    rowsDataRef.current = rowsData
+    nextAbsoluteRowIndex.current = 0
+    nextRowDataIndex.current = 0
+    activeRowsData.current = []
+    baseZByRow.current = []
+    wrapCountByRow.current = []
+    rowZByIndex.current = []
+    rowBaseWithoutScroll.current = []
+    rowIsVisible.current = []
+    xByBodyIndex.current = []
+    yByBodyIndex.current = []
+    currentScrollPosition.current = 0
 
-    function setupInitialRowsAndTiles() {
-      // Reset state
-      rowsDataRef.current = []
-      nextAbsoluteRowIndex.current = 0
-      nextRowDataIndex.current = 0
-      activeRowsData.current = []
-      baseZByRow.current = []
-      wrapCountByRow.current = []
-      rowZByIndex.current = []
-      rowBaseWithoutScroll.current = []
-      rowIsVisible.current = []
-      xByBodyIndex.current = []
-      yByBodyIndex.current = []
-      currentScrollPosition.current = 0
+    const tileInstances: InstancedRigidBodyProps[] = []
 
-      rowsDataRef.current = rowsData
+    const playerZ = 0
+    const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
+    const nextStartZ = playerZ + initialHalfSpan - INITIAL_ROW_BACK_OFFSET
+    if (IS_DEV_ENV) {
+      console.warn(
+        `[Platform] Initializing rows around playerZ=${playerZ.toFixed(
+          2,
+        )} with startZ=${nextStartZ.toFixed(2)} (halfSpan=${initialHalfSpan.toFixed(2)}).`,
+      )
+    }
+    warnVisibilityCoverageIfNeeded()
 
-      const tileInstances: InstancedRigidBodyProps[] = []
+    let nextRowZ = nextStartZ
 
-      const playerZ = 0
-      const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
-      const nextStartZ = playerZ + initialHalfSpan - INITIAL_ROW_BACK_OFFSET
-      if (IS_DEV_ENV) {
-        console.warn(
-          `[Platform] Initializing rows around playerZ=${playerZ.toFixed(
-            2,
-          )} with startZ=${nextStartZ.toFixed(2)} (halfSpan=${initialHalfSpan.toFixed(2)}).`,
-        )
-      }
-      warnVisibilityCoverageIfNeeded()
+    const tilesVisibility = tilesHandle.visibilityData
+    const tilesSeed = tilesHandle.seedData
+    const tilesHighlighted = tilesHandle.highlightedData
 
-      let nextRowZ = nextStartZ
-
-      const tilesVisibility = tilesHandle.visibilityData
-      const tilesSeed = tilesHandle.seedData
-      const tilesHighlighted = tilesHandle.highlightedData
-
-      if (!tilesVisibility || !tilesSeed || !tilesHighlighted) {
-        console.error('[Platform] Missing tile instance attributes data.')
-        return
-      }
-
-      for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-        const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
-        activeRowsData.current[rowIndex] = rowData
-        baseZByRow.current[rowIndex] = nextRowZ
-        rowZByIndex.current[rowIndex] = nextRowZ
-        rowBaseWithoutScroll.current[rowIndex] = nextRowZ
-        wrapCountByRow.current[rowIndex] = 0
-        rowIsVisible.current[rowIndex] = false
-        floatingTilesHandle.current?.setRowData(rowIndex, rowData)
-
-        for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
-          const x = colToX(columnIndex)
-          const z = nextRowZ
-          const y = rowData.heights[columnIndex]
-          const bodyIndex = rowIndex * COLUMNS + columnIndex
-          xByBodyIndex.current[bodyIndex] = x
-          yByBodyIndex.current[bodyIndex] = y
-
-          tilesVisibility![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
-          tilesSeed![bodyIndex] = Math.random()
-          tilesHighlighted![bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
-
-          tileInstances.push({
-            key: `tile-${rowIndex}-${columnIndex}`,
-            position: [x, y, z],
-            userData: { type: 'tile', rowIndex, colIndex: columnIndex },
-          })
-        }
-
-        nextRowZ -= TILE_SIZE
-      }
-
-      tilesHandle.setTileInstances(tileInstances)
-      floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
-      floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
-      nextRowDataIndex.current = ROWS_RENDERED
-      markInstanceAttributesDirty()
-
-      setPlatformReady(true)
+    if (!tilesVisibility || !tilesSeed || !tilesHighlighted) {
+      console.error('[Platform] Missing tile instance attributes data.')
+      return
     }
 
-    setupInitialRowsAndTiles()
-  }, [isPlatformReady, readyState, mode, setPlatformReady, rowsData])
+    for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
+      const rowData = rowsDataRef.current[rowIndex] ?? EMPTY_ROW_DATA
+      activeRowsData.current[rowIndex] = rowData
+      baseZByRow.current[rowIndex] = nextRowZ
+      rowZByIndex.current[rowIndex] = nextRowZ
+      rowBaseWithoutScroll.current[rowIndex] = nextRowZ
+      wrapCountByRow.current[rowIndex] = 0
+      rowIsVisible.current[rowIndex] = false
+      floatingTilesHandle.current?.setRowData(rowIndex, rowData)
+
+      for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
+        const x = colToX(columnIndex)
+        const z = nextRowZ
+        const y = rowData.heights[columnIndex]
+        const bodyIndex = rowIndex * COLUMNS + columnIndex
+        xByBodyIndex.current[bodyIndex] = x
+        yByBodyIndex.current[bodyIndex] = y
+
+        tilesVisibility![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
+        tilesSeed![bodyIndex] = Math.random()
+        tilesHighlighted![bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
+
+        tileInstances.push({
+          key: `tile-${rowIndex}-${columnIndex}`,
+          position: [x, y, z],
+          userData: { type: 'tile', rowIndex, colIndex: columnIndex },
+        })
+      }
+
+      nextRowZ -= TILE_SIZE
+    }
+
+    tilesHandle.setTileInstances(tileInstances)
+    floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
+    floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
+    nextRowDataIndex.current = ROWS_RENDERED
+    markInstanceAttributesDirty()
+    setPlatformReady(true)
+  }, [rowsData, setPlatformReady])
+
+  const checkReady = useCallback(
+    (currentReadyState: ReadyState) => {
+      if (isPlatformReady || rowsData.length === 0) return
+      const isSpeedRunMode = mode === GameMode.SPEEDRUN
+
+      const shouldSkipReadyCheck = (key: ReadyStateKey) => {
+        if (!isSpeedRunMode && key === 'speedRun') return true
+        return false
+      }
+
+      const areElementsReady = (
+        Object.entries(currentReadyState) as unknown as Array<[ReadyStateKey, boolean]>
+      ).every(([key, value]) => {
+        if (shouldSkipReadyCheck(key)) return true
+        return value
+      })
+
+      if (!areElementsReady) return
+      setupInitialRowsAndTiles()
+    },
+    [isPlatformReady, rowsData, mode, setupInitialRowsAndTiles],
+  )
+
+  const { readyChangeHandlers } = useReadyState(checkReady, [resetPlatformTick, rowsData])
 
   const { targetScrollPosition, onRespawnScrollComplete } = usePlayerRespawn({
     activeRowsData,
@@ -539,13 +532,13 @@ const Platform: FC = () => {
     <group>
       <FloatingTiles
         ref={floatingTilesHandle}
-        key={`floating-tiles-${rowsData.length}`}
+        key={`floating-tiles-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.floatingTiles}
       />
 
       <PlatformTiles
         ref={tiles}
-        key={`platform-tiles-${rowsData.length}`}
+        key={`platform-tiles-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.tiles}
       />
 
@@ -584,4 +577,4 @@ const Platform: FC = () => {
   )
 }
 
-export default Platform
+export default memo(Platform, () => true)

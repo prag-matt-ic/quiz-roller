@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { Vector3, type Vector3Tuple } from 'three'
+import { type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
 import { CollectibleID } from '@/model/schema'
@@ -15,17 +15,11 @@ import {
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
 
-export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
-  PLAYER_INITIAL_POSITION[0],
-  PLAYER_INITIAL_POSITION[1],
-  PLAYER_INITIAL_POSITION[2],
-)
-
 const COLLECTIBLE_DURATION_S = 1.5
 
 const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void => {
   if (process.env.NODE_ENV === 'production') return
-  if (payload) {
+  if (!!payload) {
     console.warn(`[PlayerStore] ${event}`, payload)
     return
   }
@@ -94,12 +88,10 @@ export const createPlayerSlice =
       setUsername: (username: string) => {
         set({ username })
       },
-      playerPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+      playerPosition: PLAYER_INITIAL_POSITION,
       setPlayerPosition: (position) => {
-        set((s) => {
-          return {
-            playerPosition: s.playerPosition.set(position.x, position.y, position.z),
-          }
+        set({
+          playerPosition: [position.x, position.y, position.z],
         })
       },
       onRingCollected: (ringIndex: RingIndex) => {
@@ -154,7 +146,7 @@ export const createPlayerSlice =
         set((s) => ({
           playerStatus: 'respawning',
           playerRespawnTick: s.playerRespawnTick + 1,
-          spawnPosition: new Vector3(position.x, position.y, position.z),
+          spawnPosition: position,
           hudIndicator: hud ?? s.hudIndicator,
         }))
         logPlayerStatus('Respawn queued', { position, hud })

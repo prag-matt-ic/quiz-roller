@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { type FC, type TransitionEvent, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
-import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { useSoundStore } from '@/components/SoundProvider'
 import type { ButtonProps } from '@/components/ui/Button'
 import { GradientText } from '@/components/ui/GradientText'
@@ -44,10 +44,8 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setIsShowingLoadingOverlay(false)
-
-    console.warn('[LoadingOverlay] Transition ended, spawning player')
     const hud = MOVE_HUD_CONFIG[inputType]
-    respawnPlayer(PLAYER_INITIAL_POSITION_VEC3, hud)
+    respawnPlayer(PLAYER_INITIAL_POSITION, hud)
   }
 
   if (!isShowingLoadingOverlay) return null

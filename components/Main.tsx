@@ -17,8 +17,8 @@ const Main: FC<Props> = ({ isMobile, isDebug }) => {
   return (
     <PerformanceProvider isMobile={isMobile}>
       <Game isDebug={isDebug} isMobile={isMobile} />
-      <HtmlPortal />
       <UI isMobile={isMobile} />
+      <HtmlPortal />
       <Timer />
       {isDebug && <DebugControls />}
     </PerformanceProvider>

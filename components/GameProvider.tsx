@@ -14,7 +14,7 @@ export {
   type RingIndex,
 } from '@/stores/types'
 
-export { PLAYER_INITIAL_POSITION, PLAYER_INITIAL_POSITION_VEC3 } from '@/stores/playerSlice'
+export { PLAYER_INITIAL_POSITION } from '@/stores/playerSlice'
 
 const GameContext = createContext<ReturnType<typeof createGameStore>>(undefined!)
 

@@ -11,7 +11,7 @@ import Camera, {
   CAMERA_POSITION_FOR_STAGE_DESKTOP,
   CAMERA_POSITION_FOR_STAGE_MOBILE,
 } from '@/components/Camera'
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { Stage } from '@/components/GameProvider'
 import OutOfBounds from '@/components/OutOfBounds'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
@@ -32,8 +32,6 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
-
-  const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
 
   const cameraPositions = isMobile
     ? CAMERA_POSITION_FOR_STAGE_MOBILE
@@ -77,7 +75,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Suspense>
           <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />
-            <Platform key={resetPlatformTick} />
+            <Platform />
             <Player />
           </Physics>
         </Suspense>

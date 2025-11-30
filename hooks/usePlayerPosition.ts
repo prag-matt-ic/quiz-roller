@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { Vector3 } from 'three'
+import { type Vector3Tuple } from 'three'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
 
-export function usePlayerPosition(onPlayerPositionChange?: (pos: Vector3) => void) {
+export function usePlayerPosition(onPlayerPositionChange?: (pos: Vector3Tuple) => void) {
   const gameStoreAPI = useGameStoreAPI()
 
   // Capture current value in a ref to avoid re-renders
-  const playerPosition = useRef<Vector3>(gameStoreAPI.getState().playerPosition)
+  const playerPosition = useRef<Vector3Tuple>(gameStoreAPI.getState().playerPosition)
 
   useEffect(() => {
     // Subscribe to store updates and update ref only when playerPosition changes

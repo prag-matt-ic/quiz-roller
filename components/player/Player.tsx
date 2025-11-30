@@ -12,7 +12,7 @@ import {
 import { type FC, useEffect, useRef } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
-import { useGameStore } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -67,6 +67,8 @@ const Player: FC = () => {
       !controllerRef.current
     )
       return
+
+    if (playerStatus === 'idle') return
 
     const currentPosition = bodyRef.current.translation()
 
@@ -166,23 +168,28 @@ const Player: FC = () => {
   const isRespawning = playerStatus === 'respawning'
 
   useEffect(() => {
-    if (!isPlatformReady || !isRespawning) return
+    if (!isPlatformReady || !isRespawning || !bodyRef.current || !spawnPosition) return
+    bodyRef.current.setTranslation(
+      { x: spawnPosition[0], y: spawnPosition[1], z: spawnPosition[2] },
+      true,
+    )
+    console.warn('[Player] Setting respawn position', { spawnPosition })
     const timeout = setTimeout(() => {
+      console.warn('[Player] Completing respawn')
       onRespawnComplete()
     }, 200)
     return () => clearTimeout(timeout)
-  }, [isRespawning, isPlatformReady, onRespawnComplete])
+  }, [playerRespawnTick, isRespawning, isPlatformReady, onRespawnComplete, spawnPosition])
 
-  if (!isPlatformReady || !spawnPosition) return null
+  if (!isPlatformReady) return null
 
   return (
     <RigidBody
       ref={bodyRef}
-      key={playerRespawnTick} // reposition to spawn position on respawn tick change
       type="kinematicPosition"
       userData={PLAYER_USER_DATA}
       colliders={false}
-      position={spawnPosition}
+      position={PLAYER_INITIAL_POSITION}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider

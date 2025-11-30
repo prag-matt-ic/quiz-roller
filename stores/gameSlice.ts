@@ -1,7 +1,7 @@
 import type { RowData } from '@/utils/tiles'
 
 import { getResetInputState } from './inputSlice'
-import { PLAYER_INITIAL_POSITION_VEC3, RESET_PLAYER_STATE } from './playerSlice'
+import { PLAYER_INITIAL_POSITION, RESET_PLAYER_STATE } from './playerSlice'
 import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
 import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
@@ -42,15 +42,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     set({ cameraLookAtPosition })
   },
   setPlatformReady: (isPlatformReady) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[GameSlice] Setting platform ready`, { isPlatformReady })
-    }
     set({ isPlatformReady })
   },
   setRowsData: (rowsData, totalCounts) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[GameSlice] Setting rows data`, { rowsData, totalCounts })
-    }
     set({ rowsData, totalCounts, isPlatformReady: false })
   },
   goToStage: (newStage: Stage) => {
@@ -84,9 +78,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         speedRunStage: speedRunStage ?? RESET_TIME_STATE.speedRunStage,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
-        spawnPosition: s.playerStatus === 'idle' ? null : PLAYER_INITIAL_POSITION_VEC3.clone(),
+        spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,
-        playerPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        playerPosition: PLAYER_INITIAL_POSITION,
         resetPlatformTick: s.resetPlatformTick + 1,
       }
     })
