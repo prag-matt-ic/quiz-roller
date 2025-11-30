@@ -6,27 +6,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { type PlayerInput, useGameStore } from '@/components/GameProvider'
 import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick'
-import { GameMode, SpeedRunStage } from '@/stores/types'
-
-type KeyProps = {
-  isActive: boolean
-  Icon: LucideIcon
-}
-
-const Key: FC<KeyProps> = ({ Icon, isActive }) => {
-  return (
-    <div
-      className={twJoin(
-        'flex h-8 w-10 items-center justify-center rounded-md text-white',
-        isActive ? 'bg-black/50' : 'bg-black',
-      )}>
-      <Icon
-        className={twJoin('size-4 transition-transform duration-200', isActive && 'scale-110')}
-        strokeWidth={2.5}
-      />
-    </div>
-  )
-}
+import { GameMode, InputType, SpeedRunStage } from '@/stores/types'
 
 function useControls() {
   const mode = useGameStore((s) => s.mode)
@@ -44,6 +24,23 @@ function useControls() {
     disableInput,
     setPlayerInput,
   }
+}
+
+type KeyProps = {
+  isActive: boolean
+  Icon: LucideIcon
+}
+
+const Key: FC<KeyProps> = ({ Icon, isActive }) => {
+  return (
+    <div
+      className={twJoin(
+        'flex h-7 w-10 items-center justify-center rounded-md text-black',
+        isActive ? 'bg-white/50' : 'bg-white',
+      )}>
+      <Icon size={16} strokeWidth={3} />
+    </div>
+  )
 }
 
 const Keys: FC = () => {
@@ -126,7 +123,7 @@ const Keys: FC = () => {
   }, [disableInput, setPlayerInput])
 
   return (
-    <aside className="pointer-events-none grid h-fit w-fit grid-cols-3 gap-0.5 place-self-end">
+    <aside className="pointer-events-none fixed right-4 bottom-4 z-50 grid h-fit w-fit grid-cols-3 gap-1 place-self-end">
       <div />
       <Key Icon={ArrowUp} isActive={playerInput.up > 0} />
       <div />
@@ -137,18 +134,16 @@ const Keys: FC = () => {
   )
 }
 
-type Props = {
-  isMobile: boolean
-}
-
-const Controls: FC<Props> = ({ isMobile }) => {
-  if (isMobile) return <Stick />
+const MovementControls: FC = () => {
+  const inputType = useGameStore((s) => s.inputType)
+  if (inputType === InputType.JOYSTICK) return <Stick />
   return <Keys />
 }
 
 const Stick: FC = () => {
   const { disableInput, setPlayerInput } = useControls()
   const JOYSTICK_LEVELS = 10
+  const joystickPosition = useGameStore((s) => s.joystickPosition)
 
   const onJoystickMove = useCallback(
     (e: OnJoystickMove) => {
@@ -166,7 +161,10 @@ const Stick: FC = () => {
   return (
     <Joystick
       level={JOYSTICK_LEVELS}
-      className="pointer-events-auto right-12 bottom-12 z-200"
+      className={twJoin(
+        'pointer-events-auto bottom-12 z-200',
+        joystickPosition === 'left' ? 'left-12' : 'right-12',
+      )}
       onMove={onJoystickMove}>
       <div className="flex size-full items-center justify-center text-black">
         <Move size={24} strokeWidth={2} />
@@ -174,4 +172,4 @@ const Stick: FC = () => {
     </Joystick>
   )
 }
-export default Controls
+export default MovementControls

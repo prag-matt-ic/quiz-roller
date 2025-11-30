@@ -11,6 +11,7 @@ uniform mediump float uConfirmingProgress; // [0,1]
 uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
 uniform bool uIsFlat;
+uniform bool uEnableVeins;
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
@@ -27,6 +28,13 @@ const float SPECULAR_STRENGTH = 0.4;
 // -------- Surface constants --------
 const float NOISE_FREQUENCY = 0.2;
 const float REVEAL_SMOOTHNESS = 0.12;
+
+// -------- Mineral vein constants --------
+const float VEIN_NOISE_FREQUENCY = 0.9;
+const float VEIN_ANIMATION_SPEED = 0.06;
+const float VEIN_POWER = 2.5;
+const float VEIN_INTENSITY = 0.3;
+const float VEIN_BRIGHTEN_STRENGTH = 0.65;
 
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping
@@ -62,8 +70,17 @@ void main() {
     return;
   }
 
+
+  if (uEnableVeins) {
+    // High-frequency ridges for mineral veins
+    float veinNoise = noise(unitLocalPos * VEIN_NOISE_FREQUENCY + uTime * VEIN_ANIMATION_SPEED);
+    float veinMask = pow(clamp(1.0 - abs(veinNoise), 0.0, 1.0), VEIN_POWER);
+    vec3 veinColour = mix(marbleColor, vec3(1.0), VEIN_BRIGHTEN_STRENGTH);
+    marbleColor += veinColour * veinMask * VEIN_INTENSITY;
+  }
+
   // Surface lighting with normal map
-  vec3 normal = perturbNormal();
+  vec3 normal = normalize(vNormal); // perturbNormal();
   vec3 viewDir = normalize(vViewPosition);
   float diffuse = max(dot(normal, LIGHT_DIR), 0.0);
   vec3 halfDir = normalize(LIGHT_DIR + viewDir);

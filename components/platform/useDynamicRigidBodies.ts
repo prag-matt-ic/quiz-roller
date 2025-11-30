@@ -41,7 +41,7 @@ function useDynamicRigidBodies(totalCount: number) {
     (index: number, x: number, y: number, z: number) => {
       const body = refs[index]
       if (!body?.current) {
-        console.warn('[setRigidBodyPosition] Invalid body reference', {
+        console.error('[setRigidBodyPosition] Invalid body reference', {
           index,
           poolSize: refs.length,
         })

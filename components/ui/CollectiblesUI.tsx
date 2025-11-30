@@ -108,7 +108,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           size={40}
           strokeWidth={0.25}
           className={twJoin(
-            'absolute inset-0 size-8 text-transparent transition-opacity md:size-10',
+            'absolute inset-0 size-8 text-transparent transition-opacity lg:size-10',
             isCollected ? 'scale-120 fill-(--icon-colour)/60' : 'fill-(--icon-colour)/10',
           )}
         />
@@ -116,7 +116,7 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           size={40}
           strokeWidth={0.75}
           className={twJoin(
-            'relative size-8 text-white md:size-10',
+            'relative size-8 text-white lg:size-10',
             isCollected ? 'scale-120 opacity-80' : 'opacity-30',
           )}
         />

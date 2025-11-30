@@ -36,10 +36,6 @@ export const createTimeSlice =
         speedRunStage: 'running',
       })
     },
-    stopSpeedRun: () => {
-      if (get().mode !== GameMode.SPEEDRUN) return
-      get().resetGame({ mode: GameMode.MAIN })
-    },
     finishSpeedRun: async () => {
       const { speedRunTimeCS, username } = get()
       if (!username) return

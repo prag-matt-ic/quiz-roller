@@ -59,15 +59,19 @@ const MODE_TEXTURES_MAP: Record<GameMode, TextureDescriptor[]> = {
 }
 
 function usePlatformRows() {
+  const isStoreHydrated = useGameStore((s) => s._isHydrated)
   const mode = useGameStore((s) => s.mode)
   const setRowsData = useGameStore((s) => s.setRowsData)
 
   useEffect(() => {
+    if (!isStoreHydrated) return
     let isMounted = true
     const textures = MODE_TEXTURES_MAP[mode] || MAIN_RUN_TEXTURES
 
     const textureSources = textures.map((descriptor) => descriptor.src)
     const totalCounts = createTotalCounts()
+
+    console.warn('[Game] Loading platform rows for mode:', { isStoreHydrated, mode })
 
     loadHtmlImage(textureSources).then((images) => {
       if (!isMounted) return
@@ -90,7 +94,7 @@ function usePlatformRows() {
     return () => {
       isMounted = false
     }
-  }, [mode, setRowsData])
+  }, [isStoreHydrated, mode, setRowsData])
 
   return mode
 }

@@ -1,13 +1,12 @@
-import { MOVE_HUD_INDICATOR } from '@/resources/content'
 import type { RowData } from '@/utils/tiles'
 
+import { getResetInputState } from './inputSlice'
 import { PLAYER_INITIAL_POSITION_VEC3, RESET_PLAYER_STATE } from './playerSlice'
 import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
 import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
 
 export const RESET_GAME_STATE = {
-  stage: Stage.HOME,
   totalCounts: createTotalCounts(),
   currentRow: 0,
   cameraLookAtPosition: null,
@@ -17,11 +16,12 @@ export const RESET_GAME_STATE = {
 
 export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   ...RESET_GAME_STATE,
+  stage: Stage.HOME,
   htmlPortal: undefined,
   _isHydrated: false,
   resetPlatformTick: 0,
   mode: GameMode.MAIN,
-  hudIndicator: MOVE_HUD_INDICATOR,
+  hudIndicator: null,
   setHydrated: () => {
     set({ _isHydrated: true })
   },
@@ -38,11 +38,14 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     set({ cameraLookAtPosition })
   },
   setPlatformReady: (isPlatformReady) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[GameSlice] Setting platform ready`, { isPlatformReady })
+    }
     set({ isPlatformReady })
   },
   setRowsData: (rowsData, totalCounts) => {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[GameSlice] Setting rows data`, { totalCounts })
+      console.warn(`[GameSlice] Setting rows data`, { rowsData, totalCounts })
     }
     set({ rowsData, totalCounts, isPlatformReady: false })
   },
@@ -62,19 +65,22 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   resetGame: ({ mode, speedRunStage }) => {
     get().stopConfirmation()
+
+    const isModeChange = get().mode !== mode
+    const nextRowsData = isModeChange ? [] : get().rowsData
+
     set((s) => {
-      const isModeChange = s.mode !== mode
-      const nextRowsData = isModeChange ? [] : [...s.rowsData]
       return {
         ...RESET_GAME_STATE,
-        ...RESET_TIME_STATE,
         ...RESET_PLAYER_STATE,
+        ...RESET_TIME_STATE,
+        ...getResetInputState(),
         mode,
         rowsData: nextRowsData,
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         speedRunStage: speedRunStage ?? RESET_TIME_STATE.speedRunStage,
-        playerStatus: 'respawning',
-        spawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
+        spawnPosition: s.playerStatus === 'idle' ? null : PLAYER_INITIAL_POSITION_VEC3.clone(),
         playerRespawnTick: s.playerRespawnTick + 1,
         playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
         resetPlatformTick: s.resetPlatformTick + 1,

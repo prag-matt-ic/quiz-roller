@@ -11,7 +11,7 @@ import Camera, {
   CAMERA_POSITION_FOR_STAGE_DESKTOP,
   CAMERA_POSITION_FOR_STAGE_MOBILE,
 } from '@/components/Camera'
-import { Stage } from '@/components/GameProvider'
+import { Stage, useGameStore } from '@/components/GameProvider'
 import OutOfBounds from '@/components/OutOfBounds'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
@@ -33,6 +33,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
 
+  const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
+
   const cameraPositions = isMobile
     ? CAMERA_POSITION_FOR_STAGE_MOBILE
     : CAMERA_POSITION_FOR_STAGE_DESKTOP
@@ -43,7 +45,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
     return window.devicePixelRatio ?? 1
   }, [maxDPR])
 
-  const mode = usePlatformRows()
+  usePlatformRows()
 
   return (
     <Canvas
@@ -75,7 +77,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Suspense>
           <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
             <OutOfBounds />
-            <Platform key={mode} />
+            <Platform key={resetPlatformTick} />
             <Player />
           </Physics>
         </Suspense>

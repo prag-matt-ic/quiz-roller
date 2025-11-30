@@ -15,13 +15,6 @@ export enum Stage {
   SPEED_RUN_FINISH = 5,
 }
 
-export type EdgeWarningIntensities = {
-  left: number
-  right: number
-  near: number
-  far: number
-}
-
 export type PlayerInput = {
   up: number
   down: number
@@ -29,7 +22,7 @@ export type PlayerInput = {
   right: number
 }
 
-export type PlayerStatus = 'safe' | 'out-of-bounds' | 'respawning'
+export type PlayerStatus = 'idle' | 'safe' | 'out-of-bounds' | 'respawning'
 
 export type HudIndicatorConfig = {
   content: ReactNode
@@ -56,7 +49,6 @@ export type TimeSlice = {
   startSpeedRun: () => void // Sets mode, sets status to countdown
   onCountdownComplete: () => void // sets status to running
   finishSpeedRun: () => void // sets status to finished, submits speedrun and shows leaderboard
-  stopSpeedRun: () => void
 
   speedRunTimeCS: number // current speed run duration in 10 milliseconds (centi-seconds)
   setSpeedRunTimeCS: (centiSeconds: number) => void
@@ -64,12 +56,23 @@ export type TimeSlice = {
   completedSpeedRuns: SpeedRunDatabase[]
 }
 
+export enum InputType {
+  KEYS = 'k',
+  JOYSTICK = 'j',
+}
+
+export type InputSlice = {
+  inputType: InputType
+  setInputType: (type: InputType) => void
+  joystickPosition: 'left' | 'right'
+  setJoystickPosition: (position: 'left' | 'right') => void
+  playerInput: PlayerInput
+  setPlayerInput: (input: PlayerInput) => void
+}
+
 export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
-
-  playerInput: PlayerInput
-  setPlayerInput: (input: PlayerInput) => void
 
   playerWorldPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
@@ -77,11 +80,12 @@ export type PlayerSlice = {
   spawnPosition: Vector3 | null
   playerRespawnTick: number
   playerStatus: PlayerStatus
-  respawnPlayer: (position: { x: number; y: number; z: number }) => void
-  onRespawnComplete: () => void
 
-  edgeWarningIntensities: EdgeWarningIntensities
-  setEdgeWarningIntensities: (intensities: EdgeWarningIntensities) => void
+  respawnPlayer: (
+    position: { x: number; y: number; z: number },
+    hud?: HudIndicatorConfig,
+  ) => void
+  onRespawnComplete: () => void
 
   confirmingCollectible: CollectibleID | null
   setConfirmingCollectible: (collectibleType: CollectibleID | null) => void
@@ -109,7 +113,9 @@ export type GameSlice = {
 
   currentRow: number
   setCurrentRow: (row: number) => void
+
   mode: GameMode
+  resetGame: (params: { mode: GameMode; speedRunStage?: SpeedRunStage }) => void
 
   cameraLookAtPosition: Vector3 | null
   setCameraLookAtPosition: (pos: Vector3 | null) => void
@@ -119,14 +125,6 @@ export type GameSlice = {
   isPlatformReady: boolean
   setPlatformReady: (isReady: boolean) => void
 
-  resetGame: ({
-    mode,
-    speedRunStage,
-  }: {
-    mode: GameMode
-    speedRunStage?: SpeedRunStage
-  }) => void
-
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
 
@@ -134,9 +132,10 @@ export type GameSlice = {
   setHydrated: () => void
 }
 
-export type GameStore = TimeSlice & PlayerSlice & GameSlice
+export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice
 
 export type SliceDeps = {
+  isMobile: boolean
   playSoundFX: PlaySoundFX
   stopSoundFX: (fx: SoundFX) => void
 }

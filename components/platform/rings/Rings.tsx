@@ -26,7 +26,7 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { getRingKey } from '@/utils/rings'
 import { HIDDEN_POSITION, ON_TILE_Y, type RowData, colToX } from '@/utils/tiles'
 
-const MAX_RING_INSTANCES = 10
+const MAX_RING_INSTANCES = 12
 const instancesArray = Array.from({ length: MAX_RING_INSTANCES }, (_, i) => i)
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
@@ -123,7 +123,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
       )
       if (availableSlot === -1) {
         if (IS_DEV_ENV) {
-          console.warn(
+          console.error(
             '[RingElements] Exceeded ring pool capacity. Increase MAX_RING_INSTANCES.',
           )
         }

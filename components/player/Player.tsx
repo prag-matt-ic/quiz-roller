@@ -12,22 +12,14 @@ import {
 import { type FC, useEffect, useRef } from 'react'
 import { Mesh, type Object3D, Vector3 } from 'three'
 
-import { type EdgeWarningIntensities, useGameStore } from '@/components/GameProvider'
+import { useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import {
-  COLUMNS,
-  ENTRY_END_Z,
-  EPSILON,
-  EXIT_START_Z,
-  PLAYER_MOVE_UNITS,
-  TERRAIN_SPEED_UNITS,
-  TILE_SIZE,
-} from '@/utils/tiles'
+import { EPSILON, PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/utils/tiles'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -36,21 +28,11 @@ import {
 // Physics constants
 const GRAVITY_ACCELERATION = -9.81 // m/s²
 const UP_DIRECTION = new Vector3(0, 1, 0)
-const PLATFORM_HALF_WIDTH = (COLUMNS * TILE_SIZE) / 2 - 1
-const EDGE_APPROACH_MARGIN = TILE_SIZE * 1.5
-const ROW_RAISE_BACK_BOUNDARY_Z = ENTRY_END_Z
-const ROW_RAISE_FRONT_BOUNDARY_Z = EXIT_START_Z
-const edgeWarningScratch: EdgeWarningIntensities = {
-  left: 0,
-  right: 0,
-  near: 0,
-  far: 0,
-}
+const PLAYER_USER_DATA: PlayerUserData = { type: 'player' }
 
 const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
-  // const setEdgeWarningIntensities = useGameStore((s) => s.setEdgeWarningIntensities)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const playerStatus = useGameStore((s) => s.playerStatus)
@@ -153,11 +135,7 @@ const Player: FC = () => {
     })
 
     // Update global player position in store (immutable update)
-
     setPlayerPosition(nextPosition.current)
-
-    // const edgeWarnings = calculateEdgeWarningIntensities(nextPosition.current)
-    // setEdgeWarningIntensities(edgeWarnings)
   })
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {
@@ -185,15 +163,15 @@ const Player: FC = () => {
     }
   }
 
+  const isRespawning = playerStatus === 'respawning'
+
   useEffect(() => {
-    if (!isPlatformReady) return
+    if (!isPlatformReady || !isRespawning) return
     const timeout = setTimeout(() => {
       onRespawnComplete()
     }, 200)
     return () => clearTimeout(timeout)
-  }, [isPlatformReady, playerRespawnTick, onRespawnComplete])
-
-  const userData: PlayerUserData = { type: 'player' }
+  }, [isRespawning, isPlatformReady, onRespawnComplete])
 
   if (!isPlatformReady || !spawnPosition) return null
 
@@ -202,7 +180,7 @@ const Player: FC = () => {
       ref={bodyRef}
       key={playerRespawnTick} // reposition to spawn position on respawn tick change
       type="kinematicPosition"
-      userData={userData}
+      userData={PLAYER_USER_DATA}
       colliders={false}
       position={spawnPosition}
       onIntersectionEnter={onIntersectionEnter}
@@ -289,60 +267,4 @@ function applyRollingPhysics({
   const rotationAngle = (speed * deltaTime) / effectiveRadius
   sphereMesh.rotateOnWorldAxis(rollAxis, rotationAngle)
   sphereMesh.quaternion.normalize()
-}
-
-function calculateEdgeWarningIntensities(position: {
-  x: number
-  z: number
-}): EdgeWarningIntensities {
-  edgeWarningScratch.left = calculateUpperBoundaryIntensity(
-    -position.x,
-    PLATFORM_HALF_WIDTH,
-    EDGE_APPROACH_MARGIN,
-  )
-  edgeWarningScratch.right = calculateUpperBoundaryIntensity(
-    position.x,
-    PLATFORM_HALF_WIDTH,
-    EDGE_APPROACH_MARGIN,
-  )
-  edgeWarningScratch.near = calculateUpperBoundaryIntensity(
-    position.z,
-    ROW_RAISE_FRONT_BOUNDARY_Z,
-    EDGE_APPROACH_MARGIN,
-  )
-  edgeWarningScratch.far = calculateLowerBoundaryIntensity(
-    position.z,
-    ROW_RAISE_BACK_BOUNDARY_Z,
-    EDGE_APPROACH_MARGIN,
-  )
-
-  return edgeWarningScratch
-}
-
-function calculateUpperBoundaryIntensity(
-  value: number,
-  boundary: number,
-  margin: number,
-): number {
-  if (value >= boundary) return 1
-  if (margin <= 0) return 0
-
-  const distance = boundary - value
-  if (distance >= margin) return 0
-
-  return 1 - distance / margin
-}
-
-function calculateLowerBoundaryIntensity(
-  value: number,
-  boundary: number,
-  margin: number,
-): number {
-  if (value <= boundary) return 1
-  if (margin <= 0) return 0
-
-  const distance = value - boundary
-  if (distance >= margin) return 0
-
-  return 1 - distance / margin
 }

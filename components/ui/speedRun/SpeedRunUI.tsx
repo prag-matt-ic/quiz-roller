@@ -7,8 +7,9 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
+import { GameMode } from '@/stores/types'
 
-export const SpeedRunTimer: FC = () => {
+const SpeedRunTimer: FC = () => {
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
 
   const isFinished = speedRunStatus === 'submitting' || speedRunStatus === 'leaderboard'
@@ -16,40 +17,50 @@ export const SpeedRunTimer: FC = () => {
 
   const isAmber = speedRunStatus === 'countdown' || speedRunStatus === 'username'
   return (
-    <div className="flex flex-col items-center gap-2 overflow-hidden">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-1.5 overflow-hidden">
+      <div className="flex items-center gap-2">
         <div
-          className={twJoin('size-2.5 rounded-full', isAmber ? 'bg-amber-400' : 'bg-green-500')}
+          className={twJoin('size-2 rounded-full', isAmber ? 'bg-amber-400' : 'bg-green-500')}
         />
-        <h2 className="text-xs tracking-widest text-white/60 uppercase">Speedroll</h2>
+        <h2 className="text-xs tracking-wider text-white/60 uppercase">Speedroll</h2>
       </div>
-      <SpeedRunTimeDisplay className="font-mono text-4xl leading-none font-semibold tracking-tight sm:text-5xl" />
+      <SpeedRunTimeDisplay className="font-mono text-2xl leading-none font-semibold tracking-tight lg:text-4xl" />
     </div>
   )
 }
 
 export const SpeedRunControls: FC = () => {
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
-  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
-  return (
-    <div className="pointer-events-auto flex size-fit justify-center self-end select-none">
-      <div className="flex gap-3 rounded-t-xl bg-black/80 p-3">
-        <button
-          type="button"
-          className="flex size-12 items-center justify-center rounded bg-red-500/50 text-white transition hover:bg-red-500/70"
-          onClick={stopSpeedRun}
-          title="Cancel">
-          <X size={28} strokeWidth={2} />
-        </button>
+  const speedRunStatus = useGameStore((s) => s.speedRunStage)
+  const showSpeedRunButtons = speedRunStatus === 'running'
 
+  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const resetGame = useGameStore((s) => s.resetGame)
+
+  return (
+    <div className="pointer-events-auto flex size-fit items-center justify-center gap-3 pt-2 select-none">
+      {showSpeedRunButtons && (
         <button
           type="button"
-          className="flex size-12 h-full items-center justify-center rounded bg-amber-400/50 text-white transition hover:bg-amber-400/70"
+          className="flex size-10 items-center justify-center rounded bg-amber-700 text-white transition hover:bg-red-500/70"
+          onClick={() => {
+            resetGame({ mode: GameMode.MAIN })
+          }}
+          title="Cancel">
+          <X size={24} strokeWidth={2} />
+        </button>
+      )}
+
+      <SpeedRunTimer />
+
+      {showSpeedRunButtons && (
+        <button
+          type="button"
+          className="flex size-10 items-center justify-center rounded bg-amber-700 text-white transition hover:bg-amber-400/70"
           onClick={startSpeedRun}
           title="Restart">
-          <RotateCcw size={28} strokeWidth={2} />
+          <RotateCcw size={24} strokeWidth={2} />
         </button>
-      </div>
+      )}
     </div>
   )
 }

@@ -35,8 +35,6 @@ const GAME_MODE_OPTIONS: Option<GameMode>[] = [
 ]
 
 const DebugControls: FC = () => {
-  // const simFps = usePerformanceStore((s) => s.simFps)
-  // const setSimFps = usePerformanceStore((s) => s.setSimFps)
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
   const maxDpr = usePerformanceStore((s) => s.maxDPR)
@@ -112,12 +110,6 @@ const DebugControls: FC = () => {
           </option>
         ))}
       </SelectRow>
-
-      <button
-        onClick={() => resetGame({ mode })}
-        className="w-full rounded bg-red-900 p-1 text-xs font-semibold text-white">
-        Reset
-      </button>
     </div>
   )
 }

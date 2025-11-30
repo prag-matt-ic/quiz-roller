@@ -36,7 +36,7 @@ function findSafeColumnX(row: RowData, preferredX: number): number | null {
 
   // Calculate the column index closest to the target X
   // col = (x / size) + (columns / 2) - 0.5
-  const rawColIndex = (targetX / TILE_SIZE) + (COLUMNS / 2) - 0.5
+  const rawColIndex = targetX / TILE_SIZE + COLUMNS / 2 - 0.5
   const startColIndex = Math.max(0, Math.min(COLUMNS - 1, Math.round(rawColIndex)))
 
   // Check the target column first
@@ -49,7 +49,7 @@ function findSafeColumnX(row: RowData, preferredX: number): number | null {
   while (true) {
     const leftIndex = startColIndex - offset
     const rightIndex = startColIndex + offset
-    
+
     // If both are out of bounds, no safe column exists
     if (leftIndex < 0 && rightIndex >= COLUMNS) {
       return null
@@ -98,13 +98,13 @@ function selectSafeRow(
   if (rowIndex < 0 || rowIndex >= ROWS_RENDERED) return null
   const row = rows[rowIndex]
   if (!row || (row.rowIndex ?? EMPTY_ROW_INDEX) >= EMPTY_ROW_INDEX) return null
-  
+
   const safeX = findSafeColumnX(row, preferredX)
   if (safeX === null) return null
-  
+
   const rowZ = zValues[rowIndex]
   if (typeof rowZ !== 'number') return null
-  
+
   const absoluteRowIndex = row.rowIndex ?? EMPTY_ROW_INDEX
   return { rowIndex, safeX, rowZ, absoluteRowIndex }
 }
@@ -189,10 +189,7 @@ export function usePlayerRespawn({
     preferredRespawnX.current = pos.x
   })
 
-  const onPlayerOutOfBounds = (playerStatus: PlayerStatus) => {
-    if (playerStatus !== 'out-of-bounds') return
-    if (!isPlatformReady) return
-
+  function onOutOfBounds() {
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
     const scrollPos = currentScrollPosition.current
@@ -261,7 +258,7 @@ export function usePlayerRespawn({
     }
 
     // 2. Current row is not safe (or invalid). Find the nearest safe row.
-    // We scan all rows to ensure we find the spatially closest one, 
+    // We scan all rows to ensure we find the spatially closest one,
     // rather than relying on index proximity which might be misleading in a ring buffer.
     const bestSelection = ensureMinimumRowSelection(
       getBestSafeRowSelection(rows, zValues, playerZ, preferredX),
@@ -281,7 +278,12 @@ export function usePlayerRespawn({
     queueRespawn(bestSelection, 'Snapping to nearest safe row')
   }
 
-  usePlayerStatus(onPlayerOutOfBounds)
+  const onPlayerStatusChange = (playerStatus: PlayerStatus) => {
+    if (!isPlatformReady) return
+    if (playerStatus === 'out-of-bounds') onOutOfBounds()
+  }
+
+  usePlayerStatus(onPlayerStatusChange)
 
   const onRespawnScrollComplete = () => {
     targetScrollPosition.current = null

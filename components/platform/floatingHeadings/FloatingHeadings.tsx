@@ -3,7 +3,7 @@ import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { FloatingHeading } from '@/components/platform/floatingHeadings/floatingHeading/FloatingHeading'
-import { FLOATING_HEADINGS_CONTENT } from '@/resources/content'
+import { HEADINGS_CONTENT } from '@/resources/content'
 import { HEADING_HEIGHT, HEADING_WIDTH } from '@/utils/platform/floatingHeading'
 import { HIDDEN_POSITION, type RowData } from '@/utils/tiles'
 
@@ -94,7 +94,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
   return (
     <>
       {refs.map((ref, contentIndex) => {
-        const text = FLOATING_HEADINGS_CONTENT[contentIndex] ?? ''
+        const text = HEADINGS_CONTENT[contentIndex] ?? ''
         return (
           <FloatingHeading
             key={`info-floating-heading-${contentIndex}`}

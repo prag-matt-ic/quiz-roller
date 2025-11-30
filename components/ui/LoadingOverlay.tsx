@@ -1,18 +1,18 @@
 'use client'
 
-import { useProgress } from '@react-three/drei'
 import { VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { type FC, type TransitionEvent, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
+import { PLAYER_INITIAL_POSITION_VEC3, useGameStore } from '@/components/GameProvider'
 import { useSoundStore } from '@/components/SoundProvider'
 import type { ButtonProps } from '@/components/ui/Button'
-import PWAInstall from '@/components/ui/PWAInstall'
-import StartExperienceButton from '@/components/ui/StartExperienceButton'
+import { GradientText } from '@/components/ui/GradientText'
+import { InputConfig } from '@/components/ui/menu/InputConfig'
+import { MOVE_HUD_CONFIG } from '@/resources/content'
 
-import { useGameStore } from '../GameProvider'
-import { GradientText } from '../ui/GradientText'
+import RotateDevice from './RotateDevice'
 
 const Button = dynamic<ButtonProps>(() => import('@/components/ui/Button'))
 
@@ -20,18 +20,19 @@ type Props = {
   isMobile: boolean
 }
 
-// TODO: add rotate device if mobile and in landscape mode
-
 const LoadingOverlay: FC<Props> = ({ isMobile }) => {
-  const { active, progress } = useProgress()
   const [isMounted, setIsMounted] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
+  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
 
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
-  const isPlatformReady = useGameStore((s) => s.isPlatformReady)
 
-  const isReady = !active && progress >= 100 && isPlatformReady
-  const canStart = isReady
+  const isHydrated = useGameStore((s) => s._isHydrated)
+  const isPlatformReady = useGameStore((s) => s.isPlatformReady)
+  const respawnPlayer = useGameStore((s) => s.respawnPlayer)
+  const inputType = useGameStore((s) => s.inputType)
+
+  const isReady = isHydrated && isPlatformReady
 
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
@@ -42,6 +43,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setIsMounted(false)
+
+    console.log('[LoadingOverlay] Transition ended, spawning player')
+    const hud = MOVE_HUD_CONFIG[inputType]
+    respawnPlayer(PLAYER_INITIAL_POSITION_VEC3, hud)
   }
 
   if (!isMounted) return null
@@ -49,46 +54,45 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   return (
     <div
       id="loading-overlay"
-      role="status"
-      aria-busy={!isReady}
-      aria-live="polite"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-3 place-items-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% py-4 sm:py-[25vh]',
+        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 bg-radial from-[#030b2a] from-25% to-[#000] to-120% px-4 py-4',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
       <header>
-        <h1 className="heading-xl relative text-white">
+        <h1 className="heading-md lg:heading-xl text-white">
           <GradientText>Speedroller</GradientText>
         </h1>
-        <p className="paragraph-lg text-white/80">A three.js showcase by Loopspeed</p>
       </header>
-      <div className="flex flex-col items-center gap-3">
-        <div
-          className={twJoin(
-            'relative flex flex-col items-center gap-4 sm:flex-row',
-            !canStart && 'opacity-20',
-          )}>
-          <StartExperienceButton
-            progress={progress}
-            isReady={isReady}
-            disabled={!canStart}
-            onClick={() => onStartClick(false)}
-            label="Start with audio"
-          />
-          <Button
-            variant="secondary"
-            color="light"
-            aria-label="Start muted"
-            onClick={() => onStartClick(true)}
-            disabled={!canStart}>
-            <VolumeOffIcon className="size-6" />
-            Start muted
-          </Button>
-        </div>
 
-        <PWAInstall isMobile={isMobile} />
+      <InputConfig />
+
+      <RotateDevice
+        isMobile={isMobile}
+        isLandscape={isMobileLandscape}
+        setIsLandscape={setIsMobileLandscape}
+      />
+
+      <div className={twJoin('relative flex flex-col items-center gap-4 sm:flex-row')}>
+        <Button
+          variant="primary"
+          color="light"
+          className="min-w-[200px]"
+          aria-label="Start experience"
+          disabled={!isReady}
+          onClick={() => onStartClick(false)}>
+          Start experience
+        </Button>
+        <Button
+          variant="secondary"
+          color="light"
+          aria-label="Start muted"
+          onClick={() => onStartClick(true)}
+          disabled={!isReady}>
+          <VolumeOffIcon className="size-6" />
+          Start muted
+        </Button>
       </div>
     </div>
   )

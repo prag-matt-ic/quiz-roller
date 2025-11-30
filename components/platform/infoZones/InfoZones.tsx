@@ -19,6 +19,7 @@ import {
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import { useTotalTime } from '@/hooks/useTime'
+import { INFO_ZONES_CARD_CONTENT } from '@/resources/content'
 import { type RowData } from '@/utils/tiles'
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
@@ -43,15 +44,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   const positionElementsIfNeeded = useCallback(
     (row: RowData, rowZ: number) => {
       if (!row.infoZonePlacements?.length) return
-
       row.infoZonePlacements.forEach((placement) => {
-        if (IS_DEV_ENV) {
-          const [, , , contentIndex] = placement
-          console.warn('[InfoZones] Position requested for', {
-            contentIndex,
-            placement,
-          })
-        }
         applyPlacement(placement, rowZ)
       })
     },
@@ -122,46 +115,10 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
   // Has to be inside to access the store hooks.
   function getContentForPlacementIndex(placementIndex: number) {
-    if (placementIndex === 0)
-      return (
-        <Card className="w-full">
-          <h2 className="info-header">About</h2>
-          <p className="paragraph-sm max-w-md">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-        </Card>
-      )
-
-    if (placementIndex === 1)
-      return (
-        <Card className="w-full">
-          <h2 className="info-header">Placeholder 1</h2>
-          <p className="paragraph-sm max-w-md">
-            This experience is built using React Three Fiber, Rapier physics and WebGL for
-            immersive graphics.
-          </p>
-        </Card>
-      )
-
-    if (placementIndex === 2)
-      return (
-        <Card className="w-full">
-          <h2 className="info-header">Placeholder 2</h2>
-          <p className="paragraph-sm max-w-md">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-        </Card>
-      )
-
     if (placementIndex === 3)
       return <TotalTimeDisplay initialValue={totalTime} timeContainer={timeContainer} />
     if (placementIndex === 4) return <LeaderboardTable {...tableData} />
-
-    return null
+    return <Card className="w-full">{INFO_ZONES_CARD_CONTENT[placementIndex]}</Card>
   }
 
   return (
@@ -214,7 +171,7 @@ function getInfoZonePropsForIndex(
   }
   // Info Card
   return {
-    infoContainerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
+    infoContainerClassName: 'grid w-[328px] lg:w-160 grid-cols-1 gap-3',
     iconSrc: infoIcon.src,
   }
 }

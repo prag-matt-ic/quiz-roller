@@ -12,14 +12,14 @@ export function usePlayerPosition(onPlayerPositionChange?: (pos: Vector3) => voi
 
   useEffect(() => {
     // Subscribe to store updates and update ref only when playerPosition changes
-    const unsubscribe = gameStoreAPI.subscribe((state) => {
-      const nextPosition = state.playerWorldPosition
-      if (notifiedPosition.current.equals(nextPosition)) return
-
-      notifiedPosition.current.copy(nextPosition)
-      playerPosition.current = nextPosition
-      onPlayerPositionChange?.(nextPosition)
-    })
+    const unsubscribe = gameStoreAPI.subscribe(
+      (s) => s.playerWorldPosition,
+      (newPosition) => {
+        notifiedPosition.current.copy(newPosition)
+        playerPosition.current = newPosition
+        onPlayerPositionChange?.(newPosition)
+      },
+    )
     return unsubscribe
   }, [gameStoreAPI, onPlayerPositionChange])
 

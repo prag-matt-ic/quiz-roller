@@ -1,11 +1,13 @@
 'use client'
 import { type FC } from 'react'
-
-import { useGameStore } from '@/components/GameProvider'
-import Button from '../Button'
-import { LeaderboardTable, useLeaderboardTableData } from './LeaderboardTable'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
+
+import { useGameStore } from '@/components/GameProvider'
+import { GameMode } from '@/stores/types'
+
+import Button from '../Button'
+import { LeaderboardTable, useLeaderboardTableData } from './LeaderboardTable'
 
 type Props = {
   ref: React.RefObject<HTMLDivElement | null>
@@ -16,7 +18,7 @@ type Props = {
 
 export const LeaderboardOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
-  const stopSpeedRun = useGameStore((s) => s.stopSpeedRun)
+  const resetGame = useGameStore((s) => s.resetGame)
   const tableData = useLeaderboardTableData(10)
 
   return (
@@ -35,7 +37,10 @@ export const LeaderboardOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         <Button color="light" variant="primary" onClick={startSpeedRun}>
           Retry
         </Button>
-        <Button color="light" variant="secondary" onClick={stopSpeedRun}>
+        <Button
+          color="light"
+          variant="secondary"
+          onClick={() => resetGame({ mode: GameMode.MAIN })}>
           Finish
         </Button>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 import { type FC, type RefObject, useLayoutEffect, useRef } from 'react'
+
 import { useGameStore } from '@/components/GameProvider'
 
 const HtmlPortal: FC = () => {
@@ -18,7 +19,7 @@ const HtmlPortal: FC = () => {
     <div
       id="html-portal"
       ref={container}
-      className="pointer-events-none fixed inset-0 z-90 select-none"
+      className="pointer-events-none fixed inset-0 z-110 select-none"
     />
   )
 }

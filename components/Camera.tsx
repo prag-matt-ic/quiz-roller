@@ -7,7 +7,6 @@ import { type FC, useCallback, useEffect, useRef } from 'react'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
-import usePlayerStatus from '@/hooks/usePlayerStatus'
 import useStage from '@/hooks/useStage'
 
 const { ACTION } = CameraControlsImpl
@@ -26,10 +25,10 @@ export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPositio
 }
 
 export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
-  [Stage.HOME]: { y: 4, z: 9 },
-  [Stage.INFO]: { y: 4, z: 9 },
-  [Stage.OBSTACLES]: { y: 6, z: 9 },
-  [Stage.CTA]: { y: 6, z: 9 },
+  [Stage.HOME]: { y: 4, z: 8 },
+  [Stage.INFO]: { y: 4, z: 8 },
+  [Stage.OBSTACLES]: { y: 6, z: 8 },
+  [Stage.CTA]: { y: 6, z: 8 },
   [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
 }
 
@@ -60,23 +59,13 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
 
-  const isMovingBackward = useRef(false)
-  const hasLookAtPosition = !!cameraLookAtPosition
-
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE
     : CAMERA_ZOOM_FOR_STAGE_DESKTOP
 
   const currentZoom = useRef<number>(cameraZoomForStage[Stage.HOME])
 
-  usePlayerStatus((status) => {
-    if (status === 'respawning') isMovingBackward.current = false
-  })
-
-  usePlayerInput((input) => {
-    if (input.down > 0) isMovingBackward.current = true
-    else if (input.up > 0) isMovingBackward.current = false
-  })
+  const { input } = usePlayerInput()
 
   const handleStageChange = useCallback(
     (nextStage: Stage) => {
@@ -101,22 +90,22 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
   useFrame(() => {
     if (!cameraControls.current) return
+    const stageCameraPosition = positions[stage.current]
+
     const lookAt = cameraLookAtPosition ?? playerPosition.current
 
-    // When looking at content, move camera backward to keep player visible
-    const stageCameraPosition = positions[stage.current]
-    let zOffset = hasLookAtPosition ? stageCameraPosition.z - 1.5 : stageCameraPosition.z
-
-    // Adjust the look based on whether player is moving back or not
-    zOffset += isMovingBackward.current ? (isMobile ? 3 : 4) : 0
+    // Adjust the camera based on player input
+    const positionZOffset = input.current.down > 0 ? 5 : 0
+    const lookAtX = lookAt.x + input.current.right - input.current.left
+    const lookAtZ = lookAt.z + input.current.down - input.current.up
 
     cameraControls.current.setLookAt(
       playerPosition.current.x,
       stageCameraPosition.y,
-      zOffset,
-      lookAt.x,
+      stageCameraPosition.z + positionZOffset,
+      lookAtX,
       3,
-      lookAt.z,
+      lookAtZ,
       true,
     )
   })

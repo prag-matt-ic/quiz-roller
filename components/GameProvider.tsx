@@ -9,7 +9,6 @@ import type { GameStore } from '@/stores/types'
 
 export {
   Stage,
-  type EdgeWarningIntensities,
   type PlayerInput,
   type HudIndicatorConfig,
   type RingIndex,
@@ -20,13 +19,16 @@ export { PLAYER_INITIAL_POSITION, PLAYER_INITIAL_POSITION_VEC3 } from '@/stores/
 const GameContext = createContext<ReturnType<typeof createGameStore>>(undefined!)
 
 type Props = PropsWithChildren<{
+  isMobile: boolean
   insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse
 }>
 
-export const GameProvider: FC<Props> = ({ children, insertSpeedRun }) => {
+export const GameProvider: FC<Props> = ({ children, isMobile, insertSpeedRun }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const stopSoundFX = useSoundStore((s) => s.stopSoundFX)
-  const [store] = useState(() => createGameStore(playSoundFX, stopSoundFX, insertSpeedRun))
+  const [store] = useState(() =>
+    createGameStore({ isMobile, playSoundFX, stopSoundFX, insertSpeedRun }),
+  )
   return <GameContext value={store}>{children}</GameContext>
 }
 

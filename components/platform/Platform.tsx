@@ -1,7 +1,7 @@
 'use client'
 
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
-import { type FC, useEffect, useLayoutEffect, useRef } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
 import FloatingTiles, {
@@ -18,7 +18,6 @@ import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerInput from '@/hooks/usePlayerInput'
-import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
 import { GameMode } from '@/stores/types'
 import {
@@ -96,7 +95,6 @@ const Platform: FC = () => {
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
-  const { playerPosition } = usePlayerPosition()
 
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
@@ -125,10 +123,18 @@ const Platform: FC = () => {
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
 
   const { readyState, readyChangeHandlers } = useReadyState()
-  const hasRows = rowsData.length > 0
 
   useEffect(() => {
-    if (!hasRows) return
+    if (!IS_DEV_ENV) return
+    console.warn(
+      '[Platform] rowsData changed while platform was ready; triggering reinitialization.',
+      { rowCount: rowsData.length },
+    )
+  }, [rowsData])
+
+  useEffect(() => {
+    if (isPlatformReady || rowsData.length === 0) return
+    const isSpeedRunMode = mode === GameMode.SPEEDRUN
 
     const shouldSkipReadyCheck = (key: ReadyStateKey) => {
       if (!isSpeedRunMode && key === 'speedRun') return true
@@ -170,7 +176,7 @@ const Platform: FC = () => {
 
       const tileInstances: InstancedRigidBodyProps[] = []
 
-      const playerZ = playerPosition.current.z
+      const playerZ = 0
       const initialHalfSpan = Math.min(ROW_VISIBILITY_HALF_SPAN, ROWS_COVERAGE_HALF_SPAN)
       const nextStartZ = playerZ + initialHalfSpan - INITIAL_ROW_BACK_OFFSET
       if (IS_DEV_ENV) {
@@ -235,9 +241,7 @@ const Platform: FC = () => {
     }
 
     setupInitialRowsAndTiles()
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetPlatformTick, hasRows, readyState, mode, rowsData, setPlatformReady])
+  }, [isPlatformReady, readyState, mode, setPlatformReady, rowsData])
 
   const { targetScrollPosition, onRespawnScrollComplete } = usePlayerRespawn({
     activeRowsData,
@@ -529,50 +533,50 @@ const Platform: FC = () => {
 
   useEffect(() => {
     floatingTilesHandle.current?.reset()
-  }, [resetPlatformTick])
+  }, [])
 
   return (
     <group>
       <FloatingTiles
         ref={floatingTilesHandle}
-        key={`${resetPlatformTick}-floating-tiles`}
+        key={`floating-tiles-${rowsData.length}`}
         onReadyChange={readyChangeHandlers.floatingTiles}
       />
 
       <PlatformTiles
         ref={tiles}
-        key={`${resetPlatformTick}-tiles`}
+        key={`platform-tiles-${rowsData.length}`}
         onReadyChange={readyChangeHandlers.tiles}
       />
 
       <FloatingHeadings
         ref={floatingHeadings}
-        key={`${resetPlatformTick}-headings`}
+        key={`floating-headings-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.headings}
       />
 
       <InfoZones
         ref={infoZones}
-        key={`${resetPlatformTick}-info-zones`}
+        key={`info-zones-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.infoZones}
       />
 
       <Collectibles
         ref={collectibles}
-        key={`${resetPlatformTick}-collectibles`}
+        key={`collectibles-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.collectibles}
       />
 
       <Rings
         ref={ringsHandle}
-        key={`${resetPlatformTick}-rings`}
+        key={`rings-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.rings}
       />
 
       {isSpeedRunMode && (
         <SpeedRunElements
           ref={speedRunElements}
-          key={`${resetPlatformTick}-speed-run`}
+          key={`speedrun-elements-${resetPlatformTick}`}
           onReadyChange={readyChangeHandlers.speedRun}
         />
       )}

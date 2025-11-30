@@ -1,0 +1,51 @@
+import { type ComponentType } from 'react'
+import { twJoin } from 'tailwind-merge'
+
+export type ButtonGroupItem<T> = {
+  label: string
+  value: T
+  Icon?: ComponentType<{ className?: string; strokeWidth?: number }>
+}
+
+type ButtonGroupProps<T> = {
+  label?: string
+  items: ButtonGroupItem<T>[]
+  value: T
+  onChange: (value: T) => void
+}
+
+export const ButtonGroup = <T extends string | number>({
+  label,
+  items,
+  value,
+  onChange,
+}: ButtonGroupProps<T>) => {
+  return (
+    <div className="flex flex-col items-center gap-3 text-sm tracking-wide uppercase">
+      {label && <p>{label}</p>}
+      <div className="flex gap-3">
+        {items.map((item) => {
+          const isActive = value === item.value
+          const Icon = item.Icon
+
+          return (
+            <button
+              key={String(item.value)}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onChange(item.value)}
+              className={twJoin(
+                'pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
+                isActive
+                  ? 'border-white bg-white text-black'
+                  : 'border-white/40 bg-transparent',
+              )}>
+              {Icon && <Icon className="size-4" strokeWidth={1.75} />}
+              {item.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

@@ -8,7 +8,7 @@ export function usePlayerInput(onInputChange?: (input: PlayerInput) => void) {
 
   useEffect(() => {
     const unsubscribe = gameStoreAPI.subscribe(
-      (state) => state.playerInput,
+      (s) => s.playerInput,
       (newInput) => {
         input.current = newInput
         onInputChange?.(newInput)

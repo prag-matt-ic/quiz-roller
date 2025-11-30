@@ -1,8 +1,9 @@
+import { ArrowUpCircleIcon, BotIcon, CoinsIcon, HandshakeIcon, LucideIcon } from 'lucide-react'
+import { FC, type ReactNode } from 'react'
+
 import { type HudIndicatorConfig } from '@/components/GameProvider'
-import Card from '@/components/ui/Card'
 import { CollectibleID } from '@/model/schema'
-import { ArrowUpCircleIcon, HandshakeIcon, BotIcon, CoinsIcon, LucideIcon } from 'lucide-react'
-import { type ReactNode } from 'react'
+import { InputType } from '@/stores/types'
 
 export const COLLECTIBLES_CONTENT: Record<
   CollectibleID,
@@ -83,64 +84,40 @@ export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalett
     },
   } as const
 
-export const FLOATING_HEADINGS_CONTENT: string[] = [
+export const HEADINGS_CONTENT: string[] = [
   'From scroll-driven storytelling to fully interactive worlds',
   'Bring your ideas to life with stunning 3D web experiences',
-  'Senior Three.js developers supercharged with AI capabilities',
+  'Senior Three.js developers supercharged with AI',
   'Ready to take the next step?',
 ]
 
-type InfoZoneContent = {
-  containerClassName?: string
-  content: ReactNode
-}
-
-export const INFO_ZONES_CONTENT: InfoZoneContent[] = [
-  {
-    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    content: (
-      <>
-        <Card className="w-full">
-          <h2 className="info-header">About</h2>
-          <p className="paragraph-sm max-w-md">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-        </Card>
-      </>
-    ),
-  },
-  {
-    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    content: (
-      <>
-        <Card className="w-full">
-          <h2 className="info-header">Placeholder 1</h2>
-          <p className="paragraph-sm max-w-md">
-            This experience is built using React Three Fiber, Rapier physics and WebGL for
-            immersive graphics.
-          </p>
-        </Card>
-      </>
-    ),
-  },
-  {
-    containerClassName: 'grid w-[328px] sm:w-160 grid-cols-1 gap-3',
-    content: (
-      <>
-        <Card className="w-full">
-          <h2 className="info-header">Placeholder 2</h2>
-          <p className="paragraph-sm max-w-md">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
-        </Card>
-      </>
-    ),
-  },
+export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
+  <>
+    <h2 className="info-header">About</h2>
+    <p className="paragraph-sm max-w-md">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+      ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+      ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </p>
+  </>,
+  <>
+    <h2 className="info-header">Optimised for mobile and desktop</h2>
+    <p className="paragraph-sm max-w-md">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+      ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+      ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </p>
+  </>,
+  <>
+    <h2 className="info-header">Collaborative Process</h2>
+    <p className="paragraph-sm max-w-md">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+      ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+      ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </p>
+  </>,
 ]
+
 const bonusUnlocked = (
   <p className="rounded-md bg-black px-3 py-2 text-sm tracking-wide whitespace-nowrap uppercase sm:text-base">
     Bonus unlocked!
@@ -162,14 +139,26 @@ export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> 
   },
 }
 
-export const MOVE_HUD_INDICATOR: HudIndicatorConfig = {
-  autoDismissS: 4,
-  content: (
+const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
+  const text: Record<InputType, string> = {
+    [InputType.KEYS]: 'Use WASD or arrow keys to move',
+    [InputType.JOYSTICK]: 'Use the touch joystick to move',
+  }
+  return (
     <div className="flex items-center gap-2 rounded-full bg-black px-2 py-2 pr-4 text-white">
       <ArrowUpCircleIcon strokeWidth={1.5} size={32} />
-      <span className="block font-bold whitespace-nowrap uppercase">
-        Use your keys to move along
-      </span>
+      <span className="block font-bold whitespace-nowrap uppercase">{text[inputType]}</span>
     </div>
-  ),
+  )
+}
+
+export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
+  [InputType.KEYS]: {
+    autoDismissS: 20,
+    content: <MoveHUD inputType={InputType.KEYS} />,
+  },
+  [InputType.JOYSTICK]: {
+    autoDismissS: 20,
+    content: <MoveHUD inputType={InputType.JOYSTICK} />,
+  },
 }

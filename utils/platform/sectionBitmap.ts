@@ -109,12 +109,10 @@ export function parseSectionBitmap(
 
       if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) {
         infoZoneColumns.push(column)
-        highlightColumns.push(column)
       }
 
       if (isColour(r, g, b, COLOUR_CODES.COLLECTIBLE)) {
         collectibleColumns.push(column)
-        highlightColumns.push(column)
       }
 
       if (isColour(r, g, b, COLOUR_CODES.FINISH_LINE)) {

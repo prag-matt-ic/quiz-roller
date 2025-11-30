@@ -1,5 +1,5 @@
-import { createContext, type FC, type PropsWithChildren, useContext, useState } from 'react'
-import { createStore, type StoreApi, useStore } from 'zustand'
+import { type FC, type PropsWithChildren, createContext, useContext, useState } from 'react'
+import { type StoreApi, createStore, useStore } from 'zustand'
 
 export type RapierSimFPS = 0 | 30 | 60 | 120 // 0 = 'vary'
 
@@ -14,6 +14,7 @@ export type SceneConfig = {
   player: {
     segments: number
     isFlat: boolean
+    enableVeins: boolean
   }
   ring: {
     radialSegments: number
@@ -50,7 +51,7 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     isDistanceFadeEnabled: true,
-    player: { segments: 64, isFlat: false },
+    player: { segments: 64, isFlat: false, enableVeins: true },
     ring: { radialSegments: 12, tubularSegments: 24 },
     gem: { particleCount: 120 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
@@ -61,7 +62,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   },
   [SceneQuality.MEDIUM]: {
     isDistanceFadeEnabled: true,
-    player: { segments: 40, isFlat: false },
+    player: { segments: 40, isFlat: false, enableVeins: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
     gem: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
@@ -72,7 +73,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   },
   [SceneQuality.LOW]: {
     isDistanceFadeEnabled: false,
-    player: { segments: 24, isFlat: true },
+    player: { segments: 24, isFlat: true, enableVeins: false },
     ring: { radialSegments: 6, tubularSegments: 12 },
     gem: { particleCount: 36 },
     floatingTiles: { instanceCount: 0 },

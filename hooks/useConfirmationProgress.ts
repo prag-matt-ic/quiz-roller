@@ -15,7 +15,7 @@ export function useConfirmationProgress(
   useEffect(() => {
     // Subscribe to store updates and update ref when confirmationProgress changes
     const unsubscribe = gameStoreAPI.subscribe(
-      (state) => state.confirmationProgress,
+      (s) => s.confirmationProgress,
       (progress) => {
         confirmationProgress.current = progress
         onConfirmationProgressChange?.(progress)

@@ -24,8 +24,6 @@ export const PLAYER_INITIAL_POSITION_VEC3 = new Vector3(
 
 const COLLECTIBLE_DURATION_S = 1.5
 
-const clampEdgeWarningValue = (value: number) => Math.min(1, Math.max(0, value))
-
 const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void => {
   if (process.env.NODE_ENV === 'production') return
   if (payload) {
@@ -36,18 +34,6 @@ const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void
 }
 
 export const RESET_PLAYER_STATE = {
-  playerInput: {
-    up: 0,
-    down: 0,
-    left: 0,
-    right: 0,
-  },
-  edgeWarningIntensities: {
-    left: 0,
-    right: 0,
-    near: 0,
-    far: 0,
-  },
   confirmingCollectible: null,
   collectedRings: {},
   confirmationProgress: 0,
@@ -103,30 +89,17 @@ export const createPlayerSlice =
       ...RESET_PLAYER_STATE,
       collectedCollectibles: [],
       playerRespawnTick: 0,
-      spawnPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
-      playerStatus: 'respawning' as PlayerStatus,
+      spawnPosition: null,
+      playerStatus: 'idle' as PlayerStatus,
       username: null,
       setUsername: (username: string) => {
         set({ username })
       },
       playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
-      setPlayerInput(input) {
-        set({ playerInput: input })
-      },
       setPlayerPosition: (position) => {
         set((s) => ({
           playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
         }))
-      },
-      setEdgeWarningIntensities: (intensities) => {
-        set({
-          edgeWarningIntensities: {
-            left: clampEdgeWarningValue(intensities.left),
-            right: clampEdgeWarningValue(intensities.right),
-            near: clampEdgeWarningValue(intensities.near),
-            far: clampEdgeWarningValue(intensities.far),
-          },
-        })
       },
       onRingCollected: (ringIndex: RingIndex) => {
         const ringKey = ringIndexToKey(ringIndex)
@@ -176,13 +149,14 @@ export const createPlayerSlice =
         confirmationTween = null
         confirmationTweenTarget.value = 0
       },
-      respawnPlayer: (position) => {
+      respawnPlayer: (position, hud) => {
         set((s) => ({
           playerStatus: 'respawning',
           playerRespawnTick: s.playerRespawnTick + 1,
           spawnPosition: new Vector3(position.x, position.y, position.z),
+          hudIndicator: hud ?? s.hudIndicator,
         }))
-        logPlayerStatus('Respawn queued', position)
+        logPlayerStatus('Respawn queued', { position, hud })
       },
       onRespawnComplete: () => {
         set({

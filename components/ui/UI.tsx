@@ -1,20 +1,20 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { FlagIcon } from 'lucide-react'
-import { type FC, useRef } from 'react'
+import { MenuIcon, XIcon } from 'lucide-react'
+import { type FC, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import AudioToggle from '@/components/ui/AudioToggle'
 import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
 import ProgressBar from '@/components/ui/ProgressBar'
-import Controls from '@/components/ui/controls/Controls'
+import MovementControls from '@/components/ui/controls/Controls'
+import Menu from '@/components/ui/menu/Menu'
 import { GameMode } from '@/stores/types'
 
 import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
-import { SpeedRunControls, SpeedRunOverlay, SpeedRunTimer } from './speedRun/SpeedRunUI'
+import { SpeedRunControls, SpeedRunOverlay } from './speedRun/SpeedRunUI'
 
 gsap.registerPlugin(useGSAP)
 
@@ -26,7 +26,6 @@ const UI: FC<Props> = ({ isMobile }) => {
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
   const infoContainer = useRef<HTMLDivElement>(null)
   const speedRunOverlay = useRef<HTMLDivElement>(null)
@@ -38,19 +37,19 @@ const UI: FC<Props> = ({ isMobile }) => {
   const showLeaderboardOverlay =
     isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
 
-  const showSpeedRunControls = isSpeedRunMode && speedRunStatus === 'running'
+  const [showMenu, setShowMenu] = useState(false)
 
   return (
     <>
       <ProgressBar />
 
-      <div className="gap-y-auto pointer-events-none fixed inset-0 z-100 grid grid-cols-3 grid-rows-2 gap-x-2 p-4 select-none">
+      <div className="gap-y-auto fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 border px-4 select-none *:border">
         {/* Top Left Rings */}
         <RingsUI />
         {/* Top Center Info */}
         <SwitchTransition>
           <Transition
-            key={isSpeedRunMode ? 'timer' : 'collectibles'}
+            key={isSpeedRunMode ? 'speed-run' : 'collectibles'}
             timeout={{ enter: 0, exit: 240 }}
             appear={true}
             nodeRef={infoContainer}>
@@ -64,37 +63,39 @@ const UI: FC<Props> = ({ isMobile }) => {
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
                   )}>
-                  {isSpeedRunMode ? <SpeedRunTimer /> : <CollectiblesUI />}
+                  {isSpeedRunMode ? <SpeedRunControls /> : <CollectiblesUI />}
                 </section>
               )
             }}
           </Transition>
         </SwitchTransition>
-        {/* Top Right Audio */}
-        <AudioToggle />
-
-        {/* Bottom left */}
-        {showSpeedRunControls ? (
-          <SpeedRunControls />
-        ) : !isSpeedRunMode ? (
-          <button
-            type="button"
-            className="pointer-events-auto size-fit self-end rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black uppercase transition md:text-sm"
-            onClick={startSpeedRun}>
-            <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
-            Start Speedroll
-          </button>
-        ) : (
-          <div className="size-0 opacity-0" />
-        )}
-
-        <div className="size-0 opacity-0" />
-
-        {/* Bottom Right Controls */}
-        <Controls isMobile={isMobile} />
+        {/* Top Right Menu toggle */}
+        <button
+          onClick={() => setShowMenu((prev) => !prev)}
+          className="pointer-events-auto place-self-end self-start p-2.5 text-white">
+          <MenuIcon size={24} className="pointer-events-auto text-white" />
+        </button>
       </div>
 
+      {/* Movement Controls */}
+      <MovementControls />
+
       {/* Fullscreen overlays */}
+      <Transition
+        in={showMenu}
+        timeout={{ enter: 0, exit: 400 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={speedRunOverlay}>
+        {(status) => (
+          <Menu
+            ref={speedRunOverlay}
+            transitionStatus={status}
+            closeMenu={() => setShowMenu(false)}
+          />
+        )}
+      </Transition>
+
       <Transition
         in={showSpeedRunOverlay}
         timeout={{ enter: 0, exit: 240 }}
