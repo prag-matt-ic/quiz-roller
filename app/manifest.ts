@@ -4,11 +4,10 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Quizroller',
     short_name: 'Quizroller',
-    description:
-      'A free 3D endless runner quiz game for the web. Navigate a marble over terrain, answering multiple-choice questions as you go.',
+    description: '',
     start_url: '/',
     display: 'fullscreen',
-    display_override: ['fullscreen', 'standalone', 'minimal-ui'],
+    display_override: ['standalone', 'minimal-ui'],
     background_color: '#000000',
     theme_color: '#000000',
     icons: [

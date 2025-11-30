@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     'A 3D quiz game built using React Three Fiber and Rapier physics. How far can you roll?',
   appleWebApp: {
     title: 'Quizroller',
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'black',
     capable: true,
   },
 }
