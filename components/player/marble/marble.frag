@@ -32,9 +32,9 @@ const float REVEAL_SMOOTHNESS = 0.12;
 // -------- Mineral vein constants --------
 const float VEIN_NOISE_FREQUENCY = 0.9;
 const float VEIN_ANIMATION_SPEED = 0.06;
-const float VEIN_POWER = 2.5;
+const float VEIN_POWER = 3.5;
 const float VEIN_INTENSITY = 0.3;
-const float VEIN_BRIGHTEN_STRENGTH = 0.65;
+const float VEIN_BRIGHTEN_STRENGTH = 0.5;
 
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping

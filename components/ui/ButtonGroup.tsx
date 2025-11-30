@@ -21,7 +21,7 @@ export const ButtonGroup = <T extends string | number>({
   onChange,
 }: ButtonGroupProps<T>) => {
   return (
-    <div className="flex flex-col items-center gap-3 overflow-hidden rounded-md border text-sm tracking-wide uppercase">
+    <div className="relative flex flex-col items-center gap-3 overflow-hidden rounded-md border text-sm tracking-wide uppercase">
       {label && <p>{label}</p>}
       <div className="flex">
         {items.map((item) => {

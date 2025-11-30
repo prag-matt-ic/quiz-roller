@@ -289,11 +289,13 @@ export function usePlayerRespawn({
   const onRespawnScrollComplete = useCallback(() => {
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
-    respawnPlayer([
-      pendingRespawnX.current,
-      PLAYER_INITIAL_POSITION[1],
-      PLAYER_INITIAL_POSITION[2],
-    ])
+    respawnPlayer(
+      [pendingRespawnX.current, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]],
+      {
+        autoDismissS: 2,
+        content: 'you went the wrong way dipshit',
+      },
+    )
     pendingRespawnX.current = null
   }, [respawnPlayer])
 

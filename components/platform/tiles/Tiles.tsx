@@ -1,4 +1,4 @@
-import { shaderMaterial } from '@react-three/drei'
+import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import {
   InstancedRigidBodies,
@@ -9,13 +9,15 @@ import {
   type Dispatch,
   type FC,
   type SetStateAction,
+  Suspense,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from 'react'
-import { type InstancedBufferAttribute, Vector2 } from 'three'
+import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector2 } from 'three'
 
+import tileDetailNoise from '@/assets/textures/platform/noise-texture-256x256.png'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
@@ -41,6 +43,7 @@ type TileShaderUniforms = {
   uPlayerWorldPos: Vector2
   uScrollZ: number
   uAddDetailNoise: number
+  uDetailNoiseMap: Texture | null
   uHighlightRadius: number
   uFadeFullRadius: number
   uFadeMinRadius: number
@@ -51,6 +54,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uPlayerWorldPos: new Vector2(PLAYER_INITIAL_POSITION[0], PLAYER_INITIAL_POSITION[2]),
   uScrollZ: 0,
   uAddDetailNoise: 1,
+  uDetailNoiseMap: null,
   uHighlightRadius: TILE_PLAYER_HIGHLIGHT_RADIUS,
   uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
   uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
@@ -83,6 +87,9 @@ type PlatformTilesProps = {
 
 export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
+  const detailNoiseTexture = useTexture(tileDetailNoise.src)
+  detailNoiseTexture.wrapS = RepeatWrapping
+  detailNoiseTexture.wrapT = RepeatWrapping
 
   const [instances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
@@ -162,13 +169,16 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
             args={[highlightedData.current!, 1]}
           />
         </boxGeometry>
-        <TileShaderMaterial
-          ref={tileShader}
-          key={(CustomTileShaderMaterial as unknown as { key: string }).key}
-          transparent={true}
-          {...INITIAL_TILE_UNIFORMS}
-          uAddDetailNoise={Number(addDetailNoise)}
-        />
+        <Suspense fallback={null}>
+          <TileShaderMaterial
+            ref={tileShader}
+            key={CustomTileShaderMaterial.key}
+            transparent={true}
+            {...INITIAL_TILE_UNIFORMS}
+            uAddDetailNoise={Number(addDetailNoise)}
+            uDetailNoiseMap={detailNoiseTexture}
+          />
+        </Suspense>
       </instancedMesh>
     </InstancedRigidBodies>
   )

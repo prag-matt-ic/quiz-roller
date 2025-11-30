@@ -1,12 +1,12 @@
 precision mediump float;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
-#pragma glslify: noise2d = require('glsl-noise/simplex/2d')
 
 #pragma glslify: sampleTilesPalette = require(../../../resources/glsl/tilesPalette.glsl)
 
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
+uniform sampler2D uDetailNoiseMap;
 
 varying mediump float vAlpha;
 varying highp vec3 vWorldPos;
@@ -37,15 +37,15 @@ void main() {
   // Compute background color with scrolling noise
   highp vec3 bgNoisePos = vWorldPos * 0.06;
   bgNoisePos.xy += vSeed * vec2(0.12, -0.12);
-  bgNoisePos.z -= uScrollZ * 0.1;
+  bgNoisePos.z -= uScrollZ * 0.06;
   float bgNoise = noise(bgNoisePos);
   float bgInput = bgNoise * 0.5 + 0.5; // Map from [-1,1] to [0,1]
   vec3 bgColour = sampleTilesPalette(bgInput);
 
-  // Apply detail noise when quality setting is high.
+  // Apply detail noise when quality setting is not low.
   if (uAddDetailNoise > 0.5) {
-    mediump float detailNoise = noise2d(vUv * 48.0) * 0.5 + 0.5;
-    bgColour -= detailNoise * 0.2;
+    mediump float detailNoise = texture2D(uDetailNoiseMap, vUv).r;
+    bgColour -= detailNoise * 0.24;
   }
 
   // Mix with white based on tile type

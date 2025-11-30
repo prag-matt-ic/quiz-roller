@@ -31,11 +31,7 @@ const RotateDevice: FC<Props> = ({ isMobile, isLandscape, setIsLandscape }) => {
   if (!isMobile) return null
 
   return (
-    <div
-      className={twJoin(
-        'flex items-center gap-3 text-white',
-        'animate-in fade-in duration-300',
-      )}>
+    <div className={twJoin('relative flex items-center gap-3 text-white')}>
       {isLandscape ? (
         <CheckCircle2 className="size-9 text-white/80" />
       ) : (

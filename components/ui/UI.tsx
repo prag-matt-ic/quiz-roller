@@ -22,7 +22,10 @@ type Props = {
   isMobile: boolean
 }
 
+// TODO: simple CSS animation in when the loading overlay is dismissed
+
 const UI: FC<Props> = ({ isMobile }) => {
+  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
@@ -43,7 +46,11 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <ProgressBar />
 
-      <div className="gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 select-none">
+      <div
+        className={twJoin(
+          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 transition-opacity duration-300 select-none',
+          isShowingLoadingOverlay ? 'opacity-0' : 'opacity-100',
+        )}>
         {/* Top Left Rings */}
         <RingsUI />
         {/* Top Center Info */}

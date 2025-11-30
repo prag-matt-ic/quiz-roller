@@ -57,12 +57,17 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
       className={twJoin(
         'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 to-120% px-4 py-4',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
+        'bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm',
         isExiting ? 'opacity-0' : 'opacity-100',
-        isReady
-          ? 'bg-radial from-[#000]/90 from-20% to-transparent to-120% backdrop-blur-sm'
-          : 'bg-[#000]',
       )}>
-      <header>
+      <div
+        className={twJoin(
+          'absolute inset-0 bg-[#000] transition-opacity delay-400 duration-600',
+          isReady ? 'opacity-0' : 'opacity-100',
+        )}
+      />
+
+      <header className="relative">
         <h1 className="heading-md lg:heading-xl text-white">
           <GradientText>Speedroller</GradientText>
         </h1>

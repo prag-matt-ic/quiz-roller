@@ -56,8 +56,8 @@ void main() {
   float visible = clamp(visibility, 0.0, 1.0);
   float fullRadiusSq = uFadeFullRadius * uFadeFullRadius;
   float minRadiusSq = uFadeMinRadius * uFadeMinRadius;
-  float fadeDenom = max(0.0001, (minRadiusSq - fullRadiusSq));
-  float fadeT = clamp((distSq - fullRadiusSq) / fadeDenom, 0.0, 1.0);
+
+  float fadeT = smoothstep(fullRadiusSq, minRadiusSq, distSq);
   float radialAlpha = mix(1.0, uFadeMinAlpha, fadeT);
   vAlpha = radialAlpha * visible;
 
