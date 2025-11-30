@@ -14,6 +14,8 @@ uniform float uFadeMinAlpha;
 
 const float TILE_FADE_ROTATE_MAX = 0.3;
 const float AXIS_EPSILON = 0.001;
+const float UP_THRESHOLD = 0.5;
+const float DARKEN_FACTOR = 0.4;
 
 float hashFloat(float n) {
   return fract(sin(n) * 43758.5453);
@@ -26,10 +28,10 @@ vec3 rotateWithTrig(vec3 v, vec3 axis, float sinAngle, float cosAngle) {
 varying mediump float vAlpha;
 varying mediump float vPlayerHighlight;
 varying highp vec3 vWorldPos;
-varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
+varying lowp float vShade;
 
 void main() {
   // Compute combined model-instance matrix once and reuse
@@ -78,8 +80,13 @@ void main() {
   centeredPos = rotateWithTrig(centeredPos, tiltAxis, tiltSin, tiltCos);
   worldPos.xyz = centeredPos + instanceCenter;
   rawNormal = rotateWithTrig(rawNormal, tiltAxis, tiltSin, tiltCos);
-  vWorldNormal = normalize(rawNormal);
+  vec3 worldNormal = normalize(rawNormal);
   vWorldPos = worldPos.xyz;
+
+  // Compute shading in vertex shader
+  float upDot = dot(worldNormal, vec3(0.0, 1.0, 0.0));
+  float isFacingUp = step(UP_THRESHOLD, upDot);
+  vShade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
 
   // Pass seed to fragment for noise offset
   vSeed = seed;

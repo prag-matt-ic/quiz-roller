@@ -11,19 +11,17 @@ uniform highp vec2 uPlayerWorldPos;
 
 varying mediump float vAlpha;
 varying highp vec3 vWorldPos;
-varying mediump vec3 vWorldNormal;
 varying mediump float vSeed;
 varying mediump float vPlayerHighlight;
 varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
+varying lowp float vShade;
 
 // Constants
 const float HIGHLIGHTED_MIX_MIN = 0.16;
 const float HIGHLIGHTED_MIX_MAX = 0.32;
 
 const float REGULAR_MIX = 0.6;
-const float DARKEN_FACTOR = 0.4;
-const float UP_THRESHOLD = 0.5;
 const float PLAYER_PROXIMITY_MIX = 0.88;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.75;
@@ -68,11 +66,7 @@ void main() {
   background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
 
   // Darken non-upward-facing surfaces
-  // vWorldNormal should already be normalized from vertex shader
-  mediump float upDot = dot(vWorldNormal, vec3(0.0, 1.0, 0.0));
-  mediump float isFacingUp = step(UP_THRESHOLD, upDot);
-  mediump float shade = mix(DARKEN_FACTOR, 1.0, isFacingUp);
-  background *= shade;
+  background *= vShade;
 
   // Output final color
   gl_FragColor = vec4(background, alpha);

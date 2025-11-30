@@ -1,4 +1,17 @@
-import { BotIcon, CoinsIcon, HandshakeIcon, LucideIcon, MoveIcon } from 'lucide-react'
+import {
+  AlertTriangleIcon,
+  ArrowBigUpDashIcon,
+  BotIcon,
+  CoinsIcon,
+  FlameIcon,
+  HandshakeIcon,
+  LaughIcon,
+  LucideIcon,
+  MoveIcon,
+  RotateCcwIcon,
+  SparklesIcon,
+  TrendingUpIcon,
+} from 'lucide-react'
 import { type FC, type ReactNode } from 'react'
 
 import { type HudIndicatorConfig } from '@/components/GameProvider'
@@ -141,10 +154,12 @@ const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
 
 export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
   [InputType.KEYS]: {
+    id: 'move-keys',
     autoDismissS: 4,
     content: <MoveHUD inputType={InputType.KEYS} />,
   },
   [InputType.JOYSTICK]: {
+    id: 'move-joystick',
     autoDismissS: 4,
     content: <MoveHUD inputType={InputType.JOYSTICK} />,
   },
@@ -152,23 +167,81 @@ export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
 
 export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
   {
+    id: 'oob-1',
     autoDismissS: 3,
-    content: <>Careful explorer, there&apos;s nothing to see down there.</>,
+    content: (
+      <>
+        <AlertTriangleIcon size={20} strokeWidth={2} />
+        <span>Nothing to see down there!</span>
+      </>
+    ),
   },
   {
+    id: 'oob-2',
     autoDismissS: 3,
-    content: <>You just unlocked: One free extra life. You&apos;re welcome.</>,
+    content: (
+      <>
+        <RotateCcwIcon size={20} strokeWidth={2} />
+        <span>
+          You just unlocked: <b>1 free life</b>
+        </span>
+      </>
+    ),
   },
   {
+    id: 'oob-3',
     autoDismissS: 3,
-    content: <>We checked under the map for you. Still no secrets.</>,
+    content: (
+      <>
+        <SparklesIcon size={20} strokeWidth={2} />
+        <span>
+          We checked under the map. <b>Still no secrets.</b>
+        </span>
+      </>
+    ),
   },
   {
+    id: 'oob-4',
     autoDismissS: 3,
-    content: <>Thanks for testing gravity. Good news: you get another shot.</>,
+    content: (
+      <>
+        <ArrowBigUpDashIcon size={20} strokeWidth={2} />
+        <span>Thanks for testing gravity!</span>
+      </>
+    ),
   },
   {
+    id: 'oob-5',
     autoDismissS: 3,
-    content: <>Falling off is just fast travel back to safety.</>,
+    content: (
+      <>
+        <TrendingUpIcon size={20} strokeWidth={2} />
+        <span>
+          Fall down 7 times, <b>stand up 8</b>
+        </span>
+      </>
+    ),
+  },
+  {
+    id: 'oob-6',
+    autoDismissS: 3,
+    content: (
+      <>
+        <FlameIcon size={20} strokeWidth={2} />
+        <span>Failure is not fatal</span>
+      </>
+    ),
+  },
+  {
+    id: 'oob-7',
+    autoDismissS: 3,
+    content: (
+      <>
+        <LaughIcon size={20} strokeWidth={2} />
+        <span>
+          <b>Rise.</b> Wiser than before.
+        </span>
+      </>
+    ),
   },
 ]

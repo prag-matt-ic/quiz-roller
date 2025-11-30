@@ -25,6 +25,7 @@ export type PlayerInput = {
 export type PlayerStatus = 'idle' | 'safe' | 'out-of-bounds' | 'respawning'
 
 export type HudIndicatorConfig = {
+  id: string
   content: ReactNode
   autoDismissS?: number
 }

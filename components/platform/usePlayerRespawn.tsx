@@ -4,7 +4,7 @@ import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import usePlayerStatus from '@/hooks/usePlayerStatus'
 import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content'
-import { PlayerStatus } from '@/stores/types'
+import { type PlayerStatus } from '@/stores/types'
 import {
   COLUMNS,
   EPSILON,
@@ -290,11 +290,13 @@ export function usePlayerRespawn({
   const onRespawnScrollComplete = useCallback(() => {
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
-    const randomOutOfBoundsHudConfig =
+
+    const hudConfig =
       OUT_OF_BOUNDS_HUD_CONFIG[Math.floor(Math.random() * OUT_OF_BOUNDS_HUD_CONFIG.length)]
+
     respawnPlayer(
       [pendingRespawnX.current, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]],
-      randomOutOfBoundsHudConfig,
+      hudConfig,
     )
     pendingRespawnX.current = null
   }, [respawnPlayer])

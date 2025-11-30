@@ -68,8 +68,10 @@ const PlayerHUD: FC = () => {
 
   const containerTween = useRef<GSAPTween>(null)
   const container = useRef<HTMLDivElement>(null)
+  const delayedCall = useRef<GSAPTween>(null)
 
   const onEnter = () => {
+    delayedCall.current?.kill()
     containerTween.current?.kill()
     containerTween.current = gsap.fromTo(
       container.current,
@@ -81,7 +83,7 @@ const PlayerHUD: FC = () => {
         ease: 'power1.out',
         onComplete: () => {
           if (!!hudIndicator?.autoDismissS) {
-            gsap.delayedCall(hudIndicator.autoDismissS, () => {
+            delayedCall.current = gsap.delayedCall(hudIndicator.autoDismissS, () => {
               setHudIndicator(null)
             })
           }
@@ -100,7 +102,7 @@ const PlayerHUD: FC = () => {
     })
   }
 
-  const switchKey = `${showBar}-${showContent}`
+  const switchKey = `${showBar}-${showContent}-${hudIndicator?.id ?? ''}`
 
   if (!isMounted) return null
 
@@ -144,7 +146,7 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black p-3 text-sm font-medium whitespace-nowrap text-white uppercase opacity-0 lg:p-4 lg:text-base">
+                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black p-3 text-sm font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:p-4 lg:text-base">
                   {hudIndicator.content}
                 </div>
               )
