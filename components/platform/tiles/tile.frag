@@ -24,8 +24,8 @@ const float HIGHLIGHTED_MIX_MAX = 0.32;
 const float REGULAR_MIX = 0.55;
 const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
-const float SHADOW_RADIUS = 0.75;
-const float SHADOW_STRENGTH = 0.5;
+const float SHADOW_RADIUS = 0.8;
+const float SHADOW_STRENGTH = 0.6;
 
 void main() {
   // Early discard for fully transparent tiles
@@ -63,6 +63,7 @@ void main() {
   // Apply player contact shadow
   float distToPlayer = distance(vWorldPos.xz, uPlayerWorldPos);
   float shadow = 1.0 - smoothstep(0.0, SHADOW_RADIUS, distToPlayer);
+  shadow = pow(shadow, 2.5);
   background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
 
   // Darken non-upward-facing surfaces

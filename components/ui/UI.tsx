@@ -22,8 +22,6 @@ type Props = {
   isMobile: boolean
 }
 
-// TODO: simple CSS animation in when the loading overlay is dismissed
-
 const UI: FC<Props> = ({ isMobile }) => {
   const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
   const mode = useGameStore((s) => s.mode)

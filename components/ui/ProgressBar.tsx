@@ -38,10 +38,10 @@ const ProgressBar: FC = () => {
   return (
     <div
       id="progress-bar"
-      className="fixed top-1/2 right-1 z-100 h-48 w-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black">
+      className="fixed top-1/2 right-3 z-100 h-48 w-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black">
       <div
         ref={barRef}
-        className="absolute bottom-0 size-full bg-white/60 transition-transform duration-100 ease-linear"
+        className="bg-teal-accent absolute bottom-0 size-full transition-transform duration-100 ease-linear"
         style={{
           transform: 'translate3d(0,100%,0)',
         }}

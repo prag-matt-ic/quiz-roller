@@ -152,7 +152,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
       },
     )
     gsap.to(tileShader.current, {
-      duration: 0.4,
+      duration: 0.5,
       uShowProgress: 1,
       ease: 'power2.out',
     })
