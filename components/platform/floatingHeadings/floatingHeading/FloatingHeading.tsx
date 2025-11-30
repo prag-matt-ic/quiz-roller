@@ -92,7 +92,7 @@ export const FloatingHeading: FC<Props> = ({
     color: '#ffffff',
     ...textCanvasOptions,
     lineHeightMultiplier: 1.2,
-    fontSize: 80 * dpr,
+    fontSize: 72 * dpr,
     fontWeight: 700,
   })
 
@@ -119,8 +119,8 @@ export const FloatingHeading: FC<Props> = ({
     if (!shaderRef.current || !isVisible) return
     shaderRef.current.uCameraZ = state.camera.position.z
 
-    if (!shouldRotate) return
     if (!ref?.current) return
+    if (!useDistanceFade) return
     ref.current.getWorldPosition(tmpWorldPosition.current)
     shaderRef.current.uHeadingCenterXZ.set(
       tmpWorldPosition.current.x,

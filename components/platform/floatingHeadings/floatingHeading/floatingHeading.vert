@@ -56,8 +56,8 @@ void main() {
   }
 
   if (uDistanceFadeEnabled > 0.5) {
-    highp float nearFade = cameraFadeNear(uCameraZ, worldPosition.z);
-    highp float distantFade = fadeDistance(worldPosition.z);
+    highp float nearFade = cameraFadeNear(uCameraZ, uHeadingCenterXZ.y - 8.0);
+    highp float distantFade = fadeDistance(uHeadingCenterXZ.y - 8.0);
     vCameraFade = nearFade * distantFade;
   } else {
     vCameraFade = 1.0;
