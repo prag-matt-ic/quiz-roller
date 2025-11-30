@@ -3,7 +3,6 @@ import { Vector3, type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
 import { CollectibleID } from '@/model/schema'
-import { COLLECTIBLES_HUD_CONFIG } from '@/resources/content'
 import { ringIndexToKey } from '@/utils/rings'
 
 import {
@@ -137,7 +136,7 @@ export const createPlayerSlice =
           set((s) => ({
             collectedCollectibles: [...s.collectedCollectibles, collectibleType],
             confirmingCollectible: null,
-            hudIndicator: COLLECTIBLES_HUD_CONFIG[currentConfirming],
+            hudIndicator: null,
           }))
           playSoundFX(SoundFX.OPEN_INFO)
         }

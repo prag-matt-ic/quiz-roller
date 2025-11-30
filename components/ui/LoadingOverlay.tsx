@@ -1,6 +1,6 @@
 'use client'
 
-import { VolumeOffIcon } from 'lucide-react'
+import { PlayCircleIcon, VolumeOffIcon } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { type FC, type TransitionEvent, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
@@ -78,10 +78,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
         <Button
           variant="primary"
           color="light"
-          className="min-w-[200px]"
           aria-label="Start experience"
           disabled={!isReady}
           onClick={() => onStartClick(false)}>
+          <PlayCircleIcon className="size-6" />
           Start experience
         </Button>
         <Button

@@ -1,4 +1,11 @@
-import { ArrowUpCircleIcon, BotIcon, CoinsIcon, HandshakeIcon, LucideIcon } from 'lucide-react'
+import {
+  ArrowUpCircleIcon,
+  BotIcon,
+  CoinsIcon,
+  HandshakeIcon,
+  LucideIcon,
+  MoveIcon,
+} from 'lucide-react'
 import { FC, type ReactNode } from 'react'
 
 import { type HudIndicatorConfig } from '@/components/GameProvider'
@@ -118,47 +125,36 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
   </>,
 ]
 
-const bonusUnlocked = (
-  <p className="rounded-md bg-black px-3 py-2 text-sm tracking-wide whitespace-nowrap uppercase sm:text-base">
-    Bonus unlocked!
-  </p>
-)
-
-export const COLLECTIBLES_HUD_CONFIG: Record<CollectibleID, HudIndicatorConfig> = {
-  [CollectibleID.Discount]: {
-    autoDismissS: 3.5,
-    content: bonusUnlocked,
-  },
-  [CollectibleID.AI_Prompts]: {
-    autoDismissS: 3.5,
-    content: bonusUnlocked,
-  },
-  [CollectibleID.Consultation]: {
-    autoDismissS: 3.5,
-    content: bonusUnlocked,
-  },
-}
-
 const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
-  const text: Record<InputType, string> = {
-    [InputType.KEYS]: 'Use WASD or arrow keys to move',
-    [InputType.JOYSTICK]: 'Use the touch joystick to move',
+  const text: Record<InputType, ReactNode> = {
+    [InputType.KEYS]: (
+      <>
+        <b>Arrow keys</b> to move
+      </>
+    ),
+    [InputType.JOYSTICK]: (
+      <>
+        <b>Touch joystick</b> to move
+      </>
+    ),
   }
   return (
     <div className="flex items-center gap-2 rounded-full bg-black px-2 py-2 pr-4 text-white">
-      <ArrowUpCircleIcon strokeWidth={1.5} size={32} />
-      <span className="block font-bold whitespace-nowrap uppercase">{text[inputType]}</span>
+      <MoveIcon strokeWidth={1.5} size={28} />
+      <span className="block text-sm font-medium whitespace-nowrap uppercase lg:text-base">
+        {text[inputType]}
+      </span>
     </div>
   )
 }
 
 export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
   [InputType.KEYS]: {
-    autoDismissS: 20,
+    autoDismissS: 4,
     content: <MoveHUD inputType={InputType.KEYS} />,
   },
   [InputType.JOYSTICK]: {
-    autoDismissS: 20,
+    autoDismissS: 4,
     content: <MoveHUD inputType={InputType.JOYSTICK} />,
   },
 }

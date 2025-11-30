@@ -9,8 +9,8 @@ import {
   useInteractions,
   useTransitionStatus,
 } from '@floating-ui/react'
-import { GemIcon } from 'lucide-react'
-import { type CSSProperties, type FC, useState } from 'react'
+import { CheckIcon, GemIcon } from 'lucide-react'
+import { type CSSProperties, type FC, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -23,7 +23,7 @@ export const RingsUI: FC = () => {
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
-    <div className="flex h-fit items-center gap-1 text-sm select-none">
+    <div className="flex h-fit items-center gap-1 p-2 text-sm select-none lg:p-4">
       <div
         className={twJoin(
           'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-semibold',
@@ -62,7 +62,6 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   isCollected,
 }) => {
   const [show, setShow] = useState(false)
-  const [hasSeen, setHasSeen] = useState(false)
 
   const { refs, floatingStyles, context } = useFloating({
     open: show,
@@ -70,9 +69,6 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
     placement: 'bottom',
     onOpenChange: (open) => {
       setShow(open)
-      if (open && !hasSeen) {
-        setHasSeen(true)
-      }
     },
     middleware: [offset(12)],
   })
@@ -84,11 +80,22 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   const click = useClick(context, { toggle: true })
   const dismiss = useDismiss(context)
 
+  useEffect(() => {
+    let timeot: NodeJS.Timeout
+    if (isCollected) {
+      setShow(true)
+      timeot = setTimeout(() => {
+        setShow(false)
+      }, 6000)
+    }
+    return () => clearTimeout(timeot)
+  }, [isCollected])
+
   const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
 
-  const shouldPulse = isCollected && !hasSeen
+  const shouldPulse = isCollected
 
   return (
     <>
@@ -132,29 +139,27 @@ const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
           <div
             data-status={status}
             className={twJoin(
-              'flex max-w-sm origin-top flex-col gap-5 overflow-hidden rounded-xl bg-black p-6 whitespace-nowrap',
+              'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
               // Transition states
               'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
               'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
               'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
             )}>
-            <div className="flex max-w-full items-center gap-2 pr-2 sm:gap-3">
-              <ContentIcon strokeWidth={1} size={40} className="text-(--icon-colour)" />
-              <p className="block">
-                <span className="mb-1 block text-sm font-medium tracking-wide text-white/80 uppercase">
-                  Bonus
+            <ContentIcon strokeWidth={1} size={40} className="shrink-0 text-(--icon-colour)" />
+            <p className="block overflow-hidden">
+              <span className="mb-1 text-sm font-medium tracking-wide text-white/80 uppercase">
+                Bonus
+              </span>
+              {isCollected ? (
+                <span className="block text-base font-bold sm:text-lg">
+                  {COLLECTIBLES_CONTENT[id].content}
                 </span>
-                {isCollected ? (
-                  <span className="block text-base font-bold sm:text-lg">
-                    {COLLECTIBLES_CONTENT[id].content}
-                  </span>
-                ) : (
-                  <span className="block text-base font-semibold">
-                    Unlock this to learn more
-                  </span>
-                )}
-              </p>
-            </div>
+              ) : (
+                <span className="block text-base font-semibold">
+                  Discover the gem to learn more
+                </span>
+              )}
+            </p>
           </div>
         </div>
       )}

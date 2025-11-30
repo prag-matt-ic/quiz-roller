@@ -43,7 +43,7 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <ProgressBar />
 
-      <div className="gap-y-auto fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 border px-4 select-none *:border">
+      <div className="gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 select-none">
         {/* Top Left Rings */}
         <RingsUI />
         {/* Top Center Info */}
@@ -58,7 +58,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'pointer-events-none flex h-fit items-center justify-center gap-2.5 opacity-0 transition-opacity duration-200',
+                    'flex h-fit items-center justify-center gap-2.5 pt-2 opacity-0 transition-opacity duration-200 lg:pt-4',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
@@ -72,8 +72,11 @@ const UI: FC<Props> = ({ isMobile }) => {
         {/* Top Right Menu toggle */}
         <button
           onClick={() => setShowMenu((prev) => !prev)}
-          className="pointer-events-auto place-self-end self-start p-2.5 text-white">
-          <MenuIcon size={24} className="pointer-events-auto text-white" />
+          className="pointer-events-auto place-self-end self-start p-2.5 text-white lg:p-4">
+          <MenuIcon
+            strokeWidth={2.5}
+            className="pointer-events-auto size-6 text-white lg:size-8"
+          />
         </button>
       </div>
 

@@ -23,7 +23,7 @@ const float HIGHLIGHTED_MIX_MAX = 0.32;
 const float REGULAR_MIX = 0.6;
 const float DARKEN_FACTOR = 0.4;
 const float UP_THRESHOLD = 0.5;
-const float HIGHLIGHT_MIX = 0.84;
+const float PLAYER_PROXIMITY_MIX = 0.88;
 const vec3 WHITE = vec3(1.0);
 
 void main() {
@@ -55,7 +55,7 @@ void main() {
 
   // Apply player proximity highlight without losing highlighted mix
   mediump float proximityAmount = vPlayerHighlight;
-  mediump float proximityMixAmount = mix(HIGHLIGHT_MIX, mixAmount, isHighlighted);
+  mediump float proximityMixAmount = mix(PLAYER_PROXIMITY_MIX, mixAmount, isHighlighted);
   vec3 proximityColour = mix(WHITE, bgColour, proximityMixAmount);
   background = mix(background, proximityColour, proximityAmount);
 

@@ -5,7 +5,6 @@ import { twJoin } from 'tailwind-merge'
 import { GameProvider } from '@/components/GameProvider'
 import { SoundProvider } from '@/components/SoundProvider'
 import LoadingOverlay from '@/components/ui/LoadingOverlay'
-import RotateDevice from '@/components/ui/RotateDevice'
 import isMobileServer from '@/utils/isMobileServer'
 
 import { insertSpeedRun } from './actions'
@@ -26,8 +25,7 @@ export default async function Home(props: PageProps) {
       <main className={twJoin('w-full overflow-hidden', isMobile ? 'h-dvh' : 'h-vh')}>
         <SoundProvider>
           <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
-            <LoadingOverlay isMobile={true} />
-            {/* <RotateDevice isMobile={isMobile} /> */}
+            <LoadingOverlay isMobile={isMobile} />
             <Main isMobile={isMobile} isDebug={isDebug} />
           </GameProvider>
         </SoundProvider>
