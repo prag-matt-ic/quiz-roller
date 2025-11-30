@@ -6,7 +6,7 @@ attribute float visibility;
 attribute float seed;
 attribute float isHighlighted;
 
-uniform vec2 uPlayerWorldPos;
+uniform highp vec2 uPlayerWorldPos;
 uniform float uHighlightRadius;
 uniform float uFadeFullRadius;
 uniform float uFadeMinRadius;

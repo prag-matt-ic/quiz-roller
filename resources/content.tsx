@@ -1,12 +1,5 @@
-import {
-  ArrowUpCircleIcon,
-  BotIcon,
-  CoinsIcon,
-  HandshakeIcon,
-  LucideIcon,
-  MoveIcon,
-} from 'lucide-react'
-import { FC, type ReactNode } from 'react'
+import { BotIcon, CoinsIcon, HandshakeIcon, LucideIcon, MoveIcon } from 'lucide-react'
+import { type FC, type ReactNode } from 'react'
 
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import { CollectibleID } from '@/model/schema'
@@ -139,12 +132,10 @@ const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
     ),
   }
   return (
-    <div className="flex items-center gap-2 rounded-full bg-black px-3 py-3 pr-4 text-white">
-      <MoveIcon strokeWidth={1.5} size={28} />
-      <span className="block text-sm font-medium whitespace-nowrap uppercase lg:text-base">
-        {text[inputType]}
-      </span>
-    </div>
+    <>
+      <MoveIcon strokeWidth={1.5} size={28} className="-ml-1" />
+      <span className="block font-medium uppercase">{text[inputType]}</span>
+    </>
   )
 }
 
@@ -158,3 +149,26 @@ export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
     content: <MoveHUD inputType={InputType.JOYSTICK} />,
   },
 }
+
+export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
+  {
+    autoDismissS: 3,
+    content: <>Careful explorer, there&apos;s nothing to see down there.</>,
+  },
+  {
+    autoDismissS: 3,
+    content: <>You just unlocked: One free extra life. You&apos;re welcome.</>,
+  },
+  {
+    autoDismissS: 3,
+    content: <>We checked under the map for you. Still no secrets.</>,
+  },
+  {
+    autoDismissS: 3,
+    content: <>Thanks for testing gravity. Good news: you get another shot.</>,
+  },
+  {
+    autoDismissS: 3,
+    content: <>Falling off is just fast travel back to safety.</>,
+  },
+]

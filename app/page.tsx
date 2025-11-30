@@ -23,7 +23,8 @@ export default async function Home(props: PageProps) {
 
   return (
     <>
-      <main className={twJoin('w-full overflow-hidden', isMobile ? 'h-dvh' : 'h-vh')}>
+      <main
+        className={twJoin('w-full overflow-hidden select-none', isMobile ? 'h-dvh' : 'h-vh')}>
         <SoundProvider>
           <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
             <LoadingOverlay isMobile={isMobile} />

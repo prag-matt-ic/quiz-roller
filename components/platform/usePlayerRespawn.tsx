@@ -3,6 +3,7 @@ import { type RefObject, useCallback, useRef } from 'react'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import usePlayerStatus from '@/hooks/usePlayerStatus'
+import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content'
 import { PlayerStatus } from '@/stores/types'
 import {
   COLUMNS,
@@ -289,12 +290,11 @@ export function usePlayerRespawn({
   const onRespawnScrollComplete = useCallback(() => {
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
+    const randomOutOfBoundsHudConfig =
+      OUT_OF_BOUNDS_HUD_CONFIG[Math.floor(Math.random() * OUT_OF_BOUNDS_HUD_CONFIG.length)]
     respawnPlayer(
       [pendingRespawnX.current, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]],
-      {
-        autoDismissS: 2,
-        content: 'you went the wrong way dipshit',
-      },
+      randomOutOfBoundsHudConfig,
     )
     pendingRespawnX.current = null
   }, [respawnPlayer])
