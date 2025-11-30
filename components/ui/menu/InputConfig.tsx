@@ -1,4 +1,4 @@
-import { Joystick, Keyboard } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Joystick, Keyboard } from 'lucide-react'
 import { type FC } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -35,8 +35,8 @@ export const InputConfig: FC = () => {
           value={joystickPosition}
           onChange={setJoystickPosition}
           items={[
-            { label: 'Left Handed', value: 'left' },
-            { label: 'Right Handed', value: 'right' },
+            { label: 'Left Handed', value: 'left', Icon: ArrowLeft },
+            { label: 'Right Handed', value: 'right', Icon: ArrowRight },
           ]}
         />
       )}

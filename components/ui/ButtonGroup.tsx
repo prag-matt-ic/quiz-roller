@@ -21,9 +21,9 @@ export const ButtonGroup = <T extends string | number>({
   onChange,
 }: ButtonGroupProps<T>) => {
   return (
-    <div className="flex flex-col items-center gap-3 text-sm tracking-wide uppercase">
+    <div className="flex flex-col items-center gap-3 overflow-hidden rounded-md border text-sm tracking-wide uppercase">
       {label && <p>{label}</p>}
-      <div className="flex gap-3">
+      <div className="flex">
         {items.map((item) => {
           const isActive = value === item.value
           const Icon = item.Icon
@@ -35,12 +35,12 @@ export const ButtonGroup = <T extends string | number>({
               aria-pressed={isActive}
               onClick={() => onChange(item.value)}
               className={twJoin(
-                'pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+                'pointer-events-auto flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors',
                 isActive
                   ? 'border-white bg-white text-black'
                   : 'border-white/40 bg-transparent',
               )}>
-              {Icon && <Icon className="size-4 lg:size-5" strokeWidth={1.75} />}
+              {!!Icon && <Icon className="size-4 lg:size-5" strokeWidth={1.75} />}
               {item.label}
             </button>
           )

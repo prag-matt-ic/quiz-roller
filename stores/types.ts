@@ -74,7 +74,7 @@ export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
 
-  playerWorldPosition: Vector3
+  playerPosition: Vector3
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
   spawnPosition: Vector3 | null

@@ -86,7 +86,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : PLAYER_INITIAL_POSITION_VEC3.clone(),
         playerRespawnTick: s.playerRespawnTick + 1,
-        playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+        playerPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
         resetPlatformTick: s.resetPlatformTick + 1,
       }
     })

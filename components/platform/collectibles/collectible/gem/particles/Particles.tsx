@@ -5,11 +5,13 @@ import { type FC, useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, BufferAttribute, Color, Vector3, type Vector3Tuple } from 'three'
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
-import particleFragment from './point.frag'
-import particleVertex from './point.vert'
 import useGameFrame from '@/hooks/useGameFrame'
 import { CollectibleID } from '@/model/schema'
 import { GEMS_BY_ID, GOLD_PARTICLE_PALETTE } from '@/resources/content'
+import { EPSILON } from '@/utils/tiles'
+
+import particleFragment from './point.frag'
+import particleVertex from './point.vert'
 
 type PointsShaderUniforms = {
   uBurstProgress: number
@@ -45,8 +47,6 @@ type Props = {
   isVisible: boolean
 }
 
-const EPSILON = 0.0001
-
 const createRandomSeeds = (count: number): Float32Array => {
   const values = new Float32Array(count)
   for (let i = 0; i < count; i++) {
@@ -77,7 +77,7 @@ const sampleOctaPoint = () => {
     z: Math.random() * 2 - 1,
   }
   const normalization =
-    Math.abs(signedRand.x) + Math.abs(signedRand.y) + Math.abs(signedRand.z) || EPSILON
+    Math.abs(signedRand.x) + Math.abs(signedRand.y) + Math.abs(signedRand.z) || EPSILON.TINY
   const radius = Math.pow(Math.random(), 0.55)
   return {
     x: (signedRand.x / normalization) * radius,

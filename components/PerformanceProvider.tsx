@@ -38,7 +38,6 @@ export type SceneConfig = {
   }
   floatingHeading: {
     shouldRotate: boolean
-    useNoiseReveal: boolean
     usePlayerFade: boolean
   }
 }
@@ -58,7 +57,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 8, renderScale: 0.75 },
-    floatingHeading: { shouldRotate: true, useNoiseReveal: true, usePlayerFade: true },
+    floatingHeading: { shouldRotate: true, usePlayerFade: true },
   },
   [SceneQuality.MEDIUM]: {
     isDistanceFadeEnabled: true,
@@ -69,7 +68,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     background: { keyframes: 4, renderScale: 0.5 },
-    floatingHeading: { shouldRotate: false, useNoiseReveal: false, usePlayerFade: true },
+    floatingHeading: { shouldRotate: false, usePlayerFade: true },
   },
   [SceneQuality.LOW]: {
     isDistanceFadeEnabled: false,
@@ -80,7 +79,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     background: { keyframes: 1, renderScale: 0.25 },
-    floatingHeading: { shouldRotate: false, useNoiseReveal: false, usePlayerFade: false },
+    floatingHeading: { shouldRotate: false, usePlayerFade: false },
   },
 }
 

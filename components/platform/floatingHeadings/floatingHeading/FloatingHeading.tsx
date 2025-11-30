@@ -34,26 +34,20 @@ type Props = {
 
 type FloatingHeadingUniforms = {
   uTexture: Texture
-  uOpacity: number
-  uTime: number
   uPlayerXZ: Vector2
   uHeadingCenterXZ: Vector2
   uCameraZ: number
   uEnableRotation: number
-  uEnableNoise: number
   uUsePlayerFade: number
   uDistanceFadeEnabled: number
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uTexture: TRANSPARENT_TEXTURE,
-  uOpacity: 1,
-  uTime: 0,
   uPlayerXZ: new Vector2(0, 0),
   uHeadingCenterXZ: new Vector2(0, 0),
   uCameraZ: 0,
   uEnableRotation: 1,
-  uEnableNoise: 1,
   uUsePlayerFade: 1,
   uDistanceFadeEnabled: 1,
 }
@@ -79,7 +73,6 @@ export const FloatingHeading: FC<Props> = ({
   const tmpWorldPosition = useRef(new Vector3())
   const {
     shouldRotate,
-    useNoiseReveal: useNoise,
     usePlayerFade,
   } = usePerformanceStore((s) => s.sceneConfig.floatingHeading)
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled) // for distance faded
@@ -93,7 +86,6 @@ export const FloatingHeading: FC<Props> = ({
 
   const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)
-  const opacity = useRef({ value: isVisible ? 1 : 0 })
 
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
@@ -117,31 +109,6 @@ export const FloatingHeading: FC<Props> = ({
   }, [width])
 
   useEffect(() => {
-    if (!shaderRef.current) return
-    shaderRef.current.uOpacity = opacity.current.value
-  }, [])
-
-  useGSAP(
-    () => {
-      const tween = gsap.to(opacity.current, {
-        value: isVisible ? 1 : 0,
-        duration: isVisible ? 1.8 : 0.4,
-        delay: isVisible ? 0.3 : 0,
-        ease: isVisible ? 'power2.out' : 'power2.out',
-        onUpdate: () => {
-          if (!shaderRef.current) return
-          shaderRef.current.uOpacity = opacity.current.value
-        },
-      })
-
-      return () => {
-        tween.kill()
-      }
-    },
-    { dependencies: [isVisible] },
-  )
-
-  useEffect(() => {
     const nextTexture = canvasState?.texture ?? TRANSPARENT_TEXTURE
     materialTextureRef.current = nextTexture
     if (shaderRef.current) {
@@ -151,9 +118,6 @@ export const FloatingHeading: FC<Props> = ({
 
   useGameFrame((state) => {
     if (!shaderRef.current || !isVisible) return
-    if (useNoise) {
-      shaderRef.current.uTime = state.clock.elapsedTime
-    }
     shaderRef.current.uCameraZ = state.camera.position.z
 
     if (!shouldRotate) return
@@ -176,10 +140,7 @@ export const FloatingHeading: FC<Props> = ({
       <FloatingHeadingMaterial
         key={FloatingHeadingShader.key}
         ref={shaderRef}
-        uOpacity={0}
-        uTime={0}
         uEnableRotation={shouldRotate ? 1 : 0}
-        uEnableNoise={useNoise ? 1 : 0}
         uUsePlayerFade={usePlayerFade ? 1 : 0}
         uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         transparent={true}

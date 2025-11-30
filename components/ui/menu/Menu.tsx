@@ -28,6 +28,8 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
         transitionStatus === 'exiting' && 'opacity-0',
         transitionStatus === 'exited' && 'opacity-0',
       )}>
+      {/* TODO: add logo. */}
+
       <ButtonGroup
         value={isMuted ? 'off' : 'on'}
         onChange={(val) => setIsMuted(val === 'off')}

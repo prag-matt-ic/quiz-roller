@@ -1,4 +1,4 @@
-import { type RefObject, useRef } from 'react'
+import { type RefObject, useCallback, useRef } from 'react'
 
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -189,7 +189,8 @@ export function usePlayerRespawn({
     preferredRespawnX.current = pos.x
   })
 
-  function onOutOfBounds() {
+  const onOutOfBounds = () => {
+    console.log('[Platform] Player out-of-bounds detected, initiating respawn sequence.')
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
     const scrollPos = currentScrollPosition.current
@@ -285,7 +286,7 @@ export function usePlayerRespawn({
 
   usePlayerStatus(onPlayerStatusChange)
 
-  const onRespawnScrollComplete = () => {
+  const onRespawnScrollComplete = useCallback(() => {
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
     respawnPlayer({
@@ -294,7 +295,7 @@ export function usePlayerRespawn({
       z: PLAYER_INITIAL_POSITION[2],
     })
     pendingRespawnX.current = null
-  }
+  }, [respawnPlayer])
 
   return { targetScrollPosition, onRespawnScrollComplete }
 }

@@ -94,11 +94,13 @@ export const createPlayerSlice =
       setUsername: (username: string) => {
         set({ username })
       },
-      playerWorldPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
+      playerPosition: PLAYER_INITIAL_POSITION_VEC3.clone(),
       setPlayerPosition: (position) => {
-        set((s) => ({
-          playerWorldPosition: s.playerWorldPosition.set(position.x, position.y, position.z),
-        }))
+        set((s) => {
+          return {
+            playerPosition: s.playerPosition.set(position.x, position.y, position.z),
+          }
+        })
       },
       onRingCollected: (ringIndex: RingIndex) => {
         const ringKey = ringIndexToKey(ringIndex)

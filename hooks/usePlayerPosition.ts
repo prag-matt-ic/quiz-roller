@@ -7,19 +7,18 @@ export function usePlayerPosition(onPlayerPositionChange?: (pos: Vector3) => voi
   const gameStoreAPI = useGameStoreAPI()
 
   // Capture current value in a ref to avoid re-renders
-  const playerPosition = useRef<Vector3>(gameStoreAPI.getState().playerWorldPosition)
-  const notifiedPosition = useRef(new Vector3().copy(playerPosition.current))
+  const playerPosition = useRef<Vector3>(gameStoreAPI.getState().playerPosition)
 
   useEffect(() => {
     // Subscribe to store updates and update ref only when playerPosition changes
     const unsubscribe = gameStoreAPI.subscribe(
-      (s) => s.playerWorldPosition,
+      (s) => s.playerPosition,
       (newPosition) => {
-        notifiedPosition.current.copy(newPosition)
         playerPosition.current = newPosition
         onPlayerPositionChange?.(newPosition)
       },
     )
+
     return unsubscribe
   }, [gameStoreAPI, onPlayerPositionChange])
 

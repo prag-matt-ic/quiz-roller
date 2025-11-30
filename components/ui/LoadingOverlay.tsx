@@ -21,9 +21,6 @@ type Props = {
 }
 
 const LoadingOverlay: FC<Props> = ({ isMobile }) => {
-  const [isExiting, setIsExiting] = useState(false)
-  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
-
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
   const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
@@ -32,6 +29,9 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const inputType = useGameStore((s) => s.inputType)
+
+  const [isExiting, setIsExiting] = useState(false)
+  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
 
   const isReady = isHydrated && isPlatformReady && (!isMobile || isMobileLandscape)
 
@@ -45,7 +45,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     if (e.target !== e.currentTarget) return
     setIsShowingLoadingOverlay(false)
 
-    console.log('[LoadingOverlay] Transition ended, spawning player')
+    console.warn('[LoadingOverlay] Transition ended, spawning player')
     const hud = MOVE_HUD_CONFIG[inputType]
     respawnPlayer(PLAYER_INITIAL_POSITION_VEC3, hud)
   }
