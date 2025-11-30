@@ -16,15 +16,15 @@ const RotateDevice: FC<Props> = ({ isMobile, isLandscape, setIsLandscape }) => {
 
     const mediaQuery = window.matchMedia('(orientation: landscape)')
 
-    const handleOrientationChange = (event: MediaQueryList | MediaQueryListEvent) => {
+    const onOrientationChange = (event: MediaQueryList | MediaQueryListEvent) => {
       setIsLandscape(event.matches)
     }
 
-    handleOrientationChange(mediaQuery)
+    onOrientationChange(mediaQuery)
 
-    mediaQuery.addEventListener('change', handleOrientationChange)
+    mediaQuery.addEventListener('change', onOrientationChange)
     return () => {
-      mediaQuery.removeEventListener('change', handleOrientationChange)
+      mediaQuery.removeEventListener('change', onOrientationChange)
     }
   }, [isMobile, setIsLandscape])
 
@@ -39,7 +39,7 @@ const RotateDevice: FC<Props> = ({ isMobile, isLandscape, setIsLandscape }) => {
       {isLandscape ? (
         <CheckCircle2 className="size-9 text-white/80" />
       ) : (
-        <RotateCw className="size-9 text-white/80" />
+        <RotateCw className="size-9 animate-pulse text-white/80" />
       )}
       <p className="text-sm font-medium tracking-wide text-white uppercase">
         {isLandscape ? 'Ready to start' : 'Rotate your device to start'}
