@@ -1,12 +1,21 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { shaderMaterial } from '@react-three/drei'
+import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend, useThree } from '@react-three/fiber'
 import gsap from 'gsap'
 import { type FC, type RefObject, useEffect, useMemo, useRef } from 'react'
-import { BackSide, Mesh, type Texture, Vector2, Vector3, type Vector3Tuple } from 'three'
+import {
+  BackSide,
+  Mesh,
+  RepeatWrapping,
+  type Texture,
+  Vector2,
+  Vector3,
+  type Vector3Tuple,
+} from 'three'
 
+import floatingHeadingNoise from '@/assets/textures/platform/heading-noise.png'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -34,22 +43,26 @@ type Props = {
 
 type FloatingHeadingUniforms = {
   uTexture: Texture
+  uNoiseTexture: Texture
   uPlayerXZ: Vector2
   uHeadingCenterXZ: Vector2
   uCameraZ: number
   uEnableRotation: number
   uUsePlayerFade: number
   uDistanceFadeEnabled: number
+  uUseNoiseFade: number
 }
 
 const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uTexture: TRANSPARENT_TEXTURE,
+  uNoiseTexture: TRANSPARENT_TEXTURE,
   uPlayerXZ: new Vector2(0, 0),
   uHeadingCenterXZ: new Vector2(0, 0),
   uCameraZ: 0,
   uEnableRotation: 1,
   uUsePlayerFade: 1,
   uDistanceFadeEnabled: 1,
+  uUseNoiseFade: 1,
 }
 
 const FloatingHeadingShader = shaderMaterial(
@@ -71,7 +84,7 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
-  const { shouldRotate, usePlayerFade } = usePerformanceStore(
+  const { shouldRotate, usePlayerFade, useNoiseFade } = usePerformanceStore(
     (s) => s.sceneConfig.floatingHeading,
   )
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled) // for distance faded
@@ -85,6 +98,10 @@ export const FloatingHeading: FC<Props> = ({
 
   const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)
+  const dissolveNoiseTexture = useTexture(floatingHeadingNoise.src, (texture) => {
+    texture.wrapS = RepeatWrapping
+    texture.wrapT = RepeatWrapping
+  })
 
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
@@ -142,6 +159,8 @@ export const FloatingHeading: FC<Props> = ({
         uEnableRotation={shouldRotate ? 1 : 0}
         uUsePlayerFade={usePlayerFade ? 1 : 0}
         uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
+        uUseNoiseFade={useNoiseFade ? 1 : 0}
+        uNoiseTexture={dissolveNoiseTexture}
         transparent={true}
         depthTest={false}
         depthWrite={false}

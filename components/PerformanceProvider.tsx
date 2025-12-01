@@ -32,14 +32,12 @@ export type SceneConfig = {
   colourTile: {
     useNoise: boolean
   }
-  background: {
-    keyframes: 1 | 4 | 8
-    renderScale: number
-  }
   floatingHeading: {
     shouldRotate: boolean
     usePlayerFade: boolean
+    useNoiseFade: boolean
   }
+  // backdrop: {}
 }
 
 const logPerformanceDebug = (...payload: unknown[]) => {
@@ -52,12 +50,11 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     isDistanceFadeEnabled: true,
     player: { segments: 64, isFlat: false, enableVeins: true },
     ring: { radialSegments: 12, tubularSegments: 24 },
-    gem: { particleCount: 120 },
+    gem: { particleCount: 128 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
-    background: { keyframes: 8, renderScale: 0.75 },
-    floatingHeading: { shouldRotate: true, usePlayerFade: true },
+    floatingHeading: { shouldRotate: true, usePlayerFade: true, useNoiseFade: true },
   },
   [SceneQuality.MEDIUM]: {
     isDistanceFadeEnabled: true,
@@ -65,10 +62,9 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     ring: { radialSegments: 8, tubularSegments: 16 },
     gem: { particleCount: 64 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
-    platformTiles: { addDetailNoise: true },
+    platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: true },
-    background: { keyframes: 4, renderScale: 0.5 },
-    floatingHeading: { shouldRotate: false, usePlayerFade: true },
+    floatingHeading: { shouldRotate: false, usePlayerFade: true, useNoiseFade: true },
   },
   [SceneQuality.LOW]: {
     isDistanceFadeEnabled: false,
@@ -78,8 +74,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
-    background: { keyframes: 1, renderScale: 0.25 },
-    floatingHeading: { shouldRotate: false, usePlayerFade: false },
+    floatingHeading: { shouldRotate: false, usePlayerFade: false, useNoiseFade: false },
   },
 }
 
