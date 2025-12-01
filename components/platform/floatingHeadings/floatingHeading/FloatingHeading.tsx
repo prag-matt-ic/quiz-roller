@@ -15,7 +15,7 @@ import {
   type Vector3Tuple,
 } from 'three'
 
-import floatingHeadingNoise from '@/assets/textures/platform/heading-noise.png'
+import floatingHeadingNoise from '@/assets/textures/platform/heading-noise.webp'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'

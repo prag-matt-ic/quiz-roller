@@ -17,7 +17,7 @@ import {
 } from 'react'
 import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector2 } from 'three'
 
-import tileDetailNoise from '@/assets/textures/platform/tile-noise.png'
+import tileDetailNoise from '@/assets/textures/platform/tile-noise.webp'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
