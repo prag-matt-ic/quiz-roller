@@ -18,7 +18,7 @@ export enum SoundFX {
   CHANGE_COLOUR = 'CHANGE_COLOUR',
   COIN_COLLECTED = 'COIN_COLLECTED',
 }
-// TODO: review audio..
+// TODO: add speed run countdown sound FX
 
 const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND]: '/audio/background.aac',

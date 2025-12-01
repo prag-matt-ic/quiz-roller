@@ -19,6 +19,11 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
+  const onStartSpeedRun = () => {
+    startSpeedRun()
+    closeMenu()
+  }
+
   return (
     <aside
       ref={ref}
@@ -44,7 +49,7 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
       <button
         type="button"
         className="pointer-events-auto size-fit rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black uppercase transition md:text-sm"
-        onClick={startSpeedRun}>
+        onClick={onStartSpeedRun}>
         <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
         Start Speedroll
       </button>

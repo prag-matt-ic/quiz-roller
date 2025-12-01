@@ -92,6 +92,7 @@ export type PlayerSlice = {
   collectedCollectibles: CollectibleID[]
 
   collectedRings: RingCollection
+  hasCollectedAllRings: boolean
   onRingCollected: (indexes: RingIndex) => void
 
   stopConfirmation: () => void

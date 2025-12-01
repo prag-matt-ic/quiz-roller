@@ -9,6 +9,7 @@ import {
   type GameSliceCreator,
   type PlayerSlice,
   type PlayerStatus,
+  RingCollection,
   type RingIndex,
   SliceDeps,
 } from './types'
@@ -30,6 +31,7 @@ export const RESET_PLAYER_STATE = {
   confirmingCollectible: null,
   collectedRings: {},
   confirmationProgress: 0,
+  hasCollectedAllRings: false,
 }
 
 export const createPlayerSlice =
@@ -97,12 +99,13 @@ export const createPlayerSlice =
       onRingCollected: (ringIndex: RingIndex) => {
         const ringKey = ringIndexToKey(ringIndex)
         if (get().collectedRings[ringKey]) return
-        set((s) => ({
-          collectedRings: {
-            ...s.collectedRings,
-            [ringKey]: true,
-          },
-        }))
+        const totalRingsCount = get().totalCounts.rings
+        const newCollectedRings: RingCollection = { ...get().collectedRings, [ringKey]: true }
+        const hasCollectedAllRings = Object.keys(newCollectedRings).length >= totalRingsCount
+        if (hasCollectedAllRings) {
+          console.warn('[PlayerStore] All rings collected!')
+        }
+        set({ collectedRings: newCollectedRings, hasCollectedAllRings })
       },
       setConfirmingCollectible: (collectibleType: CollectibleID | null) => {
         confirmationTween?.kill()
@@ -169,6 +172,7 @@ export const createPlayerSlice =
             right: 0,
           },
           collectedRings: {},
+          hasCollectedAllRings: false,
         })
         logPlayerStatus('Player out of bounds')
       },

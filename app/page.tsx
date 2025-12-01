@@ -117,7 +117,6 @@ const StructuredData: FC = () => {
           }),
         }}
       />
-
       {/* Software Application details for the Quizroller game */}
       <script
         type="application/ld+json"
