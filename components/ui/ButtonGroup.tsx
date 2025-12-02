@@ -8,44 +8,39 @@ export type ButtonGroupItem<T> = {
 }
 
 type ButtonGroupProps<T> = {
-  label?: string
   items: ButtonGroupItem<T>[]
   value: T
   onChange: (value: T) => void
 }
 
 export const ButtonGroup = <T extends string | number>({
-  label,
   items,
   value,
   onChange,
 }: ButtonGroupProps<T>) => {
   return (
-    <div className="relative flex flex-col items-center gap-3 overflow-hidden rounded-md border text-sm tracking-wide uppercase">
-      {label && <p>{label}</p>}
-      <div className="flex">
-        {items.map((item) => {
-          const isActive = value === item.value
-          const Icon = item.Icon
+    <div className="relative flex items-center overflow-hidden rounded-md border border-white/15 text-sm tracking-wide uppercase lg:text-base">
+      {items.map((item) => {
+        const isActive = value === item.value
+        const Icon = item.Icon
 
-          return (
-            <button
-              key={String(item.value)}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => onChange(item.value)}
-              className={twJoin(
-                'pointer-events-auto flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors',
-                isActive
-                  ? 'border-white bg-white text-black'
-                  : 'border-white/40 bg-transparent',
-              )}>
-              {!!Icon && <Icon className="size-4 lg:size-5" strokeWidth={1.75} />}
-              {item.label}
-            </button>
-          )
-        })}
-      </div>
+        return (
+          <button
+            key={String(item.value)}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onChange(item.value)}
+            className={twJoin(
+              'pointer-events-auto flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors',
+              isActive
+                ? 'border-white bg-white/10 text-white'
+                : 'border-white/20 bg-transparent text-white/50',
+            )}>
+            {!!Icon && <Icon className="size-4 lg:size-6" strokeWidth={1.75} />}
+            {item.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

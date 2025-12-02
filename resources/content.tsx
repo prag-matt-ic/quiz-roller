@@ -183,7 +183,7 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
       <>
         <RotateCcwIcon size={20} strokeWidth={2} />
         <span>
-          You just unlocked: <b>1 free life</b>
+          You unlocked: <b>1 free life</b>
         </span>
       </>
     ),
@@ -195,7 +195,7 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
       <>
         <SparklesIcon size={20} strokeWidth={2} />
         <span>
-          We checked under the map. <b>Still no secrets.</b>
+          <b>Still no secrets</b>
         </span>
       </>
     ),

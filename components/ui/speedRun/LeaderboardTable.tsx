@@ -1,4 +1,5 @@
 'use client'
+import { PlayIcon } from 'lucide-react'
 import { type FC, useEffect, useMemo, useState } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
@@ -15,6 +16,7 @@ export function useLeaderboardTableData(
   const [playerPosition, setPlayerPosition] = useState<number | null>(null)
 
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
+  const hasCompletedRun = showPlayerPosition && completedSpeedruns.length > 0
   const userSpeedRunIds = useMemo(
     () => (showPlayerPosition ? completedSpeedruns.map((run) => run.id) : []),
     [completedSpeedruns, showPlayerPosition],
@@ -66,21 +68,36 @@ export function useLeaderboardTableData(
     }
   }, [count, latestRunId, showPlayerPosition])
 
-  return { count, isLoading, speedRuns, latestRunId, userSpeedRunIds, playerPosition }
+  return {
+    count,
+    hasCompletedRun,
+    isLoading,
+    latestRunId,
+    playerPosition,
+    showPlayerPosition,
+    speedRuns,
+    userSpeedRunIds,
+  }
 }
 
 type TableProps = {
   count: number
+  hasCompletedRun: boolean
   isLoading: boolean
   speedRuns: SpeedRunDatabase[]
   userSpeedRunIds: number[]
   playerPosition: number | null
+  showPlayerPosition: boolean
   latestRunId?: number
+  onStartSpeedRun?: () => void
 }
 
 export const LeaderboardTable: FC<TableProps> = ({
   count,
+  hasCompletedRun,
   isLoading,
+  onStartSpeedRun,
+  showPlayerPosition,
   speedRuns,
   userSpeedRunIds,
   playerPosition,
@@ -91,16 +108,11 @@ export const LeaderboardTable: FC<TableProps> = ({
   const leaderboardRuns = speedRuns.slice(0, count)
   const playerRunBelowLeaderboard =
     playerPosition && playerPosition > count ? speedRuns[speedRuns.length - 1] : null
+  const shouldShowPlayerCallToAction =
+    !isLoading && showPlayerPosition && !hasCompletedRun && !!onStartSpeedRun
 
   return (
     <section className="w-full max-w-xl">
-      <header className="flex w-full px-3 py-5">
-        <h2 className="w-full text-center text-2xl tracking-wider uppercase">
-          <span className="font-semibold italic opacity-65 blur-[1px]">Speedroll</span>
-          <br />
-          <span className="font-bold">Leaderboard</span>
-        </h2>
-      </header>
       <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4">
         {isLoading
           ? placeholderRows.map((_, index) => (
@@ -126,6 +138,10 @@ export const LeaderboardTable: FC<TableProps> = ({
             className="mt-4"
           />
         )}
+
+        {shouldShowPlayerCallToAction && onStartSpeedRun ? (
+          <LeaderboardCallToActionRow className="mt-4" onStartSpeedRun={onStartSpeedRun} />
+        ) : null}
       </div>
     </section>
   )
@@ -133,6 +149,9 @@ export const LeaderboardTable: FC<TableProps> = ({
 
 const ROW_CONTAINER_CLASSES =
   'col-span-full grid grid-cols-subgrid items-center border-b border-white/8 px-3 last-of-type:border-0'
+
+const PLACEHOLDER_POSITION = '??'
+const PLACEHOLDER_TIME = '??:??s'
 
 const LeaderboardRow: FC<{
   entry: SpeedRunDatabase
@@ -162,7 +181,7 @@ const LeaderboardRow: FC<{
       )}
       <h4
         className={twJoin(
-          'flex items-center text-left uppercase',
+          'flex items-center text-left',
           isTopThree ? 'text-lg' : 'text-base',
         )}>
         {entry.username}
@@ -172,6 +191,37 @@ const LeaderboardRow: FC<{
       </div>
       <div className="flex items-center justify-center text-center text-2xl font-bold">
         {entry.flag ?? '?'}
+      </div>
+    </div>
+  )
+}
+
+const LeaderboardCallToActionRow: FC<{
+  onStartSpeedRun: () => void
+  className?: string
+}> = ({ onStartSpeedRun, className }) => {
+  return (
+    <div
+      className={twMerge(
+        ROW_CONTAINER_CLASSES,
+        'h-11 bg-leaderboard/10 text-leaderboard',
+        className,
+      )}>
+      <div className="flex w-full items-center justify-center pl-1 text-center font-semibold">
+        {PLACEHOLDER_POSITION}
+      </div>
+      <h4 className="text-base font-semibold">Your run</h4>
+      <div className="flex items-center justify-center text-center font-mono text-xl tabular-nums text-white/70">
+        {PLACEHOLDER_TIME}
+      </div>
+      <div className="flex items-center justify-center">
+        <button
+          type="button"
+          onClick={onStartSpeedRun}
+          className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-white/25 hover:bg-white/20"
+          aria-label="Start a speed run">
+          <PlayIcon className="h-5 w-5" strokeWidth={1.75} />
+        </button>
       </div>
     </div>
   )

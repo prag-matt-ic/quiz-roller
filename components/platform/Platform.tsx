@@ -10,6 +10,7 @@ import FloatingTiles, {
 import Collectibles, {
   type CollectiblesHandle,
 } from '@/components/platform/collectibles/Collectibles'
+import ConfettiRows, { type ConfettiHandle } from '@/components/platform/confetti/ConfettiRows'
 import FloatingHeadings, {
   type FloatingHeadingsHandle,
 } from '@/components/platform/floatingHeadings/FloatingHeadings'
@@ -123,6 +124,7 @@ const Platform: FC = () => {
   const infoZones = useRef<InfoZonesHandle | null>(null)
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
+  const confettiHandle = useRef<ConfettiHandle | null>(null)
 
   const setupInitialRowsAndTiles = useCallback(() => {
     const tilesHandle = tiles.current
@@ -276,6 +278,7 @@ const Platform: FC = () => {
     floatingHeadings.current?.hideElementsIfNeeded(row)
     infoZones.current?.hideElementsIfNeeded(row)
     collectibles.current?.hideElementsIfNeeded(row)
+    confettiHandle.current?.hideElementsIfNeeded(row)
     ringsHandle.current?.hideElementsIfNeeded(row)
 
     switch (row.stage) {
@@ -293,6 +296,7 @@ const Platform: FC = () => {
     floatingHeadings.current?.positionElementsIfNeeded(row, rowZ)
     infoZones.current?.positionElementsIfNeeded(row, rowZ)
     collectibles.current?.positionElementsIfNeeded(row, rowZ)
+    confettiHandle.current?.positionElementsIfNeeded(row, rowZ)
     ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
 
     switch (row.stage) {
@@ -478,7 +482,8 @@ const Platform: FC = () => {
       !floatingHeadings.current ||
       !collectibles.current ||
       !infoZones.current ||
-      !ringsHandle.current
+      !ringsHandle.current ||
+      !confettiHandle.current
     ) {
       return
     }
@@ -517,6 +522,7 @@ const Platform: FC = () => {
     ringsHandle.current.moveElements(totalScrollDelta)
     floatingHeadings.current.moveElements(totalScrollDelta)
     collectibles.current.moveElements(totalScrollDelta)
+    confettiHandle.current?.moveElements(totalScrollDelta)
     infoZones.current.moveElements(totalScrollDelta)
 
     if (isSpeedRunMode) {
@@ -546,6 +552,12 @@ const Platform: FC = () => {
         ref={floatingHeadings}
         key={`floating-headings-${resetPlatformTick}`}
         onReadyChange={readyChangeHandlers.headings}
+      />
+
+      <ConfettiRows
+        ref={confettiHandle}
+        key={`confetti-${resetPlatformTick}`}
+        onReadyChange={readyChangeHandlers.confetti}
       />
 
       <InfoZones

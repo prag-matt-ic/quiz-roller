@@ -1,11 +1,12 @@
 'use client'
 import gsap from 'gsap'
-import { RotateCcw, X } from 'lucide-react'
-import { type FC, type Ref, useRef } from 'react'
+import { ArrowRight, RotateCcw, X } from 'lucide-react'
+import { type FC, type Ref, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import { Input } from '@/components/ui/input'
 import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
 import { GameMode } from '@/stores/types'
 
@@ -77,6 +78,9 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const setUsername = useGameStore((s) => s.setUsername)
 
+  const [inputValue, setInputValue] = useState(username ?? '')
+  const isValid = inputValue.trim().length > 0
+
   const onCountdownComplete = useGameStore((s) => s.onCountdownComplete)
 
   const showUsernameInput = speedRunStage === 'username'
@@ -113,6 +117,13 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
 
   const usernameInput = useRef<HTMLInputElement>(null)
 
+  const handleUsernameSubmit = () => {
+    const value = inputValue.trim()
+    if (!value || value.length === 0) return
+    setUsername(value)
+    setSpeedRunStage('countdown')
+  }
+
   const onContentEnter = () => {
     if (showCountdown) {
       animateCountdown()
@@ -133,31 +144,41 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
   )
 
   const usernameForm = (
-    <input
-      ref={usernameInput}
-      id="username-input"
-      className="bg-black px-4 py-3 text-left text-3xl font-bold outline-none placeholder:text-white/60 focus:ring focus:ring-amber-400"
-      maxLength={12}
-      defaultValue={username ?? ''}
-      placeholder="enter a username"
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          const value = e.currentTarget.value.trim()
-          if (!value) return
-          if (value.length === 0) return
-          setUsername(value)
-          setSpeedRunStage('countdown')
-        }
-      }}
-    />
+    <div className="flex items-stretch gap-2">
+      <Input
+        ref={usernameInput}
+        id="username-input"
+        className="border-none"
+        maxLength={12}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        placeholder="enter a username"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            handleUsernameSubmit()
+          }
+        }}
+      />
+      <button
+        type="button"
+        onClick={handleUsernameSubmit}
+        disabled={!isValid}
+        className={twJoin(
+          'flex aspect-square items-center justify-center transition-colors',
+          isValid ? 'bg-amber-500 text-black hover:bg-amber-400' : 'bg-white/10 text-white/20',
+        )}
+        aria-label="Submit username">
+        <ArrowRight size={32} strokeWidth={3} />
+      </button>
+    </div>
   )
 
   return (
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-black/97 transition-opacity duration-200',
+        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm transition-opacity duration-200',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0',
         transitionStatus === 'exited' && 'opacity-0',

@@ -26,6 +26,11 @@ export type CollectibleUserData = {
   collectibleType: CollectibleID
 }
 
+export type ConfettiUserData = {
+  type: 'confetti'
+  confettiIndex: number
+}
+
 export type InfoZoneUserData = {
   type: 'info-zone'
 }
@@ -42,6 +47,7 @@ export type RigidBodyUserData =
   | PlayerUserData
   | OutOfBoundsUserData
   | CollectibleUserData
+  | ConfettiUserData
   | InfoZoneUserData
   | CtaZoneUserData
 

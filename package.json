@@ -13,6 +13,7 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
     "@gsap/react": "^2.1.2",
+    "@mantine/hooks": "^8.3.9",
     "@neondatabase/serverless": "^1.0.2",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",

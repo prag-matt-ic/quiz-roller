@@ -2,11 +2,13 @@ import type { TotalCounts } from '@/stores/totalCounts'
 import { Stage } from '@/stores/types'
 import {
   COLUMNS,
+  type ConfettiPlacement,
   type IndexedPlacement,
   ON_TILE_Y,
   RingPositions,
   type RowData,
   SAFE_HEIGHT,
+  CONFETTI_ROW_DEPTH,
   TILE_SIZE,
   UNSAFE_HEIGHT,
   colToX,
@@ -27,10 +29,12 @@ type BitmapRow = {
   collectibleColumns: number[]
   finishLineColumns: number[]
   floatingHeadingColumns: number[]
+  confettiColumns: number[]
   infoZonePlacements?: BitmapPlacement[]
   collectiblePlacements?: BitmapPlacement[]
   finishLinePlacement?: BitmapPlacement | null
   floatingHeadingPlacement?: BitmapPlacement | null
+  confettiPlacements?: BitmapPlacement[]
 }
 
 type PlacementIndexKey = Exclude<keyof TotalCounts, 'rows' | 'rings'>
@@ -38,6 +42,8 @@ type PlacementIndexKey = Exclude<keyof TotalCounts, 'rows' | 'rings'>
 export type SectionBitmapParseResult = {
   rows: RowData[]
 }
+
+const MAX_CONFETTI_COUNT = 6
 
 const COLOUR_CODES = {
   VOID: [0, 0, 0] as const,
@@ -47,6 +53,7 @@ const COLOUR_CODES = {
   COLLECTIBLE: [0, 0, 255] as const,
   HIGHLIGHT: [0, 255, 255] as const,
   FINISH_LINE: [255, 255, 0] as const,
+  CONFETTI: [255, 0, 128] as const,
 }
 
 const isColour = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
@@ -93,6 +100,7 @@ export function parseSectionBitmap(
     const collectibleColumns: number[] = []
     const finishLineColumns: number[] = []
     const floatingHeadingColumns: number[] = []
+    const confettiColumns: number[] = []
 
     for (let column = 0; column < width; column++) {
       const pixelIndex = (srcRow * width + column) * 4
@@ -126,6 +134,10 @@ export function parseSectionBitmap(
       if (isColour(r, g, b, COLOUR_CODES.FLOATING_HEADING)) {
         floatingHeadingColumns.push(column)
       }
+
+      if (isColour(r, g, b, COLOUR_CODES.CONFETTI)) {
+        confettiColumns.push(column)
+      }
     }
 
     rows[rowIndex] = {
@@ -136,6 +148,7 @@ export function parseSectionBitmap(
       finishLineColumns,
       highlightColumns,
       floatingHeadingColumns,
+      confettiColumns,
     }
   }
 
@@ -170,6 +183,15 @@ export function parseSectionBitmap(
     (row) => row.floatingHeadingColumns,
     (rowIndex, placements) => {
       rows[rowIndex].floatingHeadingPlacement = placements[0] ?? null
+    },
+  )
+
+  assignBitmapPlacements(
+    rows,
+    (row) => row.confettiColumns,
+    (rowIndex, placements) => {
+      if (!placements.length) return
+      rows[rowIndex].confettiPlacements = placements
     },
   )
 
@@ -309,14 +331,15 @@ function buildRowDataFromBitmapRows({
     globalIndexes.rows++
 
     applyRingColumns(baseRow, layoutRow.ringColumns)
-    applyInfoColumns(baseRow, layoutRow, globalIndexes)
-    applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
-    applyFinishLineColumn(baseRow, layoutRow)
-    applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
-    applyHighlightColumns(baseRow, layoutRow.highlightColumns)
+  applyInfoColumns(baseRow, layoutRow, globalIndexes)
+  applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
+  applyFinishLineColumn(baseRow, layoutRow)
+  applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
+  applyHighlightColumns(baseRow, layoutRow.highlightColumns)
+  applyConfettiPlacements(baseRow, layoutRow, globalIndexes)
 
-    rowData[rowIndex] = baseRow
-  }
+  rowData[rowIndex] = baseRow
+}
 
   return rowData
 }
@@ -414,6 +437,20 @@ function applyFloatingHeadingPlacement(
   }
 }
 
+function applyConfettiPlacements(
+  row: RowData,
+  layoutRow: BitmapRow,
+  globalIndexes: TotalCounts,
+) {
+  const placements =
+    buildConfettiPlacementsFromBitmap(layoutRow, globalIndexes) ??
+    buildConfettiPlacementsFromColumns(layoutRow, globalIndexes)
+
+  if (placements?.length) {
+    row.confettiPlacements = placements
+  }
+}
+
 function buildPlacementsFromBitmap(
   placements: BitmapPlacement[] | undefined,
   y: number,
@@ -429,6 +466,101 @@ function buildPlacementsFromBitmap(
     }
   })
   return indexedPlacements.length > 0 ? indexedPlacements : undefined
+}
+
+function buildConfettiPlacementsFromBitmap(
+  layoutRow: BitmapRow,
+  globalIndexes: TotalCounts,
+): RowData['confettiPlacements'] | undefined {
+  const placements = layoutRow.confettiPlacements
+  if (!placements?.length) return undefined
+
+  const raisedSpan = getRaisedSpanForRow(layoutRow.heights)
+  if (!raisedSpan) return undefined
+
+  const confettiPlacements: RowData['confettiPlacements'] = []
+  placements.forEach(({ zOffset }) => {
+    const placement = createConfettiPlacement({
+      zOffset,
+      raisedSpan,
+      globalIndexes,
+    })
+    if (placement) {
+      confettiPlacements.push(placement)
+    }
+  })
+  return confettiPlacements.length > 0 ? confettiPlacements : undefined
+}
+
+function buildConfettiPlacementsFromColumns(
+  layoutRow: BitmapRow,
+  globalIndexes: TotalCounts,
+): RowData['confettiPlacements'] | undefined {
+  const { confettiColumns } = layoutRow
+  if (!confettiColumns?.length) return undefined
+
+  const raisedSpan = getRaisedSpanForRow(layoutRow.heights)
+  if (!raisedSpan) return undefined
+
+  const placement = createConfettiPlacement({
+    zOffset: 0,
+    raisedSpan,
+    globalIndexes,
+  })
+
+  return placement ? [placement] : undefined
+}
+
+function createConfettiPlacement({
+  zOffset,
+  raisedSpan,
+  globalIndexes,
+}: {
+  zOffset: number
+  raisedSpan: { centerX: number; width: number; depth: number }
+  globalIndexes: TotalCounts
+}): ConfettiPlacement | null {
+  if (globalIndexes.confetti >= MAX_CONFETTI_COUNT) {
+    console.warn(
+      `[Confetti] Skipping extra placement beyond maximum of ${MAX_CONFETTI_COUNT}.`,
+      { zOffset },
+    )
+    return null
+  }
+
+  const contentIndex = globalIndexes.confetti
+  globalIndexes.confetti += 1
+
+  return {
+    position: [raisedSpan.centerX, ON_TILE_Y, zOffset],
+    width: raisedSpan.width,
+    depth: raisedSpan.depth,
+    contentIndex,
+  }
+}
+
+function getRaisedSpanForRow(
+  heights: number[],
+): { centerX: number; width: number; depth: number } | null {
+  let minColumn = Infinity
+  let maxColumn = -Infinity
+
+  heights.forEach((height, columnIndex) => {
+    if (height <= UNSAFE_HEIGHT) return
+    if (columnIndex < minColumn) minColumn = columnIndex
+    if (columnIndex > maxColumn) maxColumn = columnIndex
+  })
+
+  if (!Number.isFinite(minColumn) || !Number.isFinite(maxColumn)) return null
+
+  const centerColumn = (minColumn + maxColumn) * 0.5
+  const width = (maxColumn - minColumn + 1) * TILE_SIZE
+
+  return {
+    centerX: colToX(centerColumn),
+    width,
+    depth: CONFETTI_ROW_DEPTH,
+  }
 }
 
 function buildPlacementsFromColumns(

@@ -45,6 +45,8 @@ const HIDE_POSITION_Y = -20 as const
 const HIDE_POSITION_Z = 10 as const
 export const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HIDE_POSITION_Z]
 
+export const CONFETTI_ROW_DEPTH = TILE_SIZE
+
 // Y value for elements placed directly on top of tiles
 export const ON_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
 
@@ -66,6 +68,13 @@ export type RingPositions = (0 | 1)[]
 
 export type IndexedPlacement = readonly [number, number, number, number]
 
+export type ConfettiPlacement = {
+  position: [number, number, number]
+  width: number
+  depth: number
+  contentIndex: number
+}
+
 export type RowData = {
   heights: number[]
   stage: Stage
@@ -78,4 +87,5 @@ export type RowData = {
   collectiblePlacements?: IndexedPlacement[] // Collectibles rendered on the platform
   floatingHeadingPlacements?: IndexedPlacement[] // Floating heading above the platform but still aligned to the row
   finishLinePosition?: [number, number, number] // Finish line position
+  confettiPlacements?: ConfettiPlacement[] // Confetti platforms rendered on the platform
 }

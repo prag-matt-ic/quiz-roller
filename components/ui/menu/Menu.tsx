@@ -1,4 +1,4 @@
-import { FlagIcon, Volume2Icon, VolumeXIcon } from 'lucide-react'
+import { FlagIcon, Gamepad2Icon, Volume2Icon, VolumeXIcon } from 'lucide-react'
 import { type FC, type RefObject } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -7,6 +7,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { useSoundStore } from '@/components/SoundProvider'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import { InputConfig } from '@/components/ui/menu/InputConfig'
+import { GameMode } from '@/stores/types'
 
 type MenuProps = {
   ref: RefObject<HTMLElement | null>
@@ -17,10 +18,13 @@ type MenuProps = {
 const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
   const isMuted = useSoundStore((s) => s.isMuted)
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const mode = useGameStore((s) => s.mode)
+  const resetGame = useGameStore((s) => s.resetGame)
 
-  const onStartSpeedRun = () => {
-    startSpeedRun()
+  const handleModeChange = (nextMode: GameMode) => {
+    if (nextMode !== mode) {
+      resetGame({ mode: nextMode })
+    }
     closeMenu()
   }
 
@@ -28,31 +32,38 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
     <aside
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-200 flex size-full flex-col items-center justify-center gap-6 bg-black p-6 transition-opacity duration-200',
+        'fixed inset-0 z-200 flex size-full flex-col items-center justify-center gap-6 p-6 transition-opacity duration-200',
+        'bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0',
         transitionStatus === 'exited' && 'opacity-0',
       )}>
       {/* TODO: add logo. */}
 
+      <section className="w-fit rounded-2xl bg-[#000]/40 p-4">
+        <h3>Settings</h3>
+        <ButtonGroup
+          value={isMuted ? 'off' : 'on'}
+          onChange={(val) => setIsMuted(val === 'off')}
+          items={[
+            { label: 'On', value: 'on', Icon: Volume2Icon },
+            { label: 'Off', value: 'off', Icon: VolumeXIcon },
+          ]}
+        />
+
+        <InputConfig />
+
+        {/* TODO: add quality button group */}
+      </section>
+
       <ButtonGroup
-        value={isMuted ? 'off' : 'on'}
-        onChange={(val) => setIsMuted(val === 'off')}
+        value={mode}
+        onChange={handleModeChange}
         items={[
-          { label: 'On', value: 'on', Icon: Volume2Icon },
-          { label: 'Off', value: 'off', Icon: VolumeXIcon },
+          { label: 'Regular', value: GameMode.MAIN, Icon: Gamepad2Icon },
+          { label: 'Speedroll', value: GameMode.SPEEDRUN, Icon: FlagIcon },
         ]}
       />
-
-      <InputConfig />
-
-      <button
-        type="button"
-        className="pointer-events-auto size-fit rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-black uppercase transition md:text-sm"
-        onClick={onStartSpeedRun}>
-        <FlagIcon className="mr-2 inline-block" strokeWidth={2.5} size={20} />
-        Start Speedroll
-      </button>
 
       <button onClick={closeMenu} className="p-4">
         Close

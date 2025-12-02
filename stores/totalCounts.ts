@@ -4,6 +4,7 @@ export type TotalCounts = {
   headings: number
   infoZones: number
   collectibles: number
+  confetti: number
 }
 
 export const createTotalCounts = (): TotalCounts => ({
@@ -12,4 +13,5 @@ export const createTotalCounts = (): TotalCounts => ({
   headings: 0,
   infoZones: 0,
   collectibles: 0,
+  confetti: 0,
 })

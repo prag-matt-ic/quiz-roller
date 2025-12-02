@@ -21,8 +21,9 @@ import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
+// TODO: make this configurable via performance store quality settings
 const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 24, 12).toNonIndexed()
-const ICON_SPHERE_LINE_WIDTH = 1.0
+const ICON_SPHERE_LINE_WIDTH = 0.5
 const ICON_SPHERE_GLOW_STRENGTH = 2.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 

@@ -1,16 +1,17 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { MenuIcon, XIcon } from 'lucide-react'
+import { MenuIcon } from 'lucide-react'
 import { type FC, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
+import { PointerProvider } from '@/components/ui/PointerProvider'
 import ProgressBar from '@/components/ui/ProgressBar'
 import MovementControls from '@/components/ui/controls/Controls'
-import Menu from '@/components/ui/menu/Menu'
+import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import { GameMode } from '@/stores/types'
 
 import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
@@ -18,9 +19,7 @@ import { SpeedRunControls, SpeedRunOverlay } from './speedRun/SpeedRunUI'
 
 gsap.registerPlugin(useGSAP)
 
-type Props = {
-  isMobile: boolean
-}
+type Props = { isMobile: boolean }
 
 const UI: FC<Props> = ({ isMobile }) => {
   const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
@@ -29,7 +28,8 @@ const UI: FC<Props> = ({ isMobile }) => {
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
 
   const infoContainer = useRef<HTMLDivElement>(null)
-  const speedRunOverlay = useRef<HTMLDivElement>(null)
+  const dashboardRef = useRef<HTMLDivElement>(null)
+  const speedRunOverlayRef = useRef<HTMLDivElement>(null)
   const leaderboardOverlay = useRef<HTMLDivElement>(null)
 
   const showSpeedRunOverlay =
@@ -94,12 +94,13 @@ const UI: FC<Props> = ({ isMobile }) => {
         timeout={{ enter: 0, exit: 400 }}
         mountOnEnter={true}
         unmountOnExit={true}
-        nodeRef={speedRunOverlay}>
+        nodeRef={dashboardRef}>
         {(status) => (
-          <Menu
-            ref={speedRunOverlay}
+          <Dashboard
+            ref={dashboardRef}
+            isMobile={isMobile}
             transitionStatus={status}
-            closeMenu={() => setShowMenu(false)}
+            onClose={() => setShowMenu(false)}
           />
         )}
       </Transition>
@@ -109,8 +110,8 @@ const UI: FC<Props> = ({ isMobile }) => {
         timeout={{ enter: 0, exit: 240 }}
         mountOnEnter={true}
         unmountOnExit={true}
-        nodeRef={speedRunOverlay}>
-        {(status) => <SpeedRunOverlay ref={speedRunOverlay} transitionStatus={status} />}
+        nodeRef={speedRunOverlayRef}>
+        {(status) => <SpeedRunOverlay ref={speedRunOverlayRef} transitionStatus={status} />}
       </Transition>
 
       <Transition

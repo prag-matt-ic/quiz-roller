@@ -31,7 +31,7 @@ export const LeaderboardOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         transitionStatus === 'exiting' && 'opacity-0',
       )}>
       {/* Table needs to be kept simple (e.g no access to the game store from within it otherwise it breaks in CTAELEMENTs) */}
-      <LeaderboardTable {...tableData} />
+      <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} />
 
       <div className="flex gap-4">
         <Button color="light" variant="primary" onClick={startSpeedRun}>
