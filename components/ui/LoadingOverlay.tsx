@@ -11,7 +11,6 @@ import type { ButtonProps } from '@/components/ui/Button'
 import { GradientText } from '@/components/ui/GradientText'
 import { InputConfig } from '@/components/ui/menu/InputConfig'
 import { MOVE_HUD_CONFIG } from '@/resources/content'
-import { GameMode } from '@/stores/types'
 
 import RotateDevice from './RotateDevice'
 
@@ -30,7 +29,6 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const inputType = useGameStore((s) => s.inputType)
-  const mode = useGameStore((s) => s.mode)
 
   const [isExiting, setIsExiting] = useState(false)
   const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
@@ -46,8 +44,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setIsShowingLoadingOverlay(false)
-    const shouldShowMoveHud = mode !== GameMode.SPEEDRUN
-    const hud = shouldShowMoveHud ? MOVE_HUD_CONFIG[inputType] : undefined
+    const hud = MOVE_HUD_CONFIG[inputType]
     respawnPlayer(PLAYER_INITIAL_POSITION, hud)
   }
 
