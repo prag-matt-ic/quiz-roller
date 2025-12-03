@@ -186,7 +186,7 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
             }
           }}
         />
-        {!!usernameError && <p className="mt-2 text-sm text-amber-600">{usernameError}</p>}
+
         <button
           type="button"
           onClick={handleUsernameSubmit}
@@ -199,6 +199,7 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
           <Play size={32} strokeWidth={2} />
         </button>
       </div>
+      {!!usernameError && <p className="mt-2.5 px-1 text-sm text-amber-600">{usernameError}</p>}
     </section>
   )
 

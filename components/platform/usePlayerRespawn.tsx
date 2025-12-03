@@ -191,7 +191,6 @@ export function usePlayerRespawn({
   })
 
   const onOutOfBounds = () => {
-    console.warn('[Platform] Player out-of-bounds detected, initiating respawn sequence.')
     const rows = activeRowsData.current
     const zValues = rowZByIndex.current
     const scrollPos = currentScrollPosition.current
@@ -207,24 +206,9 @@ export function usePlayerRespawn({
     // 1. Try to find the closest row (current row)
     const closestRowIndex = getClosestRowIndex(zValues, playerZ)
 
-    const queueRespawn = (
-      selection: SafeRowSelection,
-      reason: string,
-      extra?: Record<string, unknown>,
-    ) => {
+    const queueRespawn = (selection: SafeRowSelection) => {
       const diff = playerZ - selection.rowZ
       const targetScroll = scrollPos + diff
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(`[Platform] Respawn: ${reason}`, {
-          slotIndex: selection.rowIndex,
-          rowIndex: selection.absoluteRowIndex,
-          rowZ: selection.rowZ,
-          diff,
-          safeX: selection.safeX,
-          targetScroll,
-          ...extra,
-        })
-      }
       targetScrollPosition.current = targetScroll
       pendingRespawnX.current = selection.safeX
     }
@@ -237,7 +221,7 @@ export function usePlayerRespawn({
         preferredX,
       )
       if (currentRowSelection) {
-        queueRespawn(currentRowSelection, 'Current row is safe. Snapping to X only.')
+        queueRespawn(currentRowSelection)
         return
       }
 
@@ -252,9 +236,7 @@ export function usePlayerRespawn({
       )
 
       if (shiftedSelection) {
-        queueRespawn(shiftedSelection, 'Current row unsafe, shifting forward.', {
-          originalSlotIndex: closestRowIndex,
-        })
+        queueRespawn(shiftedSelection)
         return
       }
     }
@@ -277,7 +259,7 @@ export function usePlayerRespawn({
       return
     }
 
-    queueRespawn(bestSelection, 'Snapping to nearest safe row')
+    queueRespawn(bestSelection)
   }
 
   const onPlayerStatusChange = (playerStatus: PlayerStatus) => {
