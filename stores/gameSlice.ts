@@ -20,6 +20,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   htmlPortal: undefined,
   _isHydrated: false,
   isShowingLoadingOverlay: true,
+  isShowingDashboard: false,
   resetPlatformTick: 0,
   mode: GameMode.MAIN,
   hudIndicator: null,
@@ -28,6 +29,9 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   },
   setIsShowingLoadingOverlay: (isVisible) => {
     set({ isShowingLoadingOverlay: isVisible })
+  },
+  setIsShowingDashboard: (isShowingDashboard) => {
+    set({ isShowingDashboard })
   },
   setHtmlPortal: (htmlPortal) => {
     set({ htmlPortal })

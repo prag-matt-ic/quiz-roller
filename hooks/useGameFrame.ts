@@ -1,6 +1,7 @@
 import { type RootState, useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 
+import { useGameStore } from '@/components/GameProvider'
 import { type RapierSimFPS, usePerformanceStore } from '@/components/PerformanceProvider'
 
 // Calls the callback at a target simulation FPS (0 = uncapped).
@@ -11,11 +12,13 @@ export function useGameFrame(
   callback: (state: RootState, fixedDt: number) => void,
   priority = 0,
 ) {
+  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
   const simFps = usePerformanceStore((s) => s.simFps)
   const accumulator = useRef(0)
   const maxSubsteps = 5
 
   useFrame((state, delta) => {
+    if (isShowingDashboard) return
     // Uncapped: forward real delta
     if (simFps === 0) {
       callback(state, delta)

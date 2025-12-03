@@ -1,10 +1,10 @@
 'use client'
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
+import useGameFrame from '@/hooks/useGameFrame'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
@@ -88,7 +88,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     }
   }, [isConfirmingCollectible])
 
-  useFrame(() => {
+  useGameFrame(() => {
     if (!cameraControls.current) return
     const stageCameraPosition = positions[stage.current]
 

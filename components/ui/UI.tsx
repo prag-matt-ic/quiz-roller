@@ -2,13 +2,12 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { MenuIcon } from 'lucide-react'
-import { type FC, useRef, useState } from 'react'
+import { type FC, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
-import { PointerProvider } from '@/components/ui/PointerProvider'
 import ProgressBar from '@/components/ui/ProgressBar'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
@@ -23,6 +22,8 @@ type Props = { isMobile: boolean }
 
 const UI: FC<Props> = ({ isMobile }) => {
   const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
+  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
+  const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
@@ -37,8 +38,6 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const showLeaderboardOverlay =
     isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
-
-  const [showMenu, setShowMenu] = useState(false)
 
   return (
     <>
@@ -76,7 +75,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         </SwitchTransition>
         {/* Top Right Menu toggle */}
         <button
-          onClick={() => setShowMenu((prev) => !prev)}
+          onClick={() => setIsShowingDashboard(true)}
           className="pointer-events-auto place-self-end self-start p-2.5 text-white lg:p-4">
           <MenuIcon
             strokeWidth={2.5}
@@ -90,7 +89,7 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       {/* Fullscreen overlays */}
       <Transition
-        in={showMenu}
+        in={isShowingDashboard}
         timeout={{ enter: 0, exit: 400 }}
         mountOnEnter={true}
         unmountOnExit={true}
@@ -100,7 +99,7 @@ const UI: FC<Props> = ({ isMobile }) => {
             ref={dashboardRef}
             isMobile={isMobile}
             transitionStatus={status}
-            onClose={() => setShowMenu(false)}
+            onClose={() => setIsShowingDashboard(false)}
           />
         )}
       </Transition>
