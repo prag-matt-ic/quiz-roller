@@ -15,12 +15,12 @@ function useDynamicRigidBodies(totalCount: number) {
     createInitialVisibilityState(totalCount),
   )
 
-  useEffect(() => {
-    if (refs.length === totalCount) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRefs(createRigidBodyRefsFromCount(totalCount))
-    setIsVisibleStates(createInitialVisibilityState(totalCount))
-  }, [totalCount, refs.length])
+  // useEffect(() => {
+  //   if (refs.length === totalCount) return
+  //   // eslint-disable-next-line react-hooks/set-state-in-effect
+  //   setRefs(createRigidBodyRefsFromCount(totalCount))
+  //   setIsVisibleStates(createInitialVisibilityState(totalCount))
+  // }, [totalCount, refs.length])
 
   const setIsVisibleState = useCallback((index: number, isVisible: boolean) => {
     setIsVisibleStates((prev) => {

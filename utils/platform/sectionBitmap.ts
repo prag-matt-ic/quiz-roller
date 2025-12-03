@@ -43,8 +43,6 @@ export type SectionBitmapParseResult = {
   rows: RowData[]
 }
 
-const MAX_CONFETTI_COUNT = 6
-
 const COLOUR_CODES = {
   VOID: [0, 0, 0] as const,
   RING: [255, 0, 0] as const,
@@ -520,14 +518,6 @@ function createConfettiPlacement({
   raisedSpan: { centerX: number; width: number; depth: number }
   globalIndexes: TotalCounts
 }): ConfettiPlacement | null {
-  if (globalIndexes.confetti >= MAX_CONFETTI_COUNT) {
-    console.warn(
-      `[Confetti] Skipping extra placement beyond maximum of ${MAX_CONFETTI_COUNT}.`,
-      { zOffset },
-    )
-    return null
-  }
-
   const contentIndex = globalIndexes.confetti
   globalIndexes.confetti += 1
 
