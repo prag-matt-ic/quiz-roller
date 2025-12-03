@@ -13,6 +13,7 @@ import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import { GameMode } from '@/stores/types'
 
+import Button from './Button'
 import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
 import { SpeedRunControls, SpeedRunOverlay } from './speedRun/SpeedRunUI'
 
@@ -74,14 +75,13 @@ const UI: FC<Props> = ({ isMobile }) => {
           </Transition>
         </SwitchTransition>
         {/* Top Right Menu toggle */}
-        <button
+        <Button
           onClick={() => setIsShowingDashboard(true)}
-          className="group pointer-events-auto place-self-end self-start p-2.5 text-white lg:p-4">
-          <LayoutDashboardIcon
-            strokeWidth={1.5}
-            className="pointer-events-auto size-6 transition-transform duration-200 group-hover:scale-105 lg:size-8"
-          />
-        </button>
+          size="md"
+          className="pointer-events-auto mt-2 mr-2 place-self-end self-start text-white"
+          endIcon={LayoutDashboardIcon}>
+          <span className="hidden lg:block">Menu</span>
+        </Button>
       </div>
 
       {/* Movement Controls */}

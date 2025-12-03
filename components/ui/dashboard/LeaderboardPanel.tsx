@@ -27,9 +27,9 @@ export const LeaderboardPanel: FC<LeaderboardProps> = ({ className }) => {
         <Button
           color="light"
           variant="secondary"
-          className="h-7 gap-1.5 px-3 text-xs"
-          onClick={startSpeedRun}>
-          <Timer className="h-3.5 w-3.5" />
+          size="sm"
+          onClick={startSpeedRun}
+          startIcon={Timer}>
           Set a time
         </Button>
       </PanelHeader>

@@ -6,8 +6,8 @@ import { SwitchTransition, Transition, type TransitionStatus } from 'react-trans
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import { Input } from '@/components/ui/input'
 import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
+import { Input } from '@/components/ui/input'
 import { GameMode } from '@/stores/types'
 
 const SpeedRunTimer: FC = () => {
@@ -144,34 +144,43 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
   )
 
   const usernameForm = (
-    <div className="flex items-stretch gap-2">
-      <Input
-        ref={usernameInput}
-        id="username-input"
-        className="border-none"
-        maxLength={12}
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        placeholder="enter a username"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            handleUsernameSubmit()
-          }
-        }}
-      />
-      <button
-        type="button"
-        onClick={handleUsernameSubmit}
-        disabled={!isValid}
-        className={twJoin(
-          'flex aspect-square items-center justify-center transition-colors',
-          isValid ? 'bg-amber-500 text-black hover:bg-amber-400' : 'bg-white/10 text-white/20',
-        )}
-        aria-label="Submit username">
-        <ArrowRight size={32} strokeWidth={3} />
-      </button>
-    </div>
+    <section>
+      <p className="heading-sm">
+        Race to the finish line as fast as you can!
+        <br />
+        Rings give you a speed boost
+      </p>
+      <div className="mt-4 flex items-center">
+        <Input
+          ref={usernameInput}
+          id="username-input"
+          className="border-none"
+          maxLength={12}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="username"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              handleUsernameSubmit()
+            }
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleUsernameSubmit}
+          disabled={!isValid}
+          className={twJoin(
+            'flex aspect-square items-center justify-center transition-colors',
+            isValid
+              ? 'bg-amber-500 text-black hover:bg-amber-400'
+              : 'bg-white/10 text-white/20',
+          )}
+          aria-label="Submit username">
+          <ArrowRight size={32} strokeWidth={3} />
+        </button>
+      </div>
+    </section>
   )
 
   return (
@@ -200,8 +209,9 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
                 status === 'entering' && 'opacity-100',
                 status === 'entered' && 'opacity-100',
               )}>
-              {showCountdown && countdown}
               {showUsernameInput && usernameForm}
+
+              {showCountdown && countdown}
             </div>
           )}
         </Transition>

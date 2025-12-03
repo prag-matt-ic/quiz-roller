@@ -1,5 +1,6 @@
 'use client'
 import {
+  FloatingPortal,
   offset,
   safePolygon,
   useClick,
@@ -9,7 +10,7 @@ import {
   useInteractions,
   useTransitionStatus,
 } from '@floating-ui/react'
-import { GemIcon } from 'lucide-react'
+import { GemIcon, LockIcon } from 'lucide-react'
 import { type CSSProperties, type FC, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
@@ -94,8 +95,6 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
 
-  const shouldPulse = isCollected
-
   return (
     <>
       <div
@@ -106,16 +105,13 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
         }
         ref={refs.setReference}
         {...getReferenceProps()}
-        className={twJoin(
-          'pointer-events-auto relative cursor-pointer',
-          shouldPulse && 'animate-pulse',
-        )}>
+        className={twJoin('pointer-events-auto relative cursor-pointer')}>
         <GemIcon
           size={40}
           strokeWidth={0.25}
           className={twJoin(
             'absolute inset-0 size-8 text-transparent transition-opacity lg:size-10',
-            isCollected ? 'scale-120 fill-(--icon-colour)/60' : 'fill-(--icon-colour)/10',
+            isCollected ? 'scale-120 fill-(--icon-colour)/60' : '',
           )}
         />
         <GemIcon
@@ -129,38 +125,48 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
       </div>
       {/* Dropdown Info */}
       {isMounted && (
-        <div
-          // eslint-disable-next-line react-hooks/refs
-          ref={refs.setFloating}
-          style={{ ...floatingStyles, '--icon-colour': collectedColour } as CSSProperties}
-          {...getFloatingProps()}
-          className="absolute z-50">
+        <FloatingPortal>
           <div
-            data-status={status}
-            className={twJoin(
-              'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
-              // Transition states
-              'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
-              'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
-              'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
-            )}>
-            <ContentIcon strokeWidth={1} size={40} className="shrink-0 text-(--icon-colour)" />
-            <p className="block overflow-hidden">
-              <span className="mb-1 text-sm font-medium tracking-wide text-white/80 uppercase">
-                Bonus
-              </span>
+            // eslint-disable-next-line react-hooks/refs
+            ref={refs.setFloating}
+            style={{ ...floatingStyles, '--icon-colour': collectedColour } as CSSProperties}
+            {...getFloatingProps()}
+            className="absolute z-500">
+            <div
+              data-status={status}
+              className={twJoin(
+                'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
+                // Transition states
+                'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
+                'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
+                'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
+              )}>
               {isCollected ? (
-                <span className="block text-base font-bold sm:text-lg">
-                  {COLLECTIBLES_CONTENT[id].content}
-                </span>
+                <ContentIcon
+                  strokeWidth={1}
+                  size={40}
+                  className="shrink-0 text-(--icon-colour)"
+                />
               ) : (
-                <span className="block text-base font-semibold">
-                  Discover the gem to learn more
-                </span>
+                <LockIcon strokeWidth={1} size={40} className="text-white/50" />
               )}
-            </p>
+              <p className="block overflow-hidden">
+                <span className="mb-1 text-sm font-medium tracking-wide text-white/80 uppercase">
+                  Bonus
+                </span>
+                {isCollected ? (
+                  <span className="block text-base font-bold sm:text-lg">
+                    {COLLECTIBLES_CONTENT[id].content}
+                  </span>
+                ) : (
+                  <span className="block text-sm font-semibold lg:text-base">
+                    Unlock the gem to learn more
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
-        </div>
+        </FloatingPortal>
       )}
     </>
   )

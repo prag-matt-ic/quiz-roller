@@ -27,7 +27,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
       <aside
         ref={ref}
         className={twJoin(
-          'fixed inset-0 z-200 flex size-full items-start justify-center overflow-y-auto px-6 py-10 transition-opacity duration-200',
+          'fixed inset-0 z-200 flex items-center justify-center overflow-y-auto px-6 py-10 transition-opacity duration-200',
           'bg-[#000]/50 backdrop-blur-lg',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
@@ -42,7 +42,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6">
           <div className="flex items-start justify-between">
-            <h1 className="font-mono text-5xl font-black tracking-tight text-white md:text-6xl">
+            <h1 className="text-2xl font-black tracking-tight text-white lg:text-4xl">
               Speedroller
             </h1>
             <button

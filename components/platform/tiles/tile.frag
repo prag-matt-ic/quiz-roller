@@ -26,6 +26,8 @@ const float REGULAR_MIX = 0.55;
 const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.8;
+const float SHADOW_RADIUS_MAX_SCALE = 1.5;
+const float SHADOW_RADIUS_MIN_SCALE = 1.0;
 const float SHADOW_STRENGTH = 0.6;
 const float SHADOW_FADE_START_Y = 1.5; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
@@ -66,14 +68,16 @@ void main() {
 
   // Apply player contact shadow
   float distToPlayer = distance(vWorldPos.xz, uPlayerWorldPos.xz);
-  float shadow = 1.0 - smoothstep(0.0, SHADOW_RADIUS, distToPlayer);
-  shadow = pow(shadow, 2.5);
   float shadowHeightT = clamp(
     (SHADOW_FADE_START_Y - uPlayerWorldPos.y) * SHADOW_FADE_RANGE_INV,
     0.0,
     1.0
   );
   float shadowHeightFade = shadowHeightT * shadowHeightT * (3.0 - 2.0 * shadowHeightT);
+  float shadowRadiusScale = mix(SHADOW_RADIUS_MAX_SCALE, SHADOW_RADIUS_MIN_SCALE, shadowHeightFade);
+  float shadowRadius = SHADOW_RADIUS * shadowRadiusScale;
+  float shadow = 1.0 - smoothstep(0.0, shadowRadius, distToPlayer);
+  shadow = pow(shadow, 2.5);
   shadow *= shadowHeightFade * uShadowEnabled;
   background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
 

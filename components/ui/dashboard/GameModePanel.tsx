@@ -1,6 +1,6 @@
 'use client'
 
-import { Compass, Gamepad2, Timer } from 'lucide-react'
+import { Compass, Gamepad2, LucideIcon, Timer } from 'lucide-react'
 import { type FC } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
@@ -13,42 +13,56 @@ type Props = {
   className?: string
 }
 
-const GAME_MODES = [
+type GameModeInfo = {
+  mode: GameMode
+  icon: LucideIcon
+  label: string
+  desc: string
+}
+
+const CORE_GAME_MODES: GameModeInfo[] = [
   {
-    id: GameMode.MAIN,
+    mode: GameMode.MAIN,
     icon: Compass,
     label: 'Explore',
-    desc: 'Free roam adventure',
-    details: 'Take your time discovering every corner of the world.',
+    desc: 'Discover every corner of the world.',
   },
   {
-    id: GameMode.SPEEDRUN,
+    mode: GameMode.SPEEDRUN,
     icon: Timer,
-    label: 'Speedrun',
-    desc: 'Race against others',
-    details:
-      'Put your racing skills to the test with our speedroll mode. Every millisecond counts.',
+    label: 'Speedroll',
+    desc: 'Race against others. Every millisecond counts.',
   },
 ] as const
+
+const DEV_GAME_MODES: GameModeInfo[] = [
+  ...CORE_GAME_MODES,
+  {
+    mode: GameMode.TEST,
+    icon: Gamepad2,
+    label: 'Test',
+    desc: 'For development and testing purposes only.',
+  },
+] as const
+
+const GAME_MODES: GameModeInfo[] =
+  process.env.NODE_ENV === 'development' ? DEV_GAME_MODES : CORE_GAME_MODES
 
 export const GameModePanel: FC<Props> = ({ className }) => {
   const mode = useGameStore((s) => s.mode)
   const resetGame = useGameStore((s) => s.resetGame)
-  const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
 
   const handleModeChange = (nextMode: GameMode) => {
-    if (nextMode !== mode) {
-      resetGame({ mode: nextMode })
-      setIsShowingDashboard(false)
-    }
+    if (nextMode === mode) return
+    resetGame({ mode: nextMode })
   }
 
   return (
     <Panel className={twMerge('h-full space-y-4 p-4', className)}>
       <PanelHeader icon={Gamepad2} label="Mode" />
 
-      <div className="flex h-[calc(100%-2rem)] flex-col gap-3">
-        {GAME_MODES.map(({ id, icon: Icon, label, desc, details }) => {
+      <div className="flex flex-col gap-3">
+        {GAME_MODES.map(({ mode: id, icon: Icon, label, desc }) => {
           const isSelected = mode === id
           return (
             <button
@@ -56,17 +70,16 @@ export const GameModePanel: FC<Props> = ({ className }) => {
               type="button"
               onClick={() => handleModeChange(id)}
               className={twJoin(
-                'flex flex-1 flex-col items-start rounded-2xl p-4 text-left transition-all',
+                'flex flex-1 flex-col items-start rounded-xl p-4 text-left',
                 isSelected
-                  ? 'bg-white/20 text-white shadow-lg shadow-white/5'
-                  : 'bg-black/20 text-white/50 hover:bg-black/30 hover:text-white/70',
+                  ? 'bg-white/10 text-white ring ring-cyan-600'
+                  : 'bg-white/5 opacity-70',
               )}>
               <div className="mb-2 flex items-center gap-2">
                 <Icon className="size-6" />
                 <span className="text-lg font-bold">{label}</span>
               </div>
-              <span className="mb-1 text-sm font-medium opacity-80">{desc}</span>
-              <span className="text-xs leading-relaxed opacity-60">{details}</span>
+              <p className="mb-1 text-sm font-medium opacity-80">{desc}</p>
             </button>
           )
         })}

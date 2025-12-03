@@ -1,17 +1,32 @@
+import { type LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes, FC, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary'
   color?: 'light' | 'dark'
+  size?: 'sm' | 'md' | 'lg'
   children: ReactNode
   className?: string
-  leadingNode?: ReactNode
-  trailingNode?: ReactNode
+  startIcon?: LucideIcon
+  endIcon?: LucideIcon
+  iconClassName?: string
 }
 
 const BASE_CLASSES =
-  'flex w-fit h-fit cursor-pointer uppercase items-center disabled:cursor-not-allowed justify-center gap-3 rounded-full px-6 py-2 text-base lg:px-8 lg:py-3 lg:text-lg font-[600]'
+  'flex w-fit h-fit cursor-pointer uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-[600]'
+
+const SIZE_CLASSES = {
+  sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
+  md: 'gap-2 px-4 py-2 text-sm lg:px-6 lg:py-2.5 lg:text-base',
+  lg: 'gap-3 px-6 py-2 text-base lg:px-8 lg:py-3 lg:text-lg',
+}
+
+const ICON_SIZE_CLASSES = {
+  sm: 'size-3.5 lg:size-4',
+  md: 'size-4 lg:size-5',
+  lg: 'size-5 lg:size-6',
+}
 
 const COLOUR_CLASSES = {
   light: {
@@ -31,22 +46,24 @@ const COLOUR_CLASSES = {
 const Button: FC<ButtonProps> = ({
   variant = 'primary',
   color = 'light',
+  size = 'lg',
   children,
   className,
-  leadingNode,
-  trailingNode,
+  startIcon: StartIcon,
+  endIcon: EndIcon,
+  iconClassName,
   ...props
 }) => {
   return (
     <button
-      className={twMerge(BASE_CLASSES, COLOUR_CLASSES[color][variant], className)}
+      className={twMerge(BASE_CLASSES, SIZE_CLASSES[size], COLOUR_CLASSES[color][variant], className)}
       {...props}>
-      {!!leadingNode ? (
-        <span className="flex items-center justify-center">{leadingNode}</span>
+      {!!StartIcon ? (
+        <StartIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
       ) : null}
       {children}
-      {!!trailingNode ? (
-        <span className="flex items-center justify-center">{trailingNode}</span>
+      {!!EndIcon ? (
+        <EndIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
       ) : null}
     </button>
   )

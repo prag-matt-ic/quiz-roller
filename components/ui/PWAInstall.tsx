@@ -47,8 +47,7 @@ const PWAInstall: FC<Props> = ({ isMobile }) => {
           aria-label="Install Quizroller"
           onClick={onInstallClick}
           disabled={isPrompting}
-          className="px-6 py-2 text-base"
-          leadingNode={<DownloadIcon className="size-5" />}>
+          startIcon={DownloadIcon}>
           {isPrompting ? 'Requesting install…' : 'Install app'}
         </Button>
       )}

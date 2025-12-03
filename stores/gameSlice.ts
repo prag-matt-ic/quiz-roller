@@ -11,6 +11,7 @@ export const RESET_GAME_STATE = {
   currentRow: 0,
   cameraLookAtPosition: null,
   isPlatformReady: false,
+  isShowingDashboard: false,
   rowsData: [] as RowData[],
 }
 
@@ -20,7 +21,6 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   htmlPortal: undefined,
   _isHydrated: false,
   isShowingLoadingOverlay: true,
-  isShowingDashboard: false,
   resetPlatformTick: 0,
   mode: GameMode.MAIN,
   hudIndicator: null,

@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  forwardRef,
-  type InputHTMLAttributes,
-  type Ref,
-} from 'react'
+import { type InputHTMLAttributes, type Ref, forwardRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
