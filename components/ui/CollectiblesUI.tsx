@@ -43,7 +43,6 @@ export const RingsUI: FC = () => {
 
 const CollectiblesUI: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
-
   return (
     <>
       {COLLECTIBLE_IDS.map((id) => {
@@ -57,7 +56,7 @@ const CollectiblesUI: FC = () => {
 
 export default CollectiblesUI
 
-const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
+export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
   id,
   isCollected,
 }) => {
