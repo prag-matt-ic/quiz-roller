@@ -22,12 +22,6 @@ const PLATFORM_MAX_Z = TILE_SIZE * 8
 export const ENTRY_END_Z = PLATFORM_MAX_Z - 16 * TILE_SIZE - EXIT_LOWER_DURATION_ROWS
 export const EXIT_START_Z = PLATFORM_MAX_Z - EXIT_LOWER_DURATION_ROWS * TILE_SIZE
 
-// Centralized game-wide constants
-// Units per second for terrain scrolling when terrainSpeed (normalized) is 1.0
-export const TERRAIN_SPEED_UNITS = 7
-// Player lateral/forward intended movement speed in world units per second
-export const PLAYER_MOVE_UNITS = 7
-
 export const EPSILON = {
   SMALL: 1e-6,
   TINY: 1e-4,

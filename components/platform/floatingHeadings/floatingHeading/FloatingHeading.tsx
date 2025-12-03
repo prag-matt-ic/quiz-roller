@@ -89,12 +89,12 @@ export const FloatingHeading: FC<Props> = ({
   )
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled) // for distance faded
 
-  const onPlayerPosition = (newPosition: Vector3Tuple) => {
+  const onPlayerPositionChange = (newPosition: Vector3Tuple) => {
     if (!shaderRef.current) return
     shaderRef.current.uPlayerXZ.set(newPosition[0], newPosition[2])
   }
 
-  usePlayerPosition(onPlayerPosition)
+  usePlayerPosition(onPlayerPositionChange)
 
   const dpr = useThree((s) => s.viewport.dpr)
   const materialTextureRef = useRef<Texture>(TRANSPARENT_TEXTURE)

@@ -78,6 +78,9 @@ export type PlayerSlice = {
   playerPosition: Vector3Tuple
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void
 
+  playerSpeedUnits: number // units per second
+  // setPlayerSpeedUnits: (speed: number) => void
+
   spawnPosition: Vector3Tuple | null
   playerRespawnTick: number
   playerStatus: PlayerStatus

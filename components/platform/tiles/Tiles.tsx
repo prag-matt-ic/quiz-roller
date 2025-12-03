@@ -15,7 +15,13 @@ import {
   useRef,
   useState,
 } from 'react'
-import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector3 } from 'three'
+import {
+  type InstancedBufferAttribute,
+  RepeatWrapping,
+  Texture,
+  Vector3,
+  Vector3Tuple,
+} from 'three'
 
 import tileDetailNoise from '@/assets/textures/platform/tile-noise.webp'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
@@ -137,16 +143,12 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
     }
   }, [])
 
-  const { playerPosition } = usePlayerPosition()
-
-  useGameFrame(() => {
+  const onPlayerPositionChange = (newPosition: Vector3Tuple) => {
     if (!tileShader.current) return
-    const playerX = playerPosition.current[0]
-    const playerY = playerPosition.current[1]
-    const playerZ = playerPosition.current[2]
-    tileShader.current.uPlayerWorldPos.set(playerX, playerY, playerZ)
-    tileShader.current.uShadowEnabled = sceneQuality === SceneQuality.LOW ? 0 : 1
-  })
+    tileShader.current.uPlayerWorldPos.set(newPosition[0], newPosition[1], newPosition[2])
+  }
+
+  usePlayerPosition(onPlayerPositionChange)
 
   useEffect(() => {
     onReadyChange(true)
@@ -188,6 +190,7 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
             {...INITIAL_TILE_UNIFORMS}
             uAddDetailNoise={Number(addDetailNoise)}
             uDetailNoiseMap={detailNoiseTexture}
+            uShadowEnabled={sceneQuality === SceneQuality.LOW ? 0 : 1}
           />
         </Suspense>
       </instancedMesh>

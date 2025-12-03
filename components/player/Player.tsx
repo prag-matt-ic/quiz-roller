@@ -17,9 +17,10 @@ import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
+import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
-import { EPSILON, PLAYER_MOVE_UNITS, TERRAIN_SPEED_UNITS } from '@/utils/tiles'
+import { EPSILON } from '@/utils/tiles'
 
 // https://rapier.rs/docs/user_guides/javascript/rigid_bodies
 // https://rapier.rs/docs/user_guides/javascript/colliders
@@ -41,6 +42,7 @@ const Player: FC = () => {
   const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
 
   const { controllerRef, input } = usePlayerController()
+  const { speedUnits: playerSpeedUnits } = usePlayerSpeed()
 
   // Refs for physics bodies and meshes
   const bodyRef = useRef<RapierRigidBody>(null)
@@ -70,6 +72,7 @@ const Player: FC = () => {
 
     if (playerStatus === 'idle') return
 
+    const speedUnits = playerSpeedUnits.current
     const currentPosition = bodyRef.current.translation()
 
     // Resolve player input into a clamped direction vector
@@ -80,15 +83,9 @@ const Player: FC = () => {
     const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ, canMove)
 
     // Calculate desired movement including gravity
-    const movement = calculateDesiredMovement(
-      resolvedDirection.x,
-      resolvedDirection.z,
-      deltaTime,
-    )
-
-    desiredMovement.current.x = movement.x
-    desiredMovement.current.y = movement.y
-    desiredMovement.current.z = movement.z
+    desiredMovement.current.x = resolvedDirection.x * speedUnits * deltaTime
+    desiredMovement.current.y = GRAVITY_ACCELERATION * deltaTime
+    desiredMovement.current.z = resolvedDirection.z * speedUnits * deltaTime
 
     // Use character controller to compute collision-aware movement
     controllerRef.current.computeColliderMovement(
@@ -103,7 +100,7 @@ const Player: FC = () => {
     terrainDisplacement.current.set(
       0,
       0,
-      platformScrollDirection * TERRAIN_SPEED_UNITS * deltaTime,
+      platformScrollDirection * speedUnits * deltaTime,
     )
 
     // Apply corrected movement to kinematic rigid body
@@ -118,7 +115,7 @@ const Player: FC = () => {
       correctedMovement.y,
       correctedMovement.z - terrainDisplacement.current.z,
     )
-    const maxFrameDistance = PLAYER_MOVE_UNITS * deltaTime
+    const maxFrameDistance = speedUnits * deltaTime
     const frameDistance = frameDisplacement.current.length()
     if (frameDistance > maxFrameDistance && frameDistance > EPSILON.SMALL) {
       frameDisplacement.current.multiplyScalar(maxFrameDistance / frameDistance)
@@ -224,18 +221,6 @@ function resolveInputDirection(
   return {
     x: inputX * inverseMagnitude,
     z: inputZ * inverseMagnitude,
-  }
-}
-
-function calculateDesiredMovement(
-  directionX: number,
-  directionZ: number,
-  deltaTime: number,
-): { x: number; y: number; z: number } {
-  return {
-    x: directionX * PLAYER_MOVE_UNITS * deltaTime,
-    y: GRAVITY_ACCELERATION * deltaTime,
-    z: directionZ * PLAYER_MOVE_UNITS * deltaTime,
   }
 }
 

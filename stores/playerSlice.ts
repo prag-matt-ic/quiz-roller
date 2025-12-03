@@ -15,20 +15,29 @@ import {
 } from './types'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
-
+const PLAYER_SPEED_BASE = 7.0 // units per second
+const RING_SPEED_INCREMENT = 0.25
 const COLLECTIBLE_DURATION_S = 1.5
 
-export const RESET_PLAYER_STATE = {
+export const RESET_PLAYER_STATE: Pick<
+  PlayerSlice,
+  | 'confirmingCollectible'
+  | 'collectedRings'
+  | 'confirmationProgress'
+  | 'hasCollectedAllRings'
+  | 'playerSpeedUnits'
+> = {
   confirmingCollectible: null,
   collectedRings: {},
   confirmationProgress: 0,
   hasCollectedAllRings: false,
+  playerSpeedUnits: PLAYER_SPEED_BASE,
 }
 
 export const createPlayerSlice =
   ({ playSoundFX, stopSoundFX }: SliceDeps): GameSliceCreator<PlayerSlice> =>
   (set, get) => {
-    let confirmationTween: gsap.core.Tween | null = null
+    let confirmationTween: GSAPTween | null = null
     const confirmationTweenTarget = { value: 0 }
 
     function startConfirmation(onComplete: () => void, duration: number) {
@@ -71,6 +80,30 @@ export const createPlayerSlice =
       })
     }
 
+    let speedTween: GSAPTween | null = null
+    const speedTweenTarget = { value: PLAYER_SPEED_BASE }
+
+    function increaseSpeed(increment: number) {
+      speedTween?.kill()
+      const targetValue = speedTweenTarget.value + increment
+      console.warn('[PlayerStore] Increasing speed to', { targetValue, increment })
+      speedTween = gsap.to(speedTweenTarget, {
+        duration: 0.3,
+        ease: 'none',
+        value: targetValue,
+        onUpdate: () => {
+          set({ playerSpeedUnits: speedTweenTarget.value })
+        },
+      })
+    }
+
+    function resetSpeed() {
+      speedTween?.kill()
+      console.warn('[PlayerStore] Resetting speed to base value', { PLAYER_SPEED_BASE })
+      speedTweenTarget.value = PLAYER_SPEED_BASE
+      set({ playerSpeedUnits: PLAYER_SPEED_BASE })
+    }
+
     return {
       ...RESET_PLAYER_STATE,
       collectedCollectibles: [],
@@ -96,6 +129,10 @@ export const createPlayerSlice =
         if (hasCollectedAllRings) {
           console.warn('[PlayerStore] All rings collected!')
         }
+
+        // Increment speed.
+        increaseSpeed(RING_SPEED_INCREMENT)
+
         set({ collectedRings: newCollectedRings, hasCollectedAllRings })
       },
       setConfirmingCollectible: (collectibleType: CollectibleID | null) => {

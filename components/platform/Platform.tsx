@@ -18,6 +18,7 @@ import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones
 import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
+import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import useStage from '@/hooks/useStage'
 import { GameMode } from '@/stores/types'
@@ -28,7 +29,6 @@ import {
   ROW_VISIBILITY_HALF_SPAN,
   type RowData,
   SAFE_HEIGHT,
-  TERRAIN_SPEED_UNITS,
   TILE_PLAYER_FADE_FULL_RADIUS,
   TILE_PLAYER_FADE_MIN_ALPHA,
   TILE_PLAYER_FADE_MIN_RADIUS,
@@ -98,6 +98,7 @@ const Platform: FC = () => {
   const stageRef = useStage()
 
   const { input: playerInput } = usePlayerInput()
+  const { speedUnits: playerSpeedUnits } = usePlayerSpeed()
 
   // Deterministic scrolling state
   const currentScrollPosition = useRef(0)
@@ -492,7 +493,8 @@ const Platform: FC = () => {
     tiles.current.shader.uScrollZ = currentScrollPosition.current
 
     const inputDirectionZ = playerInput.current.up - playerInput.current.down
-    const zStep = inputDirectionZ * TERRAIN_SPEED_UNITS * delta
+    const speedUnits = playerSpeedUnits.current
+    const zStep = inputDirectionZ * speedUnits * delta
 
     const previousScroll = currentScrollPosition.current
 
