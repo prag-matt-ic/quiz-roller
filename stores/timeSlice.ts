@@ -43,10 +43,15 @@ export const createTimeSlice =
       set({ speedRunStage: 'submitting' })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
+
+      const inputType = get().inputType
+
       const submission: ServerSpeedRunSubmission = {
         username,
         time: timeInSeconds,
         date: new Date().toISOString(),
+        input_type: 'keyboard',
+        level_id: '1.0',
       }
 
       try {

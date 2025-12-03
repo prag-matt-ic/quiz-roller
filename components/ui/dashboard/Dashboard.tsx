@@ -60,7 +60,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
             <SettingsPanel className="col-span-2 row-span-2" />
             <RingsPanel className="col-span-1 row-span-1" />
             <CollectiblesPanel className="col-span-1 row-span-1" />
-            <ContactPanel className="col-span-1 row-span-1" />
+            <ContactPanel className="col-span-2 row-span-1" />
           </div>
         </div>
       </aside>

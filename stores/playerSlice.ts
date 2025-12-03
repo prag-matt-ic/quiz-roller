@@ -98,8 +98,6 @@ export const createPlayerSlice =
           set({ playerSpeedUnits: speedTweenTarget.value })
         },
         onComplete: () => {
-          // Start decay tween
-          speedDecayTween?.kill()
           speedDecayTween = gsap.to(speedTweenTarget, {
             duration: 5.0,
             ease: 'none',

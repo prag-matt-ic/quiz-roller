@@ -17,11 +17,13 @@ export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]
     const sql = neon(process.env.DATABASE_URL!)
 
     const speedrun = await sql`
-      SELECT id, username, time, date, ip, country, flag, attempt
+      SELECT id, username, time, date, ip, country, flag, attempt, input_type, level_id
       FROM "quizroller_speedrun" 
       ORDER BY time ASC
       LIMIT ${count}
     `
+
+    console.warn('Fetched speedrun data:', speedrun)
     return speedrunDatabaseSchema.array().parse(speedrun)
   } catch (error) {
     console.error('Error fetching speedrun data:', error)
@@ -46,10 +48,12 @@ export async function getSpeedrunPosition(id: number): Promise<{
           country,
           flag,
           attempt,
+          input_type,
+          level_id,
           ROW_NUMBER() OVER (ORDER BY time ASC) as position
         FROM "quizroller_speedrun"
       )
-      SELECT id, username, time, date, ip, country, flag, attempt, position
+      SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id
       FROM ranked_runs
       WHERE id = ${id}
     `
@@ -64,10 +68,14 @@ export async function getSpeedrunPosition(id: number): Promise<{
   }
 }
 
+const LEVEL_ID = '1.0'
+
 export async function insertSpeedRun({
   username,
   date,
   time,
+  input_type,
+  level_id = LEVEL_ID,
 }: ServerSpeedRunSubmission): InsertSpeedRunResponse {
   try {
     const headersList = await headers()
@@ -95,6 +103,8 @@ export async function insertSpeedRun({
       WHERE username = ${username}
       AND ip = ${ip}
     `
+
+    console.warn('Previous attempts for', { username, ip, previousAttempts })
     const attempt = (Number(previousAttempts[0]?.count) || 0) + 1
 
     const data: SpeedRunDatabaseInsert = {
@@ -105,17 +115,21 @@ export async function insertSpeedRun({
       country: country ?? null,
       attempt,
       flag: flag ?? null,
+      input_type: input_type,
+      level_id: LEVEL_ID,
     }
 
     console.warn('Submitting speedrun data:', data)
 
     const validatedData = speedrunDatabaseInsertSchema.parse(data)
 
+    console.warn('Validated speedrun data:', validatedData)
+
     // TODO: Rename this table.
     const insert = await sql`
-      INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt) 
-      VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt})
-      RETURNING id, username, time, date, ip, country, flag, attempt
+      INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt, input_type, level_id) 
+      VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt}, ${validatedData.input_type}, ${validatedData.level_id})
+      RETURNING id, username, time, date, ip, country, flag, attempt, input_type, level_id
     `
     if (!insert || insert.length === 0) throw new Error('No data returned from insert')
 

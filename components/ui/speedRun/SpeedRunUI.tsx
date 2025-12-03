@@ -1,6 +1,6 @@
 'use client'
 import gsap from 'gsap'
-import { InfoIcon, Play, RotateCcw, X } from 'lucide-react'
+import { InfoIcon, Play, RotateCcw, UploadCloud, X } from 'lucide-react'
 import { type FC, type Ref, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -34,10 +34,11 @@ const SpeedRunTimer: FC = () => {
 
 export const SpeedRunControls: FC = () => {
   const speedRunStatus = useGameStore((s) => s.speedRunStage)
-  const showSpeedRunButtons = speedRunStatus === 'running'
-
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const resetGame = useGameStore((s) => s.resetGame)
+  const finishSpeedRun = useGameStore((s) => s.finishSpeedRun)
+
+  const showSpeedRunButtons = speedRunStatus === 'running'
 
   return (
     <div className="pointer-events-auto flex size-fit items-center justify-center gap-4">
@@ -58,6 +59,16 @@ export const SpeedRunControls: FC = () => {
       {showSpeedRunButtons && (
         <Button size="sm" onClick={startSpeedRun} title="Restart" className="aspect-square!">
           <RotateCcw size={24} strokeWidth={2} />
+        </Button>
+      )}
+
+      {process.env.NODE_ENV === 'development' && showSpeedRunButtons && (
+        <Button
+          size="sm"
+          onClick={finishSpeedRun}
+          title="Finish Speedrun (Dev Only)"
+          className="aspect-square!">
+          <UploadCloud size={24} strokeWidth={2} />
         </Button>
       )}
     </div>
