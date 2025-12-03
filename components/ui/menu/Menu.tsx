@@ -33,14 +33,14 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
       ref={ref}
       className={twJoin(
         'fixed inset-0 z-200 flex size-full flex-col items-center justify-center gap-6 p-6 transition-opacity duration-200',
-        'bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm',
+        'bg-radial from-black/90 from-25% to-black/0 to-100% backdrop-blur-sm',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0',
         transitionStatus === 'exited' && 'opacity-0',
       )}>
       {/* TODO: add logo. */}
 
-      <section className="w-fit rounded-2xl bg-[#000]/40 p-4">
+      <section className="w-fit rounded-2xl bg-black/40 p-4">
         <h3>Settings</h3>
         <ButtonGroup
           value={isMuted ? 'off' : 'on'}

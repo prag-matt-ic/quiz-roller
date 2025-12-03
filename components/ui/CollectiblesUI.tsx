@@ -49,27 +49,14 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
     middleware: [offset(12)],
   })
 
-  const collectedColour = GEMS_BY_ID[id]?.colour
-
   const { isMounted, status } = useTransitionStatus(context)
   const hover = useHover(context, { handleClose: safePolygon() })
   const click = useClick(context, { toggle: true })
   const dismiss = useDismiss(context)
-
-  useEffect(() => {
-    let timeot: NodeJS.Timeout
-    if (isCollected) {
-      setShow(true)
-      timeot = setTimeout(() => {
-        setShow(false)
-      }, 6000)
-    }
-    return () => clearTimeout(timeot)
-  }, [isCollected])
-
-  const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
-
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
+
+  const collectedColour = GEMS_BY_ID[id]?.colour
+  const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
 
   return (
     <>
@@ -111,7 +98,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
+                'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl border-2 border-white/10 bg-black p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',

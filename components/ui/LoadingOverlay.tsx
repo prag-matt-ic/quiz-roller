@@ -11,6 +11,7 @@ import type { ButtonProps } from '@/components/ui/Button'
 import { GradientText } from '@/components/ui/GradientText'
 import { InputConfig } from '@/components/ui/menu/InputConfig'
 import { MOVE_HUD_CONFIG } from '@/resources/content'
+import { GameMode } from '@/stores/types'
 
 import RotateDevice from './RotateDevice'
 
@@ -29,6 +30,7 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const inputType = useGameStore((s) => s.inputType)
+  const mode = useGameStore((s) => s.mode)
 
   const [isExiting, setIsExiting] = useState(false)
   const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
@@ -44,7 +46,8 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setIsShowingLoadingOverlay(false)
-    const hud = MOVE_HUD_CONFIG[inputType]
+    const shouldShowMoveHud = mode !== GameMode.SPEEDRUN
+    const hud = shouldShowMoveHud ? MOVE_HUD_CONFIG[inputType] : undefined
     respawnPlayer(PLAYER_INITIAL_POSITION, hud)
   }
 
@@ -57,12 +60,12 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
       className={twJoin(
         'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 to-120% px-4 py-4',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
-        'bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm',
+        'bg-radial from-black/90 from-25% to-black/0 to-100% backdrop-blur-sm',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
       <div
         className={twJoin(
-          'absolute inset-0 bg-[#000] transition-opacity delay-400 duration-600',
+          'absolute inset-0 bg-black transition-opacity delay-400 duration-600',
           isReady ? 'opacity-0' : 'opacity-100',
         )}
       />

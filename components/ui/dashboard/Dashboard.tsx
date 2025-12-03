@@ -14,6 +14,8 @@ import { RingsPanel } from '@/components/ui//dashboard/RingsPanel'
 import { PointerProvider } from '@/components/ui/PointerProvider'
 import { SettingsPanel } from '@/components/ui/dashboard/SettingsPanel'
 
+import Button from '../Button'
+
 type DashboardProps = {
   ref: RefObject<HTMLElement | null>
   isMobile: boolean
@@ -28,7 +30,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
         ref={ref}
         className={twJoin(
           'fixed inset-0 z-200 flex items-center justify-center overflow-y-auto px-6 py-10 transition-opacity duration-200',
-          'bg-[#000]/50 backdrop-blur-lg',
+          'bg-black/50 backdrop-blur-lg',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
           transitionStatus === 'exited' && 'opacity-0',
@@ -45,12 +47,9 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
             <h1 className="text-2xl font-black tracking-tight text-white lg:text-4xl">
               Speedroller
             </h1>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-white/30 hover:bg-white/10">
+            <Button type="button" size="md" onClick={onClose} className="aspect-square">
               <XIcon className="size-5" />
-            </button>
+            </Button>
           </div>
 
           <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">

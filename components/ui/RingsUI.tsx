@@ -16,19 +16,16 @@ const RingsUI: FC = () => {
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
-    <div className="pointer-events-auto flex items-center gap-3 p-2 text-sm lg:p-4 m-2">
+    <div className="pointer-events-auto m-2 flex items-center gap-3 p-2 text-sm lg:p-4">
       <div
         className={twJoin(
-          'relative flex aspect-square size-7 items-center justify-center rounded-full border-2 border-amber-400 font-mono leading-none font-bold',
-          collectedRingCount > 0 && 'text-amber-300',
+          'relative flex aspect-square size-9 items-center justify-center rounded-full border-2 border-amber-400 bg-black/20 font-mono leading-none font-bold tracking-wide',
+          collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
         )}>
         <SpeedBoostDial />
         {collectedRingCount}
       </div>
-      <span className="font-mono font-medium tracking-wide">
-        <span className="text-white/70">/</span>
-        {totalRingsCount}
-      </span>
+      <span className="font-mono tracking-wide">{totalRingsCount}</span>
     </div>
   )
 }

@@ -195,7 +195,7 @@ const LeaderboardRow: FC<RowProps> = ({
     <div
       className={twMerge(
         ROW_CONTAINER_CLASSES,
-        position % 2 === 0 && 'bg-[#000]/20',
+        position % 2 === 0 && 'bg-black/20',
         isCurrentUser && 'text-leaderboard bg-leaderboard/10',
         isTopThree ? 'h-14' : 'h-11',
         isLatestRun && 'border-leaderboard z-40 border!',
