@@ -97,11 +97,7 @@ const Player: FC = () => {
     const correctedMovement = controllerRef.current.computedMovement()
 
     // Platform scroll input shifts the ground underneath the player; capture that displacement
-    terrainDisplacement.current.set(
-      0,
-      0,
-      platformScrollDirection * speedUnits * deltaTime,
-    )
+    terrainDisplacement.current.set(0, 0, platformScrollDirection * speedUnits * deltaTime)
 
     // Apply corrected movement to kinematic rigid body
     nextPosition.current.x = currentPosition.x + correctedMovement.x
@@ -170,9 +166,7 @@ const Player: FC = () => {
       { x: spawnPosition[0], y: spawnPosition[1], z: spawnPosition[2] },
       true,
     )
-    console.warn('[Player] Setting respawn position', { spawnPosition })
     const timeout = setTimeout(() => {
-      console.warn('[Player] Completing respawn')
       onRespawnComplete()
     }, 200)
     return () => clearTimeout(timeout)
