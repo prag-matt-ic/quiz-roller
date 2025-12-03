@@ -1,16 +1,16 @@
 import { useEffect } from 'react'
 
-import ctaTexture from '@/assets/platform/cta.png'
-import homeTexture from '@/assets/platform/home.png'
-import info1Texture from '@/assets/platform/info-1.png'
-import info2Texture from '@/assets/platform/info-2.png'
-import info3Texture from '@/assets/platform/info-3.png'
-import obstacle1Texture from '@/assets/platform/obstacles-1.png'
-import obstacle2Texture from '@/assets/platform/obstacles-2.png'
-import obstacle3Texture from '@/assets/platform/obstacles-3.png'
-import obstacle4Texture from '@/assets/platform/obstacles-4.png'
-import speedRunTexture from '@/assets/platform/speed-run-finish.png'
-import testTexture from '@/assets/platform/test.png'
+import ctaTexture from '@/assets/platform/1.0/cta.png'
+import homeTexture from '@/assets/platform/1.0/home.png'
+import info1Texture from '@/assets/platform/1.0/info-1.png'
+import info2Texture from '@/assets/platform/1.0/info-2.png'
+import info3Texture from '@/assets/platform/1.0/info-3.png'
+import obstacle1Texture from '@/assets/platform/1.0/obstacles-1.png'
+import obstacle2Texture from '@/assets/platform/1.0/obstacles-2.png'
+import obstacle3Texture from '@/assets/platform/1.0/obstacles-3.png'
+import obstacle4Texture from '@/assets/platform/1.0/obstacles-4.png'
+import speedRunTexture from '@/assets/platform/1.0/speed-run-finish.png'
+import testTexture from '@/assets/platform/1.0/test.png'
 import { Stage, useGameStore } from '@/components/GameProvider'
 import { createTotalCounts } from '@/stores/totalCounts'
 import { GameMode } from '@/stores/types'
@@ -57,6 +57,8 @@ const MODE_TEXTURES_MAP: Record<GameMode, TextureDescriptor[]> = {
   [GameMode.SPEEDRUN]: SPEED_RUN_TEXTURES,
   [GameMode.TEST]: TEST_MODE_TEXTURES,
 }
+
+// TODO: handle new level versions..
 
 function usePlatformRows() {
   const isStoreHydrated = useGameStore((s) => s._isHydrated)

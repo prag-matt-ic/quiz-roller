@@ -12,18 +12,20 @@ import {
   speedrunDatabaseSchema,
 } from '@/model/schema'
 
-export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]> {
+export async function getSpeedrunData(
+  count: number,
+  levelId: string = '1.0',
+): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
 
     const speedrun = await sql`
       SELECT id, username, time, date, ip, country, flag, attempt, input_type, level_id
       FROM "quizroller_speedrun" 
+      WHERE level_id = ${levelId}
       ORDER BY time ASC
       LIMIT ${count}
     `
-
-    console.warn('Fetched speedrun data:', speedrun)
     return speedrunDatabaseSchema.array().parse(speedrun)
   } catch (error) {
     console.error('Error fetching speedrun data:', error)
@@ -31,7 +33,10 @@ export async function getSpeedrunData(count: number): Promise<SpeedRunDatabase[]
   }
 }
 
-export async function getSpeedrunPosition(id: number): Promise<{
+export async function getSpeedrunPosition(
+  id: number,
+  levelId: string = '1.0',
+): Promise<{
   run: SpeedRunDatabase
   position: number
 } | null> {
@@ -52,6 +57,7 @@ export async function getSpeedrunPosition(id: number): Promise<{
           level_id,
           ROW_NUMBER() OVER (ORDER BY time ASC) as position
         FROM "quizroller_speedrun"
+        WHERE level_id = ${levelId}
       )
       SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id
       FROM ranked_runs
@@ -80,7 +86,6 @@ export async function insertSpeedRun({
   try {
     const headersList = await headers()
 
-    // TODO: figure out how to use geolocation form vercel functions...
     // TODO: This doesnt work on windows
     const getFlagEmoji = (countryCode: string) => {
       const codePoints = countryCode
@@ -107,7 +112,7 @@ export async function insertSpeedRun({
     console.warn('Previous attempts for', { username, ip, previousAttempts })
     const attempt = (Number(previousAttempts[0]?.count) || 0) + 1
 
-    const data: SpeedRunDatabaseInsert = {
+    const insert: SpeedRunDatabaseInsert = {
       username,
       time,
       date,
@@ -115,25 +120,22 @@ export async function insertSpeedRun({
       country: country ?? null,
       attempt,
       flag: flag ?? null,
-      input_type: input_type,
-      level_id: LEVEL_ID,
+      input_type,
+      level_id,
     }
 
-    console.warn('Submitting speedrun data:', data)
-
-    const validatedData = speedrunDatabaseInsertSchema.parse(data)
-
-    console.warn('Validated speedrun data:', validatedData)
+    const validatedInsert = speedrunDatabaseInsertSchema.parse(insert)
 
     // TODO: Rename this table.
-    const insert = await sql`
+    const insertResult = await sql`
       INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt, input_type, level_id) 
-      VALUES (${validatedData.username}, ${validatedData.time}, ${validatedData.date}, ${validatedData.ip}, ${validatedData.country}, ${validatedData.flag}, ${validatedData.attempt}, ${validatedData.input_type}, ${validatedData.level_id})
+      VALUES (${validatedInsert.username}, ${validatedInsert.time}, ${validatedInsert.date}, ${validatedInsert.ip}, ${validatedInsert.country}, ${validatedInsert.flag}, ${validatedInsert.attempt}, ${validatedInsert.input_type}, ${validatedInsert.level_id})
       RETURNING id, username, time, date, ip, country, flag, attempt, input_type, level_id
     `
-    if (!insert || insert.length === 0) throw new Error('No data returned from insert')
+    if (!insertResult || insertResult.length === 0)
+      throw new Error('No data returned from insert')
 
-    const parsedInsert = speedrunDatabaseSchema.parse(insert[0])
+    const parsedInsert = speedrunDatabaseSchema.parse(insertResult[0])
     console.warn('Inserted speedrun:', parsedInsert)
 
     return parsedInsert
