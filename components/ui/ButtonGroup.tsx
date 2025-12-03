@@ -38,7 +38,7 @@ export const ButtonGroup = <T extends string | number>({
             disabled={disabled}
             onClick={() => onChange(item.value)}
             className={twJoin(
-              'pointer-events-auto flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors',
+              'pointer-events-auto flex h-full items-center gap-2 px-4 py-2 text-sm font-semibold transition-colors',
               isActive
                 ? 'border-white bg-white/10 text-white'
                 : 'border-white/20 bg-transparent text-white/50',

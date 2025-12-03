@@ -11,7 +11,6 @@ import { GameMode } from '@/stores/types'
 
 type Props = {
   className?: string
-  onClose?: () => void
 }
 
 const GAME_MODES = [
@@ -20,28 +19,28 @@ const GAME_MODES = [
     icon: Compass,
     label: 'Explore',
     desc: 'Free roam adventure',
-    details:
-      'Take your time discovering every corner of the world. No timers, no pressure. Find hidden paths, collect rings at your own pace, and uncover all the secrets the game has to offer.',
+    details: 'Take your time discovering every corner of the world.',
   },
   {
     id: GameMode.SPEEDRUN,
     icon: Timer,
     label: 'Speedrun',
-    desc: 'Race against time',
+    desc: 'Race against others',
     details:
-      'Put your skills to the test with timed challenges. Complete stages as fast as possible, master shortcuts, and compete for the best times. Every millisecond counts.',
+      'Put your racing skills to the test with our speedroll mode. Every millisecond counts.',
   },
 ] as const
 
-export const GameModePanel: FC<Props> = ({ className, onClose }) => {
+export const GameModePanel: FC<Props> = ({ className }) => {
   const mode = useGameStore((s) => s.mode)
   const resetGame = useGameStore((s) => s.resetGame)
+  const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
 
   const handleModeChange = (nextMode: GameMode) => {
     if (nextMode !== mode) {
       resetGame({ mode: nextMode })
+      setIsShowingDashboard(false)
     }
-    onClose?.()
   }
 
   return (

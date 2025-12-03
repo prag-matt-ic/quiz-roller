@@ -19,7 +19,7 @@ import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector3 } from 
 
 import tileDetailNoise from '@/assets/textures/platform/tile-noise.webp'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
+import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
@@ -37,7 +37,6 @@ import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
 
 const INSTANCE_COUNT = COLUMNS * ROWS_RENDERED
-const PLAYER_Y_LOG_INTERVAL = 0.2
 
 // Shader material for proximity-driven tile visibility and coloring
 type TileShaderUniforms = {
@@ -49,6 +48,7 @@ type TileShaderUniforms = {
   uFadeFullRadius: number
   uFadeMinRadius: number
   uFadeMinAlpha: number
+  uShadowEnabled: number
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
@@ -64,6 +64,7 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
   uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
   uFadeMinAlpha: TILE_PLAYER_FADE_MIN_ALPHA,
+  uShadowEnabled: 1,
 }
 
 const CustomTileShaderMaterial = shaderMaterial(
@@ -92,6 +93,7 @@ type PlatformTilesProps = {
 
 export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
+  const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const detailNoiseTexture = useTexture(tileDetailNoise.src)
   detailNoiseTexture.wrapS = RepeatWrapping
   detailNoiseTexture.wrapT = RepeatWrapping
@@ -107,8 +109,6 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
   const highlightedAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
-  const playerYLogTimer = useRef(0)
-  const lastLoggedPlayerY = useRef<number | null>(null)
 
   useImperativeHandle(ref, () => {
     return {
@@ -139,19 +139,13 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
 
   const { playerPosition } = usePlayerPosition()
 
-  useGameFrame((_, deltaTime) => {
+  useGameFrame(() => {
     if (!tileShader.current) return
     const playerX = playerPosition.current[0]
     const playerY = playerPosition.current[1]
     const playerZ = playerPosition.current[2]
     tileShader.current.uPlayerWorldPos.set(playerX, playerY, playerZ)
-
-    playerYLogTimer.current += deltaTime
-    if (playerYLogTimer.current >= PLAYER_Y_LOG_INTERVAL && lastLoggedPlayerY.current !== playerY) {
-      lastLoggedPlayerY.current = playerY
-      playerYLogTimer.current = 0
-      console.log('[Tiles] playerY', playerY)
-    }
+    tileShader.current.uShadowEnabled = sceneQuality === SceneQuality.LOW ? 0 : 1
   })
 
   useEffect(() => {

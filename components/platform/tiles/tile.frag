@@ -8,6 +8,7 @@ uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
 uniform sampler2D uDetailNoiseMap;
 uniform highp vec3 uPlayerWorldPos;
+uniform lowp float uShadowEnabled;
 
 varying mediump float vAlpha;
 varying highp vec3 vWorldPos;
@@ -26,7 +27,9 @@ const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.8;
 const float SHADOW_STRENGTH = 0.6;
-const float SHADOW_MAX_HEIGHT = 1.0;
+const float SHADOW_FADE_START_Y = 1.5; // fully hidden
+const float SHADOW_FADE_END_Y = 0.5; // fully visible
+const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
 
 void main() {
   // Early discard for fully transparent tiles
@@ -65,7 +68,13 @@ void main() {
   float distToPlayer = distance(vWorldPos.xz, uPlayerWorldPos.xz);
   float shadow = 1.0 - smoothstep(0.0, SHADOW_RADIUS, distToPlayer);
   shadow = pow(shadow, 2.5);
-  shadow *= step(uPlayerWorldPos.y, SHADOW_MAX_HEIGHT);
+  float shadowHeightT = clamp(
+    (SHADOW_FADE_START_Y - uPlayerWorldPos.y) * SHADOW_FADE_RANGE_INV,
+    0.0,
+    1.0
+  );
+  float shadowHeightFade = shadowHeightT * shadowHeightT * (3.0 - 2.0 * shadowHeightT);
+  shadow *= shadowHeightFade * uShadowEnabled;
   background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
 
   // Darken non-upward-facing surfaces

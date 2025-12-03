@@ -54,7 +54,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
           </div>
 
           <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            <GameModePanel className="col-span-2 row-span-2" onClose={onClose} />
+            <GameModePanel className="col-span-2 row-span-2" />
             <PlayerPanel className="col-span-2 row-span-1" />
             <LeaderboardPanel className="col-span-2 row-span-1" />
             <SettingsPanel className="col-span-2 row-span-2" />
