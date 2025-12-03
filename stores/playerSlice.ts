@@ -82,11 +82,13 @@ export const createPlayerSlice =
     }
 
     let speedTween: GSAPTween | null = null
+    let speedDecayTween: GSAPTween | null = null
     const speedTweenTarget = { value: PLAYER_SPEED_BASE }
 
     function increaseSpeed(increment: number) {
       speedTween?.kill()
-      const targetValue = speedTweenTarget.value + increment
+      speedDecayTween?.kill()
+      const targetValue = Math.min(PLAYER_SPEED_MAX, speedTweenTarget.value + increment)
       console.warn('[PlayerStore] Increasing speed to', { targetValue, increment })
       speedTween = gsap.to(speedTweenTarget, {
         duration: 0.3,
@@ -95,11 +97,24 @@ export const createPlayerSlice =
         onUpdate: () => {
           set({ playerSpeedUnits: speedTweenTarget.value })
         },
+        onComplete: () => {
+          // Start decay tween
+          speedDecayTween?.kill()
+          speedDecayTween = gsap.to(speedTweenTarget, {
+            duration: 5.0,
+            ease: 'none',
+            value: PLAYER_SPEED_BASE,
+            onUpdate: () => {
+              set({ playerSpeedUnits: speedTweenTarget.value })
+            },
+          })
+        },
       })
     }
 
     function resetSpeed() {
       speedTween?.kill()
+      speedDecayTween?.kill()
       console.warn('[PlayerStore] Resetting speed to base value', { PLAYER_SPEED_BASE })
       speedTween = gsap.to(speedTweenTarget, {
         duration: 0.3,
@@ -137,7 +152,6 @@ export const createPlayerSlice =
           console.warn('[PlayerStore] All rings collected!')
         }
 
-        // Increment speed.
         increaseSpeed(RING_SPEED_INCREMENT)
 
         set({ collectedRings: newCollectedRings, hasCollectedAllRings })
