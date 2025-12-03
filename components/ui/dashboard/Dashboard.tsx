@@ -5,14 +5,14 @@ import { type FC, type RefObject } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
-import { PointerProvider } from '../PointerProvider'
-import { CollectiblesPanel } from './CollectiblesPanel'
-import { ContactPanel } from './ContactPanel'
-import { GameModePanel } from './GameModePanel'
-import { LeaderboardPanel } from './Leaderboard'
-import { PlayerPanel } from './PlayerCard'
-import { RingsPanel } from './RingsPanel'
-import { SettingsPanel } from './Settings'
+import { CollectiblesPanel } from '@/components/ui//dashboard/CollectiblesPanel'
+import { ContactPanel } from '@/components/ui//dashboard/ContactPanel'
+import { GameModePanel } from '@/components/ui//dashboard/GameModePanel'
+import { LeaderboardPanel } from '@/components/ui//dashboard/LeaderboardPanel'
+import { PlayerPanel } from '@/components/ui//dashboard/PlayerPanel'
+import { RingsPanel } from '@/components/ui//dashboard/RingsPanel'
+import { PointerProvider } from '@/components/ui/PointerProvider'
+import { SettingsPanel } from '@/components/ui/dashboard/SettingsPanel'
 
 type DashboardProps = {
   ref: RefObject<HTMLElement | null>
@@ -28,7 +28,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
         ref={ref}
         className={twJoin(
           'fixed inset-0 z-200 flex size-full items-start justify-center overflow-y-auto px-6 py-10 transition-opacity duration-200',
-          'bg-radial from-[#000]/90 from-25% to-[#000]/0 to-100% backdrop-blur-sm',
+          'bg-[#000]/50 backdrop-blur-lg',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
           transitionStatus === 'exited' && 'opacity-0',
