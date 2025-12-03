@@ -15,7 +15,8 @@ import {
 } from './types'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
-const PLAYER_SPEED_BASE = 7.0 // units per second
+export const PLAYER_SPEED_BASE = 7.0 // units per second
+export const PLAYER_SPEED_MAX = 9.0
 const RING_SPEED_INCREMENT = 0.25
 const COLLECTIBLE_DURATION_S = 1.5
 
@@ -100,8 +101,14 @@ export const createPlayerSlice =
     function resetSpeed() {
       speedTween?.kill()
       console.warn('[PlayerStore] Resetting speed to base value', { PLAYER_SPEED_BASE })
-      speedTweenTarget.value = PLAYER_SPEED_BASE
-      set({ playerSpeedUnits: PLAYER_SPEED_BASE })
+      speedTween = gsap.to(speedTweenTarget, {
+        duration: 0.3,
+        ease: 'power2.out',
+        value: PLAYER_SPEED_BASE,
+        onUpdate: () => {
+          set({ playerSpeedUnits: speedTweenTarget.value })
+        },
+      })
     }
 
     return {
@@ -188,6 +195,7 @@ export const createPlayerSlice =
       },
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
+        resetSpeed()
         set({
           playerStatus: 'out-of-bounds',
           spawnPosition: null, // Calculated in usePlayerRespawn hook
