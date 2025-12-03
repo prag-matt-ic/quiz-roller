@@ -18,30 +18,6 @@ import { useGameStore } from '@/components/GameProvider'
 import { COLLECTIBLE_IDS, CollectibleID } from '@/model/schema'
 import { COLLECTIBLES_CONTENT, GEMS_BY_ID } from '@/resources/content'
 
-export const RingsUI: FC = () => {
-  const collectedRings = useGameStore((s) => s.collectedRings)
-  const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
-  const collectedRingCount = Object.keys(collectedRings).length
-
-  return (
-    <div className="flex h-fit items-center gap-1 p-2 text-sm lg:p-4">
-      <div
-        className={twJoin(
-          'relative flex aspect-square size-8 items-center justify-center rounded-full border-[1.5px] border-amber-400 font-mono leading-none font-bold',
-          collectedRingCount > 0 && 'text-amber-300',
-        )}>
-        {collectedRingCount}
-      </div>
-      <span className="font-mono font-medium tracking-wide">
-        <span className="text-white/70">/</span>
-        {totalRingsCount}
-      </span>
-
-      {/* TODO: Ring based speed boost indicator would go here... */}
-    </div>
-  )
-}
-
 const CollectiblesUI: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
   return (

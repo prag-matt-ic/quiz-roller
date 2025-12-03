@@ -7,7 +7,8 @@ import { SwitchTransition, Transition, type TransitionStatus } from 'react-trans
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import CollectiblesUI, { RingsUI } from '@/components/ui/CollectiblesUI'
+import CollectiblesUI from '@/components/ui/CollectiblesUI'
+import RingsUI from '@/components/ui/RingsUI'
 import ProgressBar from '@/components/ui/ProgressBar'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
