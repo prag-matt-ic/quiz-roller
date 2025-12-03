@@ -114,12 +114,14 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const totalTime = useTotalTime(onTimeChange)
+  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
 
   // Has to be inside to access the store hooks.
   function getContentForPlacementIndex(placementIndex: number) {
     if (placementIndex === 3)
       return <TotalTimeDisplay initialValue={totalTime} timeContainer={timeContainer} />
-    if (placementIndex === 4) return <LeaderboardTable {...tableData} />
+    if (placementIndex === 4)
+      return <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} />
     return <Card className="w-full">{INFO_ZONES_CARD_CONTENT[placementIndex]}</Card>
   }
 

@@ -229,7 +229,6 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
                 status === 'entered' && 'opacity-100',
               )}>
               {showUsernameInput && usernameForm}
-
               {showCountdown && countdown}
             </div>
           )}

@@ -6,6 +6,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -35,6 +36,8 @@ type EmitterPair = [
   RefObject<ConfettiParticleEmitterHandle | null>,
 ]
 
+const MOVE_LOG_INTERVAL = 30
+
 const createEmitterPairs = (count: number): EmitterPair[] =>
   Array.from({ length: count }, () => [createRef(), createRef()])
 
@@ -42,10 +45,14 @@ const createDimensionState = (count: number): number[] => Array.from({ length: c
 
 const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
   const totalCount = useGameStore((s) => s.totalCounts.confetti)
+
+  console.log('[ConfettiRows] totalCount:', totalCount)
   const paletteToUse = palette ?? PARTICLE_PALETTE
 
   const { refs, isVisibleStates, translation, applyPlacement, hideRigidBodyAtIndex } =
     useDynamicRigidBodies(totalCount)
+
+  const moveLogCounter = useRef(0)
 
   const [emitterRefs, setEmitterRefs] = useState<EmitterPair[]>(() =>
     createEmitterPairs(totalCount),
@@ -59,6 +66,10 @@ const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
 
   useEffect(() => {
     if (emitterRefs.length === totalCount) return
+    console.log('[ConfettiRows] Resizing emitter refs', {
+      previousCount: emitterRefs.length,
+      nextCount: totalCount,
+    })
     setEmitterRefs(createEmitterPairs(totalCount))
     setWidthByIndex(createDimensionState(totalCount))
     setDepthByIndex(createDimensionState(totalCount))
@@ -94,9 +105,30 @@ const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
       const placements = row.confettiPlacements
       if (!placements?.length) return
 
+      console.log('[ConfettiRows] positionElementsIfNeeded', {
+        rowIndex: row.rowIndex,
+        rowZ,
+        placementCount: placements.length,
+      })
+
       placements.forEach((placement) => {
         const { position, width, depth, contentIndex } = placement
-        if (contentIndex < 0 || contentIndex >= refs.length) return
+        if (contentIndex < 0 || contentIndex >= refs.length) {
+          console.warn('[ConfettiRows] Skipping placement with invalid index', {
+            placement,
+            poolSize: refs.length,
+          })
+          return
+        }
+        const targetZ = rowZ + position[2]
+        console.log('[ConfettiRows] Applying placement', {
+          contentIndex,
+          position,
+          width,
+          depth,
+          rowZ,
+          targetZ,
+        })
         const indexedPlacement: [number, number, number, number] = [
           position[0],
           position[1],
@@ -115,9 +147,14 @@ const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
     (row: RowData) => {
       const placements = row.confettiPlacements
       if (!placements?.length) return
+      console.log('[ConfettiRows] hideElementsIfNeeded', {
+        rowIndex: row.rowIndex,
+        placementCount: placements.length,
+      })
       placements.forEach((placement) => {
         const contentIndex = placement.contentIndex
         if (contentIndex == null) return
+        console.log('[ConfettiRows] Hiding placement', { contentIndex, rowIndex: row.rowIndex })
         hideRigidBodyAtIndex(contentIndex)
         resetEmittersForIndex(contentIndex)
       })
@@ -128,16 +165,33 @@ const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
   const moveElements = useCallback(
     (zStep: number) => {
       if (zStep === 0) return
+      let movedCount = 0
+      let sample: { index: number; fromZ: number; toZ: number } | null = null
       isVisibleStates.forEach((isVisible, index) => {
         if (!isVisible) return
         const body = refs[index]
         if (!body?.current) return
         const currentPosition = body.current.translation()
-        translation.current.x = currentPosition.x ?? HIDDEN_POSITION[0]
-        translation.current.y = currentPosition.y ?? HIDDEN_POSITION[1]
-        translation.current.z = (currentPosition.z ?? HIDDEN_POSITION[2]) + zStep
+        const currentZ = currentPosition?.z ?? HIDDEN_POSITION[2]
+        translation.current.x = currentPosition?.x ?? HIDDEN_POSITION[0]
+        translation.current.y = currentPosition?.y ?? HIDDEN_POSITION[1]
+        translation.current.z = currentZ + zStep
         body.current.setTranslation(translation.current, true)
+        movedCount += 1
+        if (sample === null) {
+          sample = { index, fromZ: currentZ, toZ: translation.current.z }
+        }
       })
+
+      moveLogCounter.current += 1
+      const shouldLog = movedCount === 0 || moveLogCounter.current % MOVE_LOG_INTERVAL === 1
+      if (shouldLog) {
+        console.log('[ConfettiRows] moveElements', {
+          zStep,
+          movedCount,
+          sample,
+        })
+      }
     },
     [isVisibleStates, refs, translation],
   )

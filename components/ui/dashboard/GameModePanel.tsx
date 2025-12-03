@@ -25,7 +25,7 @@ const CORE_GAME_MODES: GameModeInfo[] = [
     mode: GameMode.MAIN,
     Icon: Compass,
     label: 'Explore',
-    description: 'Discover every corner of the world.',
+    description: 'Learn the level and discover bonuses to unlock.',
   },
   {
     mode: GameMode.SPEEDRUN,

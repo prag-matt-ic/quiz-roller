@@ -65,11 +65,19 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       set({ stage: Stage.CTA })
     }
   },
-  resetGame: ({ mode, speedRunStage }) => {
+  resetGame: ({ mode }) => {
     get().stopConfirmation()
 
     const isModeChange = get().mode !== mode
     const nextRowsData = isModeChange ? [] : get().rowsData
+    const isSpeedRunMode = mode === GameMode.SPEEDRUN
+    const username = get().username
+
+    const speedRunStage = isSpeedRunMode
+      ? !!username
+        ? 'countdown'
+        : 'username'
+      : RESET_TIME_STATE.speedRunStage
 
     set((s) => {
       return {
@@ -80,7 +88,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         mode,
         rowsData: nextRowsData,
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
-        speedRunStage: speedRunStage ?? RESET_TIME_STATE.speedRunStage,
+        speedRunStage: speedRunStage,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,

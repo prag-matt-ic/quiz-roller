@@ -86,10 +86,9 @@ export const createPlayerSlice =
     const speedTweenTarget = { value: PLAYER_SPEED_BASE }
 
     function increaseSpeed(increment: number) {
-      speedTween?.kill()
       speedDecayTween?.kill()
+      speedTween?.kill()
       const targetValue = Math.min(PLAYER_SPEED_MAX, speedTweenTarget.value + increment)
-      console.warn('[PlayerStore] Increasing speed to', { targetValue, increment })
       speedTween = gsap.to(speedTweenTarget, {
         duration: 0.3,
         ease: 'none',
@@ -111,9 +110,8 @@ export const createPlayerSlice =
     }
 
     function resetSpeed() {
-      speedTween?.kill()
       speedDecayTween?.kill()
-      console.warn('[PlayerStore] Resetting speed to base value', { PLAYER_SPEED_BASE })
+      speedTween?.kill()
       speedTween = gsap.to(speedTweenTarget, {
         duration: 0.3,
         ease: 'power2.out',

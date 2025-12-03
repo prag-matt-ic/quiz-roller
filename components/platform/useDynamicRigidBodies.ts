@@ -1,7 +1,7 @@
 import { RapierRigidBody } from '@react-three/rapier'
 import { type RefObject, createRef, useCallback, useEffect, useRef, useState } from 'react'
 
-import { HIDDEN_POSITION, IndexedPlacement } from '@/utils/tiles'
+import { HIDDEN_POSITION, type IndexedPlacement } from '@/utils/tiles'
 
 const createRigidBodyRefsFromCount = (count: number): RefObject<RapierRigidBody | null>[] =>
   Array.from({ length: count }, () => createRef<RapierRigidBody | null>())
