@@ -85,19 +85,21 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
         <Button
           variant="primary"
           color="light"
+          size="lg"
           aria-label="Start experience"
           disabled={!isReady}
+          startIcon={PlayCircleIcon}
           onClick={() => onStartClick(false)}>
-          <PlayCircleIcon className="size-6" />
           Enter experience
         </Button>
         <Button
           variant="secondary"
           color="light"
+          size="lg"
           aria-label="Start muted"
           onClick={() => onStartClick(true)}
+          startIcon={VolumeOffIcon}
           disabled={!isReady}>
-          <VolumeOffIcon className="size-6" />
           Enter in silence
         </Button>
       </div>

@@ -218,7 +218,11 @@ const Platform: FC = () => {
       if (isPlatformReady || rowsData.length === 0) return
       const isSpeedRunMode = mode === GameMode.SPEEDRUN
 
-      const shouldSkipReadyCheck = (key: ReadyStateKey) => {
+      const shouldSkipReadyCheck = (key: ReadyStateKey): boolean => {
+        if (isSpeedRunMode && key === 'headings') return true
+        if (isSpeedRunMode && key === 'collectibles') return true
+        if (isSpeedRunMode && key === 'infoZones') return true
+
         if (!isSpeedRunMode && key === 'speedRun') return true
         return false
       }
@@ -478,15 +482,11 @@ const Platform: FC = () => {
   useGameFrame((_, delta) => {
     if (!isPlatformReady) return
     if (!tiles.current?.shader) return
-    if (
-      !floatingHeadings.current ||
-      !collectibles.current ||
-      !infoZones.current ||
-      !ringsHandle.current ||
-      !confettiHandle.current
-    ) {
-      return
-    }
+    if (!ringsHandle.current || !confettiHandle.current) return
+
+    if (!isSpeedRunMode && !floatingHeadings.current) return
+    if (!isSpeedRunMode && !collectibles.current) return
+    if (!isSpeedRunMode && !infoZones.current) return
     if (isSpeedRunMode && !speedRunElements.current) return
 
     tiles.current.shader.uScrollZ = currentScrollPosition.current
@@ -519,11 +519,14 @@ const Platform: FC = () => {
 
     if (Math.abs(totalScrollDelta) < EPSILON.SMALL) return
 
+    if (!isSpeedRunMode) {
+      floatingHeadings.current!.moveElements(totalScrollDelta)
+      collectibles.current!.moveElements(totalScrollDelta)
+      infoZones.current!.moveElements(totalScrollDelta)
+    }
+
     ringsHandle.current.moveElements(totalScrollDelta)
-    floatingHeadings.current.moveElements(totalScrollDelta)
-    collectibles.current.moveElements(totalScrollDelta)
-    confettiHandle.current?.moveElements(totalScrollDelta)
-    infoZones.current.moveElements(totalScrollDelta)
+    confettiHandle.current.moveElements(totalScrollDelta)
 
     if (isSpeedRunMode) {
       speedRunElements.current?.moveElements(totalScrollDelta)
@@ -548,11 +551,13 @@ const Platform: FC = () => {
         onReadyChange={readyChangeHandlers.tiles}
       />
 
-      <FloatingHeadings
-        ref={floatingHeadings}
-        key={`floating-headings-${resetPlatformTick}`}
-        onReadyChange={readyChangeHandlers.headings}
-      />
+      {!isSpeedRunMode && (
+        <FloatingHeadings
+          ref={floatingHeadings}
+          key={`floating-headings-${resetPlatformTick}`}
+          onReadyChange={readyChangeHandlers.headings}
+        />
+      )}
 
       <ConfettiRows
         ref={confettiHandle}
@@ -560,17 +565,21 @@ const Platform: FC = () => {
         onReadyChange={readyChangeHandlers.confetti}
       />
 
-      <InfoZones
-        ref={infoZones}
-        key={`info-zones-${resetPlatformTick}`}
-        onReadyChange={readyChangeHandlers.infoZones}
-      />
+      {!isSpeedRunMode && (
+        <InfoZones
+          ref={infoZones}
+          key={`info-zones-${resetPlatformTick}`}
+          onReadyChange={readyChangeHandlers.infoZones}
+        />
+      )}
 
-      <Collectibles
-        ref={collectibles}
-        key={`collectibles-${resetPlatformTick}`}
-        onReadyChange={readyChangeHandlers.collectibles}
-      />
+      {!isSpeedRunMode && (
+        <Collectibles
+          ref={collectibles}
+          key={`collectibles-${resetPlatformTick}`}
+          onReadyChange={readyChangeHandlers.collectibles}
+        />
+      )}
 
       <Rings
         ref={ringsHandle}

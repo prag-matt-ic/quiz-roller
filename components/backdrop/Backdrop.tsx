@@ -90,8 +90,8 @@ const Backdrop: FC = () => {
 
     // Log the optimal aspect ratio for the texture
     // This helps in preparing the texture image with the correct dimensions to avoid stretching
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
         'Backdrop Texture Optimal Aspect Ratio (Width / ArcLength):',
         BACKDROP_WIDTH / totalArcLength,
       )

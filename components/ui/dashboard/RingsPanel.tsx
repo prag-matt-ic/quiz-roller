@@ -32,7 +32,7 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-amber-200/30">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all"
+              className="h-full rounded-full bg-linear-to-r from-amber-500 to-amber-300"
               style={{ width: `${progress}%` }}
             />
           </div>

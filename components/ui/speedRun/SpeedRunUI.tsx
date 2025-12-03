@@ -1,13 +1,15 @@
 'use client'
 import gsap from 'gsap'
-import { ArrowRight, InfoIcon, Play, PlaySquare, RotateCcw, X } from 'lucide-react'
+import { InfoIcon, Play, RotateCcw, X } from 'lucide-react'
 import { type FC, type Ref, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import Button from '@/components/ui/Button'
 import { SpeedRunTimeDisplay } from '@/components/ui/SpeedRunTimeDisplay'
 import { Input } from '@/components/ui/input'
+import { speedRunSubmissionSchema } from '@/model/schema'
 import { GameMode } from '@/stores/types'
 
 const SpeedRunTimer: FC = () => {
@@ -38,29 +40,25 @@ export const SpeedRunControls: FC = () => {
   const resetGame = useGameStore((s) => s.resetGame)
 
   return (
-    <div className="pointer-events-auto flex size-fit items-center justify-center gap-3">
+    <div className="pointer-events-auto flex size-fit items-center justify-center gap-4">
       {showSpeedRunButtons && (
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded bg-amber-700 text-white transition hover:bg-red-500/70"
+        <Button
+          size="sm"
+          title="Cancel"
+          className="aspect-square!"
           onClick={() => {
             resetGame({ mode: GameMode.MAIN })
-          }}
-          title="Cancel">
+          }}>
           <X size={24} strokeWidth={2} />
-        </button>
+        </Button>
       )}
 
       <SpeedRunTimer />
 
       {showSpeedRunButtons && (
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded bg-amber-700 text-white transition hover:bg-amber-400/70"
-          onClick={startSpeedRun}
-          title="Restart">
+        <Button size="sm" onClick={startSpeedRun} title="Restart" className="aspect-square!">
           <RotateCcw size={24} strokeWidth={2} />
-        </button>
+        </Button>
       )}
     </div>
   )
@@ -71,6 +69,9 @@ type SpeedrunOverlayProps = {
   transitionStatus: TransitionStatus
 }
 
+const usernameSchema = speedRunSubmissionSchema.shape.username
+const USERNAME_ERROR_MESSAGE = 'Username must be 6-12 characters long'
+
 // Overlay handles the countdown and name input if needed.
 export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatus }) => {
   const username = useGameStore((s) => s.username)
@@ -79,7 +80,11 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
   const setUsername = useGameStore((s) => s.setUsername)
 
   const [inputValue, setInputValue] = useState(username ?? '')
-  const isValid = inputValue.trim().length > 0
+  const trimmedUsername = inputValue.trim()
+  const usernameValidation = usernameSchema.safeParse(trimmedUsername)
+  const usernameError =
+    trimmedUsername.length > 0 && !usernameValidation.success ? USERNAME_ERROR_MESSAGE : null
+  const isValid = usernameValidation.success
 
   const onCountdownComplete = useGameStore((s) => s.onCountdownComplete)
 
@@ -118,9 +123,8 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
   const usernameInput = useRef<HTMLInputElement>(null)
 
   const handleUsernameSubmit = () => {
-    const value = inputValue.trim()
-    if (!value || value.length === 0) return
-    setUsername(value)
+    if (!usernameValidation.success) return
+    setUsername(usernameValidation.data)
     setSpeedRunStage('countdown')
   }
 
@@ -159,6 +163,7 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
           ref={usernameInput}
           id="username-input"
           className="border-none pr-16"
+          minLength={6}
           maxLength={12}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -170,6 +175,7 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
             }
           }}
         />
+        {!!usernameError && <p className="mt-2 text-sm text-amber-600">{usernameError}</p>}
         <button
           type="button"
           onClick={handleUsernameSubmit}

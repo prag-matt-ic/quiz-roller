@@ -18,15 +18,6 @@ export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
 
 const COLLECTIBLE_DURATION_S = 1.5
 
-const logPlayerStatus = (event: string, payload?: Record<string, unknown>): void => {
-  if (process.env.NODE_ENV === 'production') return
-  if (!!payload) {
-    console.warn(`[PlayerStore] ${event}`, payload)
-    return
-  }
-  console.warn(`[PlayerStore] ${event}`)
-}
-
 export const RESET_PLAYER_STATE = {
   confirmingCollectible: null,
   collectedRings: {},
@@ -152,13 +143,11 @@ export const createPlayerSlice =
           spawnPosition: position,
           hudIndicator: hud ?? s.hudIndicator,
         }))
-        logPlayerStatus('Respawn queued', { position, hud })
       },
       onRespawnComplete: () => {
         set({
           playerStatus: 'safe',
         })
-        logPlayerStatus('Respawn complete')
       },
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
@@ -174,7 +163,6 @@ export const createPlayerSlice =
           collectedRings: {},
           hasCollectedAllRings: false,
         })
-        logPlayerStatus('Player out of bounds')
       },
     }
   }

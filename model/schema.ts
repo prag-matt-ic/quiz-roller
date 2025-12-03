@@ -60,7 +60,7 @@ const databaseDateSchema = isoDateStringSchema.or(
 )
 
 export const speedRunSubmissionSchema = z.object({
-  username: z.string().min(3).max(12),
+  username: z.string().min(6).max(12),
   time: z.number(),
   attempt: z.number().min(1),
   date: isoDateStringSchema,
