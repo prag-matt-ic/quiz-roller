@@ -43,7 +43,7 @@ export const ModeTabs: FC<ModeTabsProps> = ({ className, activeTab, onTabChange 
   return (
     <Panel
       className={twMerge(
-        'flex h-full flex-col gap-3 rounded-xl p-4 md:flex-row lg:rounded-2xl',
+        'flex h-32 flex-col gap-3 rounded-xl p-4 md:flex-row lg:rounded-2xl',
         className,
       )}>
       {MODE_TABS.map(({ id, Icon, label, description }) => {

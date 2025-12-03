@@ -8,15 +8,16 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI from '@/components/ui/CollectiblesUI'
-import RingsUI from '@/components/ui/RingsUI'
 import ProgressBar from '@/components/ui/ProgressBar'
+import RingsUI from '@/components/ui/RingsUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import { GameMode } from '@/stores/types'
 
 import Button from './Button'
-import { LeaderboardOverlay } from './speedRun/LeaderboardOverlay'
-import { SpeedRunControls, SpeedRunOverlay } from './speedRun/SpeedRunUI'
+import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
+import { SpeedRunStartOverlay } from './speedRun/SpeedRunStartOverlay'
+import { SpeedRunControls } from './speedRun/SpeedRunUI'
 
 gsap.registerPlugin(useGSAP)
 
@@ -28,18 +29,13 @@ const UI: FC<Props> = ({ isMobile }) => {
   const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
-  const speedRunStatus = useGameStore((s) => s.speedRunStage)
+  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
+  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
 
   const infoContainer = useRef<HTMLDivElement>(null)
   const dashboardRef = useRef<HTMLDivElement>(null)
   const speedRunOverlayRef = useRef<HTMLDivElement>(null)
   const leaderboardOverlay = useRef<HTMLDivElement>(null)
-
-  const showSpeedRunOverlay =
-    isSpeedRunMode && ['countdown', 'username'].includes(speedRunStatus)
-
-  const showLeaderboardOverlay =
-    isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStatus)
 
   return (
     <>
@@ -106,21 +102,23 @@ const UI: FC<Props> = ({ isMobile }) => {
       </Transition>
 
       <Transition
-        in={showSpeedRunOverlay}
+        in={isShowingSpeedRunStartOverlay}
         timeout={{ enter: 0, exit: 240 }}
         mountOnEnter={true}
         unmountOnExit={true}
         nodeRef={speedRunOverlayRef}>
-        {(status) => <SpeedRunOverlay ref={speedRunOverlayRef} transitionStatus={status} />}
+        {(status) => (
+          <SpeedRunStartOverlay ref={speedRunOverlayRef} transitionStatus={status} />
+        )}
       </Transition>
 
       <Transition
-        in={showLeaderboardOverlay}
+        in={isShowingSpeedRunEndOverlay}
         timeout={{ enter: 0, exit: 300 }}
         mountOnEnter={true}
         unmountOnExit={true}
         nodeRef={leaderboardOverlay}>
-        {(status) => <LeaderboardOverlay ref={leaderboardOverlay} transitionStatus={status} />}
+        {(status) => <SpeedrunEndOverlay ref={leaderboardOverlay} transitionStatus={status} />}
       </Transition>
     </>
   )

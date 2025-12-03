@@ -16,7 +16,7 @@ type Props = {
 
 // Fullscreen overlay version of the table shown at the end of a speedrun in the UI.
 
-export const LeaderboardOverlay: FC<Props> = ({ ref, transitionStatus }) => {
+export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const resetGame = useGameStore((s) => s.resetGame)
   const tableData = useLeaderboardTableData({

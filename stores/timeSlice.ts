@@ -28,7 +28,15 @@ export const createTimeSlice =
       set({ speedRunTimeCS: centiSeconds })
     },
     setSpeedRunStage: (stage: SpeedRunStage) => {
-      set({ speedRunStage: stage })
+      const { mode } = get()
+      const isSpeedRunMode = mode === GameMode.SPEEDRUN
+      set({
+        speedRunStage: stage,
+        isShowingSpeedRunStartOverlay:
+          isSpeedRunMode && ['countdown', 'username'].includes(stage),
+        isShowingSpeedRunEndOverlay:
+          isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+      })
     },
     startSpeedRun: () => {
       const { username, resetGame } = get()
@@ -38,15 +46,31 @@ export const createTimeSlice =
       })
     },
     onCountdownComplete: () => {
+      const { mode } = get()
+      const isSpeedRunMode = mode === GameMode.SPEEDRUN
+      const stage = 'running'
       set({
-        speedRunStage: 'running',
+        speedRunStage: stage,
+        isShowingSpeedRunStartOverlay:
+          isSpeedRunMode && ['countdown', 'username'].includes(stage),
+        isShowingSpeedRunEndOverlay:
+          isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
       })
     },
     finishSpeedRun: async () => {
-      const { speedRunTimeCS, username, inputType } = get()
+      const { speedRunTimeCS, username, inputType, mode } = get()
       if (!username) return
 
-      set({ speedRunStage: 'submitting' })
+      const isSpeedRunMode = mode === GameMode.SPEEDRUN
+      const submittingStage = 'submitting'
+
+      set({
+        speedRunStage: submittingStage,
+        isShowingSpeedRunStartOverlay:
+          isSpeedRunMode && ['countdown', 'username'].includes(submittingStage),
+        isShowingSpeedRunEndOverlay:
+          isSpeedRunMode && ['submitting', 'leaderboard'].includes(submittingStage),
+      })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
 
@@ -61,14 +85,32 @@ export const createTimeSlice =
       try {
         const result = await insertSpeedRun(submission)
         if (!result) throw new Error('Inserting speedrun returned null')
-        set((state) => ({
-          completedSpeedRuns: [...state.completedSpeedRuns, result],
-          speedRunStage: 'leaderboard',
-        }))
+        set((state) => {
+          const stage = 'leaderboard'
+          const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
+          return {
+            completedSpeedRuns: [...state.completedSpeedRuns, result],
+            speedRunStage: stage,
+            isShowingSpeedRunStartOverlay:
+              isSpeedRunMode && ['countdown', 'username'].includes(stage),
+            isShowingSpeedRunEndOverlay:
+              isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+          }
+        })
       } catch (error) {
         // TODO: handle showing the error with some UI - maybe a toast?
         console.error('Error inserting speedrun:', error)
-        set({ speedRunStage: 'leaderboard' })
+        set((state) => {
+          const stage = 'leaderboard'
+          const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
+          return {
+            speedRunStage: stage,
+            isShowingSpeedRunStartOverlay:
+              isSpeedRunMode && ['countdown', 'username'].includes(stage),
+            isShowingSpeedRunEndOverlay:
+              isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+          }
+        })
       }
     },
   })

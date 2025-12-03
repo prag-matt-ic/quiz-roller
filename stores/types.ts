@@ -131,6 +131,8 @@ export type GameSlice = {
   setIsShowingLoadingOverlay: (isVisible: boolean) => void
   isShowingDashboard: boolean
   setIsShowingDashboard: (isShowingDashboard: boolean) => void
+  isShowingSpeedRunEndOverlay: boolean
+  isShowingSpeedRunStartOverlay: boolean
 
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void

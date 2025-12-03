@@ -1,6 +1,7 @@
 'use client'
+import { useQuery } from '@tanstack/react-query'
 import { PlayIcon } from 'lucide-react'
-import { type FC, ReactNode, useEffect, useMemo, useState } from 'react'
+import { type FC, type ReactNode, useMemo } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 import { RunWithPosition, getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
@@ -16,10 +17,6 @@ export function useLeaderboardTableData({
   fetchPlayerRecentPosition: boolean
   showCTARow: boolean
 }): TableProps {
-  const [isLoading, setIsLoading] = useState(true)
-  const [leaderboardRuns, setLeaderboardRuns] = useState<SpeedRunDatabase[]>([])
-  const [userRecentRun, setUserRecentRun] = useState<RunWithPosition | null>(null)
-
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
 
   const userSpeedRunIds = useMemo(
@@ -28,46 +25,34 @@ export function useLeaderboardTableData({
   )
 
   const latestRunId = useMemo(
-    () => completedSpeedruns[completedSpeedruns.length - 1]?.id,
+    () => completedSpeedruns[completedSpeedruns.length - 1]?.id ?? null,
     [completedSpeedruns],
   )
 
-  useEffect(() => {
-    let isMounted = true
+  const { data: leaderboardRuns = [], isPending: isLeaderboardPending } = useQuery({
+    queryKey: ['speedrun-leaderboard', count, latestRunId],
+    queryFn: () => getSpeedrunData(count),
+    staleTime: 30_000,
+  })
 
-    const fetchData = async () => {
-      setIsLoading(true)
+  const latestRunIsRanked =
+    typeof latestRunId === 'number' && leaderboardRuns.some((run) => run.id === latestRunId)
 
-      const leaderboardRuns = await getSpeedrunData(count)
-      if (!isMounted) return
+  const shouldFetchRecentRun = Boolean(
+    fetchPlayerRecentPosition && latestRunId && !isLeaderboardPending && !latestRunIsRanked,
+  )
 
-      const isOnLeaderboard = leaderboardRuns.some((speedrun) => speedrun.id === latestRunId)
-
-      if (!isOnLeaderboard && !!latestRunId && fetchPlayerRecentPosition) {
-        const recentRunPosition = await getSpeedrunPosition(latestRunId)
-        if (!!recentRunPosition && isMounted) {
-          console.log('[useLeaderboardTableData] fetched player recent run:', recentRunPosition)
-          setUserRecentRun(recentRunPosition)
-        }
-      }
-
-      if (isMounted) {
-        setLeaderboardRuns(leaderboardRuns)
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-
-    return () => {
-      isMounted = false
-    }
-  }, [count, latestRunId, fetchPlayerRecentPosition])
+  const { data: userRecentRunData } = useQuery({
+    queryKey: ['speedrun-recent-run', latestRunId],
+    queryFn: () => getSpeedrunPosition(latestRunId as number),
+    enabled: shouldFetchRecentRun,
+    staleTime: 60_000,
+  })
 
   return {
     count,
-    isLoading,
-    userRecentRun,
+    isLoading: isLeaderboardPending,
+    userRecentRun: shouldFetchRecentRun ? (userRecentRunData ?? null) : null,
     leaderboardRuns,
     userSpeedRunIds,
     showCTA: showCTARow,

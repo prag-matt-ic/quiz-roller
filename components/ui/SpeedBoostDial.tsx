@@ -7,14 +7,16 @@ import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import { PLAYER_SPEED_BASE, PLAYER_SPEED_MAX } from '@/stores/playerSlice'
 
 type SpeedBoostDialProps = {
+  fixedProgress?: number
   className?: string
 }
 
-export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ className }) => {
+export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ fixedProgress, className }) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const pathLength = useRef(0)
   const targetProgress = useRef(0)
   const pendingFrame = useRef<number | null>(null)
+  const hasFixedProgress = fixedProgress !== undefined
 
   const applyDraw = useCallback(() => {
     pendingFrame.current = null
@@ -33,12 +35,13 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ className }) => {
 
   const onPlayerSpeedChange = useCallback(
     (speed: number) => {
+      if (hasFixedProgress) return
       const speedBoost = speed - PLAYER_SPEED_BASE
       const maxBoost = PLAYER_SPEED_MAX - PLAYER_SPEED_BASE
       targetProgress.current = clamp01(maxBoost > 0 ? speedBoost / maxBoost : 0)
       scheduleDraw()
     },
-    [scheduleDraw],
+    [hasFixedProgress, scheduleDraw],
   )
 
   useEffect(() => {
@@ -56,6 +59,12 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ className }) => {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (fixedProgress === undefined) return
+    targetProgress.current = clamp01(fixedProgress)
+    applyDraw()
+  }, [applyDraw, fixedProgress])
 
   usePlayerSpeed(onPlayerSpeedChange)
 

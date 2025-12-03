@@ -30,7 +30,7 @@ export const LeaderboardPanel: FC<Props> = ({ className, count = 3 }) => {
     <Panel
       className={twMerge('flex h-full flex-col gap-3 p-4', className)}
       attractorClassName={attractorClassName}>
-      <PanelHeader icon={Trophy} label="Speedroll Leaderboard" />
+      <PanelHeader icon={Trophy} label="Leaderboard" />
       <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} className="p-3" />
     </Panel>
   )

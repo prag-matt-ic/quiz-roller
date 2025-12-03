@@ -21,8 +21,8 @@ export const SpeedPanel: FC<RingsSpeedPanelProps> = ({ className }) => {
 
       <div className="flex items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3">
         <div className="relative flex size-20 items-center justify-center">
-          <SpeedBoostDial className="size-20" />
-          <span className="pointer-events-none absolute text-[10px] tracking-[2px] text-white/60 uppercase">
+          <SpeedBoostDial className="size-20" fixedProgress={0.2} />
+          <span className="pointer-events-none absolute text-[10px] tracking-[2px] text-white/70 uppercase">
             Boost
           </span>
         </div>

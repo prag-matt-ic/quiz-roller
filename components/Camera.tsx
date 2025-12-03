@@ -59,6 +59,15 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
   const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
+  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
+  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
+  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
+
+  const isOverlayOpen =
+    isShowingDashboard ||
+    isShowingSpeedRunEndOverlay ||
+    isShowingSpeedRunStartOverlay ||
+    isShowingLoadingOverlay
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE
@@ -97,8 +106,8 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     // Adjust the camera based on player input
     const positionZOffset = input.current.down > 0 ? 5 : 0
-    const dashboardZOffset = isShowingDashboard ? 3 : 0
-    const dashboardYOffset = isShowingDashboard ? 4 : 0
+    const dashboardZOffset = isOverlayOpen ? 3 : 0
+    const dashboardYOffset = isOverlayOpen ? 4 : 0
 
     const lookAtX = lookAt[0] + input.current.right - input.current.left
     const lookAtZ = lookAt[2] + input.current.down - input.current.up

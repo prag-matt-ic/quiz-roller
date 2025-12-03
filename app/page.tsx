@@ -3,6 +3,7 @@ import { type FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { GameProvider } from '@/components/GameProvider'
+import { QueryProvider } from '@/components/QueryProvider'
 import { SoundProvider } from '@/components/SoundProvider'
 import LoadingOverlay from '@/components/ui/LoadingOverlay'
 import PWAInstall from '@/components/ui/PWAInstall'
@@ -26,11 +27,13 @@ export default async function Home(props: PageProps) {
       <main
         className={twJoin('w-full overflow-hidden select-none', isMobile ? 'h-dvh' : 'h-vh')}>
         <SoundProvider>
-          <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
-            <LoadingOverlay isMobile={isMobile} />
-            <Main isMobile={isMobile} isDebug={isDebug} />
-            <PWAInstall isMobile={isMobile} />
-          </GameProvider>
+          <QueryProvider>
+            <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
+              <LoadingOverlay isMobile={isMobile} />
+              <Main isMobile={isMobile} isDebug={isDebug} />
+              <PWAInstall isMobile={isMobile} />
+            </GameProvider>
+          </QueryProvider>
         </SoundProvider>
       </main>
       {/* <button

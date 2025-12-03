@@ -12,6 +12,8 @@ export const RESET_GAME_STATE = {
   cameraLookAtPosition: null,
   isPlatformReady: false,
   isShowingDashboard: false,
+  isShowingSpeedRunEndOverlay: false,
+  isShowingSpeedRunStartOverlay: false,
   rowsData: [] as RowData[],
 }
 
@@ -79,6 +81,11 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         : 'username'
       : RESET_TIME_STATE.speedRunStage
 
+    const isShowingSpeedRunStartOverlay =
+      isSpeedRunMode && ['countdown', 'username'].includes(speedRunStage)
+    const isShowingSpeedRunEndOverlay =
+      isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStage)
+
     set((s) => {
       return {
         ...RESET_GAME_STATE,
@@ -89,6 +96,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         rowsData: nextRowsData,
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         speedRunStage: speedRunStage,
+        isShowingSpeedRunStartOverlay,
+        isShowingSpeedRunEndOverlay,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,
