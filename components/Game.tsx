@@ -26,6 +26,11 @@ type Props = {
   isMobile: boolean
 }
 
+// TODO: pre-process the bitmap images locally as part of development - preparing typescript for the platform layouts.
+// This will speed up initial load times as we won't need to do it in the browser.
+// We can also run it with a version number so we can keep track of when the platform layouts change.
+// This should be a local script that inserts into a resources typescript file on command.
+
 const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const maxDPR = usePerformanceStore((s) => s.maxDPR)
   const simFps = usePerformanceStore((s) => s.simFps)
