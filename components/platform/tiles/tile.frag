@@ -7,7 +7,7 @@ precision mediump float;
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
 uniform sampler2D uDetailNoiseMap;
-uniform highp vec2 uPlayerWorldPos;
+uniform highp vec3 uPlayerWorldPos;
 
 varying mediump float vAlpha;
 varying highp vec3 vWorldPos;
@@ -26,6 +26,7 @@ const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.8;
 const float SHADOW_STRENGTH = 0.6;
+const float SHADOW_MAX_HEIGHT = 1.0;
 
 void main() {
   // Early discard for fully transparent tiles
@@ -61,9 +62,10 @@ void main() {
   background = mix(background, proximityColour, proximityAmount);
 
   // Apply player contact shadow
-  float distToPlayer = distance(vWorldPos.xz, uPlayerWorldPos);
+  float distToPlayer = distance(vWorldPos.xz, uPlayerWorldPos.xz);
   float shadow = 1.0 - smoothstep(0.0, SHADOW_RADIUS, distToPlayer);
   shadow = pow(shadow, 2.5);
+  shadow *= step(uPlayerWorldPos.y, SHADOW_MAX_HEIGHT);
   background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
 
   // Darken non-upward-facing surfaces

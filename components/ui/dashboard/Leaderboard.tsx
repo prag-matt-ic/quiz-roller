@@ -6,37 +6,24 @@ import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
-import Surface from '@/components/ui/surface/Surface'
+import Panel from '@/components/ui/dashboard/panel/Panel'
+import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
 import {
   LeaderboardTable,
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 
-import { PANEL_BASE_CLASSES, PANEL_VARIANTS } from './panelStyles'
-
 type LeaderboardProps = {
   className?: string
 }
 
-export const Leaderboard: FC<LeaderboardProps> = ({ className }) => {
+export const LeaderboardPanel: FC<LeaderboardProps> = ({ className }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const tableData = useLeaderboardTableData(3, true)
 
   return (
-    <Surface
-      className={twMerge(
-        PANEL_BASE_CLASSES,
-        PANEL_VARIANTS.dark,
-        'flex h-full flex-col',
-        className,
-      )}>
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-white/50" />
-          <span className="text-xs font-medium tracking-widest text-white/50 uppercase">
-            Speedroll Leaderboard
-          </span>
-        </div>
+    <Panel className={twMerge('flex h-full flex-col p-4', className)}>
+      <PanelHeader icon={Trophy} label="Speedroll Leaderboard" className="mb-3">
         <Button
           color="light"
           variant="secondary"
@@ -45,11 +32,11 @@ export const Leaderboard: FC<LeaderboardProps> = ({ className }) => {
           <Timer className="h-3.5 w-3.5" />
           Set a time
         </Button>
-      </div>
+      </PanelHeader>
 
       <div className="flex flex-1 items-start justify-center overflow-hidden rounded-xl bg-black/30 p-3">
         <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} />
       </div>
-    </Surface>
+    </Panel>
   )
 }

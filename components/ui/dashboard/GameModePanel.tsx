@@ -1,16 +1,15 @@
 'use client'
 
+import { Compass, Gamepad2, Timer } from 'lucide-react'
 import { type FC } from 'react'
-import { Compass, Timer } from 'lucide-react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import Panel from '@/components/ui/dashboard/panel/Panel'
+import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
 import { GameMode } from '@/stores/types'
-import Surface from '@/components/ui/surface/Surface'
 
-import { PANEL_BASE_CLASSES, PANEL_VARIANTS } from './panelStyles'
-
-type GameModePanelProps = {
+type Props = {
   className?: string
   onClose?: () => void
 }
@@ -34,7 +33,7 @@ const GAME_MODES = [
   },
 ] as const
 
-export const GameModePanel: FC<GameModePanelProps> = ({ className, onClose }) => {
+export const GameModePanel: FC<Props> = ({ className, onClose }) => {
   const mode = useGameStore((s) => s.mode)
   const resetGame = useGameStore((s) => s.resetGame)
 
@@ -46,13 +45,8 @@ export const GameModePanel: FC<GameModePanelProps> = ({ className, onClose }) =>
   }
 
   return (
-    <Surface
-      className={twMerge(PANEL_BASE_CLASSES, PANEL_VARIANTS.light, 'h-full', className)}>
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-widest text-white/50">
-          Game Mode
-        </span>
-      </div>
+    <Panel className={twMerge('h-full space-y-4 p-4', className)}>
+      <PanelHeader icon={Gamepad2} label="Mode" />
 
       <div className="flex h-[calc(100%-2rem)] flex-col gap-3">
         {GAME_MODES.map(({ id, icon: Icon, label, desc, details }) => {
@@ -78,6 +72,6 @@ export const GameModePanel: FC<GameModePanelProps> = ({ className, onClose }) =>
           )
         })}
       </div>
-    </Surface>
+    </Panel>
   )
 }

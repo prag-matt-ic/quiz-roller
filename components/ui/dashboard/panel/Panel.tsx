@@ -11,16 +11,16 @@ import { type PointerPosition, usePointerPosition } from '@/components/ui/Pointe
 
 type Strength = 1 | 2 | 3
 
-export type SurfaceProps = PropsWithChildren<{
+export type PanelProps = PropsWithChildren<{
   strength?: Strength
   className?: string
   enableAttractor?: boolean
 }>
 
 const CONTAINER_STRENGTH_CLASSES: Record<Strength, string> = {
-  1: 'border-white/10 bg-black/10',
-  2: 'border-white/15 bg-black/30',
-  3: 'border-white/20 bg-black/50',
+  1: 'border-black/10 bg-black/3',
+  2: 'border-black/20 bg-black/10',
+  3: 'border-black/40 bg-black/30',
 }
 
 const ATTRACTOR_CLASS = 'bg-white/5 bg-linear-70 from-white/10 to-transparent'
@@ -35,7 +35,7 @@ const ATTRACTOR_CLASS = 'bg-white/5 bg-linear-70 from-white/10 to-transparent'
 //     'border-white/15 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10',
 // }
 
-const Surface: FC<SurfaceProps> = ({
+const Panel: FC<PanelProps> = ({
   strength = 2,
   className,
   children,
@@ -78,7 +78,7 @@ const Surface: FC<SurfaceProps> = ({
   )
 }
 
-export default Surface
+export default Panel
 
 const ACTIVE_PROXIMITY = 128
 const INACTIVE_PROXIMITY = 160

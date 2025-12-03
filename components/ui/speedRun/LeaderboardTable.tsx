@@ -180,16 +180,13 @@ const LeaderboardRow: FC<{
         </div>
       )}
       <h4
-        className={twJoin(
-          'flex items-center text-left',
-          isTopThree ? 'text-lg' : 'text-base',
-        )}>
+        className={twJoin('flex items-center text-left', isTopThree ? 'text-base' : 'text-sm')}>
         {entry.username}
       </h4>
-      <div className="flex items-center justify-center text-center font-mono text-xl tabular-nums">
+      <div className="flex items-center justify-center text-center font-mono text-base tabular-nums">
         {entry.time.toFixed(2)}s
       </div>
-      <div className="flex items-center justify-center text-center text-2xl font-bold">
+      <div className="flex items-center justify-center text-center text-xl font-bold">
         {entry.flag ?? '?'}
       </div>
     </div>
@@ -204,14 +201,14 @@ const LeaderboardCallToActionRow: FC<{
     <div
       className={twMerge(
         ROW_CONTAINER_CLASSES,
-        'h-11 bg-leaderboard/10 text-leaderboard',
+        'bg-leaderboard/10 text-leaderboard h-11',
         className,
       )}>
       <div className="flex w-full items-center justify-center pl-1 text-center font-semibold">
         {PLACEHOLDER_POSITION}
       </div>
       <h4 className="text-base font-semibold">Your run</h4>
-      <div className="flex items-center justify-center text-center font-mono text-xl tabular-nums text-white/70">
+      <div className="flex items-center justify-center text-center font-mono text-xl text-white/70 tabular-nums">
         {PLACEHOLDER_TIME}
       </div>
       <div className="flex items-center justify-center">

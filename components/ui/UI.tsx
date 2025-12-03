@@ -1,7 +1,7 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { MenuIcon } from 'lucide-react'
+import { LayoutDashboardIcon } from 'lucide-react'
 import { type FC, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -76,10 +76,10 @@ const UI: FC<Props> = ({ isMobile }) => {
         {/* Top Right Menu toggle */}
         <button
           onClick={() => setIsShowingDashboard(true)}
-          className="pointer-events-auto place-self-end self-start p-2.5 text-white lg:p-4">
-          <MenuIcon
-            strokeWidth={2.5}
-            className="pointer-events-auto size-6 text-white lg:size-8"
+          className="group pointer-events-auto place-self-end self-start p-2.5 text-white lg:p-4">
+          <LayoutDashboardIcon
+            strokeWidth={1.5}
+            className="pointer-events-auto size-6 transition-transform duration-200 group-hover:scale-105 lg:size-8"
           />
         </button>
       </div>

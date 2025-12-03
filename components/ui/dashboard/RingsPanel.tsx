@@ -1,13 +1,12 @@
 'use client'
 
-import { type FC, useMemo } from 'react'
 import { Circle } from 'lucide-react'
+import { type FC, useMemo } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Surface from '@/components/ui/surface/Surface'
-
-import { PANEL_BASE_CLASSES, PANEL_VARIANTS } from './panelStyles'
+import Panel from '@/components/ui/dashboard/panel/Panel'
+import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
 
 type RingsPanelProps = {
   className?: string
@@ -17,23 +16,14 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
   const collectedRings = useGameStore((s) => s.collectedRings)
   const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
 
-  const collectedRingCount = useMemo(
-    () => Object.keys(collectedRings).length,
-    [collectedRings],
-  )
+  const collectedRingCount = useMemo(() => Object.keys(collectedRings).length, [collectedRings])
 
   const progress = totalRingsCount > 0 ? (collectedRingCount / totalRingsCount) * 100 : 0
 
   return (
-    <Surface
-      className={twMerge(PANEL_BASE_CLASSES, PANEL_VARIANTS.dark, className)}>
+    <Panel className={twMerge('h-full p-4', className)}>
       <div className="flex h-full flex-col justify-between">
-        <div className="flex items-center gap-2">
-          <Circle className="size-4 text-amber-400" />
-          <span className="text-xs font-medium uppercase tracking-widest text-white/50">
-            Rings
-          </span>
-        </div>
+        <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
 
         <div>
           <div className="mb-2 text-3xl font-bold text-white">
@@ -48,6 +38,6 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
           </div>
         </div>
       </div>
-    </Surface>
+    </Panel>
   )
 }

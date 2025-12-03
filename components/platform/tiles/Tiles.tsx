@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector2 } from 'three'
+import { type InstancedBufferAttribute, RepeatWrapping, Texture, Vector3 } from 'three'
 
 import tileDetailNoise from '@/assets/textures/platform/tile-noise.webp'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
@@ -37,10 +37,11 @@ import fragmentShader from './tile.frag'
 import vertexShader from './tile.vert'
 
 const INSTANCE_COUNT = COLUMNS * ROWS_RENDERED
+const PLAYER_Y_LOG_INTERVAL = 0.2
 
 // Shader material for proximity-driven tile visibility and coloring
 type TileShaderUniforms = {
-  uPlayerWorldPos: Vector2
+  uPlayerWorldPos: Vector3
   uScrollZ: number
   uAddDetailNoise: number
   uDetailNoiseMap: Texture | null
@@ -51,7 +52,11 @@ type TileShaderUniforms = {
 }
 
 const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
-  uPlayerWorldPos: new Vector2(PLAYER_INITIAL_POSITION[0], PLAYER_INITIAL_POSITION[2]),
+  uPlayerWorldPos: new Vector3(
+    PLAYER_INITIAL_POSITION[0],
+    PLAYER_INITIAL_POSITION[1],
+    PLAYER_INITIAL_POSITION[2],
+  ),
   uScrollZ: 0,
   uAddDetailNoise: 1,
   uDetailNoiseMap: null,
@@ -102,6 +107,8 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
   const highlightedAttribute = useRef<InstancedBufferAttribute>(null)
 
   const tileShader = useRef<typeof TileShaderMaterial & TileShaderUniforms>(null)
+  const playerYLogTimer = useRef(0)
+  const lastLoggedPlayerY = useRef<number | null>(null)
 
   useImperativeHandle(ref, () => {
     return {
@@ -132,9 +139,19 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
 
   const { playerPosition } = usePlayerPosition()
 
-  useGameFrame(() => {
+  useGameFrame((_, deltaTime) => {
     if (!tileShader.current) return
-    tileShader.current.uPlayerWorldPos.set(playerPosition.current[0], playerPosition.current[2])
+    const playerX = playerPosition.current[0]
+    const playerY = playerPosition.current[1]
+    const playerZ = playerPosition.current[2]
+    tileShader.current.uPlayerWorldPos.set(playerX, playerY, playerZ)
+
+    playerYLogTimer.current += deltaTime
+    if (playerYLogTimer.current >= PLAYER_Y_LOG_INTERVAL && lastLoggedPlayerY.current !== playerY) {
+      lastLoggedPlayerY.current = playerY
+      playerYLogTimer.current = 0
+      console.log('[Tiles] playerY', playerY)
+    }
   })
 
   useEffect(() => {

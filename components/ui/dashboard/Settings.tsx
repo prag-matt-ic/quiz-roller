@@ -1,23 +1,30 @@
 'use client'
 
+import {
+  ArrowLeft,
+  ArrowRight,
+  Joystick,
+  Keyboard,
+  Settings2,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import { type FC } from 'react'
-import { ArrowLeft, ArrowRight, Joystick, Keyboard, Settings2, Volume2, VolumeX } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
 import { useSoundStore } from '@/components/SoundProvider'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
-import Surface from '@/components/ui/surface/Surface'
+import Panel from '@/components/ui/dashboard/panel/Panel'
+import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
 import { InputType } from '@/stores/types'
 
-import { PANEL_BASE_CLASSES, PANEL_VARIANTS } from './panelStyles'
-
-type SettingsProps = {
+type Props = {
   className?: string
 }
 
-export const Settings: FC<SettingsProps> = ({ className }) => {
+export const SettingsPanel: FC<Props> = ({ className }) => {
   const inputType = useGameStore((s) => s.inputType)
   const setInputType = useGameStore((s) => s.setInputType)
   const joystickPosition = useGameStore((s) => s.joystickPosition)
@@ -30,15 +37,9 @@ export const Settings: FC<SettingsProps> = ({ className }) => {
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
   return (
-    <Surface
-      className={twMerge(PANEL_BASE_CLASSES, PANEL_VARIANTS.dark, className)}>
+    <Panel className={twMerge('h-full p-4', className)} strength={1}>
       <div className="flex h-full flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Settings2 className="size-4 text-white/50" />
-          <span className="text-xs font-medium uppercase tracking-widest text-white/50">
-            Settings
-          </span>
-        </div>
+        <PanelHeader icon={Settings2} label="Settings" />
 
         <div className="flex flex-col gap-4">
           {/* Audio */}
@@ -58,27 +59,27 @@ export const Settings: FC<SettingsProps> = ({ className }) => {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-white/70">Input</span>
-              <ButtonGroup
-                value={inputType}
-                onChange={setInputType}
-                items={[
-                  { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
-                  { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
-                ]}
-              />
-            </div>
-            {inputType === InputType.JOYSTICK && (
-              <div className="flex justify-end">
+
+              <div className="flex gap-2">
+                <ButtonGroup
+                  value={inputType}
+                  onChange={setInputType}
+                  items={[
+                    { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
+                    { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
+                  ]}
+                />
                 <ButtonGroup
                   value={joystickPosition}
                   onChange={setJoystickPosition}
+                  disabled={inputType !== InputType.JOYSTICK}
                   items={[
-                    { label: 'Left Handed', value: 'left', Icon: ArrowLeft },
-                    { label: 'Right Handed', value: 'right', Icon: ArrowRight },
+                    { label: null, value: 'left', Icon: ArrowLeft },
+                    { label: null, value: 'right', Icon: ArrowRight },
                   ]}
                 />
               </div>
-            )}
+            </div>
           </div>
 
           {/* Quality */}
@@ -96,6 +97,6 @@ export const Settings: FC<SettingsProps> = ({ className }) => {
           </div>
         </div>
       </div>
-    </Surface>
+    </Panel>
   )
 }

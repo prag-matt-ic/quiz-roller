@@ -7,12 +7,12 @@ import { twJoin } from 'tailwind-merge'
 
 import { PointerProvider } from '../PointerProvider'
 import { CollectiblesPanel } from './CollectiblesPanel'
+import { ContactPanel } from './ContactPanel'
 import { GameModePanel } from './GameModePanel'
-import { Leaderboard } from './Leaderboard'
-import { PlayerCard } from './PlayerCard'
-import { QuickActions } from './QuickActions'
+import { LeaderboardPanel } from './Leaderboard'
+import { PlayerPanel } from './PlayerCard'
 import { RingsPanel } from './RingsPanel'
-import { Settings } from './Settings'
+import { SettingsPanel } from './Settings'
 
 type DashboardProps = {
   ref: RefObject<HTMLElement | null>
@@ -42,11 +42,9 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6">
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="font-mono text-5xl font-black tracking-tight text-white md:text-6xl">
-                Speedroller
-              </h1>
-            </div>
+            <h1 className="font-mono text-5xl font-black tracking-tight text-white md:text-6xl">
+              Speedroller
+            </h1>
             <button
               type="button"
               onClick={onClose}
@@ -57,12 +55,12 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus,
 
           <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             <GameModePanel className="col-span-2 row-span-2" onClose={onClose} />
-            <PlayerCard className="col-span-2 row-span-1" />
-            <Leaderboard className="col-span-2 row-span-1" />
-            <Settings className="col-span-2 row-span-2" />
+            <PlayerPanel className="col-span-2 row-span-1" />
+            <LeaderboardPanel className="col-span-2 row-span-1" />
+            <SettingsPanel className="col-span-2 row-span-2" />
             <RingsPanel className="col-span-1 row-span-1" />
             <CollectiblesPanel className="col-span-1 row-span-1" />
-            <QuickActions className="col-span-1 row-span-1" />
+            <ContactPanel className="col-span-1 row-span-1" />
           </div>
         </div>
       </aside>

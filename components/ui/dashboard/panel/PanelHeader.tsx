@@ -1,0 +1,29 @@
+import { type LucideIcon } from 'lucide-react'
+import { type FC, type ReactNode } from 'react'
+import { twMerge } from 'tailwind-merge'
+
+type PanelHeaderProps = {
+  icon: LucideIcon
+  iconClassName?: string
+  label: string
+  children?: ReactNode
+  className?: string
+}
+
+export const PanelHeader: FC<PanelHeaderProps> = ({
+  icon: Icon,
+  iconClassName,
+  label,
+  children,
+  className,
+}) => {
+  return (
+    <div className={twMerge('flex w-full items-center gap-2', className)}>
+      <Icon className={twMerge('size-4 text-white/50', iconClassName)} />
+      <span className="text-xs font-medium tracking-widest text-white/50 uppercase">
+        {label}
+      </span>
+      {children && <span className="ml-auto">{children}</span>}
+    </div>
+  )
+}
