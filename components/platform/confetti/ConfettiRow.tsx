@@ -119,7 +119,7 @@ const ConfettiRow: FC<Props> = ({
         ref={rightEmitterRef}
         position={rightEmitterPosition}
         isVisible={isVisible}
-        seedOffset={index * 2 + 1}
+        seedOffset={index * 5 + 1}
         palette={palette}
       />
     </RigidBody>

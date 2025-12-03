@@ -28,8 +28,12 @@ const INITIAL_POINTS_UNIFORMS: PointsShaderUniforms = {
   uBurstDuration: 1.8,
 }
 
-const PointsShader = shaderMaterial(INITIAL_POINTS_UNIFORMS, vertexShader, fragmentShader)
-const PointsShaderMaterial = extend(PointsShader)
+const ConfettiPointsShader = shaderMaterial(
+  INITIAL_POINTS_UNIFORMS,
+  vertexShader,
+  fragmentShader,
+)
+const ConfettiPointsShaderMaterial = extend(ConfettiPointsShader)
 
 export type ConfettiParticleEmitterHandle = {
   burst: () => void
@@ -67,9 +71,9 @@ const tmpColor = new Color()
 const CONFETTI_GRAVITY = -6
 const BURST_DURATION_SECONDS = 1.6
 const MIN_DRIFT_SPEED = 0.45
-const MAX_DRIFT_SPEED = 1.5
+const MAX_DRIFT_SPEED = 2.0
 const MIN_LAUNCH_SPEED = 5.0
-const MAX_LAUNCH_SPEED = 8.5
+const MAX_LAUNCH_SPEED = 10.0
 
 const createRandomSeeds = (count: number, offset: number): Float32Array => {
   const values = new Float32Array(count)
@@ -130,9 +134,9 @@ const ConfettiParticleEmitter = forwardRef<ConfettiParticleEmitterHandle, Props>
     const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
     const dpr = useThree((s) => s.viewport.dpr)
 
-    const materialRef = useRef<(typeof PointsShaderMaterial & PointsShaderUniforms) | null>(
-      null,
-    )
+    const materialRef = useRef<
+      (typeof ConfettiPointsShaderMaterial & PointsShaderUniforms) | null
+    >(null)
 
     const progress = useRef({ value: 0 })
     const progressTween = useRef<gsap.core.Tween | null>(null)
@@ -270,8 +274,8 @@ const ConfettiParticleEmitter = forwardRef<ConfettiParticleEmitterHandle, Props>
           />
         </bufferGeometry>
 
-        <PointsShaderMaterial
-          key={PointsShader.key}
+        <ConfettiPointsShaderMaterial
+          key={ConfettiPointsShader.key}
           ref={materialRef}
           transparent={true}
           depthTest={false}

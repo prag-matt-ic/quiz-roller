@@ -15,6 +15,7 @@ attribute float seed;
 attribute vec3 colour;
 
 varying vec4 vColorAlpha;
+varying mediump float vSoftness;
 
 float easeOutCubic(in float t) {
   float inv = 1.0 - t;
@@ -66,4 +67,5 @@ void main() {
   float opacity = appear * fade * mix(0.85, 1.15, seed) * distanceFade;
 
   vColorAlpha = vec4(colour, opacity * mix(1.0, 1.2, settle));
+  vSoftness = fract(seed * 31.0);
 }
