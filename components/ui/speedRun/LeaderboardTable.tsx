@@ -70,7 +70,7 @@ export function useLeaderboardTableData({
     userRecentRun,
     leaderboardRuns,
     userSpeedRunIds,
-    showCTARow,
+    showCTA: showCTARow,
   }
 }
 
@@ -81,7 +81,7 @@ type TableProps = {
   leaderboardRuns: SpeedRunDatabase[] // Those within the top `count`
   userSpeedRunIds: number[] // IDs of the user's completed speedruns
   userRecentRun: RunWithPosition | null // The user's most recent speedrun, if applicable
-  showCTARow: boolean
+  showCTA: boolean
   onStartSpeedRun?: () => void
 }
 
@@ -89,14 +89,14 @@ export const LeaderboardTable: FC<TableProps> = ({
   count,
   className,
   isLoading,
-  showCTARow,
+  showCTA,
   userSpeedRunIds = [],
   leaderboardRuns,
   userRecentRun,
   onStartSpeedRun,
 }) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
-  const showCTA = showCTARow && !!onStartSpeedRun
+  const showCTARow = showCTA && !!onStartSpeedRun
 
   console.warn('[LeaderboardTable] Rendering with:', {
     count,
@@ -141,20 +141,20 @@ export const LeaderboardTable: FC<TableProps> = ({
         />
       )}
 
-      {showCTA && (
+      {showCTARow && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 mt-4"
-          username="Start your run"
+          className="pointer-events-auto z-100 mt-4 h-fit rounded-full bg-green-400/20 text-white"
+          username="Set a time"
           time={0}
           position={CTA_POSITION}
-          isCurrentUser={true}
+          isCurrentUser={false}
           isLatestRun={false}
           flag={
             <button
               type="button"
               onClick={onStartSpeedRun}
-              className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition hover:border-white/25 hover:bg-white/20"
+              className="-mr-3 flex aspect-square size-12 items-center justify-center rounded-full bg-green-600 text-white ring ring-green-400 transition-all duration-200 hover:bg-green-500 hover:ring-green-200"
               aria-label="Start a speed run">
               <PlayIcon className="h-5 w-5" strokeWidth={1.75} />
             </button>
@@ -166,8 +166,7 @@ export const LeaderboardTable: FC<TableProps> = ({
 }
 
 const CTA_POSITION = -1
-const ROW_CONTAINER_CLASSES =
-  'col-span-full grid grid-cols-subgrid items-center border-b border-white/8 px-3 last-of-type:border-0'
+const ROW_CONTAINER_CLASSES = 'col-span-full grid grid-cols-subgrid items-center px-2'
 
 type RowProps = {
   username: string
@@ -196,8 +195,8 @@ const LeaderboardRow: FC<RowProps> = ({
       className={twMerge(
         ROW_CONTAINER_CLASSES,
         position % 2 === 0 && 'bg-black/20',
-        isCurrentUser && 'text-leaderboard bg-leaderboard/10',
-        isTopThree ? 'h-14' : 'h-11',
+        isTopThree ? 'h-14 text-white' : 'h-11 text-white/90',
+        isCurrentUser && 'bg-green-600/5 text-green-400',
         isLatestRun && 'border-leaderboard z-40 border!',
         className,
       )}>

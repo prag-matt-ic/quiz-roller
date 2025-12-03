@@ -21,7 +21,9 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
   const progress = totalRingsCount > 0 ? (collectedRingCount / totalRingsCount) * 100 : 0
 
   return (
-    <Panel className={twMerge('h-full p-4', className)}>
+    <Panel
+      className={twMerge('h-full p-4', className)}
+      attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
       <div className="flex h-full flex-col justify-between">
         <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
 

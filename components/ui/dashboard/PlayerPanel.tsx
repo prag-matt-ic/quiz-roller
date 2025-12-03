@@ -21,7 +21,7 @@ export const PlayerPanel: FC<Props> = ({ className }) => {
   }
 
   return (
-    <Panel className={twMerge('flex h-full items-center gap-4 p-4', className)} strength={1}>
+    <Panel className={twMerge('flex h-full items-center gap-4 p-6', className)} strength={1}>
       <User className="size-6 text-white/70" />
       <Input
         value={username ?? ''}

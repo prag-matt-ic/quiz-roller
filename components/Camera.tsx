@@ -1,10 +1,10 @@
 'use client'
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import useGameFrame from '@/hooks/useGameFrame'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
@@ -58,6 +58,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const { playerPosition } = usePlayerPosition()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
+  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE
@@ -88,7 +89,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     }
   }, [isConfirmingCollectible])
 
-  useGameFrame(() => {
+  useFrame(() => {
     if (!cameraControls.current) return
     const stageCameraPosition = positions[stage.current]
 
@@ -96,13 +97,16 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     // Adjust the camera based on player input
     const positionZOffset = input.current.down > 0 ? 5 : 0
+    const dashboardZOffset = isShowingDashboard ? 3 : 0
+    const dashboardYOffset = isShowingDashboard ? 4 : 0
+
     const lookAtX = lookAt[0] + input.current.right - input.current.left
     const lookAtZ = lookAt[2] + input.current.down - input.current.up
 
     cameraControls.current.setLookAt(
       playerPosition.current[0],
-      stageCameraPosition.y,
-      stageCameraPosition.z + positionZOffset,
+      stageCameraPosition.y + dashboardYOffset,
+      stageCameraPosition.z + positionZOffset + dashboardZOffset,
       lookAtX,
       3,
       lookAtZ,

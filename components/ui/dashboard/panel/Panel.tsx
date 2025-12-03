@@ -15,6 +15,7 @@ export type PanelProps = PropsWithChildren<{
   strength?: Strength
   className?: string
   enableAttractor?: boolean
+  attractorClassName?: string
 }>
 
 const CONTAINER_STRENGTH_CLASSES: Record<Strength, string> = {
@@ -23,7 +24,7 @@ const CONTAINER_STRENGTH_CLASSES: Record<Strength, string> = {
   3: 'border-black/40 bg-black/30',
 }
 
-const ATTRACTOR_CLASS = 'bg-white/5 bg-linear-70 from-white/10 to-transparent'
+const ATTRACTOR_CLASS = 'bg-teal-500/15 bg-linear-70 from-white/10 to-transparent'
 
 // Legacy GlassPanel styling for reference:
 // const GLASS_PANEL_BASE =
@@ -40,6 +41,7 @@ const Panel: FC<PanelProps> = ({
   className,
   children,
   enableAttractor = true,
+  attractorClassName = ATTRACTOR_CLASS,
 }) => {
   const { ref, inViewport } = useInViewport()
   const container = useRef<HTMLDivElement>(null)
@@ -57,7 +59,7 @@ const Panel: FC<PanelProps> = ({
       ref={mergedRef}
       {...containerHandlers}
       className={twMerge(
-        'relative overflow-hidden rounded-xl border backdrop-blur-sm sm:rounded-2xl',
+        'relative overflow-hidden rounded-2xl border backdrop-blur-sm',
         CONTAINER_STRENGTH_CLASSES[strength],
         className,
       )}>
@@ -68,7 +70,7 @@ const Panel: FC<PanelProps> = ({
             data-surface-glow="true"
             className={twMerge(
               'relative size-56 rounded-full opacity-0 blur-[56px]',
-              ATTRACTOR_CLASS,
+              attractorClassName,
             )}
           />
         </div>

@@ -14,18 +14,22 @@ import {
 
 type Props = {
   className?: string
+  count?: number
 }
 
-export const LeaderboardPanel: FC<Props> = ({ className }) => {
+export const LeaderboardPanel: FC<Props> = ({ className, count = 3 }) => {
   const startSpeedRun = useGameStore((s) => s.startSpeedRun)
   const tableData = useLeaderboardTableData({
-    count: 3,
+    count,
     fetchPlayerRecentPosition: false,
     showCTARow: true,
   })
+  const attractorClassName = 'bg-emerald-400/[0.125] bg-linear-70 from-white/10 to-transparent'
 
   return (
-    <Panel className={twMerge('flex h-full flex-col gap-3 p-4', className)}>
+    <Panel
+      className={twMerge('flex h-full flex-col gap-3 p-4', className)}
+      attractorClassName={attractorClassName}>
       <PanelHeader icon={Trophy} label="Speedroll Leaderboard" />
       <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} className="p-3" />
     </Panel>
