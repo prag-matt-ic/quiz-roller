@@ -1,7 +1,7 @@
 'use client'
 
 import { Compass, Gamepad2, LucideIcon, Timer } from 'lucide-react'
-import { type FC } from 'react'
+import { type FC, type ReactNode } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -15,23 +15,23 @@ type Props = {
 
 type GameModeInfo = {
   mode: GameMode
-  icon: LucideIcon
+  Icon: LucideIcon
   label: string
-  desc: string
+  description: ReactNode
 }
 
 const CORE_GAME_MODES: GameModeInfo[] = [
   {
     mode: GameMode.MAIN,
-    icon: Compass,
+    Icon: Compass,
     label: 'Explore',
-    desc: 'Discover every corner of the world.',
+    description: 'Discover every corner of the world.',
   },
   {
     mode: GameMode.SPEEDRUN,
-    icon: Timer,
+    Icon: Timer,
     label: 'Speedroll',
-    desc: 'Race against others. Every millisecond counts.',
+    description: 'Race against others to the finish line. Every millisecond counts.',
   },
 ] as const
 
@@ -39,9 +39,9 @@ const DEV_GAME_MODES: GameModeInfo[] = [
   ...CORE_GAME_MODES,
   {
     mode: GameMode.TEST,
-    icon: Gamepad2,
+    Icon: Gamepad2,
     label: 'Test',
-    desc: 'For development and testing purposes only.',
+    description: "If you aren't on the inside you shouldn't see this.",
   },
 ] as const
 
@@ -62,7 +62,7 @@ export const GameModePanel: FC<Props> = ({ className }) => {
       <PanelHeader icon={Gamepad2} label="Mode" />
 
       <div className="flex flex-col gap-3">
-        {GAME_MODES.map(({ mode: id, icon: Icon, label, desc }) => {
+        {GAME_MODES.map(({ mode: id, Icon, label, description: desc }) => {
           const isSelected = mode === id
           return (
             <button
@@ -70,16 +70,16 @@ export const GameModePanel: FC<Props> = ({ className }) => {
               type="button"
               onClick={() => handleModeChange(id)}
               className={twJoin(
-                'flex flex-1 flex-col items-start rounded-xl p-4 text-left',
+                'flex flex-1 flex-col items-start rounded-xl p-4 text-left text-white',
                 isSelected
-                  ? 'bg-white/10 text-white ring ring-cyan-600'
-                  : 'bg-white/5 opacity-70',
+                  ? 'bg-amber-300/5 ring ring-amber-500'
+                  : 'bg-white/5 opacity-70 hover:opacity-100',
               )}>
-              <div className="mb-2 flex items-center gap-2">
+              <div className="mb-2 flex items-center gap-2.5">
                 <Icon className="size-6" />
                 <span className="text-lg font-bold">{label}</span>
               </div>
-              <p className="mb-1 text-sm font-medium opacity-80">{desc}</p>
+              <p className="text-base font-medium opacity-80">{desc}</p>
             </button>
           )
         })}

@@ -1,6 +1,6 @@
 'use client'
 import gsap from 'gsap'
-import { ArrowRight, RotateCcw, X } from 'lucide-react'
+import { ArrowRight, InfoIcon, Play, PlaySquare, RotateCcw, X } from 'lucide-react'
 import { type FC, type Ref, useRef, useState } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -145,22 +145,26 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
 
   const usernameForm = (
     <section>
-      <p className="heading-sm">
-        Race to the finish line as fast as you can!
-        <br />
-        Rings give you a speed boost
+      <p className="text-center text-2xl font-semibold">
+        Race to the finish line as fast as you can
       </p>
-      <div className="mt-4 flex items-center">
+
+      <div className="my-5 flex items-center gap-2 text-base text-white/80 lg:text-lg">
+        <InfoIcon />
+        Rings give you a speed boost!
+      </div>
+
+      <div className="relative flex items-center">
         <Input
           ref={usernameInput}
           id="username-input"
-          className="border-none"
+          className="border-none pr-16"
           maxLength={12}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="username"
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.key === 'NumpadEnter') {
               e.preventDefault()
               handleUsernameSubmit()
             }
@@ -171,13 +175,11 @@ export const SpeedRunOverlay: FC<SpeedrunOverlayProps> = ({ ref, transitionStatu
           onClick={handleUsernameSubmit}
           disabled={!isValid}
           className={twJoin(
-            'flex aspect-square items-center justify-center transition-colors',
-            isValid
-              ? 'bg-amber-500 text-black hover:bg-amber-400'
-              : 'bg-white/10 text-white/20',
+            'absolute right-0 z-10 flex aspect-square h-full items-center justify-center',
+            isValid ? 'text-green-400' : 'text-white/20',
           )}
           aria-label="Submit username">
-          <ArrowRight size={32} strokeWidth={3} />
+          <Play size={32} strokeWidth={2} />
         </button>
       </div>
     </section>

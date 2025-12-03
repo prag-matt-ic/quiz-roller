@@ -56,7 +56,12 @@ const Button: FC<ButtonProps> = ({
 }) => {
   return (
     <button
-      className={twMerge(BASE_CLASSES, SIZE_CLASSES[size], COLOUR_CLASSES[color][variant], className)}
+      className={twMerge(
+        BASE_CLASSES,
+        SIZE_CLASSES[size],
+        COLOUR_CLASSES[color][variant],
+        className,
+      )}
       {...props}>
       {!!StartIcon ? (
         <StartIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />

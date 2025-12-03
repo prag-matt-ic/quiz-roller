@@ -8,7 +8,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 const BASE_CLASSES =
-  'w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-left text-3xl font-bold text-white outline-none placeholder:text-white/60 transition-colors focus:ring focus:ring-amber-400'
+  'w-full rounded-xl ring ring-white/30 bg-[#000000] px-4 py-3 text-left text-2xl lg:text-3xl font-bold text-white outline-none placeholder:text-white/60 transition-colors focus:ring-2 focus:ring-amber-500'
 
 export const Input = forwardRef(function Input(
   { className, ...props }: InputProps,
