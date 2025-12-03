@@ -26,11 +26,9 @@ const INITIAL_READY_STATE: ReadyState = {
 
 const READY_STATE_KEYS: ReadyStateKey[] = Object.keys(INITIAL_READY_STATE) as ReadyStateKey[]
 
-const DEFAULT_DEPENDENCIES: unknown[] = []
-
 export default function useReadyState(
   onStateChange?: (readyState: ReadyState) => void,
-  resetDependencies: unknown[] = DEFAULT_DEPENDENCIES,
+  resetDependencies: unknown[] = [],
 ) {
   const readyState = useRef<ReadyState>(INITIAL_READY_STATE)
 

@@ -33,13 +33,15 @@ export async function getSpeedrunData(
   }
 }
 
+export type RunWithPosition = {
+  run: SpeedRunDatabase
+  position: number
+}
+
 export async function getSpeedrunPosition(
   id: number,
   levelId: string = '1.0',
-): Promise<{
-  run: SpeedRunDatabase
-  position: number
-} | null> {
+): Promise<RunWithPosition | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const result = await sql`

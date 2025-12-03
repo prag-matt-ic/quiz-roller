@@ -15,12 +15,18 @@ export const ContactPanel: FC<QuickActionsProps> = ({ className }) => {
   return (
     <Panel className={twMerge('flex h-full gap-2 p-4', className)} strength={1}>
       <p className="flex-1">
+        {/* TODO: update this copy.. */}
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
         incididunt ut
       </p>
 
-      <div className="flex flex-1 flex-col gap-3">
-        <Button size="md" color="light" variant="secondary" className="" startIcon={BugIcon}>
+      <div className="flex flex-col gap-3">
+        <Button
+          size="md"
+          color="light"
+          variant="secondary"
+          className="w-full"
+          startIcon={BugIcon}>
           Report Bug
         </Button>
         <Button size="md" color="light" variant="secondary" className="" startIcon={MailIcon}>

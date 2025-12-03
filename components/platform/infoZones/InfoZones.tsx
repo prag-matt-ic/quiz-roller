@@ -96,7 +96,11 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
     }
   }, [onReadyChange])
 
-  const tableData = useLeaderboardTableData(5, false)
+  const tableData = useLeaderboardTableData({
+    count: 5,
+    fetchPlayerRecentPosition: false,
+    showCTARow: true,
+  })
 
   const timeContainer = useRef<HTMLDivElement | null>(null)
 

@@ -1,6 +1,12 @@
 import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
 
-import { GameMode, type GameSliceCreator, type SpeedRunStage, type TimeSlice } from './types'
+import {
+  GameMode,
+  type GameSliceCreator,
+  InputType,
+  type SpeedRunStage,
+  type TimeSlice,
+} from './types'
 
 export const RESET_TIME_STATE: Pick<TimeSlice, 'speedRunTimeCS' | 'speedRunStage'> = {
   speedRunTimeCS: 0,
@@ -37,20 +43,18 @@ export const createTimeSlice =
       })
     },
     finishSpeedRun: async () => {
-      const { speedRunTimeCS, username } = get()
+      const { speedRunTimeCS, username, inputType } = get()
       if (!username) return
 
       set({ speedRunStage: 'submitting' })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
 
-      const inputType = get().inputType
-
       const submission: ServerSpeedRunSubmission = {
         username,
         time: timeInSeconds,
         date: new Date().toISOString(),
-        input_type: 'keyboard',
+        input_type: inputType === InputType.KEYS ? 'keyboard' : 'joystick',
         level_id: '1.0',
       }
 

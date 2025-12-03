@@ -3,29 +3,33 @@ import { PlayIcon } from 'lucide-react'
 import { type FC, useEffect, useMemo, useState } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
-import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
+import { RunWithPosition, getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 import type { SpeedRunDatabase } from '@/model/schema'
 
-export function useLeaderboardTableData(
-  count: number = 10,
-  showPlayerPosition: boolean = true,
-): TableProps {
+export function useLeaderboardTableData({
+  count = 10,
+  fetchPlayerRecentPosition = false,
+  showCTARow = false,
+}: {
+  count: number
+  fetchPlayerRecentPosition: boolean
+  showCTARow: boolean
+}): TableProps {
   const [isLoading, setIsLoading] = useState(true)
-  const [speedRuns, setSpeedRuns] = useState<SpeedRunDatabase[]>([])
-  const [playerPosition, setPlayerPosition] = useState<number | null>(null)
+  const [leaderboardRuns, setLeaderboardRuns] = useState<SpeedRunDatabase[]>([])
+  const [userRecentRun, setUserRecentRun] = useState<RunWithPosition | null>(null)
 
   const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
-  const hasCompletedRun = showPlayerPosition && completedSpeedruns.length > 0
+
   const userSpeedRunIds = useMemo(
-    () => (showPlayerPosition ? completedSpeedruns.map((run) => run.id) : []),
-    [completedSpeedruns, showPlayerPosition],
+    () => completedSpeedruns.map((run) => run.id),
+    [completedSpeedruns],
   )
 
   const latestRunId = useMemo(
-    () =>
-      showPlayerPosition ? completedSpeedruns[completedSpeedruns.length - 1]?.id : undefined,
-    [completedSpeedruns, showPlayerPosition],
+    () => completedSpeedruns[completedSpeedruns.length - 1]?.id,
+    [completedSpeedruns],
   )
 
   useEffect(() => {
@@ -33,30 +37,21 @@ export function useLeaderboardTableData(
 
     const fetchData = async () => {
       setIsLoading(true)
-      setPlayerPosition(null)
 
-      const speedrunData = await getSpeedrunData(count)
-
+      const leaderboardRuns = await getSpeedrunData(count)
       if (!isMounted) return
 
-      let playerPosition: number | null = null
-      let allSpeedruns = speedrunData
+      const isOnLeaderboard = leaderboardRuns.some((speedrun) => speedrun.id === latestRunId)
 
-      if (showPlayerPosition && latestRunId) {
-        const isOnLeaderboard = speedrunData.some((speedrun) => speedrun.id === latestRunId)
-
-        if (!isOnLeaderboard) {
-          const playerData = await getSpeedrunPosition(latestRunId)
-          if (playerData && isMounted) {
-            playerPosition = playerData.position
-            allSpeedruns = [...speedrunData, playerData.run]
-          }
+      if (!isOnLeaderboard && !!latestRunId && fetchPlayerRecentPosition) {
+        const playerData = await getSpeedrunPosition(latestRunId)
+        if (!!playerData && isMounted) {
+          setUserRecentRun(playerData)
         }
       }
 
       if (isMounted) {
-        setSpeedRuns(allSpeedruns)
-        setPlayerPosition(playerPosition)
+        setLeaderboardRuns(leaderboardRuns)
         setIsLoading(false)
       }
     }
@@ -66,53 +61,44 @@ export function useLeaderboardTableData(
     return () => {
       isMounted = false
     }
-  }, [count, latestRunId, showPlayerPosition])
+  }, [count, latestRunId, fetchPlayerRecentPosition])
 
   return {
     count,
-    hasCompletedRun,
     isLoading,
-    latestRunId,
-    playerPosition,
-    showPlayerPosition,
-    speedRuns,
+    userRecentRun,
+    leaderboardRuns,
     userSpeedRunIds,
+    showCTARow,
   }
 }
 
 type TableProps = {
   count: number
-  hasCompletedRun: boolean
+  className?: string
   isLoading: boolean
-  speedRuns: SpeedRunDatabase[]
-  userSpeedRunIds: number[]
-  playerPosition: number | null
-  showPlayerPosition: boolean
-  latestRunId?: number
+  leaderboardRuns: SpeedRunDatabase[] // Those within the top `count`
+  userSpeedRunIds: number[] // IDs of the user's completed speedruns
+  userRecentRun: RunWithPosition | null // The user's most recent speedrun, if applicable
+  showCTARow: boolean
   onStartSpeedRun?: () => void
 }
 
 export const LeaderboardTable: FC<TableProps> = ({
   count,
-  hasCompletedRun,
+  className,
   isLoading,
+  showCTARow,
+  userSpeedRunIds = [],
+  leaderboardRuns,
+  userRecentRun,
   onStartSpeedRun,
-  showPlayerPosition,
-  speedRuns,
-  userSpeedRunIds,
-  playerPosition,
-  latestRunId,
 }) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
-
-  const leaderboardRuns = speedRuns.slice(0, count)
-  const playerRunBelowLeaderboard =
-    playerPosition && playerPosition > count ? speedRuns[speedRuns.length - 1] : null
-  const shouldShowPlayerCallToAction =
-    !isLoading && showPlayerPosition && !hasCompletedRun && !!onStartSpeedRun
+  const showCTA = showCTARow && !!onStartSpeedRun
 
   return (
-    <section className="w-full max-w-xl">
+    <section className={twMerge('w-full max-w-xl', className)}>
       <div className="grid grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4">
         {isLoading
           ? placeholderRows.map((_, index) => (
@@ -124,24 +110,24 @@ export const LeaderboardTable: FC<TableProps> = ({
                 entry={entry}
                 index={index}
                 isCurrentUser={userSpeedRunIds.includes(entry.id)}
-                isLatestRun={entry.id === latestRunId}
+                isLatestRun={entry.id === userRecentRun?.run.id}
               />
             ))}
 
-        {!isLoading && playerRunBelowLeaderboard && (
+        {!isLoading && !!userRecentRun && (
           <LeaderboardRow
-            key={playerRunBelowLeaderboard.id}
-            entry={playerRunBelowLeaderboard}
-            index={playerPosition! - 1}
+            key={userRecentRun!.run.id}
+            entry={userRecentRun!.run}
+            index={userRecentRun!.position - 1}
             isCurrentUser={true}
-            isLatestRun={playerRunBelowLeaderboard.id === latestRunId}
+            isLatestRun={true}
             className="mt-4"
           />
         )}
 
-        {shouldShowPlayerCallToAction && onStartSpeedRun ? (
+        {showCTA && (
           <LeaderboardCallToActionRow className="mt-4" onStartSpeedRun={onStartSpeedRun} />
-        ) : null}
+        )}
       </div>
     </section>
   )
@@ -151,7 +137,7 @@ const ROW_CONTAINER_CLASSES =
   'col-span-full grid grid-cols-subgrid items-center border-b border-white/8 px-3 last-of-type:border-0'
 
 const PLACEHOLDER_POSITION = '??'
-const PLACEHOLDER_TIME = '??:??s'
+const PLACEHOLDER_TIME = '00:00'
 
 const LeaderboardRow: FC<{
   entry: SpeedRunDatabase
