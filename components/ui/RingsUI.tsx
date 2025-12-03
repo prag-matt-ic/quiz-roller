@@ -46,9 +46,7 @@ const SpeedBoostBar: FC = () => {
   usePlayerSpeed(onPlayerSpeedChange)
 
   return (
-    <div
-      id="progress-bar"
-      className="relative ml-2 h-2 w-20 overflow-hidden rounded-full bg-white/50">
+    <div className="relative h-2 w-20 overflow-hidden rounded-full bg-white/50">
       <div
         ref={barRef}
         className="bg-orange-accent absolute left-0 size-full transition-transform duration-100 ease-linear"
