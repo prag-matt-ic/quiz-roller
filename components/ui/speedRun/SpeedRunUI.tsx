@@ -44,7 +44,7 @@ export const SpeedRunControls: FC = () => {
           title="Cancel"
           className="aspect-square!"
           onClick={() => {
-            resetGame({ mode: GameMode.MAIN })
+            resetGame({ mode: GameMode.LEARN })
           }}>
           <X size={24} strokeWidth={2} />
         </Button>

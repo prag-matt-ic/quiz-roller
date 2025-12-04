@@ -11,7 +11,7 @@ import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
 const getPlatformDataForMode = (
   mode: GameMode,
 ): { rowsData: RowData[]; totalCounts: ReturnType<typeof createTotalCounts> } => {
-  const modeData = PLATFORM_DATA.modes[mode] ?? PLATFORM_DATA.modes[GameMode.MAIN]
+  const modeData = PLATFORM_DATA.modes[mode] ?? PLATFORM_DATA.modes[GameMode.LEARN]
   if (!modeData) {
     return {
       rowsData: [],
@@ -24,7 +24,7 @@ const getPlatformDataForMode = (
   }
 }
 
-const DEFAULT_PLATFORM_DATA = getPlatformDataForMode(GameMode.MAIN)
+const DEFAULT_PLATFORM_DATA = getPlatformDataForMode(GameMode.LEARN)
 
 export const RESET_GAME_STATE = {
   totalCounts: DEFAULT_PLATFORM_DATA.totalCounts,
@@ -40,7 +40,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   htmlPortal: undefined,
   _isHydrated: false,
   resetPlatformTick: 0,
-  mode: GameMode.MAIN,
+  mode: GameMode.LEARN,
   hudIndicator: null,
   setHydrated: () => {
     set({ _isHydrated: true })

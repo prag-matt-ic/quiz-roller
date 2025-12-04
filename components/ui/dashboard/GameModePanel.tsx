@@ -22,10 +22,10 @@ type GameModeInfo = {
 
 const CORE_GAME_MODES: GameModeInfo[] = [
   {
-    mode: GameMode.MAIN,
+    mode: GameMode.LEARN,
     Icon: Compass,
     label: 'Explore',
-    description: 'Learn the level and discover bonuses to unlock.',
+    description: 'Learn the level and discover more about the project.',
   },
   {
     mode: GameMode.SPEEDRUN,
@@ -38,7 +38,7 @@ const CORE_GAME_MODES: GameModeInfo[] = [
 const DEV_GAME_MODES: GameModeInfo[] = [
   ...CORE_GAME_MODES,
   {
-    mode: GameMode.TEST,
+    mode: GameMode.DEV,
     Icon: Gamepad2,
     label: 'Test',
     description: "If you aren't on the inside you shouldn't see this.",

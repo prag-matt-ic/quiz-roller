@@ -29,9 +29,9 @@ const DPR_OPTIONS: Option<number | undefined>[] = [
 ] as const
 
 const GAME_MODE_OPTIONS: Option<GameMode>[] = [
-  { label: 'Main Run', value: GameMode.MAIN },
+  { label: 'Learn', value: GameMode.LEARN },
   { label: 'Speedrun', value: GameMode.SPEEDRUN },
-  { label: 'Test', value: GameMode.TEST },
+  { label: 'Dev', value: GameMode.DEV },
 ]
 
 const OVERLAY_OPTIONS: Option<OverlaySelection>[] = [

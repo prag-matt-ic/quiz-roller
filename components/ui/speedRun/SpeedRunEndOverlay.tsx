@@ -44,7 +44,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         <Button
           color="light"
           variant="secondary"
-          onClick={() => resetGame({ mode: GameMode.MAIN })}>
+          onClick={() => resetGame({ mode: GameMode.LEARN })}>
           Finish
         </Button>
       </div>

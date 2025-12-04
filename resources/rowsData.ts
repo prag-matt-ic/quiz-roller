@@ -16,7 +16,7 @@ export type PlatformRowsData = {
 export const PLATFORM_DATA: PlatformRowsData = {
   version: '1.0.0',
   modes: {
-    [GameMode.MAIN]: {
+    [GameMode.LEARN]: {
       rows: [
         {
           heights: [
@@ -7297,7 +7297,7 @@ export const PLATFORM_DATA: PlatformRowsData = {
         confetti: 9,
       },
     },
-    [GameMode.TEST]: {
+    [GameMode.DEV]: {
       rows: [
         {
           heights: [

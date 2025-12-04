@@ -60,7 +60,7 @@ const Menu: FC<MenuProps> = ({ ref, transitionStatus, closeMenu }) => {
         value={mode}
         onChange={handleModeChange}
         items={[
-          { label: 'Regular', value: GameMode.MAIN, Icon: Gamepad2Icon },
+          { label: 'Regular', value: GameMode.LEARN, Icon: Gamepad2Icon },
           { label: 'Speedroll', value: GameMode.SPEEDRUN, Icon: FlagIcon },
         ]}
       />

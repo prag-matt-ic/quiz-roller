@@ -43,9 +43,9 @@ export type RingCollection = Record<string, true>
 export type SpeedRunStage = 'username' | 'countdown' | 'running' | 'submitting' | 'leaderboard'
 
 export enum GameMode {
-  MAIN = 'main',
-  TEST = 'test',
+  LEARN = 'learn',
   SPEEDRUN = 'speedrun',
+  DEV = 'dev',
 }
 
 export type TimeSlice = {

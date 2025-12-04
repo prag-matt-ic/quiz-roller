@@ -80,12 +80,12 @@ const CORE_SOURCES: SectionSource[] = [
 ]
 
 const MODE_SOURCES: Record<GameMode, SectionSource[]> = {
-  [GameMode.MAIN]: [...CORE_SOURCES, { file: 'cta.png', stage: Stage.CTA }],
+  [GameMode.LEARN]: [...CORE_SOURCES, { file: 'cta.png', stage: Stage.CTA }],
   [GameMode.SPEEDRUN]: [
     ...CORE_SOURCES,
     { file: 'speed-run-finish.png', stage: Stage.SPEED_RUN_FINISH },
   ],
-  [GameMode.TEST]: [
+  [GameMode.DEV]: [
     { file: 'test.png', stage: Stage.HOME },
     { file: 'cta.png', stage: Stage.CTA },
   ],
@@ -187,9 +187,9 @@ export type PlatformRowsData = {
 export const PLATFORM_DATA: PlatformRowsData = {
   version: '${version}',
   modes: {
-    [GameMode.MAIN]: ${formatModeData(modes[GameMode.MAIN])},
+    [GameMode.LEARN]: ${formatModeData(modes[GameMode.LEARN])},
     [GameMode.SPEEDRUN]: ${formatModeData(modes[GameMode.SPEEDRUN])},
-    [GameMode.TEST]: ${formatModeData(modes[GameMode.TEST])},
+    [GameMode.DEV]: ${formatModeData(modes[GameMode.DEV])},
   },
 }
 export const PLATFORM_VERSION = PLATFORM_DATA.version
@@ -705,9 +705,9 @@ async function main() {
   console.log(`🛠️  Generating platform rows for version ${version}`)
 
   const modes: Record<GameMode, ModeRows> = {
-    [GameMode.MAIN]: await buildModeData(directory, MODE_SOURCES[GameMode.MAIN]),
+    [GameMode.LEARN]: await buildModeData(directory, MODE_SOURCES[GameMode.LEARN]),
     [GameMode.SPEEDRUN]: await buildModeData(directory, MODE_SOURCES[GameMode.SPEEDRUN]),
-    [GameMode.TEST]: await buildModeData(directory, MODE_SOURCES[GameMode.TEST]),
+    [GameMode.DEV]: await buildModeData(directory, MODE_SOURCES[GameMode.DEV]),
   }
 
   const output = buildOutputFile({ version, modes })

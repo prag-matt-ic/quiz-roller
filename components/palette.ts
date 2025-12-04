@@ -24,43 +24,21 @@ type PaletteParams = {
 
 const TAU = Math.PI * 2
 
-// Keep these parameters in sync with components/palette.glsl
+// Keep these parameters in sync with resources/glsl/playerPalette.glsl
 
-// TODO: Create enum for PaletteIndexes
-
-const YELLOW_GREEN_PARAMS: PaletteParams = {
-  a: [0.5, 0.5, 0.5],
+const PLAYER_PALETTE_PARAMS: PaletteParams = {
+  a: [0.47, 0.5, 0.5],
   b: [0.5, 0.5, 0.5],
-  c: [1.0, 1.0, 0.5],
-  d: [0.8, 0.9, 0.3],
+  c: [1.0, 1.0, 0.49],
+  d: [0.75, 0.91, 0.3],
 }
 
-const PURPLE_GOLD_PARAMS: PaletteParams = {
-  a: [0.5, 0.5, 0.5],
-  b: [0.5, 0.5, 0.5],
-  c: [1.0, 0.7, 0.4],
-  d: [0.0, 0.15, 0.2],
-}
-
-const ORANGE_BLUE_PARAMS: PaletteParams = {
-  a: [0.5, 0.5, 0.5],
-  b: [0.5, 0.5, 0.5],
-  c: [0.8, 0.8, 0.5],
-  d: [0.0, 0.2, 0.5],
-}
-
-const PALETTES: readonly PaletteParams[] = [
-  PURPLE_GOLD_PARAMS,
-  YELLOW_GREEN_PARAMS,
-  ORANGE_BLUE_PARAMS,
-] as const
+const PALETTES: readonly PaletteParams[] = [PLAYER_PALETTE_PARAMS] as const
 
 export const PALETTE_COUNT = PALETTES.length
 export const GRADIENT_STEPS = 8
 
-export const PURPLE_GOLD_PALETTE_INDEX = 0
-export const YELLOW_GREEN_PALETTE_INDEX = 1
-export const ORANGE_BLUE_PALETTE_INDEX = 2
+export const PLAYER_PALETTE_INDEX = 0
 
 const clampUnit = (value: number): number => Math.min(1, Math.max(0, value))
 
@@ -107,15 +85,15 @@ export function getPaletteHex(paletteIndex: number, t = 0.5): string {
   return rgbToHex(samplePaletteColour(paletteIndex, t))
 }
 
-export function getPaletteCss(paletteIndex: number, t = 0.5): string {
-  return rgbToCss(samplePaletteColour(paletteIndex, t))
+export function getPaletteCss(
+  paletteIndex: number,
+  t = 0.5,
+  mode: PaletteGradientMode = 'rgb',
+): string {
+  return getSampleColour(paletteIndex, t, mode)
 }
 
-const getSampleColour = (
-  paletteIndex: number,
-  t: number,
-  mode: PaletteGradientMode,
-): string => {
+function getSampleColour(paletteIndex: number, t: number, mode: PaletteGradientMode): string {
   const colour = samplePaletteColour(paletteIndex, t)
   return mode === 'oklch' ? toOklchCss(colour) : toSrgbCss(colour)
 }
