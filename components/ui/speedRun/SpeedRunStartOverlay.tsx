@@ -6,10 +6,9 @@ import { SwitchTransition, Transition, type TransitionStatus } from 'react-trans
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import { RingBoostInfo } from '@/components/ui/dashboard/RingsSpeedPanel'
 import { Input } from '@/components/ui/input'
 import { speedRunSubmissionSchema } from '@/model/schema'
-
-import SpeedBoostDial from '../SpeedBoostDial'
 
 type Props = {
   ref: Ref<HTMLDivElement>
@@ -102,18 +101,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         Race to the finish line as fast as you can
       </p>
 
-      <div className="flex items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3">
-        <div className="relative flex size-20 items-center justify-center">
-          <SpeedBoostDial className="size-20" fixedProgress={0.3} />
-          <span className="pointer-events-none absolute text-[10px] tracking-[2px] text-white/60 uppercase">
-            Boost
-          </span>
-        </div>
-        <p className="leading-relaxed text-pretty text-white">
-          Each ring you collect gives you a temporary speed boost. Plan your route so you hit as
-          many rings as possible while still keeping a tight line.
-        </p>
-      </div>
+      <RingBoostInfo />
 
       <div className="relative flex items-center">
         <Input

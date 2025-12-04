@@ -5,7 +5,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
-import { GameMode } from '@/stores/types'
+import { GameMode, type OverlaySelection } from '@/stores/types'
 
 type Option<T> = {
   label: string
@@ -34,6 +34,14 @@ const GAME_MODE_OPTIONS: Option<GameMode>[] = [
   { label: 'Test', value: GameMode.TEST },
 ]
 
+const OVERLAY_OPTIONS: Option<OverlaySelection>[] = [
+  { label: 'None', value: 'none' },
+  { label: 'Dashboard', value: 'dashboard' },
+  { label: 'Loading', value: 'loading' },
+  { label: 'Speedrun Start', value: 'speedrun-start' },
+  { label: 'Speedrun End', value: 'speedrun-end' },
+]
+
 const DebugControls: FC = () => {
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const setSceneQuality = usePerformanceStore((s) => s.setSceneQuality)
@@ -43,6 +51,14 @@ const DebugControls: FC = () => {
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const setIsPhysicsDebug = usePerformanceStore((s) => s.setIsPhysicsDebug)
   const resetGame = useGameStore((s) => s.resetGame)
+  const setOverlaySelection = useGameStore((s) => s.setOverlaySelection)
+  const overlaySelection = useGameStore((s) => {
+    if (s.isShowingLoadingOverlay) return 'loading'
+    if (s.isShowingDashboard) return 'dashboard'
+    if (s.isShowingSpeedRunStartOverlay) return 'speedrun-start'
+    if (s.isShowingSpeedRunEndOverlay) return 'speedrun-end'
+    return 'none'
+  })
 
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
@@ -63,6 +79,11 @@ const DebugControls: FC = () => {
   const handlePhysicsDebugChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
     setIsPhysicsDebug(event.target.value === 'true')
+  }
+
+  const handleOverlayChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    event.target.blur()
+    setOverlaySelection(event.target.value as OverlaySelection)
   }
 
   return (
@@ -98,6 +119,17 @@ const DebugControls: FC = () => {
         onChange={handlePhysicsDebugChange}>
         <option value="false">Off</option>
         <option value="true">On</option>
+      </SelectRow>
+      <SelectRow
+        id="performance-debug-overlays"
+        label="Overlay"
+        value={overlaySelection}
+        onChange={handleOverlayChange}>
+        {OVERLAY_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
       </SelectRow>
       <SelectRow
         id="performance-debug-mode"

@@ -23,10 +23,11 @@ import {
   Vector3Tuple,
 } from 'three'
 
-import tileDetailNoise from '@/assets/textures/platform/tile-noise.webp'
+import tileDetailNoise2 from '@/assets/textures/platform/tile-noise-2.webp'
+import tileDetailNoise3 from '@/assets/textures/platform/tile-noise-3.webp'
+import tileDetailNoise1 from '@/assets/textures/platform/tile-noise.webp'
 import { PLAYER_INITIAL_POSITION } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
-import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import {
   COLUMNS,
@@ -49,7 +50,9 @@ type TileShaderUniforms = {
   uPlayerWorldPos: Vector3
   uScrollZ: number
   uAddDetailNoise: number
-  uDetailNoiseMap: Texture | null
+  uDetailNoiseMap1: Texture | null
+  uDetailNoiseMap2: Texture | null
+  uDetailNoiseMap3: Texture | null
   uHighlightRadius: number
   uFadeFullRadius: number
   uFadeMinRadius: number
@@ -65,7 +68,9 @@ const INITIAL_TILE_UNIFORMS: TileShaderUniforms = {
   ),
   uScrollZ: 0,
   uAddDetailNoise: 1,
-  uDetailNoiseMap: null,
+  uDetailNoiseMap1: null,
+  uDetailNoiseMap2: null,
+  uDetailNoiseMap3: null,
   uHighlightRadius: TILE_PLAYER_HIGHLIGHT_RADIUS,
   uFadeFullRadius: TILE_PLAYER_FADE_FULL_RADIUS,
   uFadeMinRadius: TILE_PLAYER_FADE_MIN_RADIUS,
@@ -100,9 +105,16 @@ type PlatformTilesProps = {
 export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) => {
   const addDetailNoise = usePerformanceStore((s) => s.sceneConfig.platformTiles.addDetailNoise)
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
-  const detailNoiseTexture = useTexture(tileDetailNoise.src)
-  detailNoiseTexture.wrapS = RepeatWrapping
-  detailNoiseTexture.wrapT = RepeatWrapping
+  const detailNoiseTextures = useTexture([
+    tileDetailNoise1.src,
+    tileDetailNoise2.src,
+    tileDetailNoise3.src,
+  ]) as [Texture, Texture, Texture]
+
+  detailNoiseTextures.forEach((texture) => {
+    texture.wrapS = RepeatWrapping
+    texture.wrapT = RepeatWrapping
+  })
 
   const [instances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)
@@ -189,7 +201,9 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
             transparent={true}
             {...INITIAL_TILE_UNIFORMS}
             uAddDetailNoise={Number(addDetailNoise)}
-            uDetailNoiseMap={detailNoiseTexture}
+            uDetailNoiseMap1={detailNoiseTextures[0]}
+            uDetailNoiseMap2={detailNoiseTextures[1]}
+            uDetailNoiseMap3={detailNoiseTextures[2]}
             uShadowEnabled={sceneQuality === SceneQuality.LOW ? 0 : 1}
           />
         </Suspense>

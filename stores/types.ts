@@ -24,6 +24,13 @@ export type PlayerInput = {
 
 export type PlayerStatus = 'idle' | 'safe' | 'out-of-bounds' | 'respawning'
 
+export type OverlaySelection =
+  | 'none'
+  | 'dashboard'
+  | 'loading'
+  | 'speedrun-start'
+  | 'speedrun-end'
+
 export type HudIndicatorConfig = {
   id: string
   content: ReactNode
@@ -78,6 +85,7 @@ export type OverlaysSlice = {
   setIsShowingDashboard: (isShowingDashboard: boolean) => void
   isShowingSpeedRunEndOverlay: boolean
   isShowingSpeedRunStartOverlay: boolean
+  setOverlaySelection: (overlay: OverlaySelection) => void
   setSpeedRunOverlays: (stage: SpeedRunStage, isSpeedRunMode: boolean) => void
 }
 

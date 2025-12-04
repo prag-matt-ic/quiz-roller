@@ -6,7 +6,9 @@ precision mediump float;
 
 uniform lowp float uAddDetailNoise;
 uniform highp float uScrollZ;
-uniform sampler2D uDetailNoiseMap;
+uniform sampler2D uDetailNoiseMap1;
+uniform sampler2D uDetailNoiseMap2;
+uniform sampler2D uDetailNoiseMap3;
 uniform highp vec3 uPlayerWorldPos;
 uniform lowp float uShadowEnabled;
 
@@ -32,6 +34,12 @@ const float SHADOW_STRENGTH = 0.6;
 const float SHADOW_FADE_START_Y = 1.5; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
 const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
+const float DETAIL_VARIANT_SCALE = 17.13;
+
+float selectDetailNoiseIndex(float seed) {
+  float hashed = fract(sin(seed * DETAIL_VARIANT_SCALE) * 43758.5453);
+  return floor(hashed * 3.0);
+}
 
 void main() {
   // Early discard for fully transparent tiles
@@ -51,8 +59,16 @@ void main() {
 
   // Apply detail noise when quality setting is not low.
   if (uAddDetailNoise > 0.5) {
-    mediump float detailNoise = texture2D(uDetailNoiseMap, vUv).r;
-    bgColour -= detailNoise * 0.24;
+    float detailIndex = selectDetailNoiseIndex(vSeed);
+    mediump float detailNoise;
+    if (detailIndex < 0.5) {
+      detailNoise = texture2D(uDetailNoiseMap1, vUv).r;
+    } else if (detailIndex < 1.5) {
+      detailNoise = texture2D(uDetailNoiseMap2, vUv).r;
+    } else {
+      detailNoise = texture2D(uDetailNoiseMap3, vUv).r;
+    }
+    bgColour -= detailNoise * 0.14;
   }
 
   // Mix with white based on tile type

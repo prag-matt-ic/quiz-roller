@@ -10,24 +10,28 @@ import {
 import { type StoreApi, createStore, useStore } from 'zustand'
 
 export enum SoundFX {
-  BACKGROUND = 'BACKGROUND',
+  BACKGROUND_EXPLORE = 'BACKGROUND_EXPLORE',
   CORRECT_ANSWER = 'CORRECT_ANSWER',
   INCORRECT_ANSWER = 'INCORRECT_ANSWER',
   OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
   OPEN_INFO = 'OPEN_INFO',
   CHANGE_COLOUR = 'CHANGE_COLOUR',
   COIN_COLLECTED = 'COIN_COLLECTED',
+  CONFETTI_BURST = 'CONFETTI_BURST',
 }
 // TODO: add speed run countdown sound FX
+// TODO: add new coin collect sound fx perhaps speed boost related.
+// TODO: add more intense background music for speed run mode?
 
 const SOUND_FILES: Record<SoundFX, string> = {
-  [SoundFX.BACKGROUND]: '/audio/background.aac',
+  [SoundFX.BACKGROUND_EXPLORE]: '/audio/background.aac',
   [SoundFX.CORRECT_ANSWER]: '/audio/correct.aac',
   [SoundFX.INCORRECT_ANSWER]: '/audio/incorrect.aac',
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
   [SoundFX.COIN_COLLECTED]: '/audio/coin.aac',
+  [SoundFX.CONFETTI_BURST]: '/audio/coin.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
@@ -164,7 +168,7 @@ const createSoundStore = () => {
       const { playSoundFX, stopAllSounds } = get()
       set({ isMuted })
       if (!isMuted) {
-        playSoundFX(SoundFX.BACKGROUND, true)
+        playSoundFX(SoundFX.BACKGROUND_EXPLORE, true)
       } else {
         stopAllSounds()
       }

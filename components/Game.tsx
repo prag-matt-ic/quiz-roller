@@ -55,7 +55,8 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       gl={{
         alpha: false,
         antialias: !isMobile,
-        powerPreference: 'high-performance',
+        powerPreference:
+          process.env.NODE_ENV === 'development' ? 'low-power' : 'high-performance',
       }}>
       <PerformanceMonitor
         // Create an upper/lower FPS band relative to device refresh rate

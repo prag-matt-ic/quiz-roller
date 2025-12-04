@@ -20,11 +20,13 @@ void main() {
   float dissolve;
 
   if (uUseNoiseFade > 0.5) {
-    float noiseSample = texture2D(uNoiseTexture, vMirroredUv).r * 0.4;
+    float noiseSample = texture2D(uNoiseTexture, vMirroredUv).r;
+    float noiseEdge = noiseSample * 0.3;
+    float noiseStrength = mix(0.65, 1.0, noiseSample);
     dissolve = smoothstep(
-      noiseSample - DISSOLVE_WIDTH,
-      noiseSample + DISSOLVE_WIDTH,
-      combinedFade
+      noiseEdge - DISSOLVE_WIDTH,
+      noiseEdge + DISSOLVE_WIDTH,
+      combinedFade * noiseStrength
     );
   } else {
     dissolve = combinedFade;

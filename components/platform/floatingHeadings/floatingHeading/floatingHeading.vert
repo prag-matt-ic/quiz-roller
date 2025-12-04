@@ -12,16 +12,23 @@ uniform float uEnableRotation;
 uniform float uUsePlayerFade;
 uniform float uDistanceFadeEnabled;
 
-const highp float PLAYER_FADE_INNER = 2.0;
-const highp float PLAYER_FADE_OUTER =  7.0;
-const highp float PLAYER_FADE_INNER_SQ = PLAYER_FADE_INNER * PLAYER_FADE_INNER;
-const highp float PLAYER_FADE_OUTER_SQ = PLAYER_FADE_OUTER * PLAYER_FADE_OUTER;
+// Use a softer lateral fade (X) so headings do not pop when the player crosses lanes.
+const highp float PLAYER_FADE_X_INNER = 1.0;
+const highp float PLAYER_FADE_X_OUTER = 10.0;
+const highp float PLAYER_FADE_Z_INNER = 1.0;
+const highp float PLAYER_FADE_Z_OUTER = 6.0;
+const highp float PLAYER_FADE_X_INNER_SQ = PLAYER_FADE_X_INNER * PLAYER_FADE_X_INNER;
+const highp float PLAYER_FADE_X_OUTER_SQ = PLAYER_FADE_X_OUTER * PLAYER_FADE_X_OUTER;
+const highp float PLAYER_FADE_Z_INNER_SQ = PLAYER_FADE_Z_INNER * PLAYER_FADE_Z_INNER;
+const highp float PLAYER_FADE_Z_OUTER_SQ = PLAYER_FADE_Z_OUTER * PLAYER_FADE_Z_OUTER;
 const highp float HEADING_MAX_ANGLE = 0.4; // ~23 degrees max tilt
 const highp float HEADING_LATERAL_RANGE = 6.0; // world-units span for full tilt
 
 float playerDistanceFade(vec2 offset) {
-  highp float distSq = dot(offset, offset);
-  return smoothstep(PLAYER_FADE_INNER_SQ, PLAYER_FADE_OUTER_SQ, distSq);
+  highp float lateralFade = smoothstep(PLAYER_FADE_X_INNER_SQ, PLAYER_FADE_X_OUTER_SQ, offset.x * offset.x);
+  highp float depthFade = smoothstep(PLAYER_FADE_Z_INNER_SQ, PLAYER_FADE_Z_OUTER_SQ, offset.y * offset.y);
+  // Use the stronger (max) fade so approaching from either axis keeps the heading visible.
+  return max(lateralFade, depthFade);
 }
 
 void main() {
