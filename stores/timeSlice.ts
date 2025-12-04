@@ -7,6 +7,7 @@ import {
   type SpeedRunStage,
   type TimeSlice,
 } from './types'
+import { getSpeedRunOverlays } from './overlaysSlice'
 
 export const RESET_TIME_STATE: Pick<TimeSlice, 'speedRunTimeCS' | 'speedRunStage'> = {
   speedRunTimeCS: 0,
@@ -30,12 +31,10 @@ export const createTimeSlice =
     setSpeedRunStage: (stage: SpeedRunStage) => {
       const { mode } = get()
       const isSpeedRunMode = mode === GameMode.SPEEDRUN
+      const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
       set({
         speedRunStage: stage,
-        isShowingSpeedRunStartOverlay:
-          isSpeedRunMode && ['countdown', 'username'].includes(stage),
-        isShowingSpeedRunEndOverlay:
-          isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+        ...overlays,
       })
     },
     startSpeedRun: () => {
@@ -49,12 +48,10 @@ export const createTimeSlice =
       const { mode } = get()
       const isSpeedRunMode = mode === GameMode.SPEEDRUN
       const stage = 'running'
+      const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
       set({
         speedRunStage: stage,
-        isShowingSpeedRunStartOverlay:
-          isSpeedRunMode && ['countdown', 'username'].includes(stage),
-        isShowingSpeedRunEndOverlay:
-          isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+        ...overlays,
       })
     },
     finishSpeedRun: async () => {
@@ -63,13 +60,11 @@ export const createTimeSlice =
 
       const isSpeedRunMode = mode === GameMode.SPEEDRUN
       const submittingStage = 'submitting'
+      const submittingOverlays = getSpeedRunOverlays(submittingStage, isSpeedRunMode)
 
       set({
         speedRunStage: submittingStage,
-        isShowingSpeedRunStartOverlay:
-          isSpeedRunMode && ['countdown', 'username'].includes(submittingStage),
-        isShowingSpeedRunEndOverlay:
-          isSpeedRunMode && ['submitting', 'leaderboard'].includes(submittingStage),
+        ...submittingOverlays,
       })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
@@ -88,13 +83,11 @@ export const createTimeSlice =
         set((state) => {
           const stage = 'leaderboard'
           const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
+          const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
           return {
             completedSpeedRuns: [...state.completedSpeedRuns, result],
             speedRunStage: stage,
-            isShowingSpeedRunStartOverlay:
-              isSpeedRunMode && ['countdown', 'username'].includes(stage),
-            isShowingSpeedRunEndOverlay:
-              isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+            ...overlays,
           }
         })
       } catch (error) {
@@ -103,12 +96,10 @@ export const createTimeSlice =
         set((state) => {
           const stage = 'leaderboard'
           const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
+          const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
           return {
             speedRunStage: stage,
-            isShowingSpeedRunStartOverlay:
-              isSpeedRunMode && ['countdown', 'username'].includes(stage),
-            isShowingSpeedRunEndOverlay:
-              isSpeedRunMode && ['submitting', 'leaderboard'].includes(stage),
+            ...overlays,
           }
         })
       }

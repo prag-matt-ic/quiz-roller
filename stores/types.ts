@@ -71,6 +71,16 @@ export type InputSlice = {
   setPlayerInput: (input: PlayerInput) => void
 }
 
+export type OverlaysSlice = {
+  isShowingLoadingOverlay: boolean
+  setIsShowingLoadingOverlay: (isVisible: boolean) => void
+  isShowingDashboard: boolean
+  setIsShowingDashboard: (isShowingDashboard: boolean) => void
+  isShowingSpeedRunEndOverlay: boolean
+  isShowingSpeedRunStartOverlay: boolean
+  setSpeedRunOverlays: (stage: SpeedRunStage, isSpeedRunMode: boolean) => void
+}
+
 export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
@@ -127,13 +137,6 @@ export type GameSlice = {
   isPlatformReady: boolean
   setPlatformReady: (isReady: boolean) => void
 
-  isShowingLoadingOverlay: boolean
-  setIsShowingLoadingOverlay: (isVisible: boolean) => void
-  isShowingDashboard: boolean
-  setIsShowingDashboard: (isShowingDashboard: boolean) => void
-  isShowingSpeedRunEndOverlay: boolean
-  isShowingSpeedRunStartOverlay: boolean
-
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
 
@@ -141,7 +144,7 @@ export type GameSlice = {
   setHydrated: () => void
 }
 
-export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice
+export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice & OverlaysSlice
 
 export type SliceDeps = {
   isMobile: boolean

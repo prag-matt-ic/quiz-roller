@@ -65,6 +65,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         opacity: 0,
         duration: 1.0,
       })
+      .set('#countdown-go', { opacity: 0.25 })
   }
 
   const usernameInput = useRef<HTMLInputElement>(null)
@@ -88,9 +89,10 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
 
   const countdown = (
     <div className="relative flex items-center justify-center">
-      <CountdownNumber id="countdown-3" number={3} />
-      <CountdownNumber id="countdown-2" number={2} />
-      <CountdownNumber id="countdown-1" number={1} />
+      <CountdownNumber id="countdown-3" label="3" />
+      <CountdownNumber id="countdown-2" label="2" />
+      <CountdownNumber id="countdown-1" label="1" />
+      <CountdownNumber id="countdown-go" label="GO" />
     </div>
   )
 
@@ -151,15 +153,16 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-radial from-black/90 from-25% to-black/0 to-100% backdrop-blur-sm transition-opacity duration-200',
+        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-radial from-black/90 from-25% to-black/0 to-100% backdrop-blur-sm transition-opacity',
+        transitionStatus === 'entering' && 'opacity-100 duration-300',
         transitionStatus === 'entered' && 'opacity-100',
-        transitionStatus === 'exiting' && 'opacity-0',
+        transitionStatus === 'exiting' && 'opacity-0 duration-500',
         transitionStatus === 'exited' && 'opacity-0',
       )}>
       <SwitchTransition>
         <Transition
           key={switchKey}
-          timeout={{ enter: 0, exit: 200 }}
+          timeout={{ enter: 0, exit: 300 }}
           nodeRef={contentContainer}
           appear={true}
           onEnter={onContentEnter}
@@ -169,7 +172,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
             <div
               ref={contentContainer}
               className={twJoin(
-                'opacity-0 transition-opacity duration-200',
+                'opacity-0 transition-opacity duration-300',
                 status === 'entering' && 'opacity-100',
                 status === 'entered' && 'opacity-100',
               )}>
@@ -183,10 +186,10 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   )
 }
 
-const CountdownNumber: FC<{ id: string; number: number }> = ({ id, number }) => {
+const CountdownNumber: FC<{ id: string; label: string }> = ({ id, label }) => {
   return (
     <div id={id} className="absolute text-[120px] font-black opacity-0">
-      {number}
+      {label}
     </div>
   )
 }

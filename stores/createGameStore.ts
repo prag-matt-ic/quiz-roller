@@ -6,6 +6,7 @@ import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/s
 
 import { createGameSlice } from './gameSlice'
 import { createInputSlice } from './inputSlice'
+import { createOverlaysSlice } from './overlaysSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createTimeSlice } from './timeSlice'
 import type { GameStore } from './types'
@@ -33,6 +34,7 @@ export const createGameStore = ({
           ...createTimeSlice(insertSpeedRun)(...a),
           ...createInputSlice({ isMobile, playSoundFX, stopSoundFX })(...a),
           ...createPlayerSlice({ isMobile, playSoundFX, stopSoundFX })(...a),
+          ...createOverlaysSlice(...a),
           ...createGameSlice(...a),
         }),
         {

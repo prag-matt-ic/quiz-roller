@@ -1,6 +1,7 @@
 import type { RowData } from '@/utils/tiles'
 
 import { getResetInputState } from './inputSlice'
+import { getSpeedRunOverlays } from './overlaysSlice'
 import { PLAYER_INITIAL_POSITION, RESET_PLAYER_STATE } from './playerSlice'
 import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
@@ -11,9 +12,6 @@ export const RESET_GAME_STATE = {
   currentRow: 0,
   cameraLookAtPosition: null,
   isPlatformReady: false,
-  isShowingDashboard: false,
-  isShowingSpeedRunEndOverlay: false,
-  isShowingSpeedRunStartOverlay: false,
   rowsData: [] as RowData[],
 }
 
@@ -22,18 +20,11 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   stage: Stage.HOME,
   htmlPortal: undefined,
   _isHydrated: false,
-  isShowingLoadingOverlay: true,
   resetPlatformTick: 0,
   mode: GameMode.MAIN,
   hudIndicator: null,
   setHydrated: () => {
     set({ _isHydrated: true })
-  },
-  setIsShowingLoadingOverlay: (isVisible) => {
-    set({ isShowingLoadingOverlay: isVisible })
-  },
-  setIsShowingDashboard: (isShowingDashboard) => {
-    set({ isShowingDashboard })
   },
   setHtmlPortal: (htmlPortal) => {
     set({ htmlPortal })
@@ -81,10 +72,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         : 'username'
       : RESET_TIME_STATE.speedRunStage
 
-    const isShowingSpeedRunStartOverlay =
-      isSpeedRunMode && ['countdown', 'username'].includes(speedRunStage)
-    const isShowingSpeedRunEndOverlay =
-      isSpeedRunMode && ['submitting', 'leaderboard'].includes(speedRunStage)
+    const speedRunOverlays = getSpeedRunOverlays(speedRunStage, isSpeedRunMode)
 
     set((s) => {
       return {
@@ -96,8 +84,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         rowsData: nextRowsData,
         totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
         speedRunStage: speedRunStage,
-        isShowingSpeedRunStartOverlay,
-        isShowingSpeedRunEndOverlay,
+        isShowingDashboard: false,
+        ...speedRunOverlays,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,
