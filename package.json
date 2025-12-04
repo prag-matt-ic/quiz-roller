@@ -8,7 +8,8 @@
     "dev:https": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build-platform-data": "tsc --project scripts/tsconfig.platform.json && node .tmp/platformRows/scripts/createPlatformRows.js"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",

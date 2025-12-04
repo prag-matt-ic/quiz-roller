@@ -1,4 +1,5 @@
 import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
+import { PLATFORM_VERSION } from '@/resources/rowsData'
 
 import {
   GameMode,
@@ -74,7 +75,7 @@ export const createTimeSlice =
         time: timeInSeconds,
         date: new Date().toISOString(),
         input_type: inputType === InputType.KEYS ? 'keyboard' : 'joystick',
-        level_id: '1.0',
+        level_id: PLATFORM_VERSION,
       }
 
       try {

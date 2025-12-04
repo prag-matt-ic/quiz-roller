@@ -11,10 +11,11 @@ import {
   speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
 } from '@/model/schema'
+import { PLATFORM_VERSION } from '@/resources/rowsData'
 
 export async function getSpeedrunData(
   count: number,
-  levelId: string = '1.0',
+  levelId: string = PLATFORM_VERSION,
 ): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
@@ -40,7 +41,7 @@ export type RunWithPosition = {
 
 export async function getSpeedrunPosition(
   id: number,
-  levelId: string = '1.0',
+  levelId: string = PLATFORM_VERSION,
 ): Promise<RunWithPosition | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
@@ -76,7 +77,7 @@ export async function getSpeedrunPosition(
   }
 }
 
-const LEVEL_ID = '1.0'
+const LEVEL_ID = PLATFORM_VERSION
 
 export async function insertSpeedRun({
   username,

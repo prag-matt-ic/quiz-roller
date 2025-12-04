@@ -1,20 +1,38 @@
-import type { TotalCounts } from '@/stores/totalCounts'
-import { Stage } from '@/stores/types'
+/**
+ * PLATFORM ROW DATA BUILDER
+ *
+ * Generates precomputed platform row data from bitmap layouts.
+ * - Detects latest version folder in ./assets/platform/{semver}/
+ * - Parses bitmaps for each game mode and writes resources/rowsData.ts
+ * - Speeds up runtime by skipping client-side bitmap parsing
+ *
+ * HOW TO RUN:
+ *   npm run build-platform-data
+ *
+ * OUTPUT:
+ *   resources/rowsData.ts with PLATFORM_DATA containing rows + totalCounts per mode.
+ */
+/* eslint-disable no-console */
+import fs from 'fs'
+import path from 'path'
+import sharp from 'sharp'
+
+import { type TotalCounts, createTotalCounts } from '../stores/totalCounts'
+import { GameMode, Stage } from '../stores/types'
+import { HEADING_Y } from '../utils/platform/floatingHeading'
 import {
   COLUMNS,
+  CONFETTI_ROW_DEPTH,
   type ConfettiPlacement,
   type IndexedPlacement,
   ON_TILE_Y,
-  RingPositions,
+  type RingPositions,
   type RowData,
   SAFE_HEIGHT,
-  CONFETTI_ROW_DEPTH,
   TILE_SIZE,
   UNSAFE_HEIGHT,
   colToX,
-} from '@/utils/tiles'
-
-import { HEADING_Y } from './floatingHeading'
+} from '../utils/tiles'
 
 type BitmapPlacement = {
   columnIndex: number
@@ -37,10 +55,40 @@ type BitmapRow = {
   confettiPlacements?: BitmapPlacement[]
 }
 
-type PlacementIndexKey = Exclude<keyof TotalCounts, 'rows' | 'rings'>
-
-export type SectionBitmapParseResult = {
+type ModeRows = {
   rows: RowData[]
+  totalCounts: TotalCounts
+}
+
+type SectionSource = {
+  file: string
+  stage: Stage
+}
+
+const PLATFORM_ROOT = path.join(process.cwd(), 'assets', 'platform')
+const OUTPUT_PATH = path.join(process.cwd(), 'resources', 'rowsData.ts')
+
+const CORE_SOURCES: SectionSource[] = [
+  { file: 'home.png', stage: Stage.HOME },
+  { file: 'obstacles-1.png', stage: Stage.OBSTACLES },
+  { file: 'info-1.png', stage: Stage.INFO },
+  { file: 'obstacles-2.png', stage: Stage.OBSTACLES },
+  { file: 'info-2.png', stage: Stage.INFO },
+  { file: 'obstacles-3.png', stage: Stage.OBSTACLES },
+  { file: 'info-3.png', stage: Stage.INFO },
+  { file: 'obstacles-4.png', stage: Stage.OBSTACLES },
+]
+
+const MODE_SOURCES: Record<GameMode, SectionSource[]> = {
+  [GameMode.MAIN]: [...CORE_SOURCES, { file: 'cta.png', stage: Stage.CTA }],
+  [GameMode.SPEEDRUN]: [
+    ...CORE_SOURCES,
+    { file: 'speed-run-finish.png', stage: Stage.SPEED_RUN_FINISH },
+  ],
+  [GameMode.TEST]: [
+    { file: 'test.png', stage: Stage.HOME },
+    { file: 'cta.png', stage: Stage.CTA },
+  ],
 }
 
 const COLOUR_CODES = {
@@ -54,43 +102,132 @@ const COLOUR_CODES = {
   CONFETTI: [255, 0, 128] as const,
 }
 
-const isColour = (r: number, g: number, b: number, [cr, cg, cb]: readonly number[]) =>
-  r === cr && g === cg && b === cb
+const NEIGHBOUR_OFFSETS: Array<[number, number]> = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+]
 
-export function parseSectionBitmap(
-  image: HTMLImageElement,
+const looksLikeVersion = (value: string) => /^\d+\.\d+\.\d+$/.test(value)
+
+function isColour(r: number, g: number, b: number, [cr, cg, cb]: readonly number[]): boolean {
+  return r === cr && g === cg && b === cb
+}
+
+function compareVersions(a: string, b: string): number {
+  const partsA = a.split('.').map(Number)
+  const partsB = b.split('.').map(Number)
+  const length = Math.max(partsA.length, partsB.length)
+
+  for (let i = 0; i < length; i++) {
+    const aPart = partsA[i] ?? 0
+    const bPart = partsB[i] ?? 0
+    if (aPart !== bPart) return bPart - aPart
+  }
+
+  return 0
+}
+
+function findVersionDirectory(basePath: string): { version: string; directory: string } {
+  const absoluteBase = path.resolve(basePath)
+  if (!fs.existsSync(absoluteBase)) {
+    throw new Error(`Platform root not found at ${absoluteBase}`)
+  }
+  const stat = fs.statSync(absoluteBase)
+  if (!stat.isDirectory()) {
+    throw new Error(`Platform root must be a directory: ${absoluteBase}`)
+  }
+
+  const baseName = path.basename(absoluteBase)
+  if (looksLikeVersion(baseName)) {
+    return { version: baseName, directory: absoluteBase }
+  }
+
+  const candidates = fs
+    .readdirSync(absoluteBase, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+
+  if (!candidates.length) {
+    throw new Error(`No versioned platform folders found in ${absoluteBase}`)
+  }
+
+  const sorted = candidates.sort(compareVersions)
+  const version = sorted[0]!
+  return { version, directory: path.join(absoluteBase, version) }
+}
+
+function formatModeData({ rows, totalCounts }: ModeRows): string {
+  return `{ rows: ${JSON.stringify(rows)}, totalCounts: ${JSON.stringify(totalCounts)} }`
+}
+
+function buildOutputFile({
+  version,
+  modes,
+}: {
+  version: string
+  modes: Record<GameMode, ModeRows>
+}): string {
+  return `/* eslint-disable */
+import { GameMode } from '@/stores/types'
+import type { TotalCounts } from '@/stores/totalCounts'
+import type { RowData } from '@/utils/tiles'
+
+export type PlatformModeData = {
+  rows: RowData[]
+  totalCounts: TotalCounts
+}
+
+export type PlatformRowsData = {
+  version: string
+  modes: Record<GameMode, PlatformModeData>
+}
+
+export const PLATFORM_DATA: PlatformRowsData = {
+  version: '${version}',
+  modes: {
+    [GameMode.MAIN]: ${formatModeData(modes[GameMode.MAIN])},
+    [GameMode.SPEEDRUN]: ${formatModeData(modes[GameMode.SPEEDRUN])},
+    [GameMode.TEST]: ${formatModeData(modes[GameMode.TEST])},
+  },
+}
+export const PLATFORM_VERSION = PLATFORM_DATA.version
+`
+}
+
+async function parseSectionBitmapFromFile(
+  filePath: string,
   stage: Stage,
   totalCounts: TotalCounts,
-): SectionBitmapParseResult {
-  if (typeof window === 'undefined') {
-    throw new Error('parseSectionBitmap must run in the browser')
-  }
-
-  const width = COLUMNS
-  const imageWidth = image.naturalWidth || image.width
-  const imageHeight = image.naturalHeight || image.height
+): Promise<RowData[]> {
+  const image = sharp(filePath)
+  const metadata = await image.metadata()
+  const imageHeight = metadata.height
+  const imageWidth = metadata.width
 
   if (!imageHeight || !imageWidth) {
-    throw new Error('Section bitmap image is missing intrinsic dimensions')
+    throw new Error(`Bitmap image missing dimensions: ${filePath}`)
   }
 
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = imageHeight
-  const context = canvas.getContext('2d', { willReadFrequently: true })
-  if (!context) {
-    throw new Error('Failed to initialise canvas context for section bitmap parsing')
+  const { data, info } = await image
+    .resize(COLUMNS, imageHeight, { fit: 'fill' })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+
+  const width = info.width
+  const height = info.height
+  const channels = info.channels
+
+  if (width !== COLUMNS) {
+    throw new Error(`Expected resized width of ${COLUMNS}, got ${width} for ${filePath}`)
   }
 
-  // Draw the source image scaled to match the platform column count.
-  context.drawImage(image, 0, 0, imageWidth, imageHeight, 0, 0, width, imageHeight)
+  const rows: BitmapRow[] = new Array(height)
 
-  const { data } = context.getImageData(0, 0, width, imageHeight)
-
-  const rows: BitmapRow[] = new Array(imageHeight)
-
-  for (let srcRow = 0; srcRow < imageHeight; srcRow++) {
-    const rowIndex = imageHeight - 1 - srcRow // bottom row -> index 0
+  for (let srcRow = 0; srcRow < height; srcRow++) {
+    const rowIndex = height - 1 - srcRow
     const heights = new Array<number>(width)
     const ringColumns: number[] = []
     const infoZoneColumns: number[] = []
@@ -101,7 +238,7 @@ export function parseSectionBitmap(
     const confettiColumns: number[] = []
 
     for (let column = 0; column < width; column++) {
-      const pixelIndex = (srcRow * width + column) * 4
+      const pixelIndex = (srcRow * width + column) * channels
       const r = data[pixelIndex]
       const g = data[pixelIndex + 1]
       const b = data[pixelIndex + 2]
@@ -109,33 +246,13 @@ export function parseSectionBitmap(
       const isRaised = !isColour(r, g, b, COLOUR_CODES.VOID)
       heights[column] = isRaised ? SAFE_HEIGHT : UNSAFE_HEIGHT
 
-      if (isColour(r, g, b, COLOUR_CODES.RING)) {
-        ringColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) {
-        infoZoneColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.COLLECTIBLE)) {
-        collectibleColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.FINISH_LINE)) {
-        finishLineColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.HIGHLIGHT)) {
-        highlightColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.FLOATING_HEADING)) {
-        floatingHeadingColumns.push(column)
-      }
-
-      if (isColour(r, g, b, COLOUR_CODES.CONFETTI)) {
-        confettiColumns.push(column)
-      }
+      if (isColour(r, g, b, COLOUR_CODES.RING)) ringColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) infoZoneColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.COLLECTIBLE)) collectibleColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.FINISH_LINE)) finishLineColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.HIGHLIGHT)) highlightColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.FLOATING_HEADING)) floatingHeadingColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.CONFETTI)) confettiColumns.push(column)
     }
 
     rows[rowIndex] = {
@@ -193,28 +310,16 @@ export function parseSectionBitmap(
     },
   )
 
-  // Release canvas resources promptly
-  context.canvas.width = 0
-  context.canvas.height = 0
-
   const totalRingsCount = rows.reduce((count, row) => count + row.ringColumns.length, 0)
   const rowData = buildRowDataFromBitmapRows({ rows, stage, globalIndexes: totalCounts })
   totalCounts.rings += totalRingsCount
 
-  return {
-    rows: rowData,
-  }
+  return rowData
 }
 
 type ColumnsAccessor = (row: BitmapRow) => number[]
 type PlacementAssigner = (rowIndex: number, placements: BitmapPlacement[]) => void
 
-/**
- * For a given surface element (info zones, collectibles, etc.) this helper scans the bitmap rows,
- * groups neighbouring coloured pixels into connected components (4-directional), and records a
- * single placement for every row that participates in that component. The function is invoked once
- * per element type, so a row can safely contain both info zones and collectibles simultaneously.
- */
 function assignBitmapPlacements(
   rows: BitmapRow[],
   getColumns: ColumnsAccessor,
@@ -224,16 +329,9 @@ function assignBitmapPlacements(
   if (rowCount === 0) return
 
   const columnSets = rows.map((row) => new Set(getColumns(row)))
-  // Track which bitmap cells have already been consumed for this feature type.
   const visited = new Set<string>()
   const placementsByRow = new Map<number, BitmapPlacement[]>()
   const keyFor = (row: number, column: number) => `${row}:${column}`
-  const NEIGHBOUR_OFFSETS: Array<[number, number]> = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1],
-  ]
 
   for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
     const columns = columnSets[rowIndex]
@@ -243,7 +341,6 @@ function assignBitmapPlacements(
       const seedKey = keyFor(rowIndex, column)
       if (visited.has(seedKey)) return
 
-      // Depth-first search starting from this pixel to capture the entire connected component.
       const stack: Array<{ row: number; column: number }> = [{ row: rowIndex, column }]
       const component: Array<{ row: number; column: number }> = []
 
@@ -295,7 +392,6 @@ function assignBitmapPlacements(
 
   placementsByRow.forEach((placements, rowIndex) => {
     placements.sort((a, b) => a.columnIndex - b.columnIndex)
-    // Hand back the per-row placement list to the caller (info zones, collectibles, etc.).
     assignPlacements(rowIndex, placements)
   })
 }
@@ -322,22 +418,22 @@ function buildRowDataFromBitmapRows({
       stage,
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === rowCount - 1,
-      isHighlighted: [],
+      isHighlighted: new Array<number>(COLUMNS).fill(0),
       rowIndex: globalIndexes.rows,
     }
 
     globalIndexes.rows++
 
     applyRingColumns(baseRow, layoutRow.ringColumns)
-  applyInfoColumns(baseRow, layoutRow, globalIndexes)
-  applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
-  applyFinishLineColumn(baseRow, layoutRow)
-  applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
-  applyHighlightColumns(baseRow, layoutRow.highlightColumns)
-  applyConfettiPlacements(baseRow, layoutRow, globalIndexes)
+    applyInfoColumns(baseRow, layoutRow, globalIndexes)
+    applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
+    applyFinishLineColumn(baseRow, layoutRow)
+    applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
+    applyHighlightColumns(baseRow, layoutRow.highlightColumns)
+    applyConfettiPlacements(baseRow, layoutRow, globalIndexes)
 
-  rowData[rowIndex] = baseRow
-}
+    rowData[rowIndex] = baseRow
+  }
 
   return rowData
 }
@@ -407,7 +503,7 @@ function applyFinishLineColumn(row: RowData, layoutRow: BitmapRow) {
 
 function applyHighlightColumns(row: RowData, columns?: number[]) {
   if (!columns || columns.length === 0) return
-  const highlights = row.isHighlighted ?? []
+  const highlights = row.isHighlighted ?? new Array<number>(COLUMNS).fill(0)
   columns.forEach((columnIndex) => {
     if (columnIndex < 0 || columnIndex >= COLUMNS) return
     highlights[columnIndex] = 1
@@ -452,7 +548,7 @@ function applyConfettiPlacements(
 function buildPlacementsFromBitmap(
   placements: BitmapPlacement[] | undefined,
   y: number,
-  indexKey: PlacementIndexKey,
+  indexKey: keyof TotalCounts & Exclude<keyof TotalCounts, 'rows' | 'rings'>,
   globalIndexes: TotalCounts,
 ): IndexedPlacement[] | undefined {
   if (!placements?.length) return undefined
@@ -556,7 +652,7 @@ function getRaisedSpanForRow(
 function buildPlacementsFromColumns(
   columns: number[] | undefined,
   y: number,
-  indexKey: PlacementIndexKey,
+  indexKey: keyof TotalCounts & Exclude<keyof TotalCounts, 'rows' | 'rings'>,
   globalIndexes: TotalCounts,
 ): IndexedPlacement[] | undefined {
   if (!columns?.length) return undefined
@@ -574,7 +670,7 @@ function createIndexedPlacement(
   columnIndex: number,
   zOffset: number,
   y: number,
-  indexKey: PlacementIndexKey,
+  indexKey: keyof TotalCounts & Exclude<keyof TotalCounts, 'rows' | 'rings'>,
   globalIndexes: TotalCounts,
 ): IndexedPlacement | null {
   if (columnIndex < 0 || columnIndex >= COLUMNS) return null
@@ -583,3 +679,45 @@ function createIndexedPlacement(
   const placement: IndexedPlacement = [colToX(columnIndex), y, zOffset, placementIndex]
   return placement
 }
+
+async function buildModeData(
+  versionDirectory: string,
+  sources: SectionSource[],
+): Promise<ModeRows> {
+  const totalCounts = createTotalCounts()
+  const rows: RowData[] = []
+
+  for (const source of sources) {
+    const filePath = path.join(versionDirectory, source.file)
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Missing platform bitmap: ${filePath}`)
+    }
+    const parsedRows = await parseSectionBitmapFromFile(filePath, source.stage, totalCounts)
+    rows.push(...parsedRows)
+  }
+
+  return { rows, totalCounts }
+}
+
+async function main() {
+  const { version, directory } = findVersionDirectory(PLATFORM_ROOT)
+
+  console.log(`🛠️  Generating platform rows for version ${version}`)
+
+  const modes: Record<GameMode, ModeRows> = {
+    [GameMode.MAIN]: await buildModeData(directory, MODE_SOURCES[GameMode.MAIN]),
+    [GameMode.SPEEDRUN]: await buildModeData(directory, MODE_SOURCES[GameMode.SPEEDRUN]),
+    [GameMode.TEST]: await buildModeData(directory, MODE_SOURCES[GameMode.TEST]),
+  }
+
+  const output = buildOutputFile({ version, modes })
+  fs.writeFileSync(OUTPUT_PATH, output)
+
+  console.log(`✅ Wrote platform rows to ${OUTPUT_PATH}`)
+}
+
+main().catch((error) => {
+  console.error('❌ Failed to generate platform rows')
+  console.error(error)
+  process.exit(1)
+})

@@ -1,3 +1,4 @@
+import { PLATFORM_DATA } from '@/resources/rowsData'
 import type { RowData } from '@/utils/tiles'
 
 import { getResetInputState } from './inputSlice'
@@ -7,12 +8,30 @@ import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
 import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
 
+const getPlatformDataForMode = (
+  mode: GameMode,
+): { rowsData: RowData[]; totalCounts: ReturnType<typeof createTotalCounts> } => {
+  const modeData = PLATFORM_DATA.modes[mode] ?? PLATFORM_DATA.modes[GameMode.MAIN]
+  if (!modeData) {
+    return {
+      rowsData: [],
+      totalCounts: createTotalCounts(),
+    }
+  }
+  return {
+    rowsData: modeData.rows,
+    totalCounts: { ...modeData.totalCounts },
+  }
+}
+
+const DEFAULT_PLATFORM_DATA = getPlatformDataForMode(GameMode.MAIN)
+
 export const RESET_GAME_STATE = {
-  totalCounts: createTotalCounts(),
+  totalCounts: DEFAULT_PLATFORM_DATA.totalCounts,
   currentRow: 0,
   cameraLookAtPosition: null,
   isPlatformReady: false,
-  rowsData: [] as RowData[],
+  rowsData: DEFAULT_PLATFORM_DATA.rowsData,
 }
 
 export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
@@ -62,7 +81,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     get().stopConfirmation()
 
     const isModeChange = get().mode !== mode
-    const nextRowsData = isModeChange ? [] : get().rowsData
+    const nextModeData = getPlatformDataForMode(mode)
     const isSpeedRunMode = mode === GameMode.SPEEDRUN
     const username = get().username
 
@@ -81,8 +100,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         ...RESET_TIME_STATE,
         ...getResetInputState(),
         mode,
-        rowsData: nextRowsData,
-        totalCounts: isModeChange ? createTotalCounts() : s.totalCounts,
+        rowsData: nextModeData.rowsData,
+        totalCounts: nextModeData.totalCounts,
         speedRunStage: speedRunStage,
         isShowingDashboard: false,
         ...speedRunOverlays,
