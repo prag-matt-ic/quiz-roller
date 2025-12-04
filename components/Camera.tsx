@@ -106,8 +106,8 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     // Adjust the camera based on player input
     const positionZOffset = input.current.down > 0 ? 5 : 0
-    const dashboardZOffset = isOverlayOpen ? 3 : 0
-    const dashboardYOffset = isOverlayOpen ? 4.5 : 0
+    const dashboardZOffset = isOverlayOpen ? 3.0 : 0
+    const dashboardYOffset = isOverlayOpen ? 5.5 : 0
 
     const lookAtX = lookAt[0] + input.current.right - input.current.left
     const lookAtZ = lookAt[2] + input.current.down - input.current.up

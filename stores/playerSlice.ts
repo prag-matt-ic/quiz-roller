@@ -16,8 +16,9 @@ import {
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
 export const PLAYER_SPEED_BASE = 7.0 // units per second
-export const PLAYER_SPEED_MAX = 9.0
-const RING_SPEED_INCREMENT = 0.25
+export const PLAYER_SPEED_MAX = 10.0
+const RING_SPEED_INCREMENT = 0.3
+const SPEED_COOLDOWN_S = 5.0
 const COLLECTIBLE_DURATION_S = 1.5
 
 export const RESET_PLAYER_STATE: Pick<
@@ -90,7 +91,7 @@ export const createPlayerSlice =
       speedTween?.kill()
       const targetValue = Math.min(PLAYER_SPEED_MAX, speedTweenTarget.value + increment)
       speedTween = gsap.to(speedTweenTarget, {
-        duration: 0.3,
+        duration: 0.25,
         ease: 'none',
         value: targetValue,
         onUpdate: () => {
@@ -98,7 +99,7 @@ export const createPlayerSlice =
         },
         onComplete: () => {
           speedDecayTween = gsap.to(speedTweenTarget, {
-            duration: 5.0,
+            duration: SPEED_COOLDOWN_S,
             ease: 'none',
             value: PLAYER_SPEED_BASE,
             onUpdate: () => {
@@ -113,8 +114,8 @@ export const createPlayerSlice =
       speedDecayTween?.kill()
       speedTween?.kill()
       speedTween = gsap.to(speedTweenTarget, {
-        duration: 0.3,
-        ease: 'power2.out',
+        duration: 0.25,
+        ease: 'none',
         value: PLAYER_SPEED_BASE,
         onUpdate: () => {
           set({ playerSpeedUnits: speedTweenTarget.value })

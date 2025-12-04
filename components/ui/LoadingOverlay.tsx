@@ -2,139 +2,18 @@
 
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import {
-  type ButtonHTMLAttributes,
-  type FC,
-  type ReactNode,
-  type TransitionEvent,
-  useEffect,
-  useId,
-  useState,
-} from 'react'
+import { type FC, type TransitionEvent, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import speedroller from '@/assets/brand/SPEEDROLLER.svg'
 import speedrollerFaint from '@/assets/brand/speedroller-faint.svg'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { useSoundStore } from '@/components/SoundProvider'
+import CTAButton from '@/components/ui/CTAButton'
 import { InputConfig } from '@/components/ui/menu/InputConfig'
 import { MOVE_HUD_CONFIG } from '@/resources/content'
 
 import RotateDevice from './RotateDevice'
-
-type CTAButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  children: ReactNode
-  secondary?: boolean
-}
-
-const CTAButton: FC<CTAButtonProps> = ({
-  children,
-  className,
-  disabled,
-  secondary = false,
-  type = 'button',
-  ...props
-}) => {
-  const gradientId = useId()
-
-  return (
-    <button
-      {...props}
-      type={type}
-      disabled={disabled}
-      className={twJoin(
-        'relative inline-flex items-center justify-center overflow-hidden rounded-xl transition-opacity',
-        disabled ? 'cursor-not-allowed opacity-60' : 'hover:opacity-90',
-        className,
-      )}
-      style={{ width: 256, height: 54 }}>
-      {secondary ? (
-        <svg
-          width="256"
-          height="54"
-          viewBox="0 0 256 54"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true">
-          <rect
-            x="0.5"
-            y="0.5"
-            width="255"
-            height="53"
-            rx="11.5"
-            fill="black"
-            fillOpacity="0.4"
-          />
-          <rect
-            x="0.5"
-            y="0.5"
-            width="255"
-            height="53"
-            rx="11.5"
-            stroke={`url(#${gradientId}-secondary)`}
-          />
-          <defs>
-            <linearGradient
-              id={`${gradientId}-secondary`}
-              x1="0"
-              y1="27"
-              x2="264.356"
-              y2="33.822"
-              gradientUnits="userSpaceOnUse">
-              <stop stopColor="#5D6C8A" />
-              <stop offset="0.55" stopColor="#3C4D63" />
-              <stop offset="1" stopColor="#1B2330" />
-            </linearGradient>
-          </defs>
-        </svg>
-      ) : (
-        <svg
-          width="256"
-          height="54"
-          viewBox="0 0 256 54"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="absolute inset-0 h-full w-full"
-          aria-hidden="true">
-          <rect
-            x="0.5"
-            y="0.5"
-            width="255"
-            height="53"
-            rx="11.5"
-            fill="black"
-            fillOpacity="0.5"
-          />
-          <rect
-            x="0.5"
-            y="0.5"
-            width="255"
-            height="53"
-            rx="11.5"
-            stroke={`url(#${gradientId}-primary)`}
-          />
-          <defs>
-            <linearGradient
-              id={`${gradientId}-primary`}
-              x1="0"
-              y1="27"
-              x2="264.356"
-              y2="33.822"
-              gradientUnits="userSpaceOnUse">
-              <stop stopColor="#FFBB43" />
-              <stop offset="0.605769" stopColor="#D34D0D" />
-              <stop offset="1" stopColor="#331A36" />
-            </linearGradient>
-          </defs>
-        </svg>
-      )}
-      <span className="relative z-10 px-4 font-['Unbounded:Medium',sans-serif] text-base font-semibold tracking-wide text-white uppercase">
-        {children}
-      </span>
-    </button>
-  )
-}
 
 type Props = {
   isMobile: boolean
@@ -186,67 +65,63 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
       id="loading-overlay"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-4 to-120% px-4 py-4',
+        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-10 px-8 py-4',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
-        'bg-radial from-black/90 from-25% to-black/0 to-100% backdrop-blur-sm',
+        'bg-linear-0 from-black/20 via-black/90 to-black/20 backdrop-blur-sm',
         isExiting ? 'opacity-0' : 'opacity-100',
       )}>
       <div
         className={twJoin(
-          'absolute inset-0 bg-black transition-opacity delay-400 duration-600',
+          'absolute inset-0 bg-black transition-opacity delay-400 duration-500',
           isReady ? 'opacity-0' : 'opacity-100',
         )}
       />
 
-      <div className="relative flex w-full shrink-0 content-stretch items-center gap-[8px]">
-        <p className="relative shrink-0 font-['Unbounded:Medium',sans-serif] text-[20px] leading-[normal] font-medium tracking-[-0.2px] text-nowrap whitespace-pre text-white opacity-50">
-          Pragmattic
-        </p>
-        <p
-          className="relative w-[36px] shrink-0 font-['Nunito_Sans:Regular',sans-serif] text-[16px] leading-[normal] font-normal tracking-[-0.16px] text-white opacity-50"
-          style={{ fontVariationSettings: "'YTLC' 500, 'wdth' 100" }}>
-          AND
-        </p>
-        Loopspeed
-        <p
-          className="relative shrink-0 text-center font-['Nunito_Sans:Regular',sans-serif] text-[16px] leading-[normal] font-normal tracking-[-0.16px] text-nowrap whitespace-pre text-white opacity-50"
-          style={{ fontVariationSettings: "'YTLC' 500, 'wdth' 100" }}>
-          PRESENT
-        </p>
-      </div>
-
-      <header className="relative flex h-[100px] w-full items-center justify-center">
-        <Image
-          src={speedrollerFaint}
-          alt=""
-          className="absolute h-[100px] w-auto max-w-full object-contain"
-          priority
-        />
-        <Image
-          src={speedroller}
-          alt="Speedroller"
-          style={{
-            clipPath: logoClipPath,
-            transition: 'clip-path 2.2s cubic-bezier(0.33, 1, 0.68, 1)',
-          }}
-          className="absolute h-[100px] w-auto max-w-full object-contain motion-reduce:transition-none motion-reduce:[clip-path:inset(0)]"
-          priority
-        />
+      <header className="relative flex flex-col justify-center gap-3">
+        <div className="relative flex items-center gap-2">
+          <span className="font-unbounded text-lg font-medium">Pragmattic</span>
+          <p className="tracking-wider text-white/50">AND</p>
+          <span className="font-unbounded text-lg font-medium">Loopspeed</span>
+          <p className="tracking-wider text-white/50">PRESENT</p>
+        </div>
+        <div className="relative h-28 max-w-full">
+          <Image
+            src={speedrollerFaint}
+            alt=""
+            className="relative h-28 w-fit max-w-full object-contain"
+            priority
+          />
+          <Image
+            src={speedroller}
+            alt="Speedroller"
+            style={{
+              clipPath: logoClipPath,
+              transition: 'clip-path 2.2s cubic-bezier(0.33, 1, 0.68, 1)',
+            }}
+            className="absolute inset-0 h-28 w-fit object-contain motion-reduce:transition-none motion-reduce:[clip-path:inset(0)]"
+            priority
+          />
+        </div>
       </header>
 
-      <div className={twJoin('relative flex flex-col items-center gap-4 sm:flex-row')}>
+      {/* TODO: create a compoent for these, wrap them in pointerprovider, load them dynamically. Then update CTA button to move the gradient center (make it radial gradient.) */}
+      <div
+        id="landing-controls"
+        className={twJoin(
+          'relative flex flex-col flex-wrap items-center gap-5 transition-opacity duration-500 ease-out motion-reduce:transition-none sm:flex-row',
+          isReady ? 'opacity-100 delay-150' : 'opacity-0',
+        )}>
         <CTAButton
           aria-label="Start experience"
           disabled={!isReady}
-          onClick={() => onStartClick(false)}
-          className="sm:mr-2">
+          onClick={() => onStartClick(false)}>
           Start experience
         </CTAButton>
         <CTAButton
           aria-label="Start muted"
           onClick={() => onStartClick(true)}
           disabled={!isReady}
-          secondary>
+          isSecondary>
           Enter in silence
         </CTAButton>
 
