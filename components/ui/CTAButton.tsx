@@ -11,7 +11,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { PLAYER_PALETTE_INDEX, getPaletteCss } from '../palette'
 
-const CTA_GRADIENT_OFFSETS = [0.5, 0.8, 1] as const
+const CTA_GRADIENT_OFFSETS = [0.25, 0.5, 0.75] as const
 const CTA_GRADIENT_MODE = 'oklch'
 
 type GradientStops = readonly [string, string, string]
@@ -71,8 +71,8 @@ const CTAButton: FC<CTAButtonProps> = ({
       disabled={disabled}
       style={{ width: 256, height: 54, ...gradientVars }}
       className={twJoin(
-        'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl transition-opacity',
-        isSecondary ? 'bg-black/10' : 'bg-black/50',
+        'relative inline-flex shrink-0 items-center justify-center rounded-xl transition-colors transition-opacity duration-200',
+        isSecondary ? 'bg-black/10' : 'bg-black/40 hover:bg-black/60',
         'hover:[--stop-a:var(--stop-a-hover)] hover:[--stop-b:var(--stop-b-hover)] hover:[--stop-c:var(--stop-c-hover)]',
         'focus-visible:[--stop-a:var(--stop-a-hover)] focus-visible:[--stop-b:var(--stop-b-hover)] focus-visible:[--stop-c:var(--stop-c-hover)]',
         disabled
@@ -122,7 +122,7 @@ const CTAButton: FC<CTAButtonProps> = ({
           </linearGradient>
         </defs>
       </svg>
-      <span className="text-unbounded relative z-10 px-4 text-base font-bold tracking-wide text-white uppercase">
+      <span className="text-unbounded relative z-10 px-4 text-base font-bold tracking-wider text-white uppercase">
         {children}
       </span>
     </button>
