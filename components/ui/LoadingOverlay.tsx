@@ -1,7 +1,5 @@
 'use client'
 
-import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import {
@@ -10,7 +8,7 @@ import {
   type ReactNode,
   type TransitionEvent,
   useEffect,
-  useRef,
+  useId,
   useState,
 } from 'react'
 import { twJoin } from 'tailwind-merge'
@@ -24,15 +22,21 @@ import { MOVE_HUD_CONFIG } from '@/resources/content'
 
 import RotateDevice from './RotateDevice'
 
-type CTAButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }
+type CTAButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  children: ReactNode
+  secondary?: boolean
+}
 
 const CTAButton: FC<CTAButtonProps> = ({
   children,
   className,
   disabled,
+  secondary = false,
   type = 'button',
   ...props
 }) => {
+  const gradientId = useId()
+
   return (
     <button
       {...props}
@@ -44,39 +48,88 @@ const CTAButton: FC<CTAButtonProps> = ({
         className,
       )}
       style={{ width: 256, height: 54 }}>
-      <svg
-        width="256"
-        height="54"
-        viewBox="0 0 256 54"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="absolute inset-0 h-full w-full"
-        aria-hidden="true">
-        <rect
-          x="0.5"
-          y="0.5"
-          width="255"
-          height="53"
-          rx="11.5"
-          fill="black"
-          fillOpacity="0.5"
-        />
-        <rect x="0.5" y="0.5" width="255" height="53" rx="11.5" stroke="url(#cta-gradient)" />
-        <defs>
-          <linearGradient
-            id="cta-gradient"
-            x1="0"
-            y1="27"
-            x2="264.356"
-            y2="33.822"
-            gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FFBB43" />
-            <stop offset="0.605769" stopColor="#D34D0D" />
-            <stop offset="1" stopColor="#331A36" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <span className="relative z-10 px-4 text-sm font-semibold tracking-wide text-white uppercase">
+      {secondary ? (
+        <svg
+          width="256"
+          height="54"
+          viewBox="0 0 256 54"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="absolute inset-0 h-full w-full"
+          aria-hidden="true">
+          <rect
+            x="0.5"
+            y="0.5"
+            width="255"
+            height="53"
+            rx="11.5"
+            fill="black"
+            fillOpacity="0.4"
+          />
+          <rect
+            x="0.5"
+            y="0.5"
+            width="255"
+            height="53"
+            rx="11.5"
+            stroke={`url(#${gradientId}-secondary)`}
+          />
+          <defs>
+            <linearGradient
+              id={`${gradientId}-secondary`}
+              x1="0"
+              y1="27"
+              x2="264.356"
+              y2="33.822"
+              gradientUnits="userSpaceOnUse">
+              <stop stopColor="#5D6C8A" />
+              <stop offset="0.55" stopColor="#3C4D63" />
+              <stop offset="1" stopColor="#1B2330" />
+            </linearGradient>
+          </defs>
+        </svg>
+      ) : (
+        <svg
+          width="256"
+          height="54"
+          viewBox="0 0 256 54"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="absolute inset-0 h-full w-full"
+          aria-hidden="true">
+          <rect
+            x="0.5"
+            y="0.5"
+            width="255"
+            height="53"
+            rx="11.5"
+            fill="black"
+            fillOpacity="0.5"
+          />
+          <rect
+            x="0.5"
+            y="0.5"
+            width="255"
+            height="53"
+            rx="11.5"
+            stroke={`url(#${gradientId}-primary)`}
+          />
+          <defs>
+            <linearGradient
+              id={`${gradientId}-primary`}
+              x1="0"
+              y1="27"
+              x2="264.356"
+              y2="33.822"
+              gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FFBB43" />
+              <stop offset="0.605769" stopColor="#D34D0D" />
+              <stop offset="1" stopColor="#331A36" />
+            </linearGradient>
+          </defs>
+        </svg>
+      )}
+      <span className="relative z-10 px-4 font-['Unbounded:Medium',sans-serif] text-base font-semibold tracking-wide text-white uppercase">
         {children}
       </span>
     </button>
@@ -90,16 +143,6 @@ type Props = {
 const LoadingOverlay: FC<Props> = ({ isMobile }) => {
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
-  const revealRef = useRef<HTMLImageElement>(null)
-
-  useGSAP(() => {
-    gsap.fromTo(
-      revealRef.current,
-      { clipPath: 'inset(0 100% 0 0)' },
-      { clipPath: 'inset(0 0% 0 0)', duration: 2.2, ease: 'power1.out' },
-    )
-  }, [])
-
   const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
   const setIsShowingLoadingOverlay = useGameStore((s) => s.setIsShowingLoadingOverlay)
   const isHydrated = useGameStore((s) => s._isHydrated)
@@ -109,8 +152,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
 
   const [isExiting, setIsExiting] = useState(false)
   const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
+  const [isLogoRevealed, setIsLogoRevealed] = useState(false)
 
   const isReady = isHydrated && isPlatformReady && (!isMobile || isMobileLandscape)
+  const logoClipPath = isLogoRevealed ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)'
 
   const onStartClick = (isMuted: boolean) => {
     setIsMuted(isMuted)
@@ -121,6 +166,10 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isShowingLoadingOverlay) setIsExiting(false)
   }, [isShowingLoadingOverlay])
+
+  useEffect(() => {
+    setIsLogoRevealed(true)
+  }, [])
 
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (!isExiting) return
@@ -174,21 +223,16 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
           priority
         />
         <Image
-          ref={revealRef}
           src={speedroller}
           alt="Speedroller"
-          className="absolute h-[100px] w-auto max-w-full object-contain"
+          style={{
+            clipPath: logoClipPath,
+            transition: 'clip-path 2.2s cubic-bezier(0.33, 1, 0.68, 1)',
+          }}
+          className="absolute h-[100px] w-auto max-w-full object-contain motion-reduce:transition-none motion-reduce:[clip-path:inset(0)]"
           priority
         />
       </header>
-
-      <InputConfig />
-
-      <RotateDevice
-        isMobile={isMobile}
-        isLandscape={isMobileLandscape}
-        setIsLandscape={setIsMobileLandscape}
-      />
 
       <div className={twJoin('relative flex flex-col items-center gap-4 sm:flex-row')}>
         <CTAButton
@@ -201,10 +245,19 @@ const LoadingOverlay: FC<Props> = ({ isMobile }) => {
         <CTAButton
           aria-label="Start muted"
           onClick={() => onStartClick(true)}
-          disabled={!isReady}>
+          disabled={!isReady}
+          secondary>
           Enter in silence
         </CTAButton>
+
+        <InputConfig />
       </div>
+
+      <RotateDevice
+        isMobile={isMobile}
+        isLandscape={isMobileLandscape}
+        setIsLandscape={setIsMobileLandscape}
+      />
     </div>
   )
 }

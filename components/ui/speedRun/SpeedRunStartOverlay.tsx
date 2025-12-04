@@ -96,12 +96,10 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   )
 
   const usernameForm = (
-    <section>
-      <p className="text-center text-2xl font-semibold">
+    <section className="flex flex-col gap-6">
+      <p className="font-unbounded text-center text-2xl font-semibold">
         Race to the finish line as fast as you can
       </p>
-
-      <RingBoostInfo />
 
       <div className="relative flex items-center">
         <Input
@@ -133,7 +131,9 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
           <Play size={32} strokeWidth={2} />
         </button>
       </div>
-      {!!usernameError && <p className="mt-2.5 px-1 text-sm text-amber-600">{usernameError}</p>}
+      {!!usernameError && <p className="-mt-4 px-1 text-sm text-amber-500">{usernameError}</p>}
+
+      <RingBoostInfo />
     </section>
   )
 

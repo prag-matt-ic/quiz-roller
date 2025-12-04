@@ -75,7 +75,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           type="button"
           onClick={() => setIsShowingDashboard(true)}
           className="pointer-events-auto flex items-center gap-2.5 self-start justify-self-end rounded-none rounded-bl-2xl border border-black/20 bg-black/15 px-6 py-2.5 text-xs text-white uppercase backdrop-blur-sm transition hover:border-black/30 hover:bg-black/20 lg:px-5 lg:py-3 lg:text-sm">
-          <span className="hidden text-white/80 lg:block">Menu</span>
+          <span className="hidden font-bold text-white/80 lg:block">Menu</span>
           <LayoutDashboardIcon className="size-4 lg:size-5" />
         </button>
       </div>
