@@ -8,10 +8,10 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI from '@/components/ui/CollectiblesUI'
-import ProgressBar from '@/components/ui/ProgressBar'
 import RingsUI from '@/components/ui/RingsUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
+import MiniMap from '@/components/ui/miniMap/MiniMap'
 import { GameMode } from '@/stores/types'
 
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
@@ -27,6 +27,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
   const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
   const mode = useGameStore((s) => s.mode)
+
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
   const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
@@ -38,8 +39,6 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   return (
     <>
-      <ProgressBar />
-
       <div
         className={twJoin(
           'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 transition-opacity duration-300 select-none',
@@ -80,7 +79,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         </button>
       </div>
 
-      {/* Movement Controls */}
+      <MiniMap />
       <MovementControls />
 
       {/* Fullscreen overlays */}

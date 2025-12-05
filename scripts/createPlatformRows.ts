@@ -11,6 +11,7 @@
  *
  * OUTPUT:
  *   resources/rowsData.ts with PLATFORM_DATA containing rows + totalCounts per mode.
+ *   public/maps/{version}/{mode}.svg mini map assets (one per GameMode).
  */
 /* eslint-disable no-console */
 import fs from 'fs'
@@ -33,6 +34,7 @@ import {
   UNSAFE_HEIGHT,
   colToX,
 } from '../utils/tiles'
+import { MINI_MAP_CONSTANTS, writeMiniMapSVG } from './utils/generateMiniMap'
 
 type BitmapPlacement = {
   columnIndex: number
@@ -67,6 +69,7 @@ type SectionSource = {
 
 const PLATFORM_ROOT = path.join(process.cwd(), 'assets', 'platform')
 const OUTPUT_PATH = path.join(process.cwd(), 'resources', 'rowsData.ts')
+const MINIMAP_BASE_DIR = path.join(process.cwd(), 'public', 'maps')
 
 const CORE_SOURCES: SectionSource[] = [
   { file: 'home.png', stage: Stage.HOME },
@@ -699,6 +702,23 @@ async function buildModeData(
   return { rows, totalCounts }
 }
 
+function writeMiniMapAssets(modes: Record<GameMode, ModeRows>, version: string) {
+  const miniMapVersionDir = path.join(MINIMAP_BASE_DIR, version)
+  fs.mkdirSync(miniMapVersionDir, { recursive: true })
+
+  const modeEntries = Object.entries(modes) as Array<[GameMode, ModeRows]>
+  modeEntries.forEach(([mode, modeRows]) => {
+    const outputPath = path.join(miniMapVersionDir, `${mode}.svg`)
+    const { width, height } = writeMiniMapSVG({
+      rows: modeRows.rows,
+      columns: COLUMNS,
+      tileSize: MINI_MAP_CONSTANTS.TILE_SIZE_PX,
+      outputPath,
+    })
+    console.log(`🗺️  Generated mini map for ${mode} (${width}x${height}) at ${outputPath}`)
+  })
+}
+
 async function main() {
   const { version, directory } = findVersionDirectory(PLATFORM_ROOT)
 
@@ -709,6 +729,8 @@ async function main() {
     [GameMode.SPEEDRUN]: await buildModeData(directory, MODE_SOURCES[GameMode.SPEEDRUN]),
     [GameMode.DEV]: await buildModeData(directory, MODE_SOURCES[GameMode.DEV]),
   }
+
+  writeMiniMapAssets(modes, version)
 
   const output = buildOutputFile({ version, modes })
   fs.writeFileSync(OUTPUT_PATH, output)
