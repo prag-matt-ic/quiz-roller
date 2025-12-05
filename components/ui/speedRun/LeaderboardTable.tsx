@@ -66,7 +66,7 @@ type TableProps = {
   leaderboardRuns: SpeedRunDatabase[] // Those within the top `count`
   userSpeedRunIds: number[] // IDs of the user's completed speedruns
   userRecentRun: RunWithPosition | null // The user's most recent speedrun, if applicable
-  showCTA: boolean
+  showCTA?: boolean
   onStartSpeedRun?: () => void
 }
 
@@ -74,7 +74,7 @@ export const LeaderboardTable: FC<TableProps> = ({
   count,
   className,
   isLoading,
-  showCTA,
+  showCTA = true,
   userSpeedRunIds = [],
   leaderboardRuns,
   userRecentRun,

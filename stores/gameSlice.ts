@@ -105,6 +105,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         speedRunStage: speedRunStage,
         isShowingDashboard: false,
         ...speedRunOverlays,
+        fallCount: 0,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,

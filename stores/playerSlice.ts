@@ -129,6 +129,7 @@ export const createPlayerSlice =
       playerRespawnTick: 0,
       spawnPosition: null,
       playerStatus: 'idle' as PlayerStatus,
+      fallCount: 0,
       username: null,
       setUsername: (username: string) => {
         set({ username })
@@ -207,9 +208,10 @@ export const createPlayerSlice =
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
         resetSpeed()
-        set({
+        set((s) => ({
           playerStatus: 'out-of-bounds',
           spawnPosition: null, // Calculated in usePlayerRespawn hook
+          fallCount: s.fallCount + 1,
           playerInput: {
             up: 0,
             down: 0,
@@ -218,7 +220,7 @@ export const createPlayerSlice =
           },
           collectedRings: {},
           hasCollectedAllRings: false,
-        })
+        }))
       },
     }
   }

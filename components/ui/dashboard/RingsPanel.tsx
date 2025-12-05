@@ -28,9 +28,9 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
         <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
 
         <div>
-          <div className="mb-2 text-3xl font-bold text-white">
+          <div className="mb-2 text-2xl *:lg:text-3xl font-bold text-white">
             {collectedRingCount}
-            <span className="text-lg text-white/40">/{totalRingsCount}</span>
+            <span className="text-base lg:text-lg text-white/40">/{totalRingsCount}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-amber-200/30">
             <div

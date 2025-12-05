@@ -116,7 +116,13 @@ const UI: FC<Props> = ({ isMobile }) => {
         mountOnEnter={true}
         unmountOnExit={true}
         nodeRef={leaderboardOverlay}>
-        {(status) => <SpeedrunEndOverlay ref={leaderboardOverlay} transitionStatus={status} />}
+        {(status) => (
+          <SpeedrunEndOverlay
+            ref={leaderboardOverlay}
+            transitionStatus={status}
+            isMobile={isMobile}
+          />
+        )}
       </Transition>
     </>
   )

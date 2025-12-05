@@ -104,6 +104,7 @@ export type PlayerSlice = {
   spawnPosition: Vector3Tuple | null
   playerRespawnTick: number
   playerStatus: PlayerStatus
+  fallCount: number
 
   respawnPlayer: (position: Vector3Tuple, hud?: HudIndicatorConfig) => void
   onRespawnComplete: () => void
