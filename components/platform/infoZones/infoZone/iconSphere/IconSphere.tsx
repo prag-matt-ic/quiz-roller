@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react'
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, Suspense, useMemo, useRef } from 'react'
+import { type FC, Suspense, useEffect, useMemo, useRef } from 'react'
 import {
   AdditiveBlending,
   Color,
@@ -22,14 +22,14 @@ import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
-// TODO: make this configurable via performance store quality settings
-const BASE_GEOMETRY = new SphereGeometry(ICON_SPHERE_RADIUS, 24, 12).toNonIndexed()
+const ICON_SPHERE_HIGH_SEGMENTS = 48
 const ICON_SPHERE_LINE_WIDTH = 0.5
-const ICON_SPHERE_GLOW_STRENGTH = 2.0
+const ICON_SPHERE_GLOW_STRENGTH = 4.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 
-const ICON_SPHERE_SURFACE_GEOMETRY = (() => {
-  const geometry = BASE_GEOMETRY.clone()
+const createIconSphereSurfaceGeometry = (segments: number) => {
+  const heightSegments = Math.max(3, Math.floor(segments / 2))
+  const geometry = new SphereGeometry(ICON_SPHERE_RADIUS, segments, heightSegments).toNonIndexed()
   const positionCount = geometry.attributes.position.count
   const barycentric = new Float32Array(positionCount * 3)
 
@@ -51,7 +51,7 @@ const ICON_SPHERE_SURFACE_GEOMETRY = (() => {
   geometry.setAttribute('aBarycentric', new Float32BufferAttribute(barycentric, 3))
   geometry.computeVertexNormals()
   return geometry
-})()
+}
 
 type IconSphereUniforms = {
   uSurfaceColor: Color
@@ -71,7 +71,7 @@ DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
   uSurfaceColor: DEFAULT_SURFACE_COLOR,
   uLineColor: DEFAULT_LINE_COLOR,
-  uOpacity: 0.4,
+  uOpacity: 0.12,
   uHiddenProgress: 0,
   uTime: 0,
   uLineWidth: ICON_SPHERE_LINE_WIDTH,
@@ -93,11 +93,28 @@ export type IconSphereProps = {
 const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colour }) => {
   const shader = useRef<typeof SphereShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
+  const sphereSegments = usePerformanceStore((s) => s.sceneConfig.infoZoneSphere.segments)
 
   const hasInitialized = useRef(false)
 
   const iconTexture = useTexture(iconSrc)
   const spriteMaterialRef = useRef<SpriteMaterial>(null)
+
+  const surfaceGeometry = useMemo(
+    () => createIconSphereSurfaceGeometry(sphereSegments),
+    [sphereSegments],
+  )
+
+  const lineWidth = useMemo(() => {
+    const safeSegments = Math.max(1, sphereSegments)
+    return (ICON_SPHERE_LINE_WIDTH * ICON_SPHERE_HIGH_SEGMENTS) / safeSegments
+  }, [sphereSegments])
+
+  useEffect(() => {
+    return () => {
+      surfaceGeometry.dispose()
+    }
+  }, [surfaceGeometry])
 
   const { surfaceColour, lineColour } = useMemo(() => {
     if (!colour)
@@ -155,7 +172,7 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
       position={[0, 0, 0]}
       rotation={[Math.PI / 2, 0, 0]}
       visible={isVisible}>
-      <mesh geometry={ICON_SPHERE_SURFACE_GEOMETRY} position={ICON_SPHERE_POSITION}>
+      <mesh key={sphereSegments} geometry={surfaceGeometry} position={ICON_SPHERE_POSITION}>
         <SphereShaderMaterial
           key={SphereShader.key}
           ref={shader}
@@ -166,6 +183,7 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
           blending={AdditiveBlending}
           uSurfaceColor={surfaceColour}
           uLineColor={lineColour}
+          uLineWidth={lineWidth}
           uDistanceFadeEnabled={isDistanceFadeEnabled ? 1 : 0}
         />
       </mesh>

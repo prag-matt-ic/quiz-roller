@@ -119,7 +119,7 @@ export const buildMiniMapSVG = ({
     `<svg xmlns="${SVG_NAMESPACE}" viewBox="0 0 ${width} ${height}" shape-rendering="crispEdges">`,
   ]
 
-  if (background) {
+  if (!!background) {
     svgParts.push(`<rect width="${width}" height="${height}" fill="${background}" />`)
   }
 

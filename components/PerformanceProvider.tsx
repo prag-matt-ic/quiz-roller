@@ -37,6 +37,9 @@ export type SceneConfig = {
     usePlayerFade: boolean
     useNoiseFade: boolean
   }
+  infoZoneSphere: {
+    segments: number
+  }
   // backdrop: {}
 }
 
@@ -55,6 +58,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     floatingHeading: { shouldRotate: true, usePlayerFade: true, useNoiseFade: true },
+    infoZoneSphere: { segments: 48 },
   },
   [SceneQuality.MEDIUM]: {
     isDistanceFadeEnabled: true,
@@ -65,6 +69,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: true },
     floatingHeading: { shouldRotate: false, usePlayerFade: true, useNoiseFade: true },
+    infoZoneSphere: { segments: 32 },
   },
   [SceneQuality.LOW]: {
     isDistanceFadeEnabled: false,
@@ -75,6 +80,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     floatingHeading: { shouldRotate: false, usePlayerFade: false, useNoiseFade: false },
+    infoZoneSphere: { segments: 20 },
   },
 }
 
