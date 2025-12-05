@@ -69,7 +69,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
           <span className="font-unbounded text-lg font-medium">Pragmattic</span>
           <span className="px-2 tracking-wider text-white/50">AND</span>
           <span className="font-unbounded text-lg font-medium">Loopspeed</span>
-          <span className="px-2 tracking-wider text-white/50">PRESENT</span>
+          <span className="px-2 tracking-wider text-white/50">PRESENTS</span>
         </p>
         <div className="relative h-fit w-full">
           <Image

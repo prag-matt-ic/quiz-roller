@@ -12,13 +12,23 @@ export function useGameFrame(
   callback: (state: RootState, fixedDt: number) => void,
   priority = 0,
 ) {
+  const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
   const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
+  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
+  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
+
+  const isOverlayOpen =
+    isShowingDashboard ||
+    isShowingSpeedRunEndOverlay ||
+    isShowingSpeedRunStartOverlay ||
+    isShowingLandingOverlay
+
   const simFps = usePerformanceStore((s) => s.simFps)
   const accumulator = useRef(0)
   const maxSubsteps = 5
 
   useFrame((state, delta) => {
-    if (isShowingDashboard) return
+    if (isOverlayOpen) return
     // Uncapped: forward real delta
     if (simFps === 0) {
       callback(state, delta)
