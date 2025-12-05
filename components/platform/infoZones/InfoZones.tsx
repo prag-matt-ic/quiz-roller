@@ -19,6 +19,7 @@ import {
   useLeaderboardTableData,
 } from '@/components/ui/speedRun/LeaderboardTable'
 import { useTotalTime } from '@/hooks/useTime'
+import { INFO_ZONE_SPHERE_COLOURS } from '@/resources/colours'
 import { INFO_ZONES_CARD_CONTENT } from '@/resources/content'
 import { type RowData } from '@/utils/tiles'
 
@@ -161,7 +162,7 @@ function getInfoZonePropsForIndex(
       iconSrc: timerIcon.src,
       infoPositionOffset: [0, 6, 4],
       infoContentHtmlProps: { transform: true },
-      sphereColour: '#7477A4', // blue mid
+      sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
     }
   }
   if (placementIndex === 4) {
@@ -170,13 +171,14 @@ function getInfoZonePropsForIndex(
       infoContainerClassName: 'w-[328px] sm:w-[450px]',
       iconSrc: trophyIcon.src,
       infoPositionOffset: [0, 10, 5],
-      sphereColour: '#E97449', // orange accent
+      sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
     }
   }
   // Info Card
   return {
     infoContainerClassName: 'grid w-[328px] lg:w-160 grid-cols-1 gap-3',
     iconSrc: infoIcon.src,
+    sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
   }
 }
 

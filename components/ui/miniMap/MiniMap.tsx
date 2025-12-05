@@ -119,7 +119,7 @@ const MiniMap: FC = () => {
           alt="Mini Map"
           width={MAP_TILE_SIZE_PX * COLUMNS}
           height={MAP_TILE_SIZE_PX * totalRows}
-          className="absolute bottom-0 opacity-40 transition-transform duration-100 ease-linear will-change-transform"
+          className="absolute bottom-0 transition-transform duration-100 ease-linear will-change-transform"
           style={{
             transform: 'translate3d(0,0,0)',
           }}

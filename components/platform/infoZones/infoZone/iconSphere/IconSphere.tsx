@@ -16,6 +16,7 @@ import {
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
+import { INFO_ZONE_SPHERE_COLOURS } from '@/resources/colours'
 
 import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
@@ -63,7 +64,7 @@ type IconSphereUniforms = {
   uTime: number
 }
 
-const DEFAULT_SURFACE_COLOR = new Color('#37D6C7') // teal accent
+const DEFAULT_SURFACE_COLOR = new Color(INFO_ZONE_SPHERE_COLOURS[0]) // teal accent
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
 DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 

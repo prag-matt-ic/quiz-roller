@@ -16,7 +16,8 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { COLLECTIBLE_IDS, CollectibleID } from '@/model/schema'
-import { COLLECTIBLES_CONTENT, GEMS_BY_ID } from '@/resources/content'
+import { GEMS_COLOURS_BY_ID } from '@/resources/colours'
+import { COLLECTIBLES_CONTENT } from '@/resources/content'
 
 const CollectiblesUI: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
@@ -55,7 +56,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
   const dismiss = useDismiss(context)
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, click, dismiss])
 
-  const collectedColour = GEMS_BY_ID[id]?.colour
+  const collectedColour = GEMS_COLOURS_BY_ID[id]?.colour
   const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
 
   return (

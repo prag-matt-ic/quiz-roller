@@ -16,11 +16,11 @@ import { SwitchTransition, Transition } from 'react-transition-group'
 import { useGameStore } from '@/components/GameProvider'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import { CollectibleID } from '@/model/schema'
-import { GEMS_BY_ID } from '@/resources/content'
+import { GEMS_COLOURS_BY_ID } from '@/resources/colours'
 
 export const PLAYER_RADIUS = 0.45
 
-const defaultGemColour = GEMS_BY_ID[CollectibleID.Discount].colour
+const defaultGemColour = GEMS_COLOURS_BY_ID[CollectibleID.Discount].colour
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
@@ -35,7 +35,7 @@ const PlayerHUD: FC = () => {
   const showRef = useRef(show)
 
   const currentGemColour = confirmingCollectible
-    ? (GEMS_BY_ID[confirmingCollectible]?.colour ?? defaultGemColour)
+    ? (GEMS_COLOURS_BY_ID[confirmingCollectible]?.colour ?? defaultGemColour)
     : defaultGemColour
 
   const progressBarStyle = useMemo(

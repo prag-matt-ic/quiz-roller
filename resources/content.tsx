@@ -36,67 +36,6 @@ export const COLLECTIBLES_CONTENT: Record<
   },
 }
 
-export const GOLD_PARTICLE_PALETTE = [
-  '#f6b253',
-  '#ffcc3e',
-  '#ffb328',
-  '#ffc82c',
-  '#ffdd3f',
-  '#ffbd1f',
-  '#ffb51d',
-  '#ffaf07',
-  '#ffe55e',
-  '#f7ebda',
-  '#fff7ec',
-  '#fde5d2',
-]
-
-const BLUE_PARTICLE_PALETTE = [
-  '#6a68e7',
-  '#e4d8ff',
-  '#debcff',
-  '#b8bfff',
-  '#b1c0ff',
-  '#d8c1ff',
-  '#e7c4ff',
-  '#e8ceff',
-  '#eec6ff',
-  '#e4e1f9',
-  '#e9e3fc',
-  '#fffaff',
-]
-
-const GREEN_PARTICLE_PALETTE = [
-  '#5ed35e',
-  '#47ec5e',
-  '#97ff7c',
-  '#74e45d',
-  '#80f662',
-  '#6ae557',
-  '#5ce62c',
-  '#60ea48',
-  '#4eff83',
-  '#eeffe9',
-  '#e7fce1',
-  '#e6ffdd',
-]
-
-export const GEMS_BY_ID: Record<CollectibleID, { colour: string; particlesPalette: string[] }> =
-  {
-    [CollectibleID.Discount]: {
-      colour: '#F6B253',
-      particlesPalette: GOLD_PARTICLE_PALETTE,
-    },
-    [CollectibleID.AI_Prompts]: {
-      colour: '#6A68E7',
-      particlesPalette: BLUE_PARTICLE_PALETTE,
-    },
-    [CollectibleID.Consultation]: {
-      colour: '#5ED35E',
-      particlesPalette: GREEN_PARTICLE_PALETTE,
-    },
-  } as const
-
 export const HEADINGS_CONTENT: string[] = [
   'From scroll-driven storytelling to fully interactive worlds',
   'Bring your ideas to life with stunning 3D web experiences',

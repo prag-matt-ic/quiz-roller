@@ -18,8 +18,8 @@ import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones
 import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
-import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import usePlayerInput from '@/hooks/usePlayerInput'
+import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import useStage from '@/hooks/useStage'
 import { GameMode } from '@/stores/types'
 import {

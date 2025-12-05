@@ -7,7 +7,7 @@ import { AdditiveBlending, BufferAttribute, Color, Vector3, type Vector3Tuple } 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { CollectibleID } from '@/model/schema'
-import { GEMS_BY_ID, GOLD_PARTICLE_PALETTE } from '@/resources/content'
+import { GEMS_COLOURS_BY_ID, GOLD_PARTICLE_PALETTE } from '@/resources/colours'
 import { EPSILON } from '@/utils/tiles'
 
 import particleFragment from './point.frag'
@@ -123,7 +123,7 @@ const Particles: FC<Props> = ({
     [positionComponentCount],
   )
   const seeds = useMemo(() => createRandomSeeds(particleCount), [particleCount])
-  const particlePalette = GEMS_BY_ID[id]?.particlesPalette ?? GOLD_PARTICLE_PALETTE
+  const particlePalette = GEMS_COLOURS_BY_ID[id]?.particlesPalette ?? GOLD_PARTICLE_PALETTE
   const colours = useMemo(
     () => createRandomColours(particleCount, particlePalette),
     [particleCount, particlePalette],

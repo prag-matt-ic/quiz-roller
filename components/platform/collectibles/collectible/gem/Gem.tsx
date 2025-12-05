@@ -7,7 +7,7 @@ import { Color, Float32BufferAttribute, OctahedronGeometry, type Vector3Tuple } 
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { CollectibleID } from '@/model/schema'
-import { GEMS_BY_ID } from '@/resources/content'
+import { GEMS_COLOURS_BY_ID } from '@/resources/colours'
 
 import gemShellFragment from './gemShell.frag'
 import gemShellVertex from './gemShell.vert'
@@ -18,7 +18,7 @@ const BASE_GEOMETRY = new OctahedronGeometry(GEM_RADIUS, 0)
 const GEM_LINE_WIDTH = 4.0
 const GEM_GLOW_STRENGTH = 4.0
 const GEM_POSITION: Vector3Tuple = [0, 3, 0]
-const DEFAULT_SURFACE_COLOR = new Color(GEMS_BY_ID[CollectibleID.AI_Prompts].colour)
+const DEFAULT_SURFACE_COLOR = new Color(GEMS_COLOURS_BY_ID[CollectibleID.AI_Prompts].colour)
 
 const GEM_SURFACE_GEOMETRY = (() => {
   const geometry = BASE_GEOMETRY.clone()
@@ -60,7 +60,7 @@ type GemShellUniforms = {
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
 DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
 
-type GemConfig = (typeof GEMS_BY_ID)[CollectibleID]
+type GemConfig = (typeof GEMS_COLOURS_BY_ID)[CollectibleID]
 
 const INITIAL_GEM_SHELL_UNIFORMS: GemShellUniforms = {
   uSurfaceColor: DEFAULT_SURFACE_COLOR,
@@ -105,13 +105,14 @@ const Gem: FC<GemShellProps> = ({
 }) => {
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
-  const gemConfig: GemConfig = GEMS_BY_ID[id] ?? GEMS_BY_ID[CollectibleID.AI_Prompts]
-  const surfaceColor = useMemo(() => new Color(gemConfig.colour), [gemConfig])
+  const colourConfig: GemConfig =
+    GEMS_COLOURS_BY_ID[id] ?? GEMS_COLOURS_BY_ID[CollectibleID.AI_Prompts]
+  const surfaceColor = useMemo(() => new Color(colourConfig.colour), [colourConfig])
   const lineColor = useMemo(() => {
-    const colour = new Color(gemConfig.colour)
+    const colour = new Color(colourConfig.colour)
     colour.offsetHSL(0, 0, 0.2)
     return colour
-  }, [gemConfig])
+  }, [colourConfig])
 
   return (
     <group
