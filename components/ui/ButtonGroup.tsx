@@ -24,7 +24,7 @@ export const ButtonGroup = <T extends string | number>({
   return (
     <div
       className={twJoin(
-        'relative flex items-center gap-3 rounded-xl border border-white/30 p-3 text-white',
+        'relative flex items-center gap-3 rounded-xl border border-white/30 p-2 text-white',
         disabled && 'pointer-events-none opacity-50',
       )}>
       {items.map((item) => {
@@ -40,7 +40,7 @@ export const ButtonGroup = <T extends string | number>({
             disabled={disabled}
             onClick={() => onChange(item.value)}
             className={twJoin(
-              'pointer-events-auto flex items-center gap-2 rounded-xl bg-transparent px-3 py-2 text-sm font-semibold normal-case transition-colors',
+              'pointer-events-auto flex items-center gap-2 rounded-lg bg-transparent px-3 py-2 text-sm font-semibold normal-case transition-colors',
               'hover:bg-white/10 hover:text-white',
               isActive
                 ? 'bg-white/10 text-white ring-1 ring-white/20 ring-inset'
@@ -49,7 +49,7 @@ export const ButtonGroup = <T extends string | number>({
             {!!Icon && (
               <Icon
                 className={twJoin(
-                  'size-5 lg:size-6',
+                  'size-4 lg:size-5',
                   isActive ? 'text-white' : 'text-white/60',
                 )}
                 strokeWidth={1.75}

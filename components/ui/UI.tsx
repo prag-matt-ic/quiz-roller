@@ -23,7 +23,7 @@ gsap.registerPlugin(useGSAP)
 type Props = { isMobile: boolean }
 
 const UI: FC<Props> = ({ isMobile }) => {
-  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
+  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
   const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
   const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
   const mode = useGameStore((s) => s.mode)

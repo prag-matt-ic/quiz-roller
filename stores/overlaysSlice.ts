@@ -5,7 +5,10 @@ import {
   type SpeedRunStage,
 } from './types'
 
-export const getSpeedRunOverlays = (stage: SpeedRunStage, isSpeedRunMode: boolean) => ({
+export const getSpeedRunOverlays = (
+  stage: SpeedRunStage,
+  isSpeedRunMode: boolean,
+): Partial<OverlaysSlice> => ({
   isShowingSpeedRunStartOverlay:
     isSpeedRunMode && (stage === 'countdown' || stage === 'username'),
   isShowingSpeedRunEndOverlay:
@@ -18,7 +21,7 @@ export const createOverlaysSlice: GameSliceCreator<OverlaysSlice> = (set) => {
       isShowingDashboard: overlay === 'dashboard',
       isShowingSpeedRunStartOverlay: overlay === 'speedrun-start',
       isShowingSpeedRunEndOverlay: overlay === 'speedrun-end',
-      isShowingLoadingOverlay: overlay === 'loading',
+      isShowingLandingOverlay: overlay === 'landing',
     })
   }
 
@@ -26,21 +29,19 @@ export const createOverlaysSlice: GameSliceCreator<OverlaysSlice> = (set) => {
     isShowingDashboard: false,
     isShowingSpeedRunEndOverlay: false,
     isShowingSpeedRunStartOverlay: false,
-    isShowingLoadingOverlay: true,
-    setIsShowingLoadingOverlay: (isVisible) => {
+    isShowingLandingOverlay: true,
+    setIsShowingLandingOverlay: (isVisible) => {
       if (isVisible) {
-        selectOverlay('loading')
+        selectOverlay('landing')
         return
       }
-
-      set({ isShowingLoadingOverlay: false })
+      set({ isShowingLandingOverlay: false })
     },
     setIsShowingDashboard: (isShowingDashboard) => {
       if (isShowingDashboard) {
         selectOverlay('dashboard')
         return
       }
-
       set({ isShowingDashboard })
     },
     setOverlaySelection: selectOverlay,

@@ -33,12 +33,12 @@ const RotateDevice: FC<Props> = ({ isMobile, isLandscape, setIsLandscape }) => {
   return (
     <div className={twJoin('relative flex items-center gap-3 text-white')}>
       {isLandscape ? (
-        <CheckCircle2 className="size-9 text-white/80" />
+        <CheckCircle2 className="size-6 text-white/80" />
       ) : (
-        <RotateCw className="size-9 animate-pulse text-white/80" />
+        <RotateCw className="size-6 animate-pulse text-white/80" />
       )}
       <p className="text-sm font-medium tracking-wide text-white uppercase">
-        {isLandscape ? 'Ready to start' : 'Rotate your device to start'}
+        {isLandscape ? 'Ready to start' : 'Rotate your device'}
       </p>
     </div>
   )

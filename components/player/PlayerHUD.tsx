@@ -146,8 +146,9 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
-                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black p-3 text-sm font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:p-4 lg:text-base">
-                  {hudIndicator.content}
+                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black/90 p-3 text-sm font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:text-base xl:p-4">
+                  {!!hudIndicator.Icon && <hudIndicator.Icon className="size-4.5 xl:size-6" />}
+                  {hudIndicator.label}
                 </div>
               )
             return <div ref={container} className="hidden" />

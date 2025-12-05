@@ -136,7 +136,7 @@ const Keys: FC = () => {
 
 const MovementControls: FC = () => {
   const inputType = useGameStore((s) => s.inputType)
-  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
+  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
   if (isShowingLoadingOverlay) return null
 
   if (inputType === InputType.JOYSTICK) return <Stick />

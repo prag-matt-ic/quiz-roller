@@ -37,7 +37,7 @@ const GAME_MODE_OPTIONS: Option<GameMode>[] = [
 const OVERLAY_OPTIONS: Option<OverlaySelection>[] = [
   { label: 'None', value: 'none' },
   { label: 'Dashboard', value: 'dashboard' },
-  { label: 'Loading', value: 'loading' },
+  { label: 'Landing', value: 'landing' },
   { label: 'Speedrun Start', value: 'speedrun-start' },
   { label: 'Speedrun End', value: 'speedrun-end' },
 ]
@@ -52,8 +52,9 @@ const DebugControls: FC = () => {
   const setIsPhysicsDebug = usePerformanceStore((s) => s.setIsPhysicsDebug)
   const resetGame = useGameStore((s) => s.resetGame)
   const setOverlaySelection = useGameStore((s) => s.setOverlaySelection)
+
   const overlaySelection = useGameStore((s) => {
-    if (s.isShowingLoadingOverlay) return 'loading'
+    if (s.isShowingLandingOverlay) return 'landing'
     if (s.isShowingDashboard) return 'dashboard'
     if (s.isShowingSpeedRunStartOverlay) return 'speedrun-start'
     if (s.isShowingSpeedRunEndOverlay) return 'speedrun-end'

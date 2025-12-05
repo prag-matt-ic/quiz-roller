@@ -58,16 +58,17 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const { playerPosition } = usePlayerPosition()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
+
+  const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
   const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
   const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
   const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
-  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLoadingOverlay)
 
   const isOverlayOpen =
     isShowingDashboard ||
     isShowingSpeedRunEndOverlay ||
     isShowingSpeedRunStartOverlay ||
-    isShowingLoadingOverlay
+    isShowingLandingOverlay
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE

@@ -11,7 +11,7 @@ import {
   useTransitionStatus,
 } from '@floating-ui/react'
 import { GemIcon, LockIcon } from 'lucide-react'
-import { type CSSProperties, type FC, useEffect, useState } from 'react'
+import { type CSSProperties, type FC, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'

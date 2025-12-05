@@ -96,16 +96,16 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   )
 
   const usernameForm = (
-    <section className="flex flex-col gap-6">
-      <p className="font-unbounded text-center text-2xl font-semibold">
-        Race to the finish line as fast as you can
+    <section className="flex max-w-xl flex-col gap-6">
+      <p className="font-unbounded text-center text-2xl font-semibold lg:text-3xl">
+        Race to the finish line
       </p>
 
       <div className="relative flex items-center">
         <Input
           ref={usernameInput}
           id="username-input"
-          className="border-none pr-16"
+          className="max-w-full border-none pr-16"
           minLength={6}
           maxLength={12}
           value={inputValue}

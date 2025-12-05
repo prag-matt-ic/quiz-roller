@@ -12,7 +12,7 @@ import {
   SparklesIcon,
   TrendingUpIcon,
 } from 'lucide-react'
-import { type FC, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 import { type HudIndicatorConfig } from '@/components/GameProvider'
 import { CollectibleID } from '@/model/schema'
@@ -131,37 +131,26 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
   </>,
 ]
 
-const MoveHUD: FC<{ inputType: InputType }> = ({ inputType }) => {
-  const text: Record<InputType, ReactNode> = {
-    [InputType.KEYS]: (
-      <>
-        <b>Arrow keys</b> to move
-      </>
-    ),
-    [InputType.JOYSTICK]: (
-      <>
-        <b>Touch joystick</b> to move
-      </>
-    ),
-  }
-  return (
-    <>
-      <MoveIcon strokeWidth={1.5} size={28} className="-ml-1" />
-      <span className="block font-medium uppercase">{text[inputType]}</span>
-    </>
-  )
-}
-
 export const MOVE_HUD_CONFIG: Record<InputType, HudIndicatorConfig> = {
   [InputType.KEYS]: {
     id: 'move-keys',
     autoDismissS: 4,
-    content: <MoveHUD inputType={InputType.KEYS} />,
+    Icon: MoveIcon,
+    label: (
+      <>
+        <b>Arrow keys</b> to move
+      </>
+    ),
   },
   [InputType.JOYSTICK]: {
     id: 'move-joystick',
     autoDismissS: 4,
-    content: <MoveHUD inputType={InputType.JOYSTICK} />,
+    Icon: MoveIcon,
+    label: (
+      <>
+        <b>Touch joystick</b> to move
+      </>
+    ),
   },
 }
 
@@ -169,78 +158,58 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
   {
     id: 'oob-1',
     autoDismissS: 3,
-    content: (
-      <>
-        <AlertTriangleIcon size={20} strokeWidth={2} />
-        <span>Nothing to see down there!</span>
-      </>
-    ),
+    Icon: AlertTriangleIcon,
+    label: 'Nothing to see down there!',
   },
   {
     id: 'oob-2',
     autoDismissS: 3,
-    content: (
+    Icon: RotateCcwIcon,
+    label: (
       <>
-        <RotateCcwIcon size={20} strokeWidth={2} />
-        <span>
-          You unlocked: <b>1 free life</b>
-        </span>
+        You unlocked: <b>1 free life</b>
       </>
     ),
   },
   {
     id: 'oob-3',
     autoDismissS: 3,
-    content: (
+    Icon: SparklesIcon,
+    label: (
       <>
-        <SparklesIcon size={20} strokeWidth={2} />
-        <span>
-          <b>Still no secrets</b>
-        </span>
+        <b>Still no secrets</b>
       </>
     ),
   },
   {
     id: 'oob-4',
     autoDismissS: 3,
-    content: (
-      <>
-        <ArrowBigUpDashIcon size={20} strokeWidth={2} />
-        <span>Thanks for testing gravity!</span>
-      </>
-    ),
+    Icon: ArrowBigUpDashIcon,
+    label: 'Thanks for testing gravity!',
   },
   {
     id: 'oob-5',
     autoDismissS: 3,
-    content: (
+    Icon: TrendingUpIcon,
+    label: (
       <>
-        <TrendingUpIcon size={20} strokeWidth={2} />
-        <span>
-          Fall down 7 times, <b>stand up 8</b>
-        </span>
+        Fall down 7 times, <b>stand up 8</b>
       </>
     ),
   },
   {
     id: 'oob-6',
     autoDismissS: 3,
-    content: (
-      <>
-        <FlameIcon size={20} strokeWidth={2} />
-        <span>Failure is not fatal</span>
-      </>
-    ),
+    Icon: FlameIcon,
+    label: 'Failure is not fatal',
   },
   {
     id: 'oob-7',
     autoDismissS: 3,
-    content: (
+    Icon: LaughIcon,
+    label: (
       <>
-        <LaughIcon size={20} strokeWidth={2} />
-        <span>
-          <b>Rise.</b> Wiser than before.
-        </span>
+        <b>Rise.</b> Wiser than before.
       </>
     ),
   },

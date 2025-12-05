@@ -73,4 +73,39 @@ h6 {
   .info-header {
     @apply text-xl font-bold text-black lg:text-2xl;
   }
+
+  @keyframes reveal-logo {
+    from {
+      mask-position: 100% 0;
+      -webkit-mask-position: 100% 0;
+    }
+    to {
+      mask-position: 0% 0;
+      -webkit-mask-position: 0% 0;
+    }
+  }
+
+  .animate-reveal-logo {
+    mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black 40%,
+      transparent 60%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      black 0%,
+      black 40%,
+      transparent 60%,
+      transparent 100%
+    );
+    mask-size: 300% 100%;
+    -webkit-mask-size: 300% 100%;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-position: 100% 0;
+    -webkit-mask-position: 100% 0;
+    animation: reveal-logo 4s cubic-bezier(0.33, 1, 0.68, 1) 300ms forwards;
+  }
 }

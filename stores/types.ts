@@ -1,3 +1,4 @@
+import { type LucideIcon } from 'lucide-react'
 import { type ReactNode } from 'react'
 import { type Vector3Tuple } from 'three'
 import { type StateCreator } from 'zustand'
@@ -26,14 +27,15 @@ export type PlayerStatus = 'idle' | 'safe' | 'out-of-bounds' | 'respawning'
 
 export type OverlaySelection =
   | 'none'
+  | 'landing'
   | 'dashboard'
-  | 'loading'
   | 'speedrun-start'
   | 'speedrun-end'
 
 export type HudIndicatorConfig = {
   id: string
-  content: ReactNode
+  label: ReactNode
+  Icon?: LucideIcon
   autoDismissS?: number
 }
 
@@ -79,8 +81,8 @@ export type InputSlice = {
 }
 
 export type OverlaysSlice = {
-  isShowingLoadingOverlay: boolean
-  setIsShowingLoadingOverlay: (isVisible: boolean) => void
+  isShowingLandingOverlay: boolean
+  setIsShowingLandingOverlay: (isVisible: boolean) => void
   isShowingDashboard: boolean
   setIsShowingDashboard: (isShowingDashboard: boolean) => void
   isShowingSpeedRunEndOverlay: boolean
