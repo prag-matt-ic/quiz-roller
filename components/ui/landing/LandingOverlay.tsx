@@ -8,7 +8,6 @@ import { twJoin } from 'tailwind-merge'
 import speedroller from '@/assets/brand/SPEEDROLLER.svg'
 import speedrollerFaint from '@/assets/brand/speedroller-faint.svg'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
-import { useSoundStore } from '@/components/SoundProvider'
 import { MOVE_HUD_CONFIG } from '@/resources/content'
 
 const LandingControls = dynamic(() => import('./LandingControls'), { ssr: false })
@@ -18,8 +17,6 @@ type Props = {
 }
 
 const LandingOverlay: FC<Props> = ({ isMobile }) => {
-  const setIsMuted = useSoundStore((s) => s.setIsMuted)
-
   const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
   const setIsShowingLandingOverlay = useGameStore((s) => s.setIsShowingLandingOverlay)
   const isHydrated = useGameStore((s) => s._isHydrated)
@@ -28,15 +25,10 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
   const inputType = useGameStore((s) => s.inputType)
 
   const [isExiting, setIsExiting] = useState(false)
-  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
 
   const isLoaded = isHydrated && isPlatformReady
-  const canStart = isLoaded && (!isMobile || isMobileLandscape)
 
-  const [startMuted, setStartMuted] = useState(false)
-
-  const onStartClick = () => {
-    setIsMuted(startMuted)
+  const onStart = () => {
     setIsExiting(true)
   }
 
@@ -60,7 +52,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       id="landing-overlay"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 flex flex-col items-center justify-center gap-6 px-6 py-4 lg:gap-8',
+        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-2 gap-5 px-6 pt-12 pb-2 lg:gap-6',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         'bg-linear-0 from-black/20 via-black/90 to-black/20 backdrop-blur-sm',
         isExiting ? 'opacity-0' : 'opacity-100',
@@ -72,14 +64,14 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
         )}
       />
 
-      <header className="relative flex flex-col justify-center gap-2">
-        <div className="relative flex items-center gap-2">
+      <header className="relative mx-auto flex w-3xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden">
+        <p className="relative w-full">
           <span className="font-unbounded text-lg font-medium">Pragmattic</span>
-          <p className="tracking-wider text-white/50">AND</p>
+          <span className="px-2 tracking-wider text-white/50">AND</span>
           <span className="font-unbounded text-lg font-medium">Loopspeed</span>
-          <p className="tracking-wider text-white/50">PRESENT</p>
-        </div>
-        <div className="relative h-fit w-3xl max-w-4/5">
+          <span className="px-2 tracking-wider text-white/50">PRESENT</span>
+        </p>
+        <div className="relative h-fit w-full">
           <Image
             src={speedrollerFaint}
             alt=""
@@ -96,16 +88,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       </header>
 
       {/* TODO: create a compoent for these, wrap them in pointerprovider, load them dynamically. Then update CTA button to move the gradient center (make it radial gradient.) */}
-      <LandingControls
-        isLoaded={isLoaded}
-        canStart={canStart}
-        onStartClick={onStartClick}
-        startMuted={startMuted}
-        setStartMuted={setStartMuted}
-        isMobile={isMobile}
-        isMobileLandscape={isMobileLandscape}
-        setIsMobileLandscape={setIsMobileLandscape}
-      />
+      <LandingControls isLoaded={isLoaded} isMobile={isMobile} onStart={onStart} />
     </div>
   )
 }

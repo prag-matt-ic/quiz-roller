@@ -15,13 +15,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  type InstancedBufferAttribute,
-  RepeatWrapping,
-  Texture,
-  Vector3,
-  Vector3Tuple,
-} from 'three'
+import { type InstancedBufferAttribute, Texture, Vector3, type Vector3Tuple } from 'three'
 
 import tileDetailNoise2 from '@/assets/textures/platform/tile-noise-2.webp'
 import tileDetailNoise3 from '@/assets/textures/platform/tile-noise-3.webp'
@@ -110,11 +104,6 @@ export const PlatformTiles: FC<PlatformTilesProps> = ({ ref, onReadyChange }) =>
     tileDetailNoise2.src,
     tileDetailNoise3.src,
   ]) as [Texture, Texture, Texture]
-
-  detailNoiseTextures.forEach((texture) => {
-    texture.wrapS = RepeatWrapping
-    texture.wrapT = RepeatWrapping
-  })
 
   const [instances, setTileInstances] = useState<InstancedRigidBodyProps[]>([])
   const tileRigidBodies = useRef<RapierRigidBody[]>(null)

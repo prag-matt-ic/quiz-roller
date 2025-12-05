@@ -1,55 +1,78 @@
 'use client'
-import { ArrowLeft, ArrowRight, Joystick, Keyboard, Volume2, VolumeX } from 'lucide-react'
-import { type Dispatch, type FC, type SetStateAction } from 'react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Joystick,
+  Keyboard,
+  RotateCcwIcon,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
+import {
+  type Dispatch,
+  type FC,
+  ReactNode,
+  type SetStateAction,
+  useEffect,
+  useState,
+} from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import { useSoundStore } from '@/components/SoundProvider'
+import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import CTAButton from '@/components/ui/CTAButton'
 import { InputType } from '@/stores/types'
 
-import { ButtonGroup } from '../ButtonGroup'
-import RotateDevice from './RotateDevice'
-
 type Props = {
   isLoaded: boolean
-  canStart: boolean
-  onStartClick: () => void
-  startMuted: boolean
-  setStartMuted: (muted: boolean) => void
   isMobile: boolean
-  isMobileLandscape: boolean
-  setIsMobileLandscape: Dispatch<SetStateAction<boolean>>
+  onStart: () => void
 }
 
-const LandingControls: FC<Props> = ({
-  isLoaded,
-  canStart,
-  onStartClick,
-  startMuted,
-  setStartMuted,
-  isMobile,
-  isMobileLandscape,
-  setIsMobileLandscape,
-}) => {
+const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   const INPUT_TYPE_OPTIONS = [
     { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
     { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
   ]
 
+  const setIsMuted = useSoundStore((s) => s.setIsMuted)
   const inputType = useGameStore((s) => s.inputType)
   const setInputType = useGameStore((s) => s.setInputType)
   const joystickPosition = useGameStore((s) => s.joystickPosition)
   const setJoystickPosition = useGameStore((s) => s.setJoystickPosition)
 
+  const [startMuted, setStartMuted] = useState(false)
+  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
+
+  const canStart = isLoaded && (!isMobile || isMobileLandscape)
+
+  useDeviceOrientation({ isMobile, setIsLandscape: setIsMobileLandscape })
+
+  const onStartClick = () => {
+    setIsMuted(startMuted)
+    onStart()
+  }
+
+  const ctaLabel: ReactNode = !isMobile ? (
+    'Start experience'
+  ) : isMobileLandscape ? (
+    'Start experience'
+  ) : (
+    <>
+      Rotate to start <RotateCcwIcon />
+    </>
+  )
+
   return (
     <div
       id="landing-controls"
       className={twJoin(
-        'relative flex flex-col flex-wrap items-center gap-5 transition-opacity duration-500 ease-out motion-reduce:transition-none sm:flex-row',
-        isLoaded ? 'opacity-100 delay-150' : 'opacity-0',
+        'relative flex flex-wrap items-center justify-center gap-4 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none',
+        isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
       )}>
       <CTAButton aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
-        Start experience
+        {ctaLabel}
       </CTAButton>
 
       <ButtonGroup
@@ -82,14 +105,33 @@ const LandingControls: FC<Props> = ({
           ]}
         />
       )}
-
-      <RotateDevice
-        isMobile={isMobile}
-        isLandscape={isMobileLandscape}
-        setIsLandscape={setIsMobileLandscape}
-      />
     </div>
   )
 }
 
 export default LandingControls
+
+function useDeviceOrientation({
+  isMobile,
+  setIsLandscape,
+}: {
+  isMobile: boolean
+  setIsLandscape: Dispatch<SetStateAction<boolean>>
+}) {
+  useEffect(() => {
+    if (!isMobile) return
+
+    const mediaQuery = window.matchMedia('(orientation: landscape)')
+
+    const onOrientationChange = (event: MediaQueryList | MediaQueryListEvent) => {
+      setIsLandscape(event.matches)
+    }
+
+    onOrientationChange(mediaQuery)
+
+    mediaQuery.addEventListener('change', onOrientationChange)
+    return () => {
+      mediaQuery.removeEventListener('change', onOrientationChange)
+    }
+  }, [isMobile, setIsLandscape])
+}

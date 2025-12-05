@@ -71,7 +71,7 @@ const CTAButton: FC<CTAButtonProps> = ({
       disabled={disabled}
       style={{ width: 256, height: 54, ...gradientVars }}
       className={twJoin(
-        'relative inline-flex shrink-0 items-center justify-center rounded-xl transition-colors transition-opacity duration-200',
+        'text-unbounded relative flex shrink-0 items-center justify-center rounded-xl transition-all duration-200',
         isSecondary ? 'bg-black/10' : 'bg-black/40 hover:bg-black/60',
         'hover:[--stop-a:var(--stop-a-hover)] hover:[--stop-b:var(--stop-b-hover)] hover:[--stop-c:var(--stop-c-hover)]',
         'focus-visible:[--stop-a:var(--stop-a-hover)] focus-visible:[--stop-b:var(--stop-b-hover)] focus-visible:[--stop-c:var(--stop-c-hover)]',
@@ -122,7 +122,7 @@ const CTAButton: FC<CTAButtonProps> = ({
           </linearGradient>
         </defs>
       </svg>
-      <span className="text-unbounded relative z-10 px-4 text-base font-bold tracking-wider text-white uppercase">
+      <span className="relative z-10 flex items-center gap-2.5 px-3 text-base font-bold tracking-wider text-white uppercase">
         {children}
       </span>
     </button>
