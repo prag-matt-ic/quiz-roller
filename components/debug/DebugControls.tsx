@@ -88,7 +88,7 @@ const DebugControls: FC = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 text-xs text-white">
+    <div className="fixed bottom-48 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 text-xs text-white">
       <SelectRow
         id="performance-debug-scene-quality"
         label="Quality"
