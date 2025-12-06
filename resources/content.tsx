@@ -59,8 +59,8 @@ export const COLLECTIBLES_CONTENT: Record<
         </Link>
         <span className="mt-1 block text-sm font-medium text-white/80">
           Prompts that will refactor existing code for readability, best practices and
-          performance. Used in this project to keep the code clean and efficient whilst moving
-          quickly. Best used in conjunction with a reasoning LLM.
+          performance. Useful to keep AI-generated code clean and efficient whilst moving
+          quickly.
         </span>
       </>
     ),

@@ -52,7 +52,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel
             className="col-span-2 col-start-1 row-start-1 flex flex-col items-center justify-center lg:gap-2"
             attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
-            <h2 className="text-2xl uppercase lg:text-4xl">congratulations!</h2>
+            <h2 className="text-2xl uppercase lg:text-4xl">Congratulations!</h2>
             <p className="flex text-xs text-white/60 lg:text-sm">
               You completed the level, now do it again but be quicker.
             </p>

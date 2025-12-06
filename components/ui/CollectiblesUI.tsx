@@ -99,7 +99,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex w-lg max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
+                'flex w-fit max-w-lg origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
@@ -112,10 +112,10 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
                   className="shrink-0 text-(--icon-colour)"
                 />
               ) : (
-                <LockIcon strokeWidth={1} size={40} className="text-white/50" />
+                <LockIcon strokeWidth={1} size={40} className="text-neutral-500" />
               )}
               <p className="block overflow-hidden">
-                <span className="mb-1 text-sm font-medium tracking-wide text-white/80 uppercase">
+                <span className="mb-1 text-sm font-medium tracking-wider text-neutral-500 uppercase">
                   Bonus
                 </span>
                 {isCollected ? (
