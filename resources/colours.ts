@@ -59,7 +59,7 @@ export const GEMS_COLOURS_BY_ID: Record<
   CollectibleID,
   { colour: string; particlesPalette: readonly string[] }
 > = {
-  [CollectibleID.Discount]: {
+  [CollectibleID.DesignTools]: {
     colour: GEM_COLOURS[0],
     particlesPalette: GOLD_PARTICLE_PALETTE,
   },

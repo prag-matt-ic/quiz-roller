@@ -20,7 +20,7 @@ import { GEMS_COLOURS_BY_ID } from '@/resources/colours'
 
 export const PLAYER_RADIUS = 0.45
 
-const defaultGemColour = GEMS_COLOURS_BY_ID[CollectibleID.Discount].colour
+const defaultGemColour = GEMS_COLOURS_BY_ID[CollectibleID.DesignTools].colour
 
 const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)

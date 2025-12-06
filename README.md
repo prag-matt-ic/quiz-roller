@@ -124,7 +124,7 @@ It supports textured and flat modes depending on the quality mode.
 
 ![Platform](https://github.com/prag-matt-ic/quiz-roller/blob/main/public/screenshots/platform.webp?raw=true)
 
-The main `Platform` is a grid of instanced rigid bodies that endlessly wrap forward.
+The main `Platform` is a grid of instanced rigid bodies that endlessly wrap forward and backwards.
 
 ### Row Recycling ♻️
 

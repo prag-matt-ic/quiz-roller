@@ -99,7 +99,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl border-2 border-white/10 bg-black p-6',
+                'flex w-lg max-w-full origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
@@ -119,9 +119,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
                   Bonus
                 </span>
                 {isCollected ? (
-                  <span className="block text-base font-bold sm:text-lg">
-                    {COLLECTIBLES_CONTENT[id].content}
-                  </span>
+                  <span className="block">{COLLECTIBLES_CONTENT[id].content}</span>
                 ) : (
                   <span className="block text-sm font-semibold lg:text-base">
                     Unlock the gem to learn more

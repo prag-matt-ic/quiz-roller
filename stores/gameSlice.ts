@@ -80,7 +80,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   resetGame: ({ mode }) => {
     get().stopConfirmation()
 
-    const isModeChange = get().mode !== mode
+    const isModeChange = mode && mode !== get().mode
     const nextModeData = getPlatformDataForMode(mode)
     const isSpeedRunMode = mode === GameMode.SPEEDRUN
     const username = get().username
@@ -100,8 +100,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         ...RESET_TIME_STATE,
         ...getResetInputState(),
         mode,
-        rowsData: nextModeData.rowsData,
-        totalCounts: nextModeData.totalCounts,
+        rowsData: isModeChange ? nextModeData.rowsData : s.rowsData,
+        totalCounts: isModeChange ? nextModeData.totalCounts : s.totalCounts,
         speedRunStage: speedRunStage,
         isShowingDashboard: false,
         ...speedRunOverlays,

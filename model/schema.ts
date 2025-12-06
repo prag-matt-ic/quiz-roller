@@ -14,7 +14,7 @@ export type RingUserData = {
 }
 
 export enum CollectibleID {
-  Discount = 'discount',
+  DesignTools = 'design_tools',
   AI_Prompts = 'ai_prompts',
   Consultation = 'consultation',
 }
