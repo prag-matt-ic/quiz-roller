@@ -18,7 +18,7 @@ export const TimesFallenPanel: FC<Props> = ({ className }) => {
     <Panel
       className={twJoin('flex h-full flex-col justify-between gap-3 p-4', className)}
       attractorClassName="bg-red-500/[0.125] bg-linear-70 from-white/10 to-transparent">
-      <PanelHeader icon={SkullIcon} label="Times Fallen" iconClassName="text-gray-200" />
+      <PanelHeader icon={SkullIcon} label="Accidents" iconClassName="text-gray-200" />
       <p className="text-3xl font-bold text-red-300 lg:text-5xl">{fallCount}</p>
     </Panel>
   )

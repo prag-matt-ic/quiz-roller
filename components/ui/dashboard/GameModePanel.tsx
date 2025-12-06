@@ -58,7 +58,7 @@ export const GameModePanel: FC<Props> = ({ className }) => {
   }
 
   return (
-    <Panel className={twMerge('h-full space-y-4 p-4', className)}>
+    <Panel className={twMerge('h-full space-y-4', className)}>
       <PanelHeader icon={Gamepad2} label="Mode" />
 
       <div className="flex flex-col gap-3">

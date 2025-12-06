@@ -31,6 +31,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
+import { PointerProvider } from '@/components/ui/PointerProvider'
 import { InfoZoneUserData, type RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import {
@@ -145,7 +146,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
       {
         opacity: 1,
         scale: 1,
-        duration: 0.36,
+        duration: 0.32,
         delay: 0.3,
         stagger: -0.07,
         ease: 'expoScale(0.8,1.0,power1.out)',
@@ -162,7 +163,7 @@ export const InfoZone: FC<InfoZoneProps> = ({
     gsap.to(infoContainer.current, {
       opacity: 0,
       scale: 0.8,
-      duration: 0.28,
+      duration: 0.24,
       ease: 'expoScale(0.8,1.0,power1.out)',
     })
     gsap.to(tileShader.current, {
@@ -248,17 +249,27 @@ export const InfoZone: FC<InfoZoneProps> = ({
             onEnter={onInfoEnter}
             onExit={onInfoExit}
             nodeRef={infoContainer}>
-            <div
+            <InfoContentPanel
               ref={infoContainer}
               className={twMerge(
                 'relative size-fit max-w-[calc(100vw-56px)]',
                 infoContainerClassName,
               )}>
               {children}
-            </div>
+            </InfoContentPanel>
           </Transition>
         </Html>
       )}
     </RigidBody>
+  )
+}
+
+const InfoContentPanel: FC<
+  PropsWithChildren<{ ref: RefObject<HTMLDivElement | null>; className?: string }>
+> = ({ children, className, ref }) => {
+  return (
+    <div ref={ref} className={className}>
+      <PointerProvider isMobile={false}>{children}</PointerProvider>
+    </div>
   )
 }

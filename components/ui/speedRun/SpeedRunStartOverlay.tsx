@@ -1,37 +1,23 @@
 'use client'
 import gsap from 'gsap'
 import { Play } from 'lucide-react'
-import { type FC, type Ref, useRef, useState } from 'react'
+import { type FC, type Ref, useRef } from 'react'
 import { SwitchTransition, Transition, type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { RingBoostInfo } from '@/components/ui/dashboard/RingsSpeedPanel'
-import { Input } from '@/components/ui/input'
-import { speedRunSubmissionSchema } from '@/model/schema'
+import { Input, useUsernameInput } from '@/components/ui/input/UsernameInput'
 
 type Props = {
   ref: Ref<HTMLDivElement>
   transitionStatus: TransitionStatus
 }
 
-const usernameSchema = speedRunSubmissionSchema.shape.username
-const USERNAME_ERROR_MESSAGE = 'Username must be 6-12 characters long'
-
 // Start overlay handles the username input if needed and countdown
 export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
-  const username = useGameStore((s) => s.username)
   const setSpeedRunStage = useGameStore((s) => s.setSpeedRunStage)
   const speedRunStage = useGameStore((s) => s.speedRunStage)
-  const setUsername = useGameStore((s) => s.setUsername)
-
-  const [inputValue, setInputValue] = useState(username ?? '')
-  const trimmedUsername = inputValue.trim()
-  const usernameValidation = usernameSchema.safeParse(trimmedUsername)
-  const usernameError =
-    trimmedUsername.length > 0 && !usernameValidation.success ? USERNAME_ERROR_MESSAGE : null
-  const isValid = usernameValidation.success
-
   const onCountdownComplete = useGameStore((s) => s.onCountdownComplete)
 
   const showUsernameInput = speedRunStage === 'username'
@@ -68,10 +54,10 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   }
 
   const usernameInput = useRef<HTMLInputElement>(null)
+  const inputProps = useUsernameInput()
 
-  const handleUsernameSubmit = () => {
-    if (!usernameValidation.success) return
-    setUsername(usernameValidation.data)
+  const startCountdown = () => {
+    if (!inputProps.isValid) return
     setSpeedRunStage('countdown')
   }
 
@@ -97,41 +83,35 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
 
   const usernameForm = (
     <section className="flex max-w-xl flex-col gap-6">
-      <p className="font-unbounded text-center text-2xl font-semibold lg:text-3xl">
+      <h2 className="font-unbounded text-center text-2xl font-semibold lg:text-3xl">
         Race to the finish line
-      </p>
+      </h2>
 
-      <div className="relative flex items-center">
-        <Input
-          ref={usernameInput}
-          id="username-input"
-          className="max-w-full border-none pr-16"
-          minLength={6}
-          maxLength={12}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="username"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === 'NumpadEnter') {
-              e.preventDefault()
-              handleUsernameSubmit()
-            }
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={handleUsernameSubmit}
-          disabled={!isValid}
-          className={twJoin(
-            'absolute right-0 z-10 flex aspect-square h-full items-center justify-center',
-            isValid ? 'text-green-400' : 'text-white/20',
-          )}
-          aria-label="Submit username">
-          <Play size={32} strokeWidth={2} />
-        </button>
-      </div>
-      {!!usernameError && <p className="-mt-4 px-1 text-sm text-amber-500">{usernameError}</p>}
+      <Input
+        ref={usernameInput}
+        {...inputProps}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === 'NumpadEnter') {
+            e.preventDefault()
+            startCountdown()
+          }
+        }}
+        endAdornment={
+          <button
+            type="button"
+            aria-label="Start countdown"
+            onClick={startCountdown}
+            disabled={!inputProps.isValid}
+            className={twJoin(
+              'flex size-full items-center justify-center',
+              inputProps.isValid
+                ? 'animate-pulse text-emerald-400 hover:text-emerald-200'
+                : 'text-neutral-600',
+            )}>
+            <Play size={32} strokeWidth={2} />
+          </button>
+        }
+      />
 
       <RingBoostInfo />
     </section>

@@ -123,7 +123,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
       return <TotalTimeDisplay initialValue={totalTime} timeContainer={timeContainer} />
     if (placementIndex === 4)
       return <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} />
-    return <Card className="w-full">{INFO_ZONES_CARD_CONTENT[placementIndex]}</Card>
+    return INFO_ZONES_CARD_CONTENT[placementIndex]
   }
 
   return (
@@ -174,9 +174,9 @@ function getInfoZonePropsForIndex(
       sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
     }
   }
-  // Info Card
+  // Info Content
   return {
-    infoContainerClassName: 'grid w-[328px] lg:w-160 grid-cols-1 gap-3',
+    infoContainerClassName: 'w-[328px] lg:w-180',
     iconSrc: infoIcon.src,
     sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
   }

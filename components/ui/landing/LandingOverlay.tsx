@@ -8,7 +8,7 @@ import { twJoin } from 'tailwind-merge'
 import speedroller from '@/assets/brand/SPEEDROLLER.svg'
 import speedrollerFaint from '@/assets/brand/speedroller-faint.svg'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
-import { MOVE_HUD_CONFIG } from '@/resources/content'
+import { MOVE_HUD_CONFIG } from '@/resources/content/hud'
 
 const LandingControls = dynamic(() => import('./LandingControls'), { ssr: false })
 

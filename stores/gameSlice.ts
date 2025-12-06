@@ -42,8 +42,8 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
   resetPlatformTick: 0,
   mode: GameMode.LEARN,
   hudIndicator: null,
-  setHydrated: () => {
-    set({ _isHydrated: true })
+  setHydrated: (mode: GameMode) => {
+    set({ _isHydrated: true, mode, ...getPlatformDataForMode(mode) })
   },
   setHtmlPortal: (htmlPortal) => {
     set({ htmlPortal })
@@ -83,15 +83,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
     const isModeChange = mode && mode !== get().mode
     const nextModeData = getPlatformDataForMode(mode)
     const isSpeedRunMode = mode === GameMode.SPEEDRUN
-    const username = get().username
-
-    const speedRunStage = isSpeedRunMode
-      ? !!username
-        ? 'countdown'
-        : 'username'
-      : RESET_TIME_STATE.speedRunStage
-
-    const speedRunOverlays = getSpeedRunOverlays(speedRunStage, isSpeedRunMode)
+    const speedRunOverlays = getSpeedRunOverlays(RESET_TIME_STATE.speedRunStage, isSpeedRunMode)
 
     set((s) => {
       return {
@@ -102,7 +94,6 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         mode,
         rowsData: isModeChange ? nextModeData.rowsData : s.rowsData,
         totalCounts: isModeChange ? nextModeData.totalCounts : s.totalCounts,
-        speedRunStage: speedRunStage,
         isShowingDashboard: false,
         ...speedRunOverlays,
         fallCount: 0,

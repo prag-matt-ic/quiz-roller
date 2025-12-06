@@ -3,14 +3,11 @@ import { type RefObject, useCallback, useRef } from 'react'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import usePlayerStatus from '@/hooks/usePlayerStatus'
-import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content'
 import { type PlayerStatus } from '@/stores/types'
 import {
   COLUMNS,
-  EPSILON,
   ROWS_RENDERED,
   type RowData,
-  SAFE_HEIGHT,
   TILE_SIZE,
   colToX,
 } from '@/utils/tiles'
@@ -41,7 +38,7 @@ function findSafeColumnX(row: RowData, preferredX: number): number | null {
   const startColIndex = Math.max(0, Math.min(COLUMNS - 1, Math.round(rawColIndex)))
 
   // Check the target column first
-  if (row.heights[startColIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+  if ((row.isRaised[startColIndex] ?? 0) === 1) {
     return colToX(startColIndex)
   }
 
@@ -58,14 +55,14 @@ function findSafeColumnX(row: RowData, preferredX: number): number | null {
 
     // Check left
     if (leftIndex >= 0) {
-      if (row.heights[leftIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+      if ((row.isRaised[leftIndex] ?? 0) === 1) {
         return colToX(leftIndex)
       }
     }
 
     // Check right
     if (rightIndex < COLUMNS) {
-      if (row.heights[rightIndex] >= SAFE_HEIGHT - EPSILON.TINY) {
+      if ((row.isRaised[rightIndex] ?? 0) === 1) {
         return colToX(rightIndex)
       }
     }
@@ -273,13 +270,11 @@ export function usePlayerRespawn({
     targetScrollPosition.current = null
     if (pendingRespawnX.current === null) return
 
-    const hudConfig =
-      OUT_OF_BOUNDS_HUD_CONFIG[Math.floor(Math.random() * OUT_OF_BOUNDS_HUD_CONFIG.length)]
-
-    respawnPlayer(
-      [pendingRespawnX.current, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]],
-      hudConfig,
-    )
+    respawnPlayer([
+      pendingRespawnX.current,
+      PLAYER_INITIAL_POSITION[1],
+      PLAYER_INITIAL_POSITION[2],
+    ])
     pendingRespawnX.current = null
   }, [respawnPlayer])
 

@@ -94,7 +94,7 @@ export const LeaderboardTable: FC<TableProps> = ({
   return (
     <section
       className={twMerge(
-        'grid w-full max-w-xl grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4',
+        'grid max-h-full w-full max-w-xl grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 overflow-y-auto',
         className,
       )}>
       {isLoading

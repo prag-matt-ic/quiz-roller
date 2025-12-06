@@ -27,11 +27,8 @@ import {
   type ConfettiPlacement,
   type IndexedPlacement,
   ON_TILE_Y,
-  type RingPositions,
   type RowData,
-  SAFE_HEIGHT,
   TILE_SIZE,
-  UNSAFE_HEIGHT,
   colToX,
 } from '../utils/tiles'
 import { MINI_MAP_CONSTANTS, writeMiniMapSVG } from './utils/generateMiniMap'
@@ -42,7 +39,7 @@ type BitmapPlacement = {
 }
 
 type BitmapRow = {
-  heights: number[]
+  isRaised: (0 | 1)[]
   highlightColumns: number[]
   ringColumns: number[]
   infoZoneColumns: number[]
@@ -231,7 +228,7 @@ async function parseSectionBitmapFromFile(
 
   for (let srcRow = 0; srcRow < height; srcRow++) {
     const rowIndex = height - 1 - srcRow
-    const heights = new Array<number>(width)
+    const raisedMask = new Array(width).fill(0) as (0 | 1)[]
     const ringColumns: number[] = []
     const infoZoneColumns: number[] = []
     const highlightColumns: number[] = []
@@ -247,7 +244,7 @@ async function parseSectionBitmapFromFile(
       const b = data[pixelIndex + 2]
 
       const isRaised = !isColour(r, g, b, COLOUR_CODES.VOID)
-      heights[column] = isRaised ? SAFE_HEIGHT : UNSAFE_HEIGHT
+      raisedMask[column] = isRaised ? 1 : 0
 
       if (isColour(r, g, b, COLOUR_CODES.RING)) ringColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) infoZoneColumns.push(column)
@@ -259,7 +256,7 @@ async function parseSectionBitmapFromFile(
     }
 
     rows[rowIndex] = {
-      heights,
+      isRaised: raisedMask,
       ringColumns,
       infoZoneColumns,
       collectibleColumns,
@@ -417,7 +414,7 @@ function buildRowDataFromBitmapRows({
     const layoutRow = rows[rowIndex]
 
     const baseRow: RowData = {
-      heights: layoutRow.heights,
+      isRaised: layoutRow.isRaised,
       stage,
       isSectionStart: rowIndex === 0,
       isSectionEnd: rowIndex === rowCount - 1,
@@ -443,12 +440,12 @@ function buildRowDataFromBitmapRows({
 
 function applyRingColumns(row: RowData, columns?: number[]) {
   if (!columns || columns.length === 0) return
-  const ringPositions = new Array<number>(COLUMNS).fill(0) as RingPositions
+  const rings = new Array<number>(COLUMNS).fill(0) as (0 | 1)[]
   columns.forEach((columnIndex) => {
     if (columnIndex < 0 || columnIndex >= COLUMNS) return
-    ringPositions[columnIndex] = 1
+    rings[columnIndex] = 1
   })
-  row.ringPositions = ringPositions
+  row.rings = rings
 }
 
 function applyInfoColumns(row: RowData, layoutRow: BitmapRow, globalIndexes: TotalCounts) {
@@ -572,7 +569,7 @@ function buildConfettiPlacementsFromBitmap(
   const placements = layoutRow.confettiPlacements
   if (!placements?.length) return undefined
 
-  const raisedSpan = getRaisedSpanForRow(layoutRow.heights)
+  const raisedSpan = getRaisedSpanForRow(layoutRow.isRaised)
   if (!raisedSpan) return undefined
 
   const confettiPlacements: RowData['confettiPlacements'] = []
@@ -596,7 +593,7 @@ function buildConfettiPlacementsFromColumns(
   const { confettiColumns } = layoutRow
   if (!confettiColumns?.length) return undefined
 
-  const raisedSpan = getRaisedSpanForRow(layoutRow.heights)
+  const raisedSpan = getRaisedSpanForRow(layoutRow.isRaised)
   if (!raisedSpan) return undefined
 
   const placement = createConfettiPlacement({
@@ -629,13 +626,13 @@ function createConfettiPlacement({
 }
 
 function getRaisedSpanForRow(
-  heights: number[],
+  raisedMask: (0 | 1)[],
 ): { centerX: number; width: number; depth: number } | null {
   let minColumn = Infinity
   let maxColumn = -Infinity
 
-  heights.forEach((height, columnIndex) => {
-    if (height <= UNSAFE_HEIGHT) return
+  raisedMask.forEach((value, columnIndex) => {
+    if (value !== 1) return
     if (columnIndex < minColumn) minColumn = columnIndex
     if (columnIndex > maxColumn) maxColumn = columnIndex
   })

@@ -28,15 +28,14 @@ import {
   ROWS_RENDERED,
   ROW_VISIBILITY_HALF_SPAN,
   type RowData,
-  SAFE_HEIGHT,
   TILE_PLAYER_FADE_FULL_RADIUS,
   TILE_PLAYER_FADE_MIN_ALPHA,
   TILE_PLAYER_FADE_MIN_RADIUS,
   TILE_SIZE,
-  UNSAFE_HEIGHT,
   clamp,
   colToX,
   lerp,
+  raisedMaskToY,
 } from '@/utils/tiles'
 
 import SpeedRunElements, { type SpeedRunElementsHandle } from './speedRun/SpeedRunElements'
@@ -46,7 +45,7 @@ import useReadyState, { type ReadyState, type ReadyStateKey } from './useReadySt
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'
 
 const EMPTY_ROW_DATA: RowData = {
-  heights: Array.from({ length: COLUMNS }, () => UNSAFE_HEIGHT),
+  isRaised: Array.from({ length: COLUMNS }, () => 0),
   stage: Stage.OBSTACLES,
   isSectionStart: false,
   isSectionEnd: false,
@@ -187,12 +186,13 @@ const Platform: FC = () => {
       for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
         const x = colToX(columnIndex)
         const z = nextRowZ
-        const y = rowData.heights[columnIndex]
+        const raisedMask = (rowData.isRaised[columnIndex] ?? 0) as 0 | 1
+        const y = raisedMaskToY(raisedMask)
         const bodyIndex = rowIndex * COLUMNS + columnIndex
         xByBodyIndex.current[bodyIndex] = x
         yByBodyIndex.current[bodyIndex] = y
 
-        tilesVisibility![bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
+        tilesVisibility![bodyIndex] = raisedMask
         tilesSeed![bodyIndex] = Math.random()
         tilesHighlighted![bodyIndex] = rowData.isHighlighted?.[columnIndex] ?? 0
 
@@ -260,9 +260,10 @@ const Platform: FC = () => {
 
     for (let columnIndex = 0; columnIndex < COLUMNS; columnIndex++) {
       const bodyIndex = rowIndex * COLUMNS + columnIndex
-      const y = data.heights[columnIndex]
+      const raisedMask = (data.isRaised[columnIndex] ?? 0) as 0 | 1
+      const y = raisedMaskToY(raisedMask)
       yByBodyIndex.current[bodyIndex] = y
-      visibilityData[bodyIndex] = y >= SAFE_HEIGHT ? 1 : 0
+      visibilityData[bodyIndex] = raisedMask
       highlightedData[bodyIndex] = data.isHighlighted?.[columnIndex] ?? 0
     }
   }

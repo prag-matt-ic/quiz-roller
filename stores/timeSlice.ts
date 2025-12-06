@@ -1,6 +1,7 @@
 import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
 import { PLATFORM_VERSION } from '@/resources/rowsData'
 
+import { getSpeedRunOverlays } from './overlaysSlice'
 import {
   GameMode,
   type GameSliceCreator,
@@ -8,7 +9,6 @@ import {
   type SpeedRunStage,
   type TimeSlice,
 } from './types'
-import { getSpeedRunOverlays } from './overlaysSlice'
 
 export const RESET_TIME_STATE: Pick<TimeSlice, 'speedRunTimeCS' | 'speedRunStage'> = {
   speedRunTimeCS: 0,
@@ -39,10 +39,9 @@ export const createTimeSlice =
       })
     },
     startSpeedRun: () => {
-      const { username, resetGame } = get()
-      resetGame({
+      get().resetGame({
         mode: GameMode.SPEEDRUN,
-        speedRunStage: !!username ? 'countdown' : 'username',
+        speedRunStage: 'username',
       })
     },
     onCountdownComplete: () => {

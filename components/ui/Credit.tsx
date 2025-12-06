@@ -10,11 +10,14 @@ type CreditProps = {
 export const Credit: FC<CreditProps> = ({ role, name, url }) => {
   return (
     <div className="py-0.5 sm:py-1">
-      <span className="mb-1 block text-xs leading-none text-black/70 uppercase">{role}</span>
+      <span className="mb-1 block text-xs font-medium tracking-widest text-white/50 uppercase">
+        {role}
+      </span>
+
       {!!url ? (
         <a
           href={url}
-          className="paragraph-sm flex items-center gap-1 font-semibold"
+          className="paragraph-sm pointer-events-auto flex items-center gap-1 font-semibold"
           target="_blank"
           rel="noopener noreferrer">
           {name}

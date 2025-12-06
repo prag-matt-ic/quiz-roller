@@ -32,8 +32,9 @@ export const COLUMNS = 33 // odd number so that there is a center column
 export const ROWS_RENDERED = 31
 
 // Heights
-export const SAFE_HEIGHT = -TILE_SIZE / 2 // top of tile at y=0
-export const UNSAFE_HEIGHT = -100 // sunken obstacles (out of sight)
+export const RAISED_Y = -TILE_SIZE / 2 // top of tile at y=0
+export const UNRAISED_Y = -100 // sunken obstacles (out of sight)
+export const raisedMaskToY = (value: 0 | 1): number => (value === 1 ? RAISED_Y : UNRAISED_Y)
 
 const HIDE_POSITION_Y = -20 as const
 const HIDE_POSITION_Z = 10 as const
@@ -42,7 +43,7 @@ export const HIDDEN_POSITION: [number, number, number] = [0, HIDE_POSITION_Y, HI
 export const CONFETTI_ROW_DEPTH = TILE_SIZE
 
 // Y value for elements placed directly on top of tiles
-export const ON_TILE_Y = SAFE_HEIGHT + TILE_THICKNESS * 0.5 + 0.005
+export const ON_TILE_Y = RAISED_Y + TILE_THICKNESS * 0.5 + 0.005
 
 // Convert a grid column index (can be fractional for centers) to world X.
 export const colToX = (col: number): number => (col - COLUMNS / 2 + 0.5) * TILE_SIZE
@@ -58,8 +59,6 @@ export function lerp(a: number, b: number, t: number): number {
 // Row index to columns with rings
 export type RingLayout = Record<number, number[]>
 
-export type RingPositions = (0 | 1)[]
-
 export type IndexedPlacement = readonly [number, number, number, number]
 
 export type ConfettiPlacement = {
@@ -70,12 +69,12 @@ export type ConfettiPlacement = {
 }
 
 export type RowData = {
-  heights: number[]
+  isRaised: (0 | 1)[]
   stage: Stage
   isSectionStart: boolean
   isSectionEnd: boolean
   rowIndex?: number
-  ringPositions?: RingPositions
+  rings?: (0 | 1)[]
   isHighlighted?: number[] // 0 = not highlighted, 1 = highlighted
   infoZonePlacements?: IndexedPlacement[] // Info zones rendered on the platform
   collectiblePlacements?: IndexedPlacement[] // Collectibles rendered on the platform

@@ -59,7 +59,7 @@ const Panel: FC<PanelProps> = ({
       ref={mergedRef}
       {...containerHandlers}
       className={twMerge(
-        'relative overflow-hidden rounded-2xl border backdrop-blur-sm',
+        'relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm lg:p-6',
         CONTAINER_STRENGTH_CLASSES[strength],
         className,
       )}>

@@ -3,6 +3,7 @@ import { type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
 import { CollectibleID } from '@/model/schema'
+import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content/hud'
 import { ringIndexToKey } from '@/utils/rings'
 
 import {
@@ -193,11 +194,20 @@ export const createPlayerSlice =
         confirmationTweenTarget.value = 0
       },
       respawnPlayer: (position, hud) => {
+        let hudIndicator = hud
+        // If no hud provided, pick a random one from out-of-bounds configs
+        if (!hud) {
+          hudIndicator =
+            OUT_OF_BOUNDS_HUD_CONFIG[
+              Math.floor(Math.random() * OUT_OF_BOUNDS_HUD_CONFIG.length)
+            ]
+        }
+
         set((s) => ({
           playerStatus: 'respawning',
           playerRespawnTick: s.playerRespawnTick + 1,
           spawnPosition: position,
-          hudIndicator: hud ?? s.hudIndicator,
+          hudIndicator: hudIndicator,
         }))
       },
       onRespawnComplete: () => {

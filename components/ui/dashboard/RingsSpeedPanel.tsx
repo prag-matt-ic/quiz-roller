@@ -35,10 +35,10 @@ export const RingBoostInfo: FC = () => {
         </span>
       </div>
       <p className="leading-relaxed text-pretty text-white">
-        Each ring collected gives you a temporary speed boost.
+        Each ring gives you a temporary speed boost.
         <br />
         <span className="text-balance text-white/60">
-          Plan your route to hit as many rings as possible while keeping a tight line.
+          Plan your route to collect rings whilst keeping a tight line.
         </span>
       </p>
     </div>

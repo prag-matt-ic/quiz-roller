@@ -142,11 +142,11 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   const positionElementsIfNeeded = useCallback(
     (row: RowData | undefined, rowZ: number) => {
       if (!row) return
-      if (!row.ringPositions) return
+      if (!row.rings) return
       const rowIndex = row.rowIndex ?? -1
       if (rowIndex < 0) return
-      for (let columnIndex = 0; columnIndex < row.ringPositions.length; columnIndex++) {
-        if (row.ringPositions[columnIndex] !== 1) continue
+      for (let columnIndex = 0; columnIndex < row.rings.length; columnIndex++) {
+        if (row.rings[columnIndex] !== 1) continue
         if (collectedRings[getRingKey(rowIndex, columnIndex)]) continue
         ensureRingForColumn(rowIndex, columnIndex, rowZ)
       }
@@ -157,7 +157,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   const hideElementsIfNeeded = useCallback(
     (row: RowData | undefined) => {
       if (!row) return
-      if (!row.ringPositions) return
+      if (!row.rings) return
       releaseRow(row.rowIndex ?? -1)
     },
     [releaseRow],

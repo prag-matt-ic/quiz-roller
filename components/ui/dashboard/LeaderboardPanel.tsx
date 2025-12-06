@@ -31,19 +31,15 @@ export const LeaderboardPanel: FC<Props> = ({
     fetchPlayerRecentPosition,
     showCTARow: showCTA,
   })
-  const attractorClassName = 'bg-emerald-400/[0.125] bg-linear-70 from-white/10 to-transparent'
+  const attractorClassName = 'bg-emerald-400/15'
 
   return (
     <Panel
-      className={twMerge('flex h-full flex-col p-3 lg:gap-3 lg:p-4', className)}
+      strength={3}
+      className={twMerge('flex h-full flex-col lg:gap-3', className)}
       attractorClassName={attractorClassName}>
-      <PanelHeader icon={Trophy} label="Leaderboard" className="-mb-2 lg:mb-0" />
-      <LeaderboardTable
-        {...tableData}
-        onStartSpeedRun={startSpeedRun}
-        showCTA={showCTA}
-        className="p-3"
-      />
+      <PanelHeader icon={Trophy} label="Leaderboard" className="" />
+      <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} showCTA={showCTA} />
     </Panel>
   )
 }

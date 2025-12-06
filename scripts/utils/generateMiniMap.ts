@@ -6,13 +6,11 @@ import {
   type IndexedPlacement,
   type RowData,
   TILE_SIZE,
-  UNSAFE_HEIGHT,
   clamp,
 } from '../../utils/tiles'
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
 const MINI_MAP_TILE_SIZE_PX = 4
-const RAISED_HEIGHT_THRESHOLD = UNSAFE_HEIGHT + 1 // anything above sunken height is considered raised
 
 type MiniMapPalette = {
   raised: string
@@ -48,7 +46,7 @@ const DEFAULT_PALETTE: MiniMapPalette = {
 
 const getColumns = (columns: number, rows: RowData[]): number => {
   if (columns > 0) return columns
-  const firstRowColumns = rows[0]?.heights.length ?? 0
+  const firstRowColumns = rows[0]?.isRaised.length ?? 0
   if (firstRowColumns <= 0) {
     throw new Error('Cannot determine column count for mini map generation')
   }
@@ -88,8 +86,8 @@ export const buildMiniMapSVG = ({
   rows.forEach((row, rowIndex) => {
     const y = (rowCount - 1 - rowIndex) * tileSize // bottom-up orientation
     for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-      const heightValue = row.heights[columnIndex]
-      if (heightValue == null || heightValue <= RAISED_HEIGHT_THRESHOLD) continue
+      const isRaised = (row.isRaised[columnIndex] ?? 0) === 1
+      if (!isRaised) continue
       const x = columnIndex * tileSize
       tiles.push(
         `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${raised}" />`,

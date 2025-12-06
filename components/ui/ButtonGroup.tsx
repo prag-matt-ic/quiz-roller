@@ -24,7 +24,7 @@ export const ButtonGroup = <T extends string | number>({
   return (
     <div
       className={twJoin(
-        'relative flex items-center gap-2 rounded-xl border border-white/20 p-2.5 text-white',
+        'relative flex items-center gap-2 rounded-xl border border-white/20 p-2 text-white',
         disabled && 'pointer-events-none opacity-50',
       )}>
       {items.map((item) => {

@@ -34,7 +34,6 @@ import {
   COLUMNS,
   ROWS_RENDERED,
   type RowData,
-  SAFE_HEIGHT,
   TILE_SIZE,
   clamp,
 } from '@/utils/tiles'
@@ -366,7 +365,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       if (rowIndex < 0 || rowIndex >= ROWS_RENDERED) return
       const mask = spawnMaskData
       const rowStart = rowIndex * GRID_COLS
-      const heights = rowData?.heights ?? []
+      const raisedMask = rowData?.isRaised ?? []
       const columnStates = rowColumnSpawnable
       if (!columnStates) return
 
@@ -382,8 +381,8 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
       const columnStateOffset = rowIndex * COLUMNS
       for (let col = 0; col < COLUMNS; col++) {
-        const height = heights[col] ?? SAFE_HEIGHT - 1
-        const isSpawnable = height < SAFE_HEIGHT ? 1 : 0
+        const isRaised = (raisedMask[col] ?? 0) === 1 ? 1 : 0
+        const isSpawnable = isRaised === 1 ? 0 : 1
         const stateIndex = columnStateOffset + col
         const prevState = columnStates[stateIndex]
 

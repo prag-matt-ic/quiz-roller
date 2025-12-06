@@ -9,7 +9,7 @@ import { createInputSlice } from './inputSlice'
 import { createOverlaysSlice } from './overlaysSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createTimeSlice } from './timeSlice'
-import type { GameStore } from './types'
+import { GameMode, type GameStore } from './types'
 
 type PersistedStore = Pick<
   GameStore,
@@ -54,7 +54,7 @@ export const createGameStore = ({
               if (!!error) {
                 console.error('an error happened during hydration', error)
               } else {
-                state?.setHydrated()
+                state?.setHydrated(state?.mode ?? GameMode.LEARN)
               }
             }
           },

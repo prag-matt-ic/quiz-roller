@@ -152,7 +152,7 @@ export type GameSlice = {
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
 
   _isHydrated: boolean
-  setHydrated: () => void
+  setHydrated: (mode: GameMode) => void
 }
 
 export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice & OverlaysSlice
