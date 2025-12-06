@@ -129,7 +129,7 @@ export const LeaderboardTable: FC<TableProps> = ({
       {showCTARow && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 mt-4 h-fit rounded-full bg-green-400/20 text-white"
+          className="pointer-events-auto z-100 mt-3 mb-2 h-fit rounded-full bg-green-400/20 text-white"
           username="Set a time"
           time={0}
           position={CTA_POSITION}
