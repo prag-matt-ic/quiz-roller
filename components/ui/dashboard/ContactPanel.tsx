@@ -5,7 +5,7 @@ import { type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/ui/Button'
-import Panel from '@/components/ui/dashboard/panel/Panel'
+import Panel from '@/components/ui/panel/Panel'
 
 type QuickActionsProps = {
   className?: string

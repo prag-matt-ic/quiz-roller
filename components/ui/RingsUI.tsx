@@ -15,7 +15,7 @@ const RingsUI: FC = () => {
     <div className="pointer-events-auto m-2 flex items-center gap-3 p-2 text-sm lg:p-4">
       <div
         className={twJoin(
-          'relative flex aspect-square size-9 items-center justify-center rounded-full border-2 border-amber-400 bg-black/20 font-mono leading-none font-bold tracking-wide',
+          'relative flex aspect-square size-9 items-center justify-center rounded-full bg-black/40 font-mono leading-none font-bold tracking-wide',
           collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
         )}>
         <SpeedBoostDial className="absolute size-12.5" />

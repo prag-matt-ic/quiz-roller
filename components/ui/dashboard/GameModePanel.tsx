@@ -5,8 +5,8 @@ import { type FC, type ReactNode } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { GameMode } from '@/stores/types'
 
 type Props = {

@@ -5,8 +5,8 @@ import { type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import {
   LeaderboardTable,
   useLeaderboardTableData,
@@ -35,9 +35,9 @@ export const LeaderboardPanel: FC<Props> = ({
 
   return (
     <Panel
-      className={twMerge('flex h-full flex-col lg:gap-3 p-3 lg:p-4', className)}
+      className={twMerge('flex h-full flex-col p-3 lg:gap-3 lg:p-4', className)}
       attractorClassName={attractorClassName}>
-      <PanelHeader icon={Trophy} label="Leaderboard" className="-mb-2 lg:mb-0"/>
+      <PanelHeader icon={Trophy} label="Leaderboard" className="-mb-2 lg:mb-0" />
       <LeaderboardTable
         {...tableData}
         onStartSpeedRun={startSpeedRun}

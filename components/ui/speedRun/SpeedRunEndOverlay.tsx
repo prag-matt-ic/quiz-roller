@@ -13,7 +13,7 @@ import TimeScorePanel from '@/components/ui/dashboard/TimeScorePanel'
 import { GameMode } from '@/stores/types'
 
 import { TimesFallenPanel } from '../dashboard/TimesFallenPanel'
-import Panel from '../dashboard/panel/Panel'
+import Panel from '../panel/Panel'
 
 type Props = {
   ref: React.RefObject<HTMLDivElement | null>
@@ -32,7 +32,8 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
       <div
         ref={ref}
         className={twJoin(
-          'fixed inset-0 z-100 grid grid-cols-1 flex-col items-center justify-center gap-4 lg:gap-6 py-4 bg-black/95 px-4 transition-opacity duration-300 ease-out md:grid-cols-2 lg:px-8 lg:py-16',
+          'bg-radial from-black/90 from-20% to-black/20 backdrop-blur-sm',
+          'fixed inset-0 z-100 grid grid-cols-1 flex-col items-center justify-center gap-4 px-4 py-4 transition-opacity duration-300 ease-out md:grid-cols-2 lg:gap-6 lg:px-8 lg:py-16',
           transitionStatus === 'entering' && 'opacity-0',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
@@ -42,14 +43,17 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           count={10}
           showCTA={false}
           fetchPlayerRecentPosition={true}
-          className={twJoin("col-start-2 row-start-1 lg:max-h-3/4", isMobile && 'overflow-y-scroll')}
+          className={twJoin(
+            'col-start-2 row-start-1 lg:max-h-3/4',
+            isMobile && 'overflow-y-scroll',
+          )}
         />
-        <section className="col-start-1 row-start-1 grid h-full lg:h-3/4 grid-cols-2 gap-2 lg:gap-4 rounded-xl px-4 py-3">
+        <section className="col-start-1 row-start-1 grid h-full grid-cols-2 gap-2 rounded-xl px-4 py-3 lg:h-3/4 lg:gap-4">
           <Panel
             className="col-span-2 col-start-1 row-start-1 flex flex-col items-center justify-center lg:gap-2"
             attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
             <h2 className="text-2xl uppercase lg:text-4xl">congratulations!</h2>
-            <p className="flex text-xs lg:text-sm text-white/60">
+            <p className="flex text-xs text-white/60 lg:text-sm">
               You completed the level, now do it again but be quicker.
             </p>
           </Panel>

@@ -7,16 +7,16 @@ import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import { PLAYER_SPEED_BASE, PLAYER_SPEED_MAX } from '@/stores/playerSlice'
 
 type SpeedBoostDialProps = {
-  fixedProgress?: number
+  progressOverride?: number
   className?: string
 }
 
-export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ fixedProgress, className }) => {
+export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, className }) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const pathLength = useRef(0)
   const targetProgress = useRef(0)
   const pendingFrame = useRef<number | null>(null)
-  const hasFixedProgress = fixedProgress !== undefined
+  const hasProgressOverride = progressOverride !== undefined
 
   const applyDraw = useCallback(() => {
     pendingFrame.current = null
@@ -35,13 +35,13 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ fixedProgress, classNa
 
   const onPlayerSpeedChange = useCallback(
     (speed: number) => {
-      if (hasFixedProgress) return
+      if (hasProgressOverride) return
       const speedBoost = speed - PLAYER_SPEED_BASE
       const maxBoost = PLAYER_SPEED_MAX - PLAYER_SPEED_BASE
       targetProgress.current = clamp01(maxBoost > 0 ? speedBoost / maxBoost : 0)
       scheduleDraw()
     },
-    [hasFixedProgress, scheduleDraw],
+    [hasProgressOverride, scheduleDraw],
   )
 
   useEffect(() => {
@@ -61,10 +61,10 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ fixedProgress, classNa
   }, [])
 
   useEffect(() => {
-    if (fixedProgress === undefined) return
-    targetProgress.current = clamp01(fixedProgress)
+    if (progressOverride === undefined) return
+    targetProgress.current = clamp01(progressOverride)
     applyDraw()
-  }, [applyDraw, fixedProgress])
+  }, [applyDraw, progressOverride])
 
   usePlayerSpeed(onPlayerSpeedChange)
 
@@ -86,7 +86,8 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ fixedProgress, classNa
         <path
           ref={pathRef}
           d="M8.31278 30.9407C6.07514 28.703 4.55129 25.8521 3.93393 22.7484C3.31656 19.6447 3.63342 16.4276 4.84442 13.504C6.05542 10.5804 8.10618 8.08154 10.7374 6.32344C13.3686 4.56534 16.462 3.62695 19.6265 3.62695C22.791 3.62695 25.8844 4.56534 28.5156 6.32344C31.1468 8.08154 33.1976 10.5804 34.4086 13.504C35.6196 16.4276 35.9364 19.6447 35.3191 22.7484C34.7017 25.8521 33.1778 28.703 30.9402 30.9407"
-          stroke="#ffffff"
+          // stroke="#ffffff"
+          className="stroke-amber-400"
           strokeWidth="4"
           strokeLinecap="round"
         />

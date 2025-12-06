@@ -5,8 +5,8 @@ import { type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { COLLECTIBLE_IDS } from '@/model/schema'
 
 import { CollectibleIcon } from '../CollectiblesUI'

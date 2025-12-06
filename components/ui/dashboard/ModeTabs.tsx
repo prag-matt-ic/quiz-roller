@@ -4,7 +4,7 @@ import { Compass, type LucideIcon, Timer } from 'lucide-react'
 import { type FC, type ReactNode } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
-import Panel from '@/components/ui/dashboard/panel/Panel'
+import Panel from '@/components/ui/panel/Panel'
 
 export type DashboardTabId = 'main' | 'speedrun' | 'test'
 

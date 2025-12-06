@@ -5,8 +5,8 @@ import { type ChangeEvent, type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Panel from '@/components/ui/dashboard/panel/Panel'
 import { Input } from '@/components/ui/input'
+import Panel from '@/components/ui/panel/Panel'
 
 type Props = {
   className?: string

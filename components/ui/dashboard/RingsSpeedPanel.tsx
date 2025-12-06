@@ -5,8 +5,8 @@ import { type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 
 type RingsSpeedPanelProps = {
   className?: string
@@ -29,7 +29,7 @@ export const RingBoostInfo: FC = () => {
   return (
     <div className="flex w-fit max-w-xl items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3">
       <div className="relative flex size-20 items-center justify-center">
-        <SpeedBoostDial className="size-20" fixedProgress={0.2} />
+        <SpeedBoostDial className="size-20" progressOverride={0.2} />
         <span className="pointer-events-none absolute text-[10px] tracking-[2px] text-white/70 uppercase">
           Boost
         </span>

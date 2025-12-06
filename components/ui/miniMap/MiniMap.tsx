@@ -19,6 +19,26 @@ const MINI_MAP_ASSET_PATHS: Record<GameMode, string> = {
 const PLAYER_SIZE_PX = 8
 const PLAYER_INDICATOR_Y_OFFSET_PX = PLAYER_SIZE_PX * 8
 const MAP_TILE_SIZE_PX = 4
+const PROGRESS_PADDING_ROWS = 5
+
+type ProgressWindow = {
+  maxRowIndex: number
+  progressStartRow: number
+  progressRange: number
+}
+
+const getProgressWindow = (totalRows: number): ProgressWindow => {
+  const maxRowIndex = Math.max(0, totalRows - 1)
+  const hasFullPadding = maxRowIndex + 1 > PROGRESS_PADDING_ROWS * 2
+  const progressStartRow = hasFullPadding ? PROGRESS_PADDING_ROWS : 0
+  const progressEndRow = hasFullPadding ? maxRowIndex - PROGRESS_PADDING_ROWS + 1 : maxRowIndex
+
+  return {
+    maxRowIndex,
+    progressStartRow,
+    progressRange: Math.max(1, progressEndRow - progressStartRow),
+  }
+}
 
 const MiniMap: FC = () => {
   const mode = useGameStore((s) => s.mode)
@@ -29,21 +49,32 @@ const MiniMap: FC = () => {
   const joystickIsOnLeft = useGameStore((s) => s.joystickPosition === 'left')
   const isMapOnRight = isUsingJoystick && joystickIsOnLeft
 
+  const {
+    maxRowIndex: initialMaxRowIndex,
+    progressStartRow: initialProgressStartRow,
+    progressRange: initialProgressRange,
+  } = getProgressWindow(totalRows)
+
   const totalRowsRef = useRef(totalRows)
   const rowsToPixelsRef = useRef(
-    totalRows === 0 ? 0 : (MAP_TILE_SIZE_PX * totalRows) / Math.max(1, totalRows - 1),
+    totalRows === 0 ? 0 : (MAP_TILE_SIZE_PX * totalRows) / Math.max(1, initialMaxRowIndex),
   )
-  const denominatorRef = useRef(Math.max(1, totalRows - 1))
+  const maxRowIndexRef = useRef(initialMaxRowIndex)
+  const progressStartRowRef = useRef(initialProgressStartRow)
+  const progressRangeRef = useRef(initialProgressRange)
   const miniMapAsset = MINI_MAP_ASSET_PATHS[mode] ?? MINI_MAP_ASSET_PATHS[GameMode.LEARN]
 
-  // const barRef = useRef<HTMLDivElement | null>(null)
+  const progressRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<HTMLImageElement | null>(null)
 
   useEffect(() => {
     totalRowsRef.current = totalRows
-    const denominator = Math.max(1, totalRows - 1)
-    denominatorRef.current = denominator
+    const { maxRowIndex, progressRange, progressStartRow } = getProgressWindow(totalRows)
+    maxRowIndexRef.current = maxRowIndex
+    const denominator = Math.max(1, maxRowIndex)
     rowsToPixelsRef.current = totalRows === 0 ? 0 : (MAP_TILE_SIZE_PX * totalRows) / denominator
+    progressStartRowRef.current = progressStartRow
+    progressRangeRef.current = progressRange
   }, [totalRows])
 
   const { playerPosition } = usePlayerPosition()
@@ -52,19 +83,22 @@ const MiniMap: FC = () => {
     let currentRow = 3
     let lastXRef = 0
     let lastYRef = 0
-    // const updateBarTransform = (row: number) => {
-    //   if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
-    //   const denominator = Math.max(1, totalRowsRef.current - 1)
-    //   const rowsProgress = Math.min(1, Math.max(0, row / denominator))
-    //   barElement.style.transform = `translate3d(0, ${100 - rowsProgress * 100}%, 0)`
-    // }
+
+    const updateProgress = (row: number) => {
+      if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
+      if (!progressRef.current) return
+      const rowsProgress = Math.min(
+        1,
+        Math.max(0, (row - progressStartRowRef.current) / progressRangeRef.current),
+      )
+      progressRef.current.style.clipPath = `inset(${100 - rowsProgress * 100}% 0 0 0)`
+    }
 
     const updateMapTransform = (row: number, playerX: number) => {
-      const mapElement = mapRef.current
-      if (!mapElement) return
+      if (!mapRef.current) return
       if (row === EMPTY_ROW_INDEX) return
 
-      const clampedRow = Math.min(denominatorRef.current, Math.max(0, row))
+      const clampedRow = Math.min(maxRowIndexRef.current, Math.max(0, row))
       const translateY = clampedRow * rowsToPixelsRef.current - PLAYER_INDICATOR_Y_OFFSET_PX
       const xPositionInTileUnits = playerX / TILE_SIZE
       const translateX = -xPositionInTileUnits * MAP_TILE_SIZE_PX
@@ -73,13 +107,14 @@ const MiniMap: FC = () => {
       lastXRef = translateX
       lastYRef = translateY
 
-      mapElement.style.transform = `translate3d(${translateX}px, ${translateY}px, 0)`
+      mapRef.current.style.transform = `translate3d(${translateX}px, ${translateY}px, 0)`
     }
 
     let animationFrameId: number
 
     const loop = () => {
       updateMapTransform(currentRow, playerPosition.current[0])
+      updateProgress(currentRow)
       animationFrameId = requestAnimationFrame(loop)
     }
 
@@ -89,7 +124,6 @@ const MiniMap: FC = () => {
       (s) => s.currentRow,
       (newCurrentRow) => {
         currentRow = newCurrentRow
-        // updateBarTransform(newCurrentRow)
       },
     )
 
@@ -102,37 +136,42 @@ const MiniMap: FC = () => {
 
   return (
     <aside
+      id="mini-map"
       className={twJoin(
-        'pointer-events-none fixed bottom-3 z-100',
+        'pointer-events-none fixed bottom-3 z-100 flex items-center justify-center overflow-hidden rounded-full bg-black/85',
         isMapOnRight ? 'right-3' : 'left-3',
-      )}>
-      <div
-        id="mini-map"
-        className="relative flex items-center justify-center overflow-hidden rounded-full bg-black/80 ring ring-black"
+      )}
+      style={{
+        width: COLUMNS * MAP_TILE_SIZE_PX,
+        height: COLUMNS * MAP_TILE_SIZE_PX,
+      }}>
+      <Image
+        src={miniMapAsset}
+        ref={mapRef}
+        alt="Mini Map"
+        width={MAP_TILE_SIZE_PX * COLUMNS}
+        height={MAP_TILE_SIZE_PX * totalRows}
+        className="absolute bottom-0 transition-transform duration-100 ease-linear will-change-transform"
         style={{
-          width: COLUMNS * MAP_TILE_SIZE_PX,
-          height: COLUMNS * MAP_TILE_SIZE_PX,
-        }}>
-        <Image
-          src={miniMapAsset}
-          ref={mapRef}
-          alt="Mini Map"
-          width={MAP_TILE_SIZE_PX * COLUMNS}
-          height={MAP_TILE_SIZE_PX * totalRows}
-          className="absolute bottom-0 transition-transform duration-100 ease-linear will-change-transform"
-          style={{
-            transform: 'translate3d(0,0,0)',
-          }}
-        />
-        <div
-          className="absolute z-20 rounded-full bg-white"
-          style={{
-            bottom: PLAYER_INDICATOR_Y_OFFSET_PX - PLAYER_SIZE_PX / 2,
-            width: PLAYER_SIZE_PX,
-            height: PLAYER_SIZE_PX,
-          }}
-        />
-      </div>
+          transform: 'translate3d(0,0,0)',
+        }}
+      />
+      <div
+        id="mini-map-player"
+        className="absolute z-20 rounded-full bg-white"
+        style={{
+          bottom: PLAYER_INDICATOR_Y_OFFSET_PX - PLAYER_SIZE_PX / 2,
+          width: PLAYER_SIZE_PX,
+          height: PLAYER_SIZE_PX,
+        }}
+      />
+      <div
+        ref={progressRef}
+        className="absolute inset-0 size-full rounded-full border-2 border-teal-300 bg-none"
+        style={{
+          clipPath: 'inset(100% 0 0 0)',
+        }}
+      />
     </aside>
   )
 }

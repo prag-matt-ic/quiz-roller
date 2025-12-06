@@ -16,8 +16,8 @@ import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
 import { useSoundStore } from '@/components/SoundProvider'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { InputType } from '@/stores/types'
 
 type Props = {

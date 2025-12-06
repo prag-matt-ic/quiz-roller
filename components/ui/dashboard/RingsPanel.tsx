@@ -5,8 +5,8 @@ import { type FC, useMemo } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
-import Panel from '@/components/ui/dashboard/panel/Panel'
-import { PanelHeader } from '@/components/ui/dashboard/panel/PanelHeader'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 
 type RingsPanelProps = {
   className?: string
@@ -28,9 +28,9 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
         <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
 
         <div>
-          <div className="mb-2 text-2xl *:lg:text-3xl font-bold text-white">
+          <div className="mb-2 text-2xl font-bold text-white *:lg:text-3xl">
             {collectedRingCount}
-            <span className="text-base lg:text-lg text-white/40">/{totalRingsCount}</span>
+            <span className="text-base text-white/40 lg:text-lg">/{totalRingsCount}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-amber-200/30">
             <div
