@@ -15,7 +15,8 @@ type RingsSpeedPanelProps = {
 export const SpeedPanel: FC<RingsSpeedPanelProps> = ({ className }) => {
   return (
     <Panel
-      className={twMerge('flex h-full flex-col gap-4 p-4', className)}
+      strength={1}
+      className={twMerge('flex h-full flex-col gap-4', className)}
       attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
       <PanelHeader icon={Circle} label="Speed" iconClassName="text-amber-400" />
       <RingBoostInfo />
@@ -38,9 +39,8 @@ export const RingBoostInfo: FC = () => {
         Each ring gives you a temporary speed boost.
         <br />
         <span className="text-balance text-white/60">
-          Plan your route to collect rings whilst keeping a tight line.
-          <br />
-          Falling off resets your rings boost.
+          Plan your route to collect rings whilst keeping a tight line. Falling off resets your
+          rings boost.
         </span>
       </p>
     </div>

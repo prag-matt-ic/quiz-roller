@@ -15,7 +15,7 @@ export const UsernamePanel: FC<Props> = ({ className }) => {
   const inputProps = useUsernameInput()
 
   return (
-    <Panel className={twMerge('flex h-full items-center gap-4', className)} strength={1}>
+    <Panel className={twMerge('flex h-full items-center gap-4', className)} strength={3}>
       <UserIcon className="size-6 text-white/70" />
       <Input
         {...inputProps}

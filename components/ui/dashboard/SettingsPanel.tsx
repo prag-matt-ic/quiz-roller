@@ -38,7 +38,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
 
   return (
     <Panel
-      className={twMerge('h-full p-4', className)}
+      className={twMerge('h-full', className)}
       strength={1}
       attractorClassName="bg-white/5 bg-linear-70 from-white/10 to-transparent">
       <div className="flex h-full flex-col gap-4">

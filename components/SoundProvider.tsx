@@ -21,7 +21,7 @@ export enum SoundFX {
 }
 // TODO: add speed run countdown sound FX
 // TODO: add new coin collect sound fx perhaps speed boost related.
-// TODO: add more intense background music for speed run mode?
+// TODO: add more intense background music for speed run mode
 
 const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND_EXPLORE]: '/audio/background.aac',
