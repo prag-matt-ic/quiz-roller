@@ -53,7 +53,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       id="landing-overlay"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-2 gap-5 px-6 pt-12 pb-2 lg:gap-6',
+        'fixed inset-0 z-5000 grid grid-cols-1 grid-rows-2 gap-5 px-8 pt-12 pb-2 lg:gap-6',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         'bg-linear-0 from-black/20 via-black/90 to-black/20 backdrop-blur-sm',
         isExiting ? 'opacity-0' : 'opacity-100',
@@ -65,7 +65,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
         )}
       />
 
-      <header className="relative mx-auto flex w-3xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden">
+      <header className="relative mx-auto flex w-3xl max-w-4/5 flex-col justify-center gap-2 self-end overflow-hidden">
         <p className="relative w-full">
           <span className="font-unbounded text-lg font-medium">Pragmattic</span>
           <span className="px-2 tracking-wider text-white/50">AND</span>

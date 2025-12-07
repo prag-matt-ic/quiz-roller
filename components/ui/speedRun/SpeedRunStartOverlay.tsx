@@ -38,7 +38,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-radial from-black/90 from-20% to-black/20 backdrop-blur-sm transition-opacity',
+        'fixed inset-0 z-200 flex size-full flex-col items-center justify-center gap-6 bg-radial from-black/90 from-20% to-black/20 backdrop-blur-sm transition-opacity',
         transitionStatus === 'entering' && 'opacity-100 duration-300',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0 duration-500',

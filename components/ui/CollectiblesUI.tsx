@@ -74,7 +74,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
           size={40}
           strokeWidth={0.25}
           className={twJoin(
-            'absolute inset-0 size-8 text-transparent transition-opacity lg:size-10',
+            'absolute inset-0 size-7 text-transparent transition-opacity xl:size-10',
             isCollected ? 'scale-120 fill-(--icon-colour)/60' : '',
           )}
         />
@@ -82,7 +82,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
           size={40}
           strokeWidth={0.75}
           className={twJoin(
-            'relative size-8 text-white lg:size-10',
+            'relative size-7 text-white xl:size-10',
             isCollected ? 'scale-120 opacity-80' : 'opacity-30',
           )}
         />
@@ -99,7 +99,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex w-fit max-w-lg origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-6',
+                'flex w-fit max-w-lg origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-4 xl:p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
@@ -108,11 +108,10 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
               {isCollected ? (
                 <ContentIcon
                   strokeWidth={1}
-                  size={40}
-                  className="shrink-0 text-(--icon-colour)"
+                  className="size-8 shrink-0 text-(--icon-colour) xl:size-10"
                 />
               ) : (
-                <LockIcon strokeWidth={1} size={40} className="text-neutral-500" />
+                <LockIcon strokeWidth={1} className="size-8 text-neutral-500 xl:size-10" />
               )}
               <p className="block overflow-hidden">
                 <span className="mb-1 text-sm font-medium tracking-wider text-neutral-500 uppercase">

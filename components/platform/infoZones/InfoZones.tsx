@@ -120,7 +120,7 @@ function getInfoZonePropsForIndex(
 > {
   // Info Content
   return {
-    infoContainerClassName: 'w-[328px] lg:w-180',
+    infoContainerClassName: 'max-w-4/5 w-180',
     iconSrc: infoIcon.src,
     sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
   }

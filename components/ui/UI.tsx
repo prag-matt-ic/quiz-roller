@@ -71,12 +71,12 @@ const UI: FC<Props> = ({ isMobile }) => {
         <button
           type="button"
           onClick={() => setOverlay(Overlay.DASHBOARD)}
-          className="pointer-events-auto flex items-center justify-self-end rounded-xl border border-black/40 bg-black/30 px-6 py-2.5 text-xs text-white uppercase transition hover:border-black/30 hover:bg-black/20 lg:px-5 lg:py-3 lg:text-sm">
+          className="pointer-events-auto flex items-center justify-self-end rounded-xl border border-black/40 bg-black/30 p-3 text-xs text-white uppercase transition hover:border-black/30 hover:bg-black/20">
           <LayoutDashboardIcon className="size-4 lg:size-6" strokeWidth={1.5} />
         </button>
       </div>
 
-      <MiniMap />
+      <MiniMap isMobile={isMobile} />
       <MovementControls />
 
       {/* Fullscreen overlays */}
