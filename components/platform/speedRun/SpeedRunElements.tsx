@@ -85,8 +85,8 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
     }
   }, [onReadyChange])
 
-  const SPEED_RUN_LINE_WIDTH = 7 * TILE_SIZE
-  const SPEED_RUN_LINE_HEIGHT = 4 * TILE_SIZE
+  const SPEED_RUN_LINE_WIDTH = 9 * TILE_SIZE
+  const SPEED_RUN_LINE_HEIGHT = 5 * TILE_SIZE
   const width = SPEED_RUN_LINE_WIDTH
   const height = SPEED_RUN_LINE_HEIGHT
 
