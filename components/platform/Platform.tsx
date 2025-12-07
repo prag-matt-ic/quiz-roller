@@ -223,8 +223,6 @@ const Platform: FC = () => {
         if (isSpeedRunMode && key === 'headings') return true
         if (isSpeedRunMode && key === 'collectibles') return true
         if (isSpeedRunMode && key === 'infoZones') return true
-
-        if (!isSpeedRunMode && key === 'speedRun') return true
         return false
       }
 
@@ -280,20 +278,12 @@ const Platform: FC = () => {
   function hideElements(rowIndex: number) {
     const row = activeRowsData.current[rowIndex]
     if (!row) return
-
     floatingHeadings.current?.hideElementsIfNeeded(row)
     infoZones.current?.hideElementsIfNeeded(row)
     collectibles.current?.hideElementsIfNeeded(row)
     confettiHandle.current?.hideElementsIfNeeded(row)
     ringsHandle.current?.hideElementsIfNeeded(row)
-
-    switch (row.stage) {
-      case Stage.SPEED_RUN_FINISH:
-        speedRunElements.current?.hideElementsIfNeeded(row)
-        break
-      default:
-        break
-    }
+    speedRunElements.current?.hideElementsIfNeeded(row)
   }
 
   function positionElements(rowIndex: number, rowZ: number) {
@@ -304,14 +294,7 @@ const Platform: FC = () => {
     collectibles.current?.positionElementsIfNeeded(row, rowZ)
     confettiHandle.current?.positionElementsIfNeeded(row, rowZ)
     ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
-
-    switch (row.stage) {
-      case Stage.SPEED_RUN_FINISH:
-        speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
-        break
-      default:
-        break
-    }
+    speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
   }
 
   function getRowIndexClosestToOrigin() {
@@ -485,11 +468,11 @@ const Platform: FC = () => {
     if (!isPlatformReady) return
     if (!tiles.current?.shader) return
     if (!ringsHandle.current || !confettiHandle.current) return
+    if (!speedRunElements.current) return
 
     if (!isSpeedRunMode && !floatingHeadings.current) return
     if (!isSpeedRunMode && !collectibles.current) return
     if (!isSpeedRunMode && !infoZones.current) return
-    if (isSpeedRunMode && !speedRunElements.current) return
 
     tiles.current.shader.uScrollZ = currentScrollPosition.current
 
@@ -530,10 +513,7 @@ const Platform: FC = () => {
 
     ringsHandle.current.moveElements(totalScrollDelta)
     confettiHandle.current.moveElements(totalScrollDelta)
-
-    if (isSpeedRunMode) {
-      speedRunElements.current?.moveElements(totalScrollDelta)
-    }
+    speedRunElements.current.moveElements(totalScrollDelta)
   })
 
   useEffect(() => {
@@ -590,13 +570,11 @@ const Platform: FC = () => {
         onReadyChange={readyChangeHandlers.rings}
       />
 
-      {isSpeedRunMode && (
-        <SpeedRunElements
-          ref={speedRunElements}
-          key={`speedrun-elements-${resetPlatformTick}`}
-          onReadyChange={readyChangeHandlers.speedRun}
-        />
-      )}
+      <SpeedRunElements
+        ref={speedRunElements}
+        key={`speedrun-elements-${resetPlatformTick}`}
+        onReadyChange={readyChangeHandlers.speedRun}
+      />
     </group>
   )
 }

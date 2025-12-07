@@ -26,7 +26,7 @@ type Props = {
 // Fullscreen overlay shown at the end of a speedrun
 
 export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile }) => {
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const startCountdown = useGameStore((s) => s.startCountdown)
   const resetGame = useGameStore((s) => s.resetGame)
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
   const { handleShare, isShareSupported } = useWebShare()
@@ -72,7 +72,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             className={twJoin('row-span-3 flex h-full flex-col lg:gap-3')}
             attractorClassName={attractorClassName}>
             <PanelHeader icon={Trophy} label="Leaderboard" className="" />
-            <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} showCTA={false} />
+            <LeaderboardTable {...tableData} onStartSpeedRun={startCountdown} showCTA={false} />
           </Panel>
 
           <div className="flex items-center justify-between gap-4">
@@ -93,7 +93,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
                 Share
               </Button>
             )}
-            <Button color="light" variant="primary" onClick={startSpeedRun}>
+            <Button color="light" variant="primary" onClick={startCountdown}>
               Retry
             </Button>
             <Button

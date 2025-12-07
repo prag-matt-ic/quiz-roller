@@ -1,18 +1,18 @@
 import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
 import { PLATFORM_VERSION } from '@/resources/rowsData'
 
-import { getSpeedRunOverlays } from './overlaysSlice'
 import {
   GameMode,
   type GameSliceCreator,
   InputType,
-  type SpeedRunStage,
+  SpeedRunStage,
   type TimeSlice,
+  getOverlayForSpeedRunStage,
 } from './types'
 
 export const RESET_TIME_STATE: Pick<TimeSlice, 'speedRunTimeCS' | 'speedRunStage'> = {
   speedRunTimeCS: 0,
-  speedRunStage: 'username',
+  speedRunStage: SpeedRunStage.START,
 }
 
 export const createTimeSlice =
@@ -29,42 +29,27 @@ export const createTimeSlice =
     setSpeedRunTimeCS: (centiSeconds: number) => {
       set({ speedRunTimeCS: centiSeconds })
     },
-    setSpeedRunStage: (stage: SpeedRunStage) => {
-      const { mode } = get()
-      const isSpeedRunMode = mode === GameMode.SPEEDRUN
-      const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
-      set({
-        speedRunStage: stage,
-        ...overlays,
-      })
-    },
-    startSpeedRun: () => {
+    startCountdown: () => {
       get().resetGame({
         mode: GameMode.SPEEDRUN,
-        speedRunStage: 'username',
+        speedRunStage: SpeedRunStage.COUNTDOWN,
       })
     },
     onCountdownComplete: () => {
-      const { mode } = get()
-      const isSpeedRunMode = mode === GameMode.SPEEDRUN
-      const stage = 'running'
-      const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
+      const speedRunStage = SpeedRunStage.RUNNING
       set({
-        speedRunStage: stage,
-        ...overlays,
+        speedRunStage,
+        overlay: getOverlayForSpeedRunStage(speedRunStage),
       })
     },
     finishSpeedRun: async () => {
-      const { speedRunTimeCS, username, inputType, mode } = get()
+      const { speedRunTimeCS, username, inputType } = get()
       if (!username) return
-
-      const isSpeedRunMode = mode === GameMode.SPEEDRUN
-      const submittingStage = 'submitting'
-      const submittingOverlays = getSpeedRunOverlays(submittingStage, isSpeedRunMode)
+      const speedRunStage = SpeedRunStage.SUBMITTING
 
       set({
-        speedRunStage: submittingStage,
-        ...submittingOverlays,
+        speedRunStage,
+        overlay: getOverlayForSpeedRunStage(speedRunStage),
       })
 
       const timeInSeconds = Math.round(speedRunTimeCS) / 100
@@ -81,26 +66,19 @@ export const createTimeSlice =
         const result = await insertSpeedRun(submission)
         if (!result) throw new Error('Inserting speedrun returned null')
         set((state) => {
-          const stage = 'leaderboard'
-          const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
-          const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
+          const speedRunStage = SpeedRunStage.END
           return {
             completedSpeedRuns: [...state.completedSpeedRuns, result],
-            speedRunStage: stage,
-            ...overlays,
+            speedRunStage: speedRunStage,
+            overlay: getOverlayForSpeedRunStage(speedRunStage),
           }
         })
       } catch (error) {
         // TODO: handle showing the error with some UI - maybe a toast?
         console.error('Error inserting speedrun:', error)
-        set((state) => {
-          const stage = 'leaderboard'
-          const isSpeedRunMode = state.mode === GameMode.SPEEDRUN
-          const overlays = getSpeedRunOverlays(stage, isSpeedRunMode)
-          return {
-            speedRunStage: stage,
-            ...overlays,
-          }
+        set({
+          speedRunStage: SpeedRunStage.END,
+          overlay: getOverlayForSpeedRunStage(SpeedRunStage.END),
         })
       }
     },

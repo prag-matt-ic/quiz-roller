@@ -8,6 +8,7 @@ import { Stage, useGameStore } from '@/components/GameProvider'
 import usePlayerInput from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
+import { Overlay } from '@/stores/types'
 
 const { ACTION } = CameraControlsImpl
 
@@ -59,16 +60,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
 
-  const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
-  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
-  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
-  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
-
-  const isOverlayOpen =
-    isShowingDashboard ||
-    isShowingSpeedRunEndOverlay ||
-    isShowingSpeedRunStartOverlay ||
-    isShowingLandingOverlay
+  const isOverlayOpen = useGameStore((s) => s.overlay !== Overlay.NONE)
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE

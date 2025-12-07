@@ -12,8 +12,9 @@ import RingsUI from '@/components/ui/RingsUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import MiniMap from '@/components/ui/miniMap/MiniMap'
-import { GameMode } from '@/stores/types'
+import { GameMode, Overlay } from '@/stores/types'
 
+import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
 import { SpeedRunStartOverlay } from './speedRun/SpeedRunStartOverlay'
 import { SpeedRunControls } from './speedRun/SpeedRunUI'
@@ -23,26 +24,23 @@ gsap.registerPlugin(useGSAP)
 type Props = { isMobile: boolean }
 
 const UI: FC<Props> = ({ isMobile }) => {
-  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
-  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
-  const setIsShowingDashboard = useGameStore((s) => s.setIsShowingDashboard)
   const mode = useGameStore((s) => s.mode)
-
+  const overlay = useGameStore((s) => s.overlay)
+  const setOverlay = useGameStore((s) => s.setOverlay)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
-  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
-  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
 
   const infoContainer = useRef<HTMLDivElement>(null)
   const dashboardRef = useRef<HTMLDivElement>(null)
-  const speedRunOverlayRef = useRef<HTMLDivElement>(null)
-  const leaderboardOverlay = useRef<HTMLDivElement>(null)
+  const speedRunStartOverlay = useRef<HTMLDivElement>(null)
+  const speedRunCountdownOverlay = useRef<HTMLDivElement>(null)
+  const speedRunEndOverlay = useRef<HTMLDivElement>(null)
 
   return (
     <>
       <div
         className={twJoin(
-          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 transition-opacity duration-300 select-none',
-          isShowingLoadingOverlay ? 'opacity-0' : 'opacity-100',
+          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 items-center gap-x-2 px-3 py-2 transition-opacity duration-300 select-none',
+          overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {/* Top Left Rings */}
         <RingsUI />
@@ -58,7 +56,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'flex h-fit items-center justify-center gap-2.5 pt-2 opacity-0 transition-opacity duration-200 lg:pt-4',
+                    'flex h-fit items-center justify-center gap-2.5 opacity-0 transition-opacity duration-200',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
@@ -72,10 +70,9 @@ const UI: FC<Props> = ({ isMobile }) => {
         {/* Top Right Menu toggle */}
         <button
           type="button"
-          onClick={() => setIsShowingDashboard(true)}
-          className="pointer-events-auto flex items-center gap-2.5 self-start justify-self-end rounded-none rounded-bl-2xl border border-black/20 bg-black/15 px-6 py-2.5 text-xs text-white uppercase backdrop-blur-sm transition hover:border-black/30 hover:bg-black/20 lg:px-5 lg:py-3 lg:text-sm">
-          <span className="hidden font-bold text-white/80 lg:block">Menu</span>
-          <LayoutDashboardIcon className="size-4 lg:size-5" />
+          onClick={() => setOverlay(Overlay.DASHBOARD)}
+          className="pointer-events-auto flex items-center justify-self-end rounded-xl border border-black/40 bg-black/30 px-6 py-2.5 text-xs text-white uppercase transition hover:border-black/30 hover:bg-black/20 lg:px-5 lg:py-3 lg:text-sm">
+          <LayoutDashboardIcon className="size-4 lg:size-6" strokeWidth={1.5} />
         </button>
       </div>
 
@@ -84,7 +81,7 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       {/* Fullscreen overlays */}
       <Transition
-        in={isShowingDashboard}
+        in={overlay === Overlay.DASHBOARD}
         timeout={{ enter: 0, exit: 400 }}
         mountOnEnter={true}
         unmountOnExit={true}
@@ -94,31 +91,42 @@ const UI: FC<Props> = ({ isMobile }) => {
             ref={dashboardRef}
             isMobile={isMobile}
             transitionStatus={status}
-            onClose={() => setIsShowingDashboard(false)}
+            onClose={() => setOverlay(Overlay.NONE)}
           />
         )}
       </Transition>
 
       <Transition
-        in={isShowingSpeedRunStartOverlay}
+        in={overlay === Overlay.SPEEDRUN_START}
         timeout={{ enter: 0, exit: 500 }}
         mountOnEnter={true}
         unmountOnExit={true}
-        nodeRef={speedRunOverlayRef}>
+        nodeRef={speedRunStartOverlay}>
         {(status) => (
-          <SpeedRunStartOverlay ref={speedRunOverlayRef} transitionStatus={status} />
+          <SpeedRunStartOverlay ref={speedRunStartOverlay} transitionStatus={status} />
         )}
       </Transition>
 
       <Transition
-        in={isShowingSpeedRunEndOverlay}
+        in={overlay === Overlay.SPEEDRUN_COUNTDOWN}
         timeout={{ enter: 0, exit: 300 }}
         mountOnEnter={true}
         unmountOnExit={true}
-        nodeRef={leaderboardOverlay}>
+        nodeRef={speedRunCountdownOverlay}>
+        {(status) => (
+          <SpeedRunCountdownOverlay ref={speedRunCountdownOverlay} transitionStatus={status} />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.SPEEDRUN_END}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={speedRunEndOverlay}>
         {(status) => (
           <SpeedrunEndOverlay
-            ref={leaderboardOverlay}
+            ref={speedRunEndOverlay}
             transitionStatus={status}
             isMobile={isMobile}
           />

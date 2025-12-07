@@ -3,6 +3,7 @@ import { useRef } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
 import { type RapierSimFPS, usePerformanceStore } from '@/components/PerformanceProvider'
+import { Overlay } from '@/stores/types'
 
 // Calls the callback at a target simulation FPS (0 = uncapped).
 // - Accumulates real frame time and steps the callback at fixed dt when capped.
@@ -12,16 +13,7 @@ export function useGameFrame(
   callback: (state: RootState, fixedDt: number) => void,
   priority = 0,
 ) {
-  const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
-  const isShowingDashboard = useGameStore((s) => s.isShowingDashboard)
-  const isShowingSpeedRunEndOverlay = useGameStore((s) => s.isShowingSpeedRunEndOverlay)
-  const isShowingSpeedRunStartOverlay = useGameStore((s) => s.isShowingSpeedRunStartOverlay)
-
-  const isOverlayOpen =
-    isShowingDashboard ||
-    isShowingSpeedRunEndOverlay ||
-    isShowingSpeedRunStartOverlay ||
-    isShowingLandingOverlay
+  const isOverlayOpen = useGameStore((s) => s.overlay !== Overlay.NONE)
 
   const simFps = usePerformanceStore((s) => s.simFps)
   const accumulator = useRef(0)

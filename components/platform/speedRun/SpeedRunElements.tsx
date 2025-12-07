@@ -1,17 +1,16 @@
 import { RapierRigidBody } from '@react-three/rapier'
 import {
   type FC,
+  type RefObject,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
-  type RefObject,
 } from 'react'
 
-import { HIDDEN_POSITION, TILE_SIZE, type RowData } from '@/utils/tiles'
+import { HIDDEN_POSITION, type RowData, TILE_SIZE } from '@/utils/tiles'
 
-import FinishLine from './FinishLine'
-import { Stage } from '@/stores/types'
+import SpeedRunLine from './SpeedRunLine'
 
 export type SpeedRunElementsHandle = {
   moveElements: (zStep: number) => void
@@ -26,51 +25,46 @@ type Props = {
 
 const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
   const translation = useRef({ x: 0, y: 0, z: 0 })
-  const finishLine = useRef<RapierRigidBody>(null)
+  const speedRunLine = useRef<RapierRigidBody>(null)
 
   const positionedRowIndex = useRef<number | null>(null)
 
   const positionElementsIfNeeded = useCallback((row: RowData | undefined, rowZ: number) => {
     if (!row) return
-    if (row.stage !== Stage.SPEED_RUN_FINISH) return
+    if (!speedRunLine.current) return
     const absoluteRowIndex = row.rowIndex as number
     if (positionedRowIndex.current === absoluteRowIndex) return
 
-    const finishLinePos = row.finishLinePosition
-    if (!!finishLinePos && finishLine.current) {
-      const newZ = rowZ + finishLinePos[2]
-      translation.current.x = finishLinePos[0]
-      translation.current.y = finishLinePos[1]
+    const linePosition = row.finishLinePosition
+    if (!!linePosition) {
+      const newZ = rowZ + linePosition[2]
+      translation.current.x = linePosition[0]
+      translation.current.y = linePosition[1]
       translation.current.z = newZ
-      finishLine.current.setTranslation(translation.current, true)
+      speedRunLine.current.setTranslation(translation.current, true)
       positionedRowIndex.current = absoluteRowIndex
     }
   }, [])
 
   const hideElementsIfNeeded = useCallback((row: RowData | undefined) => {
     if (!row) return
-    if (row.stage !== Stage.SPEED_RUN_FINISH) return
+    const shouldHideLine = !!row.finishLinePosition
 
-    const shouldHideFinishLine = !!row.finishLinePosition
-
-    if (shouldHideFinishLine && finishLine.current) {
+    if (shouldHideLine && speedRunLine.current) {
       translation.current.x = 0
       translation.current.y = HIDDEN_POSITION[1]
       translation.current.z = HIDDEN_POSITION[2]
-      finishLine.current.setTranslation(translation.current, true)
+      speedRunLine.current.setTranslation(translation.current, true)
       positionedRowIndex.current = null
     }
   }, [])
 
   const moveElements = useCallback((zStep: number) => {
     if (positionedRowIndex.current == null) return
-    if (!!finishLine.current) {
-      const currentTranslation = finishLine.current.translation()
-      const newZ = currentTranslation.z + zStep
-      translation.current.x = currentTranslation.x
-      translation.current.y = currentTranslation.y
+    if (!!speedRunLine.current) {
+      const newZ = translation.current.z + zStep
       translation.current.z = newZ
-      finishLine.current.setTranslation(translation.current, true)
+      speedRunLine.current.setTranslation(translation.current, true)
     }
   }, [])
 
@@ -91,14 +85,14 @@ const SpeedRunElements: FC<Props> = ({ ref, onReadyChange }) => {
     }
   }, [onReadyChange])
 
-  const FINISH_LINE_WIDTH = 7 * TILE_SIZE
-  const FINISH_LINE_HEIGHT = 4 * TILE_SIZE
-  const width = FINISH_LINE_WIDTH
-  const height = FINISH_LINE_HEIGHT
+  const SPEED_RUN_LINE_WIDTH = 7 * TILE_SIZE
+  const SPEED_RUN_LINE_HEIGHT = 4 * TILE_SIZE
+  const width = SPEED_RUN_LINE_WIDTH
+  const height = SPEED_RUN_LINE_HEIGHT
 
   return (
     <>
-      <FinishLine ref={finishLine} width={width} height={height} />
+      <SpeedRunLine ref={speedRunLine} width={width} height={height} />
     </>
   )
 }

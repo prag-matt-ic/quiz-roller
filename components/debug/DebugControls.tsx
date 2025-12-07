@@ -5,7 +5,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
-import { GameMode, type OverlaySelection } from '@/stores/types'
+import { GameMode, Overlay } from '@/stores/types'
 
 type Option<T> = {
   label: string
@@ -34,13 +34,10 @@ const GAME_MODE_OPTIONS: Option<GameMode>[] = [
   { label: 'Dev', value: GameMode.DEV },
 ]
 
-const OVERLAY_OPTIONS: Option<OverlaySelection>[] = [
-  { label: 'None', value: 'none' },
-  { label: 'Dashboard', value: 'dashboard' },
-  { label: 'Landing', value: 'landing' },
-  { label: 'Speedrun Start', value: 'speedrun-start' },
-  { label: 'Speedrun End', value: 'speedrun-end' },
-]
+const OVERLAY_OPTIONS: Option<Overlay>[] = Object.values(Overlay).map((value) => ({
+  label: value.charAt(0).toUpperCase() + value.slice(1),
+  value,
+}))
 
 const DebugControls: FC = () => {
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
@@ -51,15 +48,8 @@ const DebugControls: FC = () => {
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const setIsPhysicsDebug = usePerformanceStore((s) => s.setIsPhysicsDebug)
   const resetGame = useGameStore((s) => s.resetGame)
-  const setOverlaySelection = useGameStore((s) => s.setOverlaySelection)
-
-  const overlaySelection = useGameStore((s) => {
-    if (s.isShowingLandingOverlay) return 'landing'
-    if (s.isShowingDashboard) return 'dashboard'
-    if (s.isShowingSpeedRunStartOverlay) return 'speedrun-start'
-    if (s.isShowingSpeedRunEndOverlay) return 'speedrun-end'
-    return 'none'
-  })
+  const overlay = useGameStore((s) => s.overlay)
+  const setOverlay = useGameStore((s) => s.setOverlay)
 
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
@@ -84,7 +74,7 @@ const DebugControls: FC = () => {
 
   const handleOverlayChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
-    setOverlaySelection(event.target.value as OverlaySelection)
+    setOverlay(event.target.value as Overlay)
   }
 
   return (
@@ -124,7 +114,7 @@ const DebugControls: FC = () => {
       <SelectRow
         id="performance-debug-overlays"
         label="Overlay"
-        value={overlaySelection}
+        value={overlay}
         onChange={handleOverlayChange}>
         {OVERLAY_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>

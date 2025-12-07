@@ -12,7 +12,7 @@ const RingsUI: FC = () => {
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
-    <div className="pointer-events-auto m-2 flex items-center gap-3 p-2 text-sm lg:p-4">
+    <div className="pointer-events-auto flex items-center gap-3 text-sm">
       <div
         className={twJoin(
           'relative flex aspect-square size-9 items-center justify-center rounded-full bg-black/40 font-mono leading-none font-bold tracking-wide',

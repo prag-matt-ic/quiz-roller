@@ -89,15 +89,15 @@ h6 {
     mask-image: linear-gradient(
       to right,
       black 0%,
-      black 40%,
-      transparent 60%,
+      black 45%,
+      transparent 65%,
       transparent 100%
     );
     -webkit-mask-image: linear-gradient(
       to right,
       black 0%,
-      black 40%,
-      transparent 60%,
+      black 45%,
+      transparent 65%,
       transparent 100%
     );
     mask-size: 300% 100%;

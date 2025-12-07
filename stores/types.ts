@@ -25,13 +25,6 @@ export type PlayerInput = {
 
 export type PlayerStatus = 'idle' | 'safe' | 'out-of-bounds' | 'respawning'
 
-export type OverlaySelection =
-  | 'none'
-  | 'landing'
-  | 'dashboard'
-  | 'speedrun-start'
-  | 'speedrun-end'
-
 export type HudIndicatorConfig = {
   id: string
   label: ReactNode
@@ -42,7 +35,13 @@ export type HudIndicatorConfig = {
 export type RingIndex = [row: number, column: number]
 export type RingCollection = Record<string, true>
 
-export type SpeedRunStage = 'username' | 'countdown' | 'running' | 'submitting' | 'leaderboard'
+export enum SpeedRunStage {
+  START = 'start',
+  COUNTDOWN = 'countdown',
+  RUNNING = 'running',
+  SUBMITTING = 'submitting',
+  END = 'end',
+}
 
 export enum GameMode {
   LEARN = 'learn',
@@ -55,10 +54,10 @@ export type TimeSlice = {
   setTotalTimeS: (seconds: number) => void
 
   speedRunStage: SpeedRunStage
-  setSpeedRunStage: (stage: SpeedRunStage) => void
-  startSpeedRun: () => void // Sets mode, sets status to countdown
-  onCountdownComplete: () => void // sets status to running
-  finishSpeedRun: () => void // sets status to finished, submits speedrun and shows leaderboard
+
+  startCountdown: () => void // Sets mode to SPEEDRUN, sets speed run stage to countdown
+  onCountdownComplete: () => void // sets speedRunStage to running
+  finishSpeedRun: () => void // sets speedRunStage to submitting, submits speedrun and then speedRunStage to end
 
   speedRunTimeCS: number // current speed run duration in 10 milliseconds (centi-seconds)
   setSpeedRunTimeCS: (centiSeconds: number) => void
@@ -80,15 +79,35 @@ export type InputSlice = {
   setPlayerInput: (input: PlayerInput) => void
 }
 
+export enum Overlay {
+  NONE = 'none',
+  LANDING = 'landing',
+  DASHBOARD = 'dashboard',
+  SPEEDRUN_START = 'speedrun-start',
+  SPEEDRUN_COUNTDOWN = 'speedrun-countdown',
+  SPEEDRUN_END = 'speedrun-end',
+}
+
+export const getOverlayForSpeedRunStage = (speedRunStage: SpeedRunStage): Overlay => {
+  switch (speedRunStage) {
+    case SpeedRunStage.START:
+      return Overlay.SPEEDRUN_START
+    case SpeedRunStage.COUNTDOWN:
+      return Overlay.SPEEDRUN_COUNTDOWN
+    case SpeedRunStage.RUNNING:
+      return Overlay.NONE
+    case SpeedRunStage.SUBMITTING:
+      return Overlay.SPEEDRUN_END
+    case SpeedRunStage.END:
+      return Overlay.SPEEDRUN_END
+    default:
+      return Overlay.NONE
+  }
+}
+
 export type OverlaysSlice = {
-  isShowingLandingOverlay: boolean
-  setIsShowingLandingOverlay: (isVisible: boolean) => void
-  isShowingDashboard: boolean
-  setIsShowingDashboard: (isShowingDashboard: boolean) => void
-  isShowingSpeedRunEndOverlay: boolean
-  isShowingSpeedRunStartOverlay: boolean
-  setOverlaySelection: (overlay: OverlaySelection) => void
-  setSpeedRunOverlays: (stage: SpeedRunStage, isSpeedRunMode: boolean) => void
+  overlay: Overlay
+  setOverlay: (overlay: Overlay) => void
 }
 
 export type PlayerSlice = {

@@ -25,7 +25,7 @@ export const LeaderboardPanel: FC<Props> = ({
   showCTA = true,
   fetchPlayerRecentPosition = false,
 }) => {
-  const startSpeedRun = useGameStore((s) => s.startSpeedRun)
+  const startSpeedRun = useGameStore((s) => s.startCountdown)
   const tableData = useLeaderboardTableData({
     count,
     fetchPlayerRecentPosition,

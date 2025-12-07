@@ -24,6 +24,10 @@ import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import CTAButton from '@/components/ui/CTAButton'
 import { InputType } from '@/stores/types'
 
+import Button from '../Button'
+import { PointerProvider } from '../PointerProvider'
+import Panel from '../panel/Panel'
+
 type Props = {
   isLoaded: boolean
   isMobile: boolean
@@ -65,47 +69,52 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   )
 
   return (
-    <div
-      id="landing-controls"
-      className={twJoin(
-        'relative flex flex-wrap items-center justify-center gap-4 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none',
-        isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
-      )}>
-      <CTAButton aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
-        {ctaLabel}
-      </CTAButton>
+    <PointerProvider isMobile={isMobile}>
+      <Panel
+        className={twJoin(
+          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-4 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none',
+          isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
+        )}>
+        {/* <CTAButton aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
+          {ctaLabel}
+        </CTAButton> */}
 
-      <ButtonGroup
-        value={startMuted ? 'off' : 'on'}
-        onChange={(val) => setStartMuted(val === 'off')}
-        items={[
-          { label: null, value: 'on', Icon: Volume2 },
-          { label: null, value: 'off', Icon: VolumeX },
-        ]}
-      />
+        <Button aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
+          {ctaLabel}
+        </Button>
 
-      <ButtonGroup
-        value={inputType}
-        onChange={setInputType}
-        items={INPUT_TYPE_OPTIONS.map(({ value, Icon, label }) => ({
-          value,
-          Icon,
-          label: null,
-          ariaLabel: label,
-        }))}
-      />
-
-      {inputType === InputType.JOYSTICK && (
         <ButtonGroup
-          value={joystickPosition}
-          onChange={setJoystickPosition}
+          value={startMuted ? 'off' : 'on'}
+          onChange={(val) => setStartMuted(val === 'off')}
           items={[
-            { label: 'Left', value: 'left', Icon: ArrowLeft },
-            { label: 'Right', value: 'right', Icon: ArrowRight },
+            { label: null, value: 'on', Icon: Volume2 },
+            { label: null, value: 'off', Icon: VolumeX },
           ]}
         />
-      )}
-    </div>
+
+        <ButtonGroup
+          value={inputType}
+          onChange={setInputType}
+          items={INPUT_TYPE_OPTIONS.map(({ value, Icon, label }) => ({
+            value,
+            Icon,
+            label: null,
+            ariaLabel: label,
+          }))}
+        />
+
+        {inputType === InputType.JOYSTICK && (
+          <ButtonGroup
+            value={joystickPosition}
+            onChange={setJoystickPosition}
+            items={[
+              { label: 'Left', value: 'left', Icon: ArrowLeft },
+              { label: 'Right', value: 'right', Icon: ArrowRight },
+            ]}
+          />
+        )}
+      </Panel>
+    </PointerProvider>
   )
 }
 

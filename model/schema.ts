@@ -39,8 +39,8 @@ export type CtaZoneUserData = {
   type: 'cta-zone'
 }
 
-export type FinishLineUserData = {
-  type: 'finish-line'
+export type SpeedRunLineUserData = {
+  type: 'speed-run-line'
 }
 
 export type RigidBodyUserData =
@@ -50,6 +50,7 @@ export type RigidBodyUserData =
   | ConfettiUserData
   | InfoZoneUserData
   | CtaZoneUserData
+  | SpeedRunLineUserData
 
 const isoDateStringSchema = z
   .string()

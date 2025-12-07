@@ -2,11 +2,18 @@ import { PLATFORM_DATA } from '@/resources/rowsData'
 import type { RowData } from '@/utils/tiles'
 
 import { getResetInputState } from './inputSlice'
-import { getSpeedRunOverlays } from './overlaysSlice'
 import { PLAYER_INITIAL_POSITION, RESET_PLAYER_STATE } from './playerSlice'
 import { RESET_TIME_STATE } from './timeSlice'
 import { createTotalCounts } from './totalCounts'
-import { GameMode, type GameSlice, type GameSliceCreator, Stage } from './types'
+import {
+  GameMode,
+  type GameSlice,
+  type GameSliceCreator,
+  Overlay,
+  SpeedRunStage,
+  Stage,
+  getOverlayForSpeedRunStage,
+} from './types'
 
 const getPlatformDataForMode = (
   mode: GameMode,
@@ -77,13 +84,21 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
       set({ stage: Stage.CTA })
     }
   },
-  resetGame: ({ mode }) => {
-    get().stopConfirmation()
+  resetGame: ({ mode: targetMode, speedRunStage }) => {
+    const { stopConfirmation, mode, overlay } = get()
 
-    const isModeChange = mode && mode !== get().mode
-    const nextModeData = getPlatformDataForMode(mode)
-    const isSpeedRunMode = mode === GameMode.SPEEDRUN
-    const speedRunOverlays = getSpeedRunOverlays(RESET_TIME_STATE.speedRunStage, isSpeedRunMode)
+    stopConfirmation()
+    const isModeChange = targetMode !== mode
+    const nextModeData = getPlatformDataForMode(targetMode)
+
+    const isSpeedRunMode = targetMode === GameMode.SPEEDRUN
+    const isShowingLandingOverlay = overlay === Overlay.LANDING
+
+    const nextOverlay = isSpeedRunMode
+      ? getOverlayForSpeedRunStage(speedRunStage ?? SpeedRunStage.START)
+      : isShowingLandingOverlay
+        ? Overlay.LANDING
+        : Overlay.NONE
 
     set((s) => {
       return {
@@ -91,11 +106,10 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         ...RESET_PLAYER_STATE,
         ...RESET_TIME_STATE,
         ...getResetInputState(),
-        mode,
+        mode: targetMode,
         rowsData: isModeChange ? nextModeData.rowsData : s.rowsData,
         totalCounts: isModeChange ? nextModeData.totalCounts : s.totalCounts,
-        isShowingDashboard: false,
-        ...speedRunOverlays,
+        overlay: nextOverlay,
         fallCount: 0,
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],

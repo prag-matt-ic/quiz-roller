@@ -6,13 +6,17 @@ import { twJoin } from 'tailwind-merge'
 
 import { type PlayerInput, useGameStore } from '@/components/GameProvider'
 import Joystick, { type OnJoystickMove } from '@/components/ui/controls/Joystick'
-import { GameMode, InputType, SpeedRunStage } from '@/stores/types'
+import { GameMode, InputType, Overlay, SpeedRunStage } from '@/stores/types'
 
 function useControls() {
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const speedRunStage = useGameStore((s) => s.speedRunStage)
-  const DISABLED_STAGES: SpeedRunStage[] = ['username', 'countdown', 'leaderboard']
+  const DISABLED_STAGES: SpeedRunStage[] = [
+    SpeedRunStage.START,
+    SpeedRunStage.COUNTDOWN,
+    SpeedRunStage.END,
+  ]
   const isDisabledStage = DISABLED_STAGES.includes(speedRunStage || '')
   const isPlayerLocked = useGameStore((s) => s.playerStatus !== 'safe')
 
@@ -136,8 +140,8 @@ const Keys: FC = () => {
 
 const MovementControls: FC = () => {
   const inputType = useGameStore((s) => s.inputType)
-  const isShowingLoadingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
-  if (isShowingLoadingOverlay) return null
+  const isShowingLandingOverlay = useGameStore((s) => s.overlay === Overlay.LANDING)
+  if (isShowingLandingOverlay) return null
 
   if (inputType === InputType.JOYSTICK) return <Stick />
   return <Keys />

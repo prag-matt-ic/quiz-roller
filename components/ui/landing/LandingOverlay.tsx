@@ -9,6 +9,7 @@ import speedroller from '@/assets/brand/SPEEDROLLER.svg'
 import speedrollerFaint from '@/assets/brand/speedroller-faint.svg'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { MOVE_HUD_CONFIG } from '@/resources/content/hud'
+import { Overlay } from '@/stores/types'
 
 const LandingControls = dynamic(() => import('./LandingControls'), { ssr: false })
 
@@ -17,8 +18,8 @@ type Props = {
 }
 
 const LandingOverlay: FC<Props> = ({ isMobile }) => {
-  const isShowingLandingOverlay = useGameStore((s) => s.isShowingLandingOverlay)
-  const setIsShowingLandingOverlay = useGameStore((s) => s.setIsShowingLandingOverlay)
+  const isShowingLandingOverlay = useGameStore((s) => s.overlay === Overlay.LANDING)
+  const setOverlay = useGameStore((s) => s.setOverlay)
   const isHydrated = useGameStore((s) => s._isHydrated)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
@@ -40,7 +41,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
-    setIsShowingLandingOverlay(false)
+    setOverlay(Overlay.NONE)
     const hud = MOVE_HUD_CONFIG[inputType]
     respawnPlayer(PLAYER_INITIAL_POSITION, hud)
   }
@@ -87,7 +88,6 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
         </div>
       </header>
 
-      {/* TODO: create a compoent for these, wrap them in pointerprovider, load them dynamically. Then update CTA button to move the gradient center (make it radial gradient.) */}
       <LandingControls isLoaded={isLoaded} isMobile={isMobile} onStart={onStart} />
     </div>
   )
