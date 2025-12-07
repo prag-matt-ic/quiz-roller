@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build-platform": "tsc --project scripts/tsconfig.platform.json && node .tmp/platformRows/scripts/createPlatformRows.js"
+    "build-platform": "tsc --project scripts/tsconfig.platform.json && node .tmp/platformRows/scripts/buildPlatformRows.js"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",

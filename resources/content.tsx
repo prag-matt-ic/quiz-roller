@@ -113,13 +113,9 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
   <Panel key="info-ai" className="row-span-2 mx-auto w-fit p-4 lg:p-8" strength={3}>
     <PanelHeader icon={LightbulbIcon} label="The era of ideas" />
 
-    <p className="paragraph-sm mt-3 max-w-md">
-      This project wouldn&apos;t exist without AI coding assistants. They saved us dozens, maybe
-      even hundreds, of development hours.
-      <br />
-      <br />
-      As builders we have more time than ever to focus on unique ideas, and memorable user
-      experiences.
+    <p className="paragraph mt-3 max-w-md">
+      As builders utilising AI, we have more time than ever to focus on unique ideas and
+      crafting memorable user experiences.
       <br />
       <br />
       <b>We are entering the era of ideas, and it&apos;s a great time to be a creator.</b>
@@ -165,7 +161,5 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
       />
       <Credit name="Theo Walton" role="Developer" />
     </Panel>
-
-    {/* TODO: suggest idea button. */}
   </div>,
 ]

@@ -11,11 +11,14 @@ import {
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
 const MINI_MAP_TILE_SIZE_PX = 4
+const INFO_COLLECTIBLE_AREA_SIZE = { width: 5, height: 5 }
+const FINISH_LINE_AREA_SIZE = { width: 9, height: 5 }
 
 type MiniMapPalette = {
   raised: string
   infoZone: string
   collectible: string
+  finishLine: string
   background?: string
 }
 
@@ -42,6 +45,7 @@ const DEFAULT_PALETTE: MiniMapPalette = {
   raised: '#0D393B',
   infoZone: INFO_ZONE_SPHERE_COLOURS[0],
   collectible: GEM_COLOURS[0],
+  finishLine: '#FFDD3F',
 }
 
 const getColumns = (columns: number, rows: RowData[]): number => {
@@ -65,10 +69,11 @@ export const buildMiniMapSVG = ({
     return { svg: '', width: 0, height: 0 }
   }
 
-  const { background, raised } = { ...DEFAULT_PALETTE, ...palette }
+  const { background, raised, finishLine } = { ...DEFAULT_PALETTE, ...palette }
   const width = columnCount * tileSize
   const height = rowCount * tileSize
   const tiles: string[] = []
+  const finishLineTiles: string[] = []
   const infoZoneTiles: string[] = []
   const collectibleTiles: string[] = []
 
@@ -76,12 +81,15 @@ export const buildMiniMapSVG = ({
     rows,
     columnCount,
     (row) => row.infoZonePlacements,
+    INFO_COLLECTIBLE_AREA_SIZE,
   )
   const collectibleCells = collectIndicatorCells(
     rows,
     columnCount,
     (row) => row.collectiblePlacements,
+    INFO_COLLECTIBLE_AREA_SIZE,
   )
+  const finishLineCells = collectFinishLineCells(rows, columnCount)
 
   rows.forEach((row, rowIndex) => {
     const y = (rowCount - 1 - rowIndex) * tileSize // bottom-up orientation
@@ -93,6 +101,14 @@ export const buildMiniMapSVG = ({
         `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${raised}" />`,
       )
     }
+  })
+
+  finishLineCells.forEach(({ rowIndex, columnIndex }) => {
+    const y = (rowCount - 1 - rowIndex) * tileSize
+    const x = columnIndex * tileSize
+    finishLineTiles.push(
+      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${finishLine}" />`,
+    )
   })
 
   infoZoneCells.forEach(({ rowIndex, columnIndex, contentIndex }) => {
@@ -121,7 +137,7 @@ export const buildMiniMapSVG = ({
     svgParts.push(`<rect width="${width}" height="${height}" fill="${background}" />`)
   }
 
-  svgParts.push(...tiles, ...infoZoneTiles, ...collectibleTiles, '</svg>')
+  svgParts.push(...tiles, ...finishLineTiles, ...infoZoneTiles, ...collectibleTiles, '</svg>')
 
   const svg = svgParts.join('')
 
@@ -148,6 +164,11 @@ type IndicatorCell = {
   contentIndex?: number
 }
 
+type IndicatorAreaSize = {
+  width: number
+  height: number
+}
+
 const getColumnIndexFromX = (x: number, columnCount: number): number | null => {
   const rawColumn = x / TILE_SIZE + columnCount / 2 - 0.5
   if (!Number.isFinite(rawColumn)) return null
@@ -168,10 +189,13 @@ const collectIndicatorCells = (
   rows: RowData[],
   columnCount: number,
   getPlacements: (row: RowData) => IndexedPlacement[] | undefined,
+  areaSize: IndicatorAreaSize,
 ): IndicatorCell[] => {
   const rowCount = rows.length
   const seen = new Set<string>()
   const cells: IndicatorCell[] = []
+  const halfHeight = Math.max(0, Math.floor(areaSize.height / 2))
+  const halfWidth = Math.max(0, Math.floor(areaSize.width / 2))
 
   rows.forEach((row, rowIndex) => {
     const placements = getPlacements(row)
@@ -184,14 +208,87 @@ const collectIndicatorCells = (
 
       if (targetRow == null || columnIndex == null) return
 
-      const key = `${targetRow}:${columnIndex}`
-      if (seen.has(key)) return
-      seen.add(key)
-      cells.push({ rowIndex: targetRow, columnIndex, contentIndex })
+      pushIndicatorAreaCells({
+        centerRow: targetRow,
+        centerColumn: columnIndex,
+        contentIndex,
+        columnCount,
+        rowCount,
+        halfHeight,
+        halfWidth,
+        seen,
+        cells,
+      })
     })
   })
 
   return cells
+}
+
+const collectFinishLineCells = (rows: RowData[], columnCount: number): IndicatorCell[] => {
+  const rowCount = rows.length
+  const seen = new Set<string>()
+  const cells: IndicatorCell[] = []
+  const halfHeight = Math.max(0, Math.floor(FINISH_LINE_AREA_SIZE.height / 2))
+  const halfWidth = Math.max(0, Math.floor(FINISH_LINE_AREA_SIZE.width / 2))
+
+  rows.forEach((row, rowIndex) => {
+    const position = row.finishLinePosition
+    if (!position) return
+    const [x, , relativeZ] = position
+    const targetRow = getRowIndexFromRelativeZ(rowIndex, relativeZ, rowCount)
+    const columnIndex = getColumnIndexFromX(x, columnCount)
+    if (targetRow == null || columnIndex == null) return
+
+    pushIndicatorAreaCells({
+      centerRow: targetRow,
+      centerColumn: columnIndex,
+      columnCount,
+      rowCount,
+      halfHeight,
+      halfWidth,
+      seen,
+      cells,
+    })
+  })
+
+  return cells
+}
+
+const pushIndicatorAreaCells = ({
+  centerRow,
+  centerColumn,
+  contentIndex,
+  columnCount,
+  rowCount,
+  halfHeight,
+  halfWidth,
+  seen,
+  cells,
+}: {
+  centerRow: number
+  centerColumn: number
+  contentIndex?: number
+  columnCount: number
+  rowCount: number
+  halfHeight: number
+  halfWidth: number
+  seen: Set<string>
+  cells: IndicatorCell[]
+}) => {
+  const startRow = Math.max(0, centerRow - halfHeight)
+  const endRow = Math.min(rowCount - 1, centerRow + halfHeight)
+  const startColumn = Math.max(0, centerColumn - halfWidth)
+  const endColumn = Math.min(columnCount - 1, centerColumn + halfWidth)
+
+  for (let row = startRow; row <= endRow; row++) {
+    for (let column = startColumn; column <= endColumn; column++) {
+      const key = `${row}:${column}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      cells.push({ rowIndex: row, columnIndex: column, contentIndex })
+    }
+  }
 }
 
 function getInfoZoneColour(contentIndex: number | undefined): string {

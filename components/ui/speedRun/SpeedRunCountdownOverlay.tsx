@@ -40,14 +40,14 @@ export const SpeedRunCountdownOverlay: FC<Props> = ({ ref, transitionStatus }) =
         opacity: 0,
         duration: 1.0,
       })
-      .set('#countdown-go', { opacity: 0.3 })
+      .set('#countdown-go', { opacity: 1 })
   }, [transitionStatus])
 
   return (
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 transition-opacity',
+        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-black/50 transition-opacity',
         transitionStatus === 'entering' && 'opacity-100 duration-300',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0 duration-300',
@@ -65,7 +65,7 @@ export const SpeedRunCountdownOverlay: FC<Props> = ({ ref, transitionStatus }) =
 
 const CountdownNumber: FC<{ id: string; label: string }> = ({ id, label }) => {
   return (
-    <div id={id} className="absolute text-[120px] font-black opacity-0">
+    <div id={id} className="absolute text-[120px] font-black opacity-0 xl:text-[140px]">
       {label}
     </div>
   )

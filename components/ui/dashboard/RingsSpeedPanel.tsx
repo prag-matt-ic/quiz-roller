@@ -39,6 +39,8 @@ export const RingBoostInfo: FC = () => {
         <br />
         <span className="text-balance text-white/60">
           Plan your route to collect rings whilst keeping a tight line.
+          <br />
+          Falling off resets your rings boost.
         </span>
       </p>
     </div>
