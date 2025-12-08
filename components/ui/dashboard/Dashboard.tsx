@@ -6,8 +6,8 @@ import { twJoin } from 'tailwind-merge'
 
 import { PointerProvider } from '@/components/ui/PointerProvider'
 import { LeaderboardPanel } from '@/components/ui/dashboard/LeaderboardPanel'
-import { SpeedPanel } from '@/components/ui/dashboard/RingsSpeedPanel'
 import { SettingsPanel } from '@/components/ui/dashboard/SettingsPanel'
+import { SpeedPanel } from '@/components/ui/dashboard/SpeedPanel'
 import { UsernamePanel } from '@/components/ui/dashboard/UsernamePanel'
 
 type DashboardProps = {

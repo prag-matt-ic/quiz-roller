@@ -80,7 +80,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           }
         }}
         className={twJoin(
-          'pointer-events-auto fixed top-3 right-3 z-300 flex items-center rounded-xl border border-black/40 bg-black/30 p-3 text-xs text-white uppercase transition-all hover:border-black/30 hover:bg-black/20',
+          'pointer-events-auto fixed top-3 right-3 z-300 flex items-center rounded-xl border border-black/40 bg-black/35 p-3 text-xs text-white uppercase transition-all hover:border-black/30 hover:bg-black/20',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (

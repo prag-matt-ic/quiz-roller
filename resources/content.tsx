@@ -98,10 +98,10 @@ export const HEADINGS_CONTENT: string[] = [
 //
 
 export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
-  <Panel key="info-welcome" strength={3}>
+  <Panel key="info-welcome" className="p-4 xl:p-8" strength={3}>
     <PanelHeader icon={CompassIcon} label="Explore the map" />
 
-    <p className="mt-3 block max-w-md text-sm font-semibold xl:text-lg">
+    <p className="max-w-md text-sm font-semibold xl:text-lg">
       Practice movement and learn the terrain before competing against the clock to claim your
       place on the leaderboard.
       <br />
@@ -110,10 +110,10 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
     </p>
   </Panel>,
 
-  <Panel key="info-ai" className="row-span-2 mx-auto w-fit p-4 lg:p-8" strength={3}>
+  <Panel key="info-ai" className="p-4 xl:p-8" strength={3}>
     <PanelHeader icon={LightbulbIcon} label="The era of ideas" />
 
-    <p className="mt-3 max-w-md text-sm xl:text-lg">
+    <p className="max-w-md text-sm xl:text-lg">
       As builders utilising AI, we have more time than ever to focus on unique ideas and
       crafting memorable user experiences.
       <br />
@@ -122,9 +122,9 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
     </p>
   </Panel>,
 
-  <Panel key="info-technologies" strength={3}>
+  <Panel key="info-technologies" className="p-4 xl:p-8" strength={3}>
     <PanelHeader icon={BoxIcon} label="Technologies Used" />
-    <ul className="mt-3 list-inside list-disc text-sm xl:text-base">
+    <ul className="list-inside list-disc text-sm xl:text-lg">
       <li>
         <b>Next.js</b> as the web framework
       </li>

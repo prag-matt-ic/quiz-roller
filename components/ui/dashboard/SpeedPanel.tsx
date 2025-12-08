@@ -2,7 +2,6 @@
 
 import { Circle } from 'lucide-react'
 import { type FC } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
 import Panel from '@/components/ui/panel/Panel'
@@ -14,10 +13,7 @@ type RingsSpeedPanelProps = {
 
 export const SpeedPanel: FC<RingsSpeedPanelProps> = ({ className }) => {
   return (
-    <Panel
-      strength={1}
-      className={twMerge('flex h-full flex-col gap-4', className)}
-      attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
+    <Panel strength={1} className={className} attractorClassName="bg-amber-400/15">
       <PanelHeader icon={Circle} label="Speed" iconClassName="text-amber-400" />
       <RingBoostInfo />
     </Panel>

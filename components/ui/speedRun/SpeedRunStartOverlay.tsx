@@ -6,7 +6,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
-import { RingBoostInfo } from '@/components/ui/dashboard/RingsSpeedPanel'
+import { RingBoostInfo } from '@/components/ui/dashboard/SpeedPanel'
 import { Input, useUsernameInput } from '@/components/ui/input/UsernameInput'
 import { Overlay } from '@/stores/types'
 

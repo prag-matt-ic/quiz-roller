@@ -18,7 +18,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({
   className,
 }) => {
   return (
-    <div className={twMerge('flex w-full items-center gap-2 py-1', className)}>
+    <div className={twMerge('mb-3 flex w-full items-center gap-2 py-1 xl:mb-4', className)}>
       <Icon className={twMerge('size-4 text-neutral-400', iconClassName)} />
       <span className="text-xs font-medium tracking-widest text-neutral-400 uppercase">
         {label}

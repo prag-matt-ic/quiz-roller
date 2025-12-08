@@ -19,29 +19,17 @@ export type PanelProps = PropsWithChildren<{
 }>
 
 const CONTAINER_STRENGTH_CLASSES: Record<Strength, string> = {
-  1: 'border-black/10 bg-black/3',
-  2: 'border-black/20 bg-black/10',
-  3: 'border-black/40 bg-black/30',
+  1: 'border-black/10 bg-black/5',
+  2: 'border-black/20 bg-black/15',
+  3: 'border-black/40 bg-black/35',
 }
-
-const ATTRACTOR_CLASS = 'bg-teal-500/15 bg-linear-70 from-white/10 to-transparent'
-
-// Legacy GlassPanel styling for reference:
-// const GLASS_PANEL_BASE =
-//   'relative h-full overflow-hidden rounded-2xl border p-4 backdrop-blur-xl transition-all duration-300 hover:scale-[1.01]'
-// const GLASS_PANEL_VARIANTS = {
-//   dark: 'border-white/10 bg-black/40 hover:border-white/20 hover:bg-black/50',
-//   light: 'border-white/20 bg-white/10 hover:border-white/30 hover:bg-white/15',
-//   accent:
-//     'border-white/15 bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10',
-// }
 
 const Panel: FC<PanelProps> = ({
   strength = 2,
   className,
   children,
   enableAttractor = true,
-  attractorClassName = ATTRACTOR_CLASS,
+  attractorClassName = 'bg-teal-500/15',
 }) => {
   const { ref, inViewport } = useInViewport()
   const container = useRef<HTMLDivElement>(null)

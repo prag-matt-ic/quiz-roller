@@ -22,7 +22,7 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
 
   return (
     <Panel
-      className={twMerge('h-full p-4', className)}
+      className={twMerge('h-full', className)}
       attractorClassName="bg-amber-400/[0.125] bg-linear-70 from-white/10 to-transparent">
       <div className="flex h-full flex-col justify-between">
         <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
