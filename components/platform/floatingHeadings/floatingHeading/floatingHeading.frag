@@ -2,7 +2,6 @@ precision mediump float;
 precision mediump int;
 
 varying mediump vec2 vMirroredUv;
-varying mediump float vPlayerFade;
 varying mediump float vCameraFade;
 
 uniform sampler2D uTexture;
@@ -16,7 +15,6 @@ void main() {
   lowp vec4 texel = texture2D(uTexture, vMirroredUv);
   if (texel.a <= ALPHA_EPSILON) discard;
 
-  float combinedFade = vCameraFade * vPlayerFade;
   float dissolve;
 
   if (uUseNoiseFade > 0.5) {
@@ -26,10 +24,10 @@ void main() {
     dissolve = smoothstep(
       noiseEdge - DISSOLVE_WIDTH,
       noiseEdge + DISSOLVE_WIDTH,
-      combinedFade * noiseStrength
+      vCameraFade * noiseStrength
     );
   } else {
-    dissolve = combinedFade;
+    dissolve = vCameraFade;
   }
 
   float alpha = texel.a * dissolve;

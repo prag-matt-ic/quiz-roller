@@ -142,7 +142,7 @@ export type PlayerSlice = {
   onRingCollected: (indexes: RingIndex) => void
 
   stopConfirmation: () => void
-  onOutOfBounds: (options?: { silent?: boolean }) => void
+  onOutOfBounds: () => void
 }
 
 export type GameSlice = {

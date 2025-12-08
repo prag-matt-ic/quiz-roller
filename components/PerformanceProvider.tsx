@@ -34,7 +34,6 @@ export type SceneConfig = {
   }
   floatingHeading: {
     shouldRotate: boolean
-    usePlayerFade: boolean
     useNoiseFade: boolean
   }
   infoZoneSphere: {
@@ -57,7 +56,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
-    floatingHeading: { shouldRotate: true, usePlayerFade: true, useNoiseFade: true },
+    floatingHeading: { shouldRotate: true, useNoiseFade: true },
     infoZoneSphere: { segments: 48 },
   },
   [SceneQuality.MEDIUM]: {
@@ -68,7 +67,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: true },
-    floatingHeading: { shouldRotate: false, usePlayerFade: true, useNoiseFade: true },
+    floatingHeading: { shouldRotate: false, useNoiseFade: true },
     infoZoneSphere: { segments: 32 },
   },
   [SceneQuality.LOW]: {
@@ -79,7 +78,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
-    floatingHeading: { shouldRotate: false, usePlayerFade: false, useNoiseFade: false },
+    floatingHeading: { shouldRotate: false, useNoiseFade: false },
     infoZoneSphere: { segments: 20 },
   },
 }

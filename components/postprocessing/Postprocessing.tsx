@@ -29,7 +29,7 @@ const EffectsShader = shaderMaterial(EFFECTS_INITIAL_UNIFORMS, vertexShader, fra
 
 const EffectsShaderMaterial = extend(EffectsShader)
 
-const Postprocessing: FC<PropsWithChildren> = ({ children }) => {
+const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
   const isEnabled = sceneQuality === SceneQuality.HIGH
 
@@ -45,8 +45,8 @@ const Postprocessing: FC<PropsWithChildren> = ({ children }) => {
     return camera
   }, [])
 
-  const { input: playerInput } = usePlayerInput()
-  const { speedUnits: playerSpeedUnits } = usePlayerSpeed()
+  const { input } = usePlayerInput()
+  const { speedUnits } = usePlayerSpeed()
 
   useFrame(({ gl, scene, camera, clock }) => {
     if (!isEnabled) return
@@ -57,11 +57,10 @@ const Postprocessing: FC<PropsWithChildren> = ({ children }) => {
     gl.setRenderTarget(null)
 
     // Update the shader uniforms
-    const inputDirectionZ = playerInput.current.up - playerInput.current.down
-    const speedUnits = playerSpeedUnits.current
+    const inputZ = input.current.up - input.current.down
     const signedSpeed = Math.max(
       -1,
-      Math.min(1, (inputDirectionZ * speedUnits) / PLAYER_SPEED_MAX),
+      Math.min(1, (inputZ * speedUnits.current) / PLAYER_SPEED_MAX),
     )
 
     material.current.uSceneTexture = renderTarget.texture
@@ -90,4 +89,4 @@ const Postprocessing: FC<PropsWithChildren> = ({ children }) => {
   )
 }
 
-export default Postprocessing
+export default PostProcessing

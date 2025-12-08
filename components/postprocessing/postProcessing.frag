@@ -37,7 +37,7 @@ void main() {
   // Radial blur pulled toward the center; only applied near the edges via edgeMask.
   vec3 blur = color.rgb;
   float weightSum = 1.0;
-  const vec2 focus = vec2(0.5);
+  const vec2 focus = vec2(0.5, 0.45);
   float directionSign = signedSpeed >= 0.0 ? 1.0 : -1.0;
   // Positive (forward) pulls blur inward; negative (backward) pushes outward.
   vec2 blurDir = directionSign >= 0.0 ? (focus - vUv) : (vUv - focus);

@@ -48,7 +48,6 @@ type FloatingHeadingUniforms = {
   uHeadingCenterXZ: Vector2
   uCameraZ: number
   uEnableRotation: number
-  uUsePlayerFade: number
   uDistanceFadeEnabled: number
   uUseNoiseFade: number
 }
@@ -60,7 +59,6 @@ const FLOATING_HEADING_UNIFORMS: FloatingHeadingUniforms = {
   uHeadingCenterXZ: new Vector2(0, 0),
   uCameraZ: 0,
   uEnableRotation: 1,
-  uUsePlayerFade: 1,
   uDistanceFadeEnabled: 1,
   uUseNoiseFade: 1,
 }
@@ -84,7 +82,7 @@ export const FloatingHeading: FC<Props> = ({
 }) => {
   const shaderRef = useRef<typeof FloatingHeadingMaterial & FloatingHeadingUniforms>(null)
   const tmpWorldPosition = useRef(new Vector3())
-  const { shouldRotate, usePlayerFade, useNoiseFade } = usePerformanceStore(
+  const { shouldRotate, useNoiseFade } = usePerformanceStore(
     (s) => s.sceneConfig.floatingHeading,
   )
   const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled) // for distance faded
@@ -158,7 +156,6 @@ export const FloatingHeading: FC<Props> = ({
         key={FloatingHeadingShader.key}
         ref={shaderRef}
         uEnableRotation={shouldRotate ? 1 : 0}
-        uUsePlayerFade={usePlayerFade ? 1 : 0}
         uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         uUseNoiseFade={useNoiseFade ? 1 : 0}
         uNoiseTexture={dissolveNoiseTexture}

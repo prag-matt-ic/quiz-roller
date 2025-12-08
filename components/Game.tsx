@@ -18,8 +18,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
-
-import Postprocessing from './postprocessing/Postprocessing'
+import PostProcessing from '@/components/postProcessing/PostProcessing'
 
 gsap.registerPlugin(useGSAP)
 
@@ -70,7 +69,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
         {/* <OrbitControls /> */}
-        <Postprocessing>
+        <PostProcessing>
           <InputSmoother />
           <Camera isMobile={isMobile} positions={cameraPositions} />
           {isDebug && <Stats />}
@@ -82,7 +81,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
               <Player />
             </Physics>
           </Suspense>
-        </Postprocessing>
+        </PostProcessing>
       </PerformanceMonitor>
     </Canvas>
   )
