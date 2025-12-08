@@ -32,7 +32,6 @@ const getProgressWindow = (totalRows: number): ProgressWindow => {
   const hasFullPadding = maxRowIndex + 1 > PROGRESS_PADDING_ROWS * 2
   const progressStartRow = hasFullPadding ? PROGRESS_PADDING_ROWS : 0
   const progressEndRow = hasFullPadding ? maxRowIndex - PROGRESS_PADDING_ROWS + 1 : maxRowIndex
-
   return {
     maxRowIndex,
     progressStartRow,

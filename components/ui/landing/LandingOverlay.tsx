@@ -77,13 +77,13 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
             src={speedrollerFaint}
             alt=""
             className="relative h-fit w-full object-contain"
-            priority
+            priority={true}
           />
           <Image
             src={speedroller}
             alt="Speedroller"
             className="animate-reveal-logo absolute inset-0 h-fit w-full object-contain motion-reduce:transition-none"
-            priority
+            priority={true}
           />
         </div>
       </header>

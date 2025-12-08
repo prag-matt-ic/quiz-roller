@@ -111,9 +111,12 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
                   className="size-8 shrink-0 text-(--icon-colour) xl:size-10"
                 />
               ) : (
-                <LockIcon strokeWidth={1} className="size-8 text-neutral-500 xl:size-10" />
+                <LockIcon
+                  strokeWidth={1}
+                  className="size-8 shrink-0 text-neutral-500 xl:size-10"
+                />
               )}
-              <p className="block overflow-hidden">
+              <p className="block flex-1 overflow-hidden">
                 <span className="mb-1 text-sm font-medium tracking-wider text-neutral-500 uppercase">
                   Bonus
                 </span>

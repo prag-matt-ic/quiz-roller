@@ -6,6 +6,7 @@ import {
   type Ref,
   forwardRef,
   startTransition,
+  useLayoutEffect,
   useState,
 } from 'react'
 import { twMerge } from 'tailwind-merge'
@@ -50,18 +51,25 @@ export const Input = forwardRef(function Input(
   )
 })
 
+const usernameSchema = speedRunSubmissionSchema.shape.username
+const errorMessage = 'Username must be 6-12 characters long'
+
 export function useUsernameInput(): InputProps & { isValid: boolean } {
   const username = useGameStore((s) => s.username)
   const setUsername = useGameStore((s) => s.setUsername)
 
-  const usernameSchema = speedRunSubmissionSchema.shape.username
-  const USERNAME_ERROR_MESSAGE = 'Username must be 6-12 characters long'
-
   const [value, setValue] = useState(username ?? '')
   const [error, setError] = useState<string | null>(null)
-  const [isValid, setIsValid] = useState<boolean>(
-    () => usernameSchema.safeParse(username ?? '').success,
-  )
+  const [isValid, setIsValid] = useState<boolean>(false)
+
+  useLayoutEffect(() => {
+    const validValue = usernameSchema.safeParse(username ?? '')
+    const isValid = validValue.success
+    const error = !isValid ? errorMessage : null
+    setError(error)
+    setIsValid(isValid)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const trimmedUsername = e.target.value.trim()
@@ -70,9 +78,7 @@ export function useUsernameInput(): InputProps & { isValid: boolean } {
     startTransition(() => {
       const validValue = usernameSchema.safeParse(trimmedUsername)
       const isValid = validValue.success
-
-      const error = trimmedUsername.length > 0 && !isValid ? USERNAME_ERROR_MESSAGE : null
-
+      const error = !isValid ? errorMessage : null
       setError(error)
       setIsValid(isValid)
       if (isValid) setUsername(trimmedUsername)
