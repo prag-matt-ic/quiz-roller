@@ -26,7 +26,7 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { getRingKey } from '@/utils/rings'
 import { HIDDEN_POSITION, ON_TILE_Y, type RowData, colToX } from '@/utils/tiles'
 
-const MAX_RING_INSTANCES = 14
+const MAX_RING_INSTANCES = 16
 const instancesArray = Array.from({ length: MAX_RING_INSTANCES }, (_, i) => i)
 const RING_MAJOR_RADIUS = 0.3
 const RING_TUBE_RADIUS = 0.05
@@ -45,8 +45,8 @@ const hashSlotIndex = (slotIndex: number): number => {
 
 export type RingsHandle = {
   moveElements: (zStep: number) => void
-  positionElementsIfNeeded: (row: RowData | undefined, rowZ: number) => void
-  hideElementsIfNeeded: (row: RowData | undefined) => void
+  positionElementsIfNeeded: (row: RowData, rowZ: number) => void
+  hideElementsIfNeeded: (row: RowData) => void
 }
 
 type Props = {
@@ -140,8 +140,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const positionElementsIfNeeded = useCallback(
-    (row: RowData | undefined, rowZ: number) => {
-      if (!row) return
+    (row: RowData, rowZ: number) => {
       if (!row.rings) return
       const rowIndex = row.rowIndex ?? -1
       if (rowIndex < 0) return
@@ -155,8 +154,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
   )
 
   const hideElementsIfNeeded = useCallback(
-    (row: RowData | undefined) => {
-      if (!row) return
+    (row: RowData) => {
       if (!row.rings) return
       releaseRow(row.rowIndex ?? -1)
     },
@@ -220,7 +218,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
         onRingCollected(indexes)
         setTimeout(() => {
           material.uExitProgress = 0
-        }, 200)
+        }, 100)
       },
     })
   }

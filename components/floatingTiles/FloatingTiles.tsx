@@ -30,13 +30,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
 import positionFragmentShader from '@/components/floatingTiles/shaders/position.frag'
-import {
-  COLUMNS,
-  ROWS_RENDERED,
-  type RowData,
-  TILE_SIZE,
-  clamp,
-} from '@/utils/tiles'
+import { COLUMNS, ROWS_RENDERED, type RowData, TILE_SIZE, clamp } from '@/utils/tiles'
 
 type FloatingTilesUniforms = {
   uMix: number
@@ -168,6 +162,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   const spawnMaskData = spawnMaskDataRef.current!
   const rowPositionsData = rowPositionsDataRef.current!
   const spawnableCellsRef = useRef<number[]>([])
+  const spawnableCellsDirtyRef = useRef(false)
   const rowColumnSpawnableRef = useRef<Int8Array | null>(null)
   if (rowColumnSpawnableRef.current == null) {
     rowColumnSpawnableRef.current = new Int8Array(ROWS_RENDERED * COLUMNS)
@@ -206,6 +201,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       }
     }
     spawnableCellsRef.current = cells
+    spawnableCellsDirtyRef.current = false
   }, [spawnMaskData])
 
   const pickRandomSpawnCell = useCallback(() => {
@@ -240,6 +236,9 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
   const seedAllInstances = useCallback(() => {
     ensureTextureBufferSize()
+    if (spawnableCellsDirtyRef.current || spawnableCellsRef.current.length === 0) {
+      rebuildSpawnableCells()
+    }
     for (let i = 0; i < instanceCount; i++) {
       seedInstance(i)
     }
@@ -250,7 +249,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       textureBufferRef.current[base + 2] = 0
       textureBufferRef.current[base + 3] = SPEED_MIN
     }
-  }, [ensureTextureBufferSize, instanceCount, seedInstance, textureSlotCount])
+  }, [ensureTextureBufferSize, instanceCount, rebuildSpawnableCells, seedInstance, textureSlotCount])
 
   const writeBufferToTexture = useCallback((texture: DataTexture) => {
     const target = texture.image.data as Float32Array
@@ -268,6 +267,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       }
     }
     spawnMaskTextureRef.current!.needsUpdate = true
+    spawnableCellsDirtyRef.current = false
     rebuildSpawnableCells()
   }, [rebuildSpawnableCells, spawnMaskData])
 
@@ -408,14 +408,11 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
       if (maskChanged) {
         spawnMaskTextureRef.current!.needsUpdate = true
+        spawnableCellsDirtyRef.current = true
         // Performance optimization:
-        // We do NOT call rebuildSpawnableCells() here.
-        // That function iterates the entire grid to find spawn locations for new particles.
-        // However, the particle system only spawns new particles when they "die" (reset),
-        // which is handled by the GPU shader logic or the initial seed.
-        // The spawnMaskTexture is updated for the GPU to use, but we don't need to
-        // burn CPU cycles updating the JS-side list of spawnable cells during the game loop.
-        // rebuildSpawnableCells();
+        // We defer rebuildSpawnableCells() to the next reseed so the JS-side list
+        // stays current without doing a full grid scan on every row update.
+        // rebuildSpawnableCells()
       }
     },
     [rowColumnSpawnable, spawnMaskData], // Removed rebuildSpawnableCells from dependency array

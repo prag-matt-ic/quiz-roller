@@ -1,6 +1,6 @@
 import { ScreenQuad, shaderMaterial, useFBO } from '@react-three/drei'
 import { createPortal, extend, useFrame, useThree } from '@react-three/fiber'
-import { type FC, type PropsWithChildren, useMemo, useRef } from 'react'
+import { type FC, type PropsWithChildren, useEffect, useMemo, useRef } from 'react'
 import { OrthographicCamera, Scene, Texture } from 'three'
 
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
@@ -16,22 +16,31 @@ type EffectsUniforms = {
   uResolution: [number, number]
   uSceneTexture: Texture | null
   uSpeed: number
+  uBlurSteps: number
 }
 
-const EFFECTS_INITIAL_UNIFORMS: EffectsUniforms = {
+const INITIAL_UNIFORMS: EffectsUniforms = {
   uTime: 0,
-  uResolution: [0, 0],
+  uResolution: [1, 1],
   uSceneTexture: null,
   uSpeed: 0,
+  uBlurSteps: 0,
 }
 
-const EffectsShader = shaderMaterial(EFFECTS_INITIAL_UNIFORMS, vertexShader, fragmentShader)
+const EffectsShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentShader)
 
 const EffectsShaderMaterial = extend(EffectsShader)
 
+const BLUR_SAMPLES_BY_QUALITY: Record<SceneQuality, number> = {
+  [SceneQuality.HIGH]: 16,
+  [SceneQuality.MEDIUM]: 6,
+  [SceneQuality.LOW]: 0,
+}
+
 const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
   const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
-  const isEnabled = sceneQuality === SceneQuality.HIGH
+  const blurSteps = BLUR_SAMPLES_BY_QUALITY[sceneQuality]
+  const isEnabled = blurSteps > 0
 
   const { viewport } = useThree()
   const material = useRef<typeof EffectsShaderMaterial & EffectsUniforms>(null)
@@ -48,29 +57,34 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
   const { input } = usePlayerInput()
   const { speedUnits } = usePlayerSpeed()
 
-  useFrame(({ gl, scene, camera, clock }) => {
-    if (!isEnabled) return
+  useEffect(() => {
     if (!material.current) return
-    // Render the FBO scene (offscreen) into the render target
-    gl.setRenderTarget(renderTarget)
-    gl.render(fboScene, camera)
-    gl.setRenderTarget(null)
+    material.current.uBlurSteps = blurSteps
+  }, [blurSteps])
 
-    // Update the shader uniforms
-    const inputZ = input.current.up - input.current.down
-    const signedSpeed = Math.max(
-      -1,
-      Math.min(1, (inputZ * speedUnits.current) / PLAYER_SPEED_MAX),
-    )
-
-    material.current.uSceneTexture = renderTarget.texture
-    material.current.uTime = clock.elapsedTime
-    material.current.uSpeed = signedSpeed
-    // Render the effects scene (default scene) using the effects shader
-    gl.render(scene, orthographicCamera)
+  useFrame(({ gl, scene, camera, clock }) => {
+    if (isEnabled && !!material.current) {
+      // Render the FBO scene (offscreen) into the render target
+      gl.setRenderTarget(renderTarget)
+      gl.render(fboScene, camera)
+      gl.setRenderTarget(null)
+      // Update the shader uniforms
+      const inputZ = input.current.up - input.current.down
+      const signedSpeed = Math.max(
+        -1,
+        Math.min(1, (inputZ * speedUnits.current) / PLAYER_SPEED_MAX),
+      )
+      material.current.uSceneTexture = renderTarget.texture
+      material.current.uTime = clock.elapsedTime
+      material.current.uSpeed = signedSpeed
+      material.current.uBlurSteps = blurSteps
+      // Render the effects scene (default scene) using the effects shader
+      gl.render(scene, orthographicCamera)
+    } else {
+      // If not enabled, just render the original scene
+      gl.render(fboScene, camera)
+    }
   }, 1)
-
-  if (!isEnabled) return children
 
   return (
     <>
@@ -83,6 +97,7 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
           uResolution={[viewport.width, viewport.height]}
           uSceneTexture={null}
           uSpeed={0}
+          uBlurSteps={blurSteps}
         />
       </ScreenQuad>
     </>

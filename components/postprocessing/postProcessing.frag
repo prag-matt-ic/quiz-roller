@@ -4,13 +4,14 @@ uniform float uTime;
 uniform vec2 uResolution;
 uniform sampler2D uSceneTexture;
 uniform float uSpeed;
+uniform int uBlurSteps;
 
 varying vec2 vUv;
 
-const int BLUR_STEPS = 16;
-const float VIGNETTE_STRENGTH = 0.7; // 0 = no fade, 1 = full vignette
+const int MAX_BLUR_STEPS = 16;
+const float VIGNETTE_STRENGTH = 0.66; // 0 = no fade, 1 = full vignette
 const float BLUR_INTENSITY_EPSILON = 0.001;
-const float EDGE_BLUR_THRESHOLD = 0.02;
+const float EDGE_BLUR_THRESHOLD = 0.04;
 
 void main() {
   vec4 color = texture2D(uSceneTexture, vUv);
@@ -43,10 +44,11 @@ void main() {
   vec2 blurDir = directionSign >= 0.0 ? (focus - vUv) : (vUv - focus);
   vec2 radialDir = normalize(blurDir + 1e-5);
   vec2 jitterDir = vec2(-radialDir.y, radialDir.x);
-  float invSteps = 1.0 / float(BLUR_STEPS);
+  float invSteps = 1.0 / float(uBlurSteps);
   float baseMix = 0.6 * intensity;
 
-  for (int i = 0; i < BLUR_STEPS; i++) {
+  for (int i = 0; i < MAX_BLUR_STEPS; i++) {
+    if (i >= uBlurSteps) break;
     float t = (float(i) + 1.0) * invSteps;
     float mixAmount = t * baseMix;
 

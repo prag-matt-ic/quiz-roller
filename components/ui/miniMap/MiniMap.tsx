@@ -143,7 +143,7 @@ const MiniMap: FC = () => {
     <aside
       id="mini-map"
       className={twJoin(
-        'pointer-events-none fixed bottom-3 z-5 flex items-center justify-center overflow-hidden rounded-full bg-black/85',
+        'pointer-events-none fixed bottom-3 z-5 flex items-center justify-center overflow-hidden rounded-full bg-black',
         isMapOnRight ? 'right-3' : 'left-3',
       )}
       style={{
