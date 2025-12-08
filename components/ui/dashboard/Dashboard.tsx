@@ -22,13 +22,13 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus 
       <aside
         ref={ref}
         className={twJoin(
-          'fixed inset-0 z-200 flex items-center justify-center overflow-hidden p-4 transition-opacity duration-200',
+          'fixed inset-0 z-200 flex items-center justify-center overflow-hidden px-18 transition-opacity duration-200',
           'bg-black/35 backdrop-blur-lg',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
           transitionStatus === 'exited' && 'opacity-0',
         )}>
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-1 gap-2 xl:grid-cols-2 xl:gap-3">
+        <div className="relative z-10 mx-auto grid max-h-full w-full max-w-6xl grid-cols-1 gap-2 overflow-y-auto px-2 py-6 xl:grid-cols-2 xl:gap-3">
           <UsernamePanel />
           <LeaderboardPanel className="row-span-3" count={10} />
           <SpeedPanel />

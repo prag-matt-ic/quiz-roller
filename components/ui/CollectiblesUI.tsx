@@ -99,7 +99,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex w-fit max-w-lg origin-top items-center gap-4 overflow-hidden rounded-xl bg-black p-4 xl:p-6',
+                'flex w-fit max-w-lg origin-top items-center gap-3 overflow-hidden rounded-xl bg-black p-4 xl:gap-4 xl:p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
@@ -113,11 +113,11 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
               ) : (
                 <LockIcon
                   strokeWidth={1}
-                  className="size-8 shrink-0 text-neutral-500 xl:size-10"
+                  className="size-5 shrink-0 text-neutral-500 xl:size-6"
                 />
               )}
               <p className="block flex-1 overflow-hidden">
-                <span className="mb-1 text-sm font-medium tracking-wider text-neutral-500 uppercase">
+                <span className="mb-1 text-xs font-medium tracking-wider text-neutral-500 uppercase xl:text-sm">
                   Bonus
                 </span>
                 {isCollected ? (

@@ -6,7 +6,7 @@ import { insertSpeedRun } from '@/app/actions'
 import { GameProvider } from '@/components/GameProvider'
 import { QueryProvider } from '@/components/QueryProvider'
 import { SoundProvider } from '@/components/SoundProvider'
-import PWAInstall from '@/components/ui/PWAInstall'
+// import PWAInstall from '@/components/ui/PWAInstall'
 import LandingOverlay from '@/components/ui/landing/LandingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
 
@@ -30,7 +30,7 @@ export default async function Home(props: PageProps) {
             <GameProvider isMobile={isMobile} insertSpeedRun={insertSpeedRun}>
               <LandingOverlay isMobile={isMobile} />
               <Main isMobile={isMobile} isDebug={isDebug} />
-              <PWAInstall isMobile={isMobile} />
+              {/* <PWAInstall isMobile={isMobile} /> */}
             </GameProvider>
           </QueryProvider>
         </SoundProvider>

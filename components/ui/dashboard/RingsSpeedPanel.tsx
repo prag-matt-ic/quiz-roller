@@ -35,7 +35,7 @@ export const RingBoostInfo: FC = () => {
           Boost
         </span>
       </div>
-      <p className="leading-relaxed text-pretty text-white">
+      <p className="text-sm leading-relaxed text-pretty text-white xl:text-base">
         Each ring gives you a temporary speed boost.
         <br />
         <span className="text-balance text-white/60">
