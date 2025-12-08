@@ -66,11 +66,11 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       />
 
       <header className="relative mx-auto flex w-xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden xl:w-3xl">
-        <div className="relative flex w-full flex-wrap gap-2 text-sm xl:text-base">
+        <div className="relative flex w-full flex-wrap gap-2 text-sm leading-3 xl:text-base">
           <span className="font-unbounded font-medium">Pragmattic</span>
-          <span className="tracking-wider text-white/50">AND</span>
+          <span className="text-xs tracking-wide text-white/50">AND</span>
           <span className="font-unbounded font-medium">Loopspeed</span>
-          <span className="tracking-wider text-white/50">PRESENTS</span>
+          <span className="text-xs tracking-wide text-white/50">PRESENTS</span>
         </div>
         <div className="relative h-fit w-full">
           <Image

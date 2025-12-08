@@ -7,8 +7,8 @@ uniform float uSpeed;
 
 varying vec2 vUv;
 
-const int BLUR_STEPS = 12;
-const float VIGNETTE_STRENGTH = 0.75; // 0 = no fade, 1 = full vignette
+const int BLUR_STEPS = 16;
+const float VIGNETTE_STRENGTH = 0.7; // 0 = no fade, 1 = full vignette
 const float BLUR_INTENSITY_EPSILON = 0.001;
 const float EDGE_BLUR_THRESHOLD = 0.02;
 
