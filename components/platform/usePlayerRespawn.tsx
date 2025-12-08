@@ -4,13 +4,7 @@ import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import usePlayerStatus from '@/hooks/usePlayerStatus'
 import { type PlayerStatus } from '@/stores/types'
-import {
-  COLUMNS,
-  ROWS_RENDERED,
-  type RowData,
-  TILE_SIZE,
-  colToX,
-} from '@/utils/tiles'
+import { COLUMNS, ROWS_RENDERED, type RowData, TILE_SIZE, colToX } from '@/utils/tiles'
 
 export const EMPTY_ROW_INDEX = 10000
 const CENTER_COL_INDEX = Math.floor(COLUMNS / 2)

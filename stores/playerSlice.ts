@@ -196,6 +196,7 @@ export const createPlayerSlice =
       respawnPlayer: (position, hud) => {
         let hudIndicator = hud
         // If no hud provided, pick a random one from out-of-bounds configs
+        // TODO: read outOfBoundsEvents, try to a pick HUD message that hasn't been used recently
         if (!hud) {
           hudIndicator =
             OUT_OF_BOUNDS_HUD_CONFIG[

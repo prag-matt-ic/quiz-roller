@@ -46,7 +46,7 @@ export function useLeaderboardTableData({
     queryKey: ['speedrun-recent-run', latestRunId],
     queryFn: () => getSpeedrunPosition(latestRunId as number),
     enabled: shouldFetchRecentRun,
-    staleTime: 60_000,
+    staleTime: 30_000,
   })
 
   return {
@@ -82,14 +82,6 @@ export const LeaderboardTable: FC<TableProps> = ({
 }) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
   const showCTARow = showCTA && !!onStartSpeedRun
-
-  console.warn('[LeaderboardTable] Rendering with:', {
-    count,
-    isLoading,
-    leaderboardRuns,
-    userRecentRun,
-    showCTA,
-  })
 
   return (
     <section
