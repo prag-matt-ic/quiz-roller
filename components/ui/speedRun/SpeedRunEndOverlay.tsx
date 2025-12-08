@@ -1,6 +1,6 @@
 'use client'
-import { Rotate3DIcon, RotateCcwIcon, Share2Icon, SmilePlus, Trophy } from 'lucide-react'
-import { type FC } from 'react'
+import { RotateCcwIcon, SmilePlus, Trophy } from 'lucide-react'
+import { type FC, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
@@ -15,7 +15,8 @@ import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { useWebShare } from '@/hooks/useWebShare'
 import { GameMode } from '@/stores/types'
 
-import { LeaderboardTable, useLeaderboardTableData } from './LeaderboardTable'
+import { LeaderboardTable } from './LeaderboardTable'
+import { type PerformanceSummary } from './speedrunPerformanceSummary'
 
 type Props = {
   ref: React.RefObject<HTMLDivElement | null>
@@ -31,39 +32,39 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
   const { handleShare, isShareSupported } = useWebShare()
 
-  // TODO: tailor the congratulations message based on performance
-  const tableData = useLeaderboardTableData({
-    count: 10,
-    fetchPlayerRecentPosition: true,
-    showCTARow: false,
-  })
+  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
+  const summaryHeading = performanceSummary?.heading ?? '...'
+  const summaryDescription = performanceSummary?.description ?? '...'
 
   return (
     <PointerProvider isMobile={isMobile}>
       <div
         ref={ref}
         className={twJoin(
-          'bg-black/40 backdrop-blur-sm',
-          'fixed inset-0 z-500 flex items-center justify-center transition-opacity duration-300 ease-out',
+          'fixed inset-0 z-500 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-out',
           transitionStatus === 'entering' && 'opacity-0',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
         )}>
         <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:gap-4">
           <Panel className="" strength={1}>
-            <h2 className="text-2xl font-bold lg:text-4xl">Congratulations!</h2>
+            <h2 className="text-2xl font-bold lg:text-4xl">{summaryHeading}</h2>
             <p className="mt-3 max-w-md text-sm text-white/80 xl:text-base">
-              You completed the speedrun TODO: tailored message based on performance.
+              {summaryDescription}
             </p>
           </Panel>
 
-          {/* Table needs to be kept simple (e.g no access to the game store from within it otherwise it breaks in CTAELEMENTs) */}
           <Panel
-            strength={3}
-            className={twJoin('row-span-3 row-start-3 xl:col-start-2 xl:row-start-1')}
+            className="row-span-3 row-start-3 xl:col-start-2 xl:row-start-1"
             attractorClassName="bg-emerald-400/15">
             <PanelHeader icon={Trophy} label="Leaderboard" />
-            <LeaderboardTable {...tableData} onStartSpeedRun={startCountdown} showCTA={false} />
+            <LeaderboardTable
+              count={LEADERBOARD_COUNT}
+              fetchLatestRun={true}
+              startCountdown={startCountdown}
+              showCTA={false}
+              onPerformanceSummary={setPerformanceSummary}
+            />
           </Panel>
 
           <div className="col-span-full grid grid-cols-3 gap-3 xl:col-span-1 xl:gap-4">
@@ -107,3 +108,5 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
     </PointerProvider>
   )
 }
+
+const LEADERBOARD_COUNT = 10

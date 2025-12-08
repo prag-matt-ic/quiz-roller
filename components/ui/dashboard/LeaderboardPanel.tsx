@@ -2,40 +2,36 @@
 
 import { Trophy } from 'lucide-react'
 import { type FC } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
-import {
-  LeaderboardTable,
-  useLeaderboardTableData,
-} from '@/components/ui/speedRun/LeaderboardTable'
+import { LeaderboardTable } from '@/components/ui/speedRun/LeaderboardTable'
 
 type Props = {
   className?: string
   count?: number
   showCTA?: boolean
-  fetchPlayerRecentPosition?: boolean
+  fetchLatestRun?: boolean
 }
 
 export const LeaderboardPanel: FC<Props> = ({
   className,
   count = 3,
   showCTA = true,
-  fetchPlayerRecentPosition = false,
+  fetchLatestRun = false,
 }) => {
-  const startSpeedRun = useGameStore((s) => s.startCountdown)
-  const tableData = useLeaderboardTableData({
-    count,
-    fetchPlayerRecentPosition,
-    showCTARow: showCTA,
-  })
+  const startCountdown = useGameStore((s) => s.startCountdown)
 
   return (
     <Panel strength={3} className={className} attractorClassName="bg-emerald-400/15">
       <PanelHeader icon={Trophy} label="Leaderboard" className="" />
-      <LeaderboardTable {...tableData} onStartSpeedRun={startSpeedRun} showCTA={showCTA} />
+      <LeaderboardTable
+        count={count}
+        fetchLatestRun={fetchLatestRun}
+        startCountdown={startCountdown}
+        showCTA={showCTA}
+      />
     </Panel>
   )
 }

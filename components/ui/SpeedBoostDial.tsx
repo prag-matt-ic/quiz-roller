@@ -8,10 +8,15 @@ import { PLAYER_SPEED_BASE, PLAYER_SPEED_MAX } from '@/stores/playerSlice'
 
 type SpeedBoostDialProps = {
   progressOverride?: number
+  strokeWidth?: number
   className?: string
 }
 
-export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, className }) => {
+export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({
+  progressOverride,
+  strokeWidth = 5,
+  className,
+}) => {
   const pathRef = useRef<SVGPathElement | null>(null)
   const pathLength = useRef(0)
   const targetProgress = useRef(0)
@@ -44,6 +49,8 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, clas
     [hasProgressOverride, scheduleDraw],
   )
 
+  usePlayerSpeed(onPlayerSpeedChange)
+
   useEffect(() => {
     const path = pathRef.current
     if (!path) return
@@ -54,7 +61,7 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, clas
     path.style.strokeDashoffset = `${length}`
 
     return () => {
-      if (pendingFrame.current !== null) {
+      if (!!pendingFrame.current) {
         cancelAnimationFrame(pendingFrame.current)
       }
     }
@@ -66,8 +73,6 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, clas
     applyDraw()
   }, [applyDraw, progressOverride])
 
-  usePlayerSpeed(onPlayerSpeedChange)
-
   return (
     <svg
       width="40"
@@ -75,24 +80,33 @@ export const SpeedBoostDial: FC<SpeedBoostDialProps> = ({ progressOverride, clas
       viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={twMerge('size-12.5', className)}>
+      className={twMerge('size-14', className)}>
       <g clipPath="url(#clip0_1259_7128)">
         <path
           d="M8.31278 30.9407C6.07514 28.703 4.55129 25.8521 3.93393 22.7484C3.31656 19.6447 3.63342 16.4276 4.84442 13.504C6.05542 10.5804 8.10618 8.08154 10.7374 6.32344C13.3686 4.56534 16.462 3.62695 19.6265 3.62695C22.791 3.62695 25.8844 4.56534 28.5156 6.32344C31.1468 8.08154 33.1976 10.5804 34.4086 13.504C35.6196 16.4276 35.9364 19.6447 35.3191 22.7484C34.7017 25.8521 33.1778 28.703 30.9402 30.9407"
           stroke="#ffffff4d"
-          strokeWidth="4"
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
         <path
           ref={pathRef}
           d="M8.31278 30.9407C6.07514 28.703 4.55129 25.8521 3.93393 22.7484C3.31656 19.6447 3.63342 16.4276 4.84442 13.504C6.05542 10.5804 8.10618 8.08154 10.7374 6.32344C13.3686 4.56534 16.462 3.62695 19.6265 3.62695C22.791 3.62695 25.8844 4.56534 28.5156 6.32344C31.1468 8.08154 33.1976 10.5804 34.4086 13.504C35.6196 16.4276 35.9364 19.6447 35.3191 22.7484C34.7017 25.8521 33.1778 28.703 30.9402 30.9407"
-          // stroke="#ffffff"
-          className="stroke-amber-400"
-          strokeWidth="4"
+          stroke="url(#speed-boost-dial-gradient)"
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
         />
       </g>
       <defs>
+        <linearGradient
+          id="speed-boost-dial-gradient"
+          x1="4"
+          y1="20"
+          x2="36"
+          y2="20"
+          gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fbbf24" />
+          <stop offset="1" stopColor="#d97706" />
+        </linearGradient>
         <clipPath id="clip0_1259_7128">
           <rect width="40" height="40" fill="none" />
         </clipPath>

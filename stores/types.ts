@@ -76,6 +76,8 @@ export type InputSlice = {
   setInputType: (type: InputType) => void
   joystickPosition: 'left' | 'right'
   setJoystickPosition: (position: 'left' | 'right') => void
+  playerInputIntent: PlayerInput
+  setPlayerInputIntent: (input: PlayerInput) => void
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
 }

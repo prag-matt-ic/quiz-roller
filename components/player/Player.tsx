@@ -17,6 +17,7 @@ import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
+import { usePlayerInput } from '@/hooks/usePlayerInput'
 import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import type { PlayerUserData, RigidBodyUserData } from '@/model/schema'
 import { COLLISION_GROUPS } from '@/utils/collisionGroups'
@@ -41,7 +42,8 @@ const Player: FC = () => {
   const spawnPosition = useGameStore((s) => s.spawnPosition)
   const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
 
-  const { controllerRef, input } = usePlayerController()
+  const { input } = usePlayerInput()
+  const { controllerRef } = usePlayerController()
   const { speedUnits: playerSpeedUnits } = usePlayerSpeed()
 
   // Refs for physics bodies and meshes

@@ -12,11 +12,14 @@ import Camera, {
   CAMERA_POSITION_FOR_STAGE_MOBILE,
 } from '@/components/Camera'
 import { Stage } from '@/components/GameProvider'
+import InputSmoother from '@/components/InputSmoother'
 import OutOfBounds from '@/components/OutOfBounds'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
+
+import Postprocessing from './postprocessing/Postprocessing'
 
 gsap.registerPlugin(useGSAP)
 
@@ -49,7 +52,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       dpr={dpr}
       camera={{
         position: [0, cameraPositions[Stage.HOME].y, cameraPositions[Stage.HOME].z],
-        far: process.env.NODE_ENV === 'development' ? 10000 : 40,
+        far: process.env.NODE_ENV === 'development' ? 100 : 40,
         fov: 65,
       }}
       gl={{
@@ -67,16 +70,19 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
         {/* <OrbitControls /> */}
-        <Camera isMobile={isMobile} positions={cameraPositions} />
-        {isDebug && <Stats />}
-        <Backdrop />
-        <Suspense>
-          <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
-            <OutOfBounds />
-            <Platform />
-            <Player />
-          </Physics>
-        </Suspense>
+        <Postprocessing>
+          <InputSmoother />
+          <Camera isMobile={isMobile} positions={cameraPositions} />
+          {isDebug && <Stats />}
+          <Backdrop />
+          <Suspense>
+            <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>
+              <OutOfBounds />
+              <Platform />
+              <Player />
+            </Physics>
+          </Suspense>
+        </Postprocessing>
       </PerformanceMonitor>
     </Canvas>
   )

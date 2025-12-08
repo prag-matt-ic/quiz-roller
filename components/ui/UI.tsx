@@ -42,9 +42,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 items-center gap-x-2 px-3 py-2 transition-opacity duration-300 select-none',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
-        {/* Top Left Rings */}
-        <RingsUI />
-        {/* Top Center Info */}
+        {/* Collectibles/Timer */}
         <SwitchTransition>
           <Transition
             key={isSpeedRunMode ? 'speed-run' : 'collectibles'}
@@ -56,7 +54,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'flex h-fit items-center justify-center gap-2.5 opacity-0 transition-opacity duration-200',
+                    'flex h-fit items-center gap-2.5 opacity-0 transition-opacity duration-200',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
@@ -67,6 +65,9 @@ const UI: FC<Props> = ({ isMobile }) => {
             }}
           </Transition>
         </SwitchTransition>
+
+        {/* Speed/Rings */}
+        <RingsUI />
       </div>
 
       {/* Top Right Dashboard toggle */}

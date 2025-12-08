@@ -1,87 +1,117 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { PlayIcon } from 'lucide-react'
-import { type FC, type ReactNode, useMemo } from 'react'
+import { type FC, type ReactNode, useEffect, useMemo } from 'react'
 import { twJoin, twMerge } from 'tailwind-merge'
 
-import { RunWithPosition, getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
+import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 import type { SpeedRunDatabase } from '@/model/schema'
 
-export function useLeaderboardTableData({
-  count = 10,
-  fetchPlayerRecentPosition = false,
-  showCTARow = false,
-}: {
+import type { PerformanceSummary } from './speedrunPerformanceSummary'
+import { getSpeedrunPerformanceSummary } from './speedrunPerformanceSummary'
+
+type Props = {
   count: number
-  fetchPlayerRecentPosition: boolean
-  showCTARow: boolean
-}): TableProps {
-  const completedSpeedruns = useGameStore((s) => s.completedSpeedRuns)
+  className?: string
+  fetchLatestRun: boolean
+  showCTA?: boolean
+  startCountdown?: () => void
+  onPerformanceSummary?: (summary: PerformanceSummary | null) => void
+}
 
+export const LeaderboardTable: FC<Props> = ({
+  count,
+  className,
+  showCTA = true,
+  fetchLatestRun,
+  startCountdown,
+  onPerformanceSummary,
+}) => {
+  const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns)
   const userSpeedRunIds = useMemo(
-    () => completedSpeedruns.map((run) => run.id),
-    [completedSpeedruns],
+    () => completedSpeedRuns.map((run) => run.id),
+    [completedSpeedRuns],
   )
+  const latestRunId = fetchLatestRun
+    ? (completedSpeedRuns[completedSpeedRuns.length - 1]?.id ?? null)
+    : null
 
-  const latestRunId = useMemo(
-    () => completedSpeedruns[completedSpeedruns.length - 1]?.id ?? null,
-    [completedSpeedruns],
-  )
-
-  const { data: leaderboardRuns = [], isPending: isLeaderboardPending } = useQuery({
+  const { data: leaderboardRuns = [], isPending: isLoadingLeaderboard } = useQuery({
     queryKey: ['speedrun-leaderboard', count, latestRunId],
     queryFn: () => getSpeedrunData(count),
     staleTime: 30_000,
   })
 
   const latestRunIsRanked =
-    typeof latestRunId === 'number' && leaderboardRuns.some((run) => run.id === latestRunId)
+    !!latestRunId && leaderboardRuns.some((run) => run.id === latestRunId)
 
-  const shouldFetchRecentRun = Boolean(
-    fetchPlayerRecentPosition && latestRunId && !isLeaderboardPending && !latestRunIsRanked,
-  )
+  const shouldFetchRecentRun = !!latestRunId && !isLoadingLeaderboard && !latestRunIsRanked
 
-  const { data: userRecentRunData } = useQuery({
+  const { data: recentRun } = useQuery({
     queryKey: ['speedrun-recent-run', latestRunId],
     queryFn: () => getSpeedrunPosition(latestRunId as number),
     enabled: shouldFetchRecentRun,
     staleTime: 30_000,
   })
 
-  return {
-    count,
-    isLoading: isLeaderboardPending,
-    userRecentRun: shouldFetchRecentRun ? (userRecentRunData ?? null) : null,
-    leaderboardRuns,
-    userSpeedRunIds,
-    showCTA: showCTARow,
-  }
-}
-
-type TableProps = {
-  count: number
-  className?: string
-  isLoading: boolean
-  leaderboardRuns: SpeedRunDatabase[] // Those within the top `count`
-  userSpeedRunIds: number[] // IDs of the user's completed speedruns
-  userRecentRun: RunWithPosition | null // The user's most recent speedrun, if applicable
-  showCTA?: boolean
-  onStartSpeedRun?: () => void
-}
-
-export const LeaderboardTable: FC<TableProps> = ({
-  count,
-  className,
-  isLoading,
-  showCTA = true,
-  userSpeedRunIds = [],
-  leaderboardRuns,
-  userRecentRun,
-  onStartSpeedRun,
-}) => {
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
-  const showCTARow = showCTA && !!onStartSpeedRun
+  const showCTARow = showCTA && !!startCountdown
+
+  const latestRun = completedSpeedRuns[completedSpeedRuns.length - 1] ?? null
+
+  useEffect(() => {
+    if (!onPerformanceSummary) return
+
+    if (isLoadingLeaderboard || !latestRun) {
+      onPerformanceSummary(null)
+      return
+    }
+
+    let previousBestTimeS: number | null = null
+    if (completedSpeedRuns.length > 1) {
+      let best = Number.POSITIVE_INFINITY
+      for (let index = 0; index < completedSpeedRuns.length - 1; index += 1) {
+        const time = completedSpeedRuns[index]?.time
+        if (typeof time === 'number' && time < best) best = time
+      }
+      previousBestTimeS = Number.isFinite(best) ? best : null
+    }
+
+    const latestRankInTop = leaderboardRuns.findIndex((run) => run.id === latestRun.id)
+
+    const bestLeaderboardTimeS =
+      leaderboardRuns.length > 0 ? (leaderboardRuns[0]?.time ?? null) : null
+
+    const latestRunRank: number | null =
+      latestRun == null
+        ? null
+        : latestRankInTop >= 0
+          ? latestRankInTop + 1
+          : recentRun && recentRun.run.id === latestRun.id
+            ? recentRun.position
+            : null
+
+    const summary = getSpeedrunPerformanceSummary({
+      latestRunTimeS: latestRun?.time ?? null,
+      latestRunRank,
+      leaderboardCount: count,
+      bestLeaderboardTimeS,
+      previousBestTimeS,
+      totalRunsCompleted: completedSpeedRuns.length,
+      latestAttempt: latestRun?.attempt ?? null,
+    })
+
+    onPerformanceSummary(summary)
+  }, [
+    completedSpeedRuns,
+    count,
+    isLoadingLeaderboard,
+    latestRun,
+    leaderboardRuns,
+    onPerformanceSummary,
+    recentRun,
+  ])
 
   return (
     <section
@@ -89,7 +119,7 @@ export const LeaderboardTable: FC<TableProps> = ({
         'grid max-h-full w-full max-w-xl grid-cols-[auto_2fr_1fr_0.5fr] gap-x-4 overflow-y-auto',
         className,
       )}>
-      {isLoading
+      {isLoadingLeaderboard
         ? placeholderRows.map((_, index) => (
             <LoadingRow key={`loading-${index}`} index={index} />
           ))
@@ -101,17 +131,17 @@ export const LeaderboardTable: FC<TableProps> = ({
               flag={entry.flag}
               position={index + 1}
               isCurrentUser={userSpeedRunIds.includes(entry.id)}
-              isLatestRun={entry.id === userRecentRun?.run.id}
+              isLatestRun={entry.id === recentRun?.run.id}
             />
           ))}
 
-      {!isLoading && !!userRecentRun && (
+      {!isLoadingLeaderboard && !!recentRun && (
         <LeaderboardRow
-          key={userRecentRun!.run.id}
-          username={userRecentRun!.run.username}
-          time={userRecentRun!.run.time}
-          flag={userRecentRun!.run.flag}
-          position={userRecentRun!.position}
+          key={recentRun.run.id}
+          username={recentRun.run.username}
+          time={recentRun.run.time}
+          flag={recentRun.run.flag}
+          position={recentRun.position}
           isCurrentUser={true}
           isLatestRun={true}
         />
@@ -129,7 +159,7 @@ export const LeaderboardTable: FC<TableProps> = ({
           flag={
             <button
               type="button"
-              onClick={onStartSpeedRun}
+              onClick={startCountdown}
               className="absolute right-6 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
               aria-label="Start speed run">
               <PlayIcon className="size-5" strokeWidth={2} />

@@ -127,12 +127,6 @@ function getInfoZonePropsForIndex(
 
 // const pad = (value: number): string => value.toString().padStart(2, '0')
 
-// const tableData = useLeaderboardTableData({
-//   count: 5,
-//   fetchPlayerRecentPosition: false,
-//   showCTARow: true,
-// })
-
 // const timeContainer = useRef<HTMLDivElement | null>(null)
 
 // const onTimeChange = useCallback(

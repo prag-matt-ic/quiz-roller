@@ -23,10 +23,12 @@ function useControls() {
   const disableInput = isPlayerLocked || (isSpeedRunMode && isDisabledStage)
 
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
+  const setPlayerInputIntent = useGameStore((s) => s.setPlayerInputIntent)
 
   return {
     disableInput,
     setPlayerInput,
+    setPlayerInputIntent,
   }
 }
 
@@ -40,7 +42,7 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
     <div
       className={twJoin(
         'flex h-7 w-10 items-center justify-center rounded-md text-black',
-        isActive ? 'bg-white/50' : 'bg-white',
+        isActive ? 'bg-white/80' : 'bg-white/50',
       )}>
       <Icon size={16} strokeWidth={3} />
     </div>
@@ -48,14 +50,16 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
 }
 
 const Keys: FC = () => {
-  const { disableInput, setPlayerInput } = useControls()
-  const playerInput = useGameStore((s) => s.playerInput)
-  const input = useRef<PlayerInput>(playerInput)
+  const { disableInput, setPlayerInput, setPlayerInputIntent } = useControls()
+  const playerInputIntent = useGameStore((s) => s.playerInputIntent)
+  const input = useRef<PlayerInput>(playerInputIntent)
 
   useEffect(() => {
     if (disableInput) {
-      setPlayerInput({ up: 0, down: 0, left: 0, right: 0 })
-      input.current = { up: 0, down: 0, left: 0, right: 0 }
+      const zeroInput = { up: 0, down: 0, left: 0, right: 0 }
+      setPlayerInputIntent(zeroInput)
+      setPlayerInput(zeroInput)
+      input.current = zeroInput
       return
     }
 
@@ -63,7 +67,7 @@ const Keys: FC = () => {
       if (input.current[key] === value) return
       const nextInput = { ...input.current, [key]: value }
       input.current = nextInput
-      setPlayerInput(nextInput)
+      setPlayerInputIntent(nextInput)
     }
 
     const handleKeyDown = (key: keyof PlayerInput) => {
@@ -124,16 +128,16 @@ const Keys: FC = () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [disableInput, setPlayerInput])
+  }, [disableInput, setPlayerInput, setPlayerInputIntent])
 
   return (
     <aside className="pointer-events-none fixed right-4 bottom-4 z-50 grid h-fit w-fit grid-cols-3 gap-1 place-self-end">
       <div />
-      <Key Icon={ArrowUp} isActive={playerInput.up > 0} />
+      <Key Icon={ArrowUp} isActive={playerInputIntent.up > 0} />
       <div />
-      <Key Icon={ArrowLeft} isActive={playerInput.left > 0} />
-      <Key Icon={ArrowDown} isActive={playerInput.down > 0} />
-      <Key Icon={ArrowRight} isActive={playerInput.right > 0} />
+      <Key Icon={ArrowLeft} isActive={playerInputIntent.left > 0} />
+      <Key Icon={ArrowDown} isActive={playerInputIntent.down > 0} />
+      <Key Icon={ArrowRight} isActive={playerInputIntent.right > 0} />
     </aside>
   )
 }
@@ -148,21 +152,21 @@ const MovementControls: FC = () => {
 }
 
 const Stick: FC = () => {
-  const { disableInput, setPlayerInput } = useControls()
+  const { disableInput, setPlayerInputIntent } = useControls()
   const JOYSTICK_LEVELS = 10
   const joystickPosition = useGameStore((s) => s.joystickPosition)
 
   const onJoystickMove = useCallback(
     (e: OnJoystickMove) => {
       if (disableInput) return
-      setPlayerInput({
+      setPlayerInputIntent({
         up: e.leveledY > 0 ? Math.min(e.leveledY / JOYSTICK_LEVELS, 1) : 0,
         down: e.leveledY < 0 ? Math.min(-e.leveledY / JOYSTICK_LEVELS, 1) : 0,
         left: e.leveledX < 0 ? Math.min(-e.leveledX / JOYSTICK_LEVELS, 1) : 0,
         right: e.leveledX > 0 ? Math.min(e.leveledX / JOYSTICK_LEVELS, 1) : 0,
       })
     },
-    [disableInput, setPlayerInput],
+    [disableInput, setPlayerInputIntent],
   )
 
   return (

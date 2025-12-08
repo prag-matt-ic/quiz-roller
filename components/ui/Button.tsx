@@ -14,7 +14,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const BASE_CLASSES =
-  'flex w-fit h-fit cursor-pointer disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold'
+  'relative flex w-fit h-fit cursor-pointer disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold'
 
 const SIZE_CLASSES = {
   sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
@@ -23,9 +23,9 @@ const SIZE_CLASSES = {
 }
 
 const ICON_SIZE_CLASSES = {
-  sm: 'size-3.5 lg:size-4',
-  md: 'size-4 lg:size-5',
-  lg: 'size-5 lg:size-6',
+  sm: 'size-3.5 xl:size-4',
+  md: 'size-4 xl:size-5',
+  lg: 'size-5 xl:size-6',
 }
 
 const COLOUR_CLASSES = {

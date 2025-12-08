@@ -1,6 +1,6 @@
 'use client'
 
-import { ExpandIcon, Eye, ToolCaseIcon } from 'lucide-react'
+import { WrenchIcon } from 'lucide-react'
 import { type ChangeEvent, type FC, type ReactNode, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
@@ -142,7 +142,7 @@ const DebugControls: FC = () => {
       )}
 
       <button onClick={() => setIsOpen((prev) => !prev)}>
-        <ToolCaseIcon />
+        <WrenchIcon />
       </button>
     </div>
   )

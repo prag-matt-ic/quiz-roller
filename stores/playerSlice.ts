@@ -16,10 +16,10 @@ import {
 } from './types'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
-export const PLAYER_SPEED_BASE = 7.0 // units per second
-export const PLAYER_SPEED_MAX = 10.0
-const RING_SPEED_INCREMENT = 0.3
-const SPEED_COOLDOWN_S = 5.0
+export const PLAYER_SPEED_BASE = 8.0 // units per second
+export const PLAYER_SPEED_MAX = 11.0
+const RING_SPEED_INCREMENT = 0.5
+const SPEED_COOLDOWN_S = 6.0
 const COLLECTIBLE_DURATION_S = 1.5
 
 export const RESET_PLAYER_STATE: Pick<
@@ -146,7 +146,9 @@ export const createPlayerSlice =
         if (get().collectedRings[ringKey]) return
         const totalRingsCount = get().totalCounts.rings
         const newCollectedRings: RingCollection = { ...get().collectedRings, [ringKey]: true }
-        const hasCollectedAllRings = Object.keys(newCollectedRings).length >= totalRingsCount
+
+        const playerRingsCount = Object.keys(newCollectedRings).length
+        const hasCollectedAllRings = playerRingsCount >= totalRingsCount
         if (hasCollectedAllRings) {
           console.warn('[PlayerStore] All rings collected!')
         }
@@ -224,6 +226,12 @@ export const createPlayerSlice =
           spawnPosition: null, // Calculated in usePlayerRespawn hook
           fallCount: s.fallCount + 1,
           playerInput: {
+            up: 0,
+            down: 0,
+            left: 0,
+            right: 0,
+          },
+          playerInputIntent: {
             up: 0,
             down: 0,
             left: 0,

@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
-import usePlayerInput from '@/hooks/usePlayerInput'
+import { usePlayerInput } from '@/hooks/usePlayerInput'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
 import useStage from '@/hooks/useStage'
 import { Overlay } from '@/stores/types'
@@ -61,6 +61,8 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
 
   const isOverlayOpen = useGameStore((s) => s.overlay !== Overlay.NONE)
+  const overlayZOffset = isOverlayOpen ? 3.0 : 0
+  const overlayYOffset = isOverlayOpen ? 5.5 : 0
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE
@@ -97,21 +99,19 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     const lookAt = cameraLookAtPosition ?? playerPosition.current
 
-    // Adjust the camera based on player input
-    const positionZOffset = input.current.down > 0 ? 5 : 0
-    const dashboardZOffset = isOverlayOpen ? 3.0 : 0
-    const dashboardYOffset = isOverlayOpen ? 5.5 : 0
+    // Adjust the position based on player input
+    const positionZOffset = input.current.down * 5.0 - input.current.up * -3.0
 
-    const lookAtX = lookAt[0] + input.current.right - input.current.left
-    const lookAtZ = lookAt[2] + input.current.down - input.current.up
+    // Look left or right based on player input
+    const lookAtX = lookAt[0] + (input.current.right - input.current.left) * 1.5
 
     cameraControls.current.setLookAt(
       playerPosition.current[0],
-      stageCameraPosition.y + dashboardYOffset,
-      stageCameraPosition.z + positionZOffset + dashboardZOffset,
+      stageCameraPosition.y + overlayYOffset,
+      stageCameraPosition.z + positionZOffset + overlayZOffset,
       lookAtX,
       3,
-      lookAtZ,
+      lookAt[2],
       true,
     )
   })

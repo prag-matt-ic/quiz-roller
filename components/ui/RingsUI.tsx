@@ -8,20 +8,19 @@ import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
 
 const RingsUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
-  const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
+  // const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
   const collectedRingCount = Object.keys(collectedRings).length
 
   return (
-    <div className="pointer-events-auto flex items-center gap-3 text-sm">
-      <div
-        className={twJoin(
-          'relative flex aspect-square size-9 items-center justify-center rounded-full bg-black/40 font-mono leading-none font-bold tracking-wide',
-          collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
-        )}>
-        <SpeedBoostDial className="absolute size-12.5" />
+    <div
+      className={twJoin(
+        'relative flex items-center justify-center place-self-center',
+        collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
+      )}>
+      <SpeedBoostDial className="size-14 xl:size-16" />
+      <span className="absolute text-center font-mono text-sm leading-none font-bold tracking-wide xl:text-base">
         {collectedRingCount}
-      </div>
-      <span className="font-mono tracking-wide">{totalRingsCount}</span>
+      </span>
     </div>
   )
 }

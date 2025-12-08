@@ -1,12 +1,21 @@
-import { type GameSliceCreator, type InputSlice, InputType, type SliceDeps } from './types'
+import {
+  type GameSliceCreator,
+  type InputSlice,
+  InputType,
+  type PlayerInput,
+  type SliceDeps,
+} from './types'
 
-export const getResetInputState = (): Pick<InputSlice, 'playerInput'> => ({
-  playerInput: {
-    up: 0,
-    down: 0,
-    left: 0,
-    right: 0,
-  },
+const createZeroInput = (): PlayerInput => ({
+  up: 0,
+  down: 0,
+  left: 0,
+  right: 0,
+})
+
+export const getResetInputState = (): Pick<InputSlice, 'playerInput' | 'playerInputIntent'> => ({
+  playerInput: createZeroInput(),
+  playerInputIntent: createZeroInput(),
 })
 
 export const createInputSlice =
@@ -23,6 +32,9 @@ export const createInputSlice =
       },
       setJoystickPosition: (position) => {
         set({ joystickPosition: position })
+      },
+      setPlayerInputIntent(input) {
+        set({ playerInputIntent: input })
       },
       setPlayerInput(input) {
         set({ playerInput: input })

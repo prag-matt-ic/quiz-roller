@@ -70,20 +70,22 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
         ref={refs.setReference}
         {...getReferenceProps()}
         className={twJoin('pointer-events-auto relative cursor-pointer')}>
+        {/* Colour */}
         <GemIcon
           size={40}
-          strokeWidth={0.25}
+          strokeWidth={0}
           className={twJoin(
             'absolute inset-0 size-7 text-transparent transition-opacity xl:size-10',
             isCollected ? 'scale-120 fill-(--icon-colour)/60' : '',
           )}
         />
+        {/* Border */}
         <GemIcon
           size={40}
           strokeWidth={0.75}
           className={twJoin(
             'relative size-7 text-white xl:size-10',
-            isCollected ? 'scale-120 opacity-80' : 'opacity-30',
+            isCollected ? 'scale-120 opacity-100' : 'opacity-35',
           )}
         />
       </div>
