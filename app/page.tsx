@@ -2,14 +2,13 @@ import dynamic from 'next/dynamic'
 import { type FC } from 'react'
 import { twJoin } from 'tailwind-merge'
 
+import { insertSpeedRun } from '@/app/actions'
 import { GameProvider } from '@/components/GameProvider'
 import { QueryProvider } from '@/components/QueryProvider'
 import { SoundProvider } from '@/components/SoundProvider'
 import PWAInstall from '@/components/ui/PWAInstall'
 import LandingOverlay from '@/components/ui/landing/LandingOverlay'
 import isMobileServer from '@/utils/isMobileServer'
-
-import { insertSpeedRun } from './actions'
 
 const Main = dynamic(() => import('@/components/Main'))
 

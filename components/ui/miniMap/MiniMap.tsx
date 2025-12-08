@@ -1,3 +1,4 @@
+import { useMediaQuery } from '@mantine/hooks'
 import Image from 'next/image'
 import { type FC, useEffect, useRef } from 'react'
 import { twJoin } from 'tailwind-merge'
@@ -16,9 +17,9 @@ const MINI_MAP_ASSET_PATHS: Record<GameMode, string> = {
   [GameMode.DEV]: `${MINI_MAP_ASSET_BASE}/dev.svg`,
 }
 
-const PLAYER_SIZE_PX = 8
-const PLAYER_INDICATOR_Y_OFFSET_PX = PLAYER_SIZE_PX * 8
-const MAP_TILE_SIZE_PX = 4
+const BASE_PLAYER_SIZE_PX = 8
+const BASE_PLAYER_INDICATOR_Y_OFFSET_PX = BASE_PLAYER_SIZE_PX * 8
+const BASE_MAP_TILE_SIZE_PX = 4
 const PROGRESS_PADDING_ROWS = 5
 
 type ProgressWindow = {
@@ -39,18 +40,19 @@ const getProgressWindow = (totalRows: number): ProgressWindow => {
   }
 }
 
-type Props = {
-  isMobile: boolean
-}
-
-const MiniMap: FC<Props> = ({ isMobile }) => {
+const MiniMap: FC = () => {
+  const gameStoreAPI = useGameStoreAPI()
   const mode = useGameStore((s) => s.mode)
   const totalRows = useGameStore((s) => s.totalCounts.rows)
-  const gameStoreAPI = useGameStoreAPI()
-
   const isUsingJoystick = useGameStore((s) => s.inputType === InputType.JOYSTICK)
   const joystickIsOnLeft = useGameStore((s) => s.joystickPosition === 'left')
   const isMapOnRight = isUsingJoystick && joystickIsOnLeft
+
+  const isXL = useMediaQuery('(min-width: 1280px)', true)
+  const sizeScale = isXL ? 1 : 0.5
+  const playerSizePx = BASE_PLAYER_SIZE_PX * sizeScale
+  const playerIndicatorYOffsetPx = BASE_PLAYER_INDICATOR_Y_OFFSET_PX * sizeScale
+  const mapTileSizePx = BASE_MAP_TILE_SIZE_PX * sizeScale
 
   const {
     maxRowIndex: initialMaxRowIndex,
@@ -60,7 +62,7 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
 
   const totalRowsRef = useRef(totalRows)
   const rowsToPixelsRef = useRef(
-    totalRows === 0 ? 0 : (MAP_TILE_SIZE_PX * totalRows) / Math.max(1, initialMaxRowIndex),
+    totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / Math.max(1, initialMaxRowIndex),
   )
   const maxRowIndexRef = useRef(initialMaxRowIndex)
   const progressStartRowRef = useRef(initialProgressStartRow)
@@ -75,10 +77,10 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
     const { maxRowIndex, progressRange, progressStartRow } = getProgressWindow(totalRows)
     maxRowIndexRef.current = maxRowIndex
     const denominator = Math.max(1, maxRowIndex)
-    rowsToPixelsRef.current = totalRows === 0 ? 0 : (MAP_TILE_SIZE_PX * totalRows) / denominator
+    rowsToPixelsRef.current = totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / denominator
     progressStartRowRef.current = progressStartRow
     progressRangeRef.current = progressRange
-  }, [totalRows])
+  }, [mapTileSizePx, totalRows])
 
   const { playerPosition } = usePlayerPosition()
 
@@ -102,9 +104,9 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
       if (row === EMPTY_ROW_INDEX) return
 
       const clampedRow = Math.min(maxRowIndexRef.current, Math.max(0, row))
-      const translateY = clampedRow * rowsToPixelsRef.current - PLAYER_INDICATOR_Y_OFFSET_PX
+      const translateY = clampedRow * rowsToPixelsRef.current - playerIndicatorYOffsetPx
       const xPositionInTileUnits = playerX / TILE_SIZE
-      const translateX = -xPositionInTileUnits * MAP_TILE_SIZE_PX
+      const translateX = -xPositionInTileUnits * mapTileSizePx
 
       if (translateX === lastXRef && translateY === lastYRef) return
       lastXRef = translateX
@@ -135,7 +137,7 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
       cancelAnimationFrame(animationFrameId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameStoreAPI])
+  }, [gameStoreAPI, mapTileSizePx, playerIndicatorYOffsetPx])
 
   return (
     <aside
@@ -145,15 +147,15 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
         isMapOnRight ? 'right-3' : 'left-3',
       )}
       style={{
-        width: COLUMNS * MAP_TILE_SIZE_PX,
-        height: COLUMNS * MAP_TILE_SIZE_PX,
+        width: COLUMNS * mapTileSizePx,
+        height: COLUMNS * mapTileSizePx,
       }}>
       <Image
         src={miniMapAsset}
         ref={mapRef}
         alt="Mini Map"
-        width={MAP_TILE_SIZE_PX * COLUMNS}
-        height={MAP_TILE_SIZE_PX * totalRows}
+        width={mapTileSizePx * COLUMNS}
+        height={mapTileSizePx * totalRows}
         className="absolute bottom-0 transition-transform duration-100 ease-linear will-change-transform"
         style={{
           transform: 'translate3d(0,0,0)',
@@ -163,9 +165,9 @@ const MiniMap: FC<Props> = ({ isMobile }) => {
         id="mini-map-player"
         className="absolute z-20 rounded-full bg-white"
         style={{
-          bottom: PLAYER_INDICATOR_Y_OFFSET_PX - PLAYER_SIZE_PX / 2,
-          width: PLAYER_SIZE_PX,
-          height: PLAYER_SIZE_PX,
+          bottom: playerIndicatorYOffsetPx - playerSizePx / 2,
+          width: playerSizePx,
+          height: playerSizePx,
         }}
       />
       <div

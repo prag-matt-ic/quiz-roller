@@ -69,7 +69,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         </SwitchTransition>
       </div>
 
-      {/* Top Right Menu toggle */}
+      {/* Top Right Dashboard toggle */}
       <button
         type="button"
         onClick={() => {
@@ -79,7 +79,7 @@ const UI: FC<Props> = ({ isMobile }) => {
             setOverlay(Overlay.DASHBOARD)
           }
         }}
-        className="pointer-events-auto fixed top-3 right-3 z-300 flex items-center justify-self-end rounded-xl border border-black/40 bg-black/30 p-3 text-xs text-white uppercase transition hover:border-black/30 hover:bg-black/20">
+        className="pointer-events-auto fixed top-3 right-3 z-300 flex items-center rounded-xl border border-black/40 bg-black/30 p-3 text-xs text-white uppercase transition hover:border-black/30 hover:bg-black/20">
         {overlay === Overlay.DASHBOARD ? (
           <XIcon className="size-4 lg:size-6" />
         ) : (
@@ -87,7 +87,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         )}
       </button>
 
-      <MiniMap isMobile={isMobile} />
+      <MiniMap />
       <MovementControls />
 
       {/* Fullscreen overlays */}

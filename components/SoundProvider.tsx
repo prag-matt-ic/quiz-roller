@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { type StoreApi, createStore, useStore } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export enum SoundFX {
   BACKGROUND_EXPLORE = 'BACKGROUND_EXPLORE',
@@ -47,6 +48,8 @@ type SoundState = {
   stopSoundFX: (fx: SoundFX) => void
   stopAllSounds: () => void
 }
+
+type PersistedSoundState = Pick<SoundState, 'isMuted'>
 
 type SoundStore = StoreApi<SoundState>
 const SoundContext = createContext<SoundStore>(undefined!)
@@ -153,81 +156,89 @@ const createSoundStore = () => {
     audioBuffers = Object.fromEntries(loadedBuffers)
   }
 
-  return createStore<SoundState>()((set, get) => ({
-    isLoading: true,
-    isMuted: true,
+  return createStore<SoundState>()(
+    persist<SoundState, [], [], PersistedSoundState>(
+      (set, get) => ({
+        isLoading: true,
+        isMuted: true,
 
-    initialise: async () => {
-      if (!initialisationPromise) {
-        initialisationPromise = loadAllSounds().finally(() => set({ isLoading: false }))
-      }
-      await initialisationPromise
-    },
+        initialise: async () => {
+          if (!initialisationPromise) {
+            initialisationPromise = loadAllSounds().finally(() => set({ isLoading: false }))
+          }
+          await initialisationPromise
+        },
 
-    setIsMuted: (isMuted: boolean) => {
-      const { playSoundFX, stopAllSounds } = get()
-      set({ isMuted })
-      if (!isMuted) {
-        playSoundFX(SoundFX.BACKGROUND_EXPLORE, true)
-      } else {
-        stopAllSounds()
-      }
-    },
+        setIsMuted: (isMuted: boolean) => {
+          const { playSoundFX, stopAllSounds } = get()
+          set({ isMuted })
+          if (!isMuted) {
+            playSoundFX(SoundFX.BACKGROUND_EXPLORE, true)
+          } else {
+            stopAllSounds()
+          }
+        },
 
-    stopAllSounds: () => {
-      const sources = Array.from(activeSources)
-      sources.forEach((source) => {
-        const gainNode = gainNodesBySource.get(source)
-        if (gainNode && audioContext) {
-          const now = audioContext.currentTime
-          gainNode.gain.cancelScheduledValues(now)
-        }
-        stopSourceImmediately(source)
-      })
-      gainNodesBySource.clear()
-      activeSources.clear()
-    },
+        stopAllSounds: () => {
+          const sources = Array.from(activeSources)
+          sources.forEach((source) => {
+            const gainNode = gainNodesBySource.get(source)
+            if (gainNode && audioContext) {
+              const now = audioContext.currentTime
+              gainNode.gain.cancelScheduledValues(now)
+            }
+            stopSourceImmediately(source)
+          })
+          gainNodesBySource.clear()
+          activeSources.clear()
+        },
 
-    playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
-      if (get().isMuted) return
+        playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
+          if (get().isMuted) return
 
-      const startPlayback = async () => {
-        await ensureContext()
-        if (!audioBuffers[fx]) {
-          await get().initialise()
-        }
-        const audioBuffer = audioBuffers[fx]
-        if (!audioBuffer) {
-          console.error(`[SoundProvider] Missing buffer for ${fx} after init`)
-          return
-        }
-        const bufferSource = audioContext!.createBufferSource()
-        bufferSource.buffer = audioBuffer
-        bufferSource.loop = loop
-        const gainNode = audioContext!.createGain()
-        gainNode.gain.value = DEFAULT_SOURCE_GAIN
-        bufferSource.connect(gainNode)
-        gainNode.connect(masterGain!)
-        registerSource(bufferSource, gainNode)
-        bufferSource.start(0)
-      }
+          const startPlayback = async () => {
+            await ensureContext()
+            if (!audioBuffers[fx]) {
+              await get().initialise()
+            }
+            const audioBuffer = audioBuffers[fx]
+            if (!audioBuffer) {
+              console.error(`[SoundProvider] Missing buffer for ${fx} after init`)
+              return
+            }
+            const bufferSource = audioContext!.createBufferSource()
+            bufferSource.buffer = audioBuffer
+            bufferSource.loop = loop
+            const gainNode = audioContext!.createGain()
+            gainNode.gain.value = DEFAULT_SOURCE_GAIN
+            bufferSource.connect(gainNode)
+            gainNode.connect(masterGain!)
+            registerSource(bufferSource, gainNode)
+            bufferSource.start(0)
+          }
 
-      try {
-        await startPlayback()
-      } catch (err) {
-        console.error(`[SoundProvider] Failed to play ${fx}`, err)
-      }
-    },
+          try {
+            await startPlayback()
+          } catch (err) {
+            console.error(`[SoundProvider] Failed to play ${fx}`, err)
+          }
+        },
 
-    stopSoundFX: (fx: SoundFX) => {
-      if (!audioContext) return
-      activeSources.forEach((source) => {
-        if (!source.buffer) return
-        if (audioBuffers[fx] !== source.buffer) return
-        fadeOutSource(source, STOP_FX_FADE_SECONDS)
-      })
-    },
-  }))
+        stopSoundFX: (fx: SoundFX) => {
+          if (!audioContext) return
+          activeSources.forEach((source) => {
+            if (!source.buffer) return
+            if (audioBuffers[fx] !== source.buffer) return
+            fadeOutSource(source, STOP_FX_FADE_SECONDS)
+          })
+        },
+      }),
+      {
+        name: 'quizroller-sound',
+        partialize: (state) => ({ isMuted: state.isMuted }),
+      },
+    ),
+  )
 }
 
 export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {

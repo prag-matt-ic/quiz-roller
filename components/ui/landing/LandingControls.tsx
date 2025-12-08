@@ -11,7 +11,7 @@ import {
 import {
   type Dispatch,
   type FC,
-  ReactNode,
+  type ReactNode,
   type SetStateAction,
   useEffect,
   useState,
@@ -20,13 +20,11 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { useSoundStore } from '@/components/SoundProvider'
+import Button from '@/components/ui/Button'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
-import CTAButton from '@/components/ui/CTAButton'
+import { PointerProvider } from '@/components/ui/PointerProvider'
+import Panel from '@/components/ui/panel/Panel'
 import { InputType } from '@/stores/types'
-
-import Button from '../Button'
-import { PointerProvider } from '../PointerProvider'
-import Panel from '../panel/Panel'
 
 type Props = {
   isLoaded: boolean
@@ -40,13 +38,14 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
     { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
   ]
 
+  const isMuted = useSoundStore((s) => s.isMuted)
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
   const inputType = useGameStore((s) => s.inputType)
   const setInputType = useGameStore((s) => s.setInputType)
   const joystickPosition = useGameStore((s) => s.joystickPosition)
   const setJoystickPosition = useGameStore((s) => s.setJoystickPosition)
 
-  const [startMuted, setStartMuted] = useState(false)
+  const [startMuted, setStartMuted] = useState(isMuted)
   const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
 
   const canStart = isLoaded && (!isMobile || isMobileLandscape)
