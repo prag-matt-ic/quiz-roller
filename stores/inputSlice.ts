@@ -15,6 +15,7 @@ export const createInputSlice =
     const initialInputType: InputType = isMobile ? InputType.JOYSTICK : InputType.KEYS
     return {
       ...getResetInputState(),
+      isMobile,
       inputType: initialInputType,
       joystickPosition: 'right',
       setInputType: (type: InputType) => {

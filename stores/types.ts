@@ -71,6 +71,7 @@ export enum InputType {
 }
 
 export type InputSlice = {
+  isMobile: boolean
   inputType: InputType
   setInputType: (type: InputType) => void
   joystickPosition: 'left' | 'right'

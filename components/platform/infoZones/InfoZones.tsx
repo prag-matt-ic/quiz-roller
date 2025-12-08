@@ -1,8 +1,8 @@
 import { type FC, type RefObject, useCallback, useEffect, useImperativeHandle } from 'react'
 
 import infoIcon from '@/assets/icons/info-icon.png'
-import timerIcon from '@/assets/icons/timer-icon.png'
-import trophyIcon from '@/assets/icons/trophy-icon.png'
+// import timerIcon from '@/assets/icons/timer-icon.png'
+// import trophyIcon from '@/assets/icons/trophy-icon.png'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone, type InfoZoneProps } from '@/components/platform/infoZones/infoZone/InfoZone'
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
@@ -118,9 +118,8 @@ function getInfoZonePropsForIndex(
   | 'infoPositionOffset'
   | 'sphereColour'
 > {
-  // Info Content
   return {
-    infoContainerClassName: 'max-w-4/5 w-180',
+    infoContainerClassName: 'w-[360px] xl:w-[480px]',
     iconSrc: infoIcon.src,
     sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
   }

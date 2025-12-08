@@ -90,12 +90,13 @@ export const InfoZone: FC<InfoZoneProps> = ({
   isVisible,
   infoContainerClassName,
   children,
-  infoPositionOffset = [0, 0, 3],
+  infoPositionOffset = [0, 0, 3.5],
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
   iconSrc,
   sphereColour,
 }) => {
+  const isMobile = useGameStore((s) => s.isMobile)
   const htmlPortal = useGameStore((s) => s.htmlPortal)
   const setCameraLookAtPosition = useGameStore((s) => s.setCameraLookAtPosition)
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
@@ -251,10 +252,8 @@ export const InfoZone: FC<InfoZoneProps> = ({
             nodeRef={infoContainer}>
             <InfoContentPanel
               ref={infoContainer}
-              className={twMerge(
-                'relative size-fit max-w-[calc(100vw-56px)]',
-                infoContainerClassName,
-              )}>
+              isMobile={isMobile}
+              className={twMerge('relative size-fit', infoContainerClassName)}>
               {children}
             </InfoContentPanel>
           </Transition>
@@ -264,12 +263,16 @@ export const InfoZone: FC<InfoZoneProps> = ({
   )
 }
 
-const InfoContentPanel: FC<
-  PropsWithChildren<{ ref: RefObject<HTMLDivElement | null>; className?: string }>
-> = ({ children, className, ref }) => {
+type PanelProps = PropsWithChildren<{
+  ref: RefObject<HTMLDivElement | null>
+  className?: string
+  isMobile: boolean
+}>
+
+const InfoContentPanel: FC<PanelProps> = ({ children, isMobile, className, ref }) => {
   return (
     <div ref={ref} className={className}>
-      <PointerProvider isMobile={false}>{children}</PointerProvider>
+      <PointerProvider isMobile={isMobile}>{children}</PointerProvider>
     </div>
   )
 }

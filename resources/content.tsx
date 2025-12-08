@@ -98,10 +98,10 @@ export const HEADINGS_CONTENT: string[] = [
 //
 
 export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
-  <Panel key="info-welcome">
+  <Panel key="info-welcome" strength={3}>
     <PanelHeader icon={CompassIcon} label="Explore the map" />
 
-    <p className="paragraph-lg mt-3 block max-w-md font-semibold">
+    <p className="mt-3 block max-w-md text-sm font-semibold xl:text-lg">
       Practice movement and learn the terrain before competing against the clock to claim your
       place on the leaderboard.
       <br />
@@ -113,7 +113,7 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
   <Panel key="info-ai" className="row-span-2 mx-auto w-fit p-4 lg:p-8" strength={3}>
     <PanelHeader icon={LightbulbIcon} label="The era of ideas" />
 
-    <p className="paragraph mt-3 max-w-md">
+    <p className="mt-3 max-w-md text-sm xl:text-lg">
       As builders utilising AI, we have more time than ever to focus on unique ideas and
       crafting memorable user experiences.
       <br />
@@ -122,44 +122,30 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
     </p>
   </Panel>,
 
-  <div
-    key="info-about"
-    className="grid w-full grid-cols-2 grid-rows-[auto_auto] gap-3 lg:gap-4">
-    <Panel strength={3}>
-      <PanelHeader icon={BoxIcon} label="Technologies Used" />
-
-      <ul className="paragraph-sm mt-3 list-inside list-disc">
-        <li>
-          <b>Next.js</b> as the web framework
-        </li>
-        <li>
-          <b>React Three Fiber</b> for 3D rendering
-        </li>
-        <li>
-          <b>Rapier</b> for physics simulation and collision events
-        </li>
-        <li>
-          <b>WebGL</b> for custom materials and particle effects
-        </li>
-        <li>
-          <b>Zustand</b> for state management
-        </li>
-        <li>
-          <b>GSAP</b> for driving animations
-        </li>
-        <li>
-          <b>Tailwind CSS</b> for UI styling
-        </li>
-      </ul>
-    </Panel>
-
-    <Panel className="flex flex-col gap-3" strength={3}>
-      <Credit
-        name="Matthew Frawley"
-        role="Lead Developer"
-        url="https://github.com/prag-matt-ic"
-      />
-      <Credit name="Theo Walton" role="Developer" />
-    </Panel>
-  </div>,
+  <Panel key="info-technologies" strength={3}>
+    <PanelHeader icon={BoxIcon} label="Technologies Used" />
+    <ul className="mt-3 list-inside list-disc text-sm xl:text-base">
+      <li>
+        <b>Next.js</b> as the web framework
+      </li>
+      <li>
+        <b>React Three Fiber</b> for 3D rendering
+      </li>
+      <li>
+        <b>Rapier</b> for physics and collision events
+      </li>
+      <li>
+        <b>WebGL</b> for materials and particle effects
+      </li>
+      <li>
+        <b>Zustand</b> for state management
+      </li>
+      <li>
+        <b>GSAP</b> for driving animations
+      </li>
+      <li>
+        <b>Tailwind CSS</b> for UI styling
+      </li>
+    </ul>
+  </Panel>,
 ]
