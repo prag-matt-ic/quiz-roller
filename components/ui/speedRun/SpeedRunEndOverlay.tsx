@@ -1,5 +1,5 @@
 'use client'
-import { Trophy } from 'lucide-react'
+import { Rotate3DIcon, RotateCcwIcon, Share2Icon, SmilePlus, Trophy } from 'lucide-react'
 import { type FC } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -10,11 +10,11 @@ import { PointerProvider } from '@/components/ui/PointerProvider'
 import { RingsPanel } from '@/components/ui/dashboard/RingsPanel'
 import TimeScorePanel from '@/components/ui/dashboard/TimeScorePanel'
 import { TimesFallenPanel } from '@/components/ui/dashboard/TimesFallenPanel'
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { useWebShare } from '@/hooks/useWebShare'
 import { GameMode } from '@/stores/types'
 
-import Panel from '../panel/Panel'
-import { PanelHeader } from '../panel/PanelHeader'
 import { LeaderboardTable, useLeaderboardTableData } from './LeaderboardTable'
 
 type Props = {
@@ -37,52 +37,47 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
     fetchPlayerRecentPosition: true,
     showCTARow: false,
   })
-  const attractorClassName = 'bg-emerald-400/15'
 
   return (
     <PointerProvider isMobile={isMobile}>
       <div
         ref={ref}
         className={twJoin(
-          'bg-black/35 backdrop-blur-sm',
-          'fixed inset-0 z-500 flex flex-col items-center justify-center gap-6 p-4 transition-opacity duration-300 ease-out',
+          'bg-black/40 backdrop-blur-sm',
+          'fixed inset-0 z-500 flex items-center justify-center transition-opacity duration-300 ease-out',
           transitionStatus === 'entering' && 'opacity-0',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
         )}>
-        <h2 className="text-2xl uppercase lg:text-4xl">Congratulations!</h2>
-
-        <div className="grid max-w-6xl grid-cols-1 gap-3 border *:border lg:grid-cols-2 lg:gap-4">
-          <div className="grid grid-cols-3 gap-2">
-            <TimeScorePanel className="" />
-            <RingsPanel />
-            <TimesFallenPanel className="" />
-          </div>
+        <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:gap-4">
+          <Panel className="" strength={1}>
+            <h2 className="text-2xl font-bold lg:text-4xl">Congratulations!</h2>
+            <p className="mt-3 max-w-md text-sm text-white/80 xl:text-base">
+              You completed the speedrun TODO: tailored message based on performance.
+            </p>
+          </Panel>
 
           {/* Table needs to be kept simple (e.g no access to the game store from within it otherwise it breaks in CTAELEMENTs) */}
-          {/* <LeaderboardPanel
-            count={10}
-            showCTA={false}
-            fetchPlayerRecentPosition={true}
-            className={twJoin('row-span-3', isMobile && 'overflow-y-scroll')}
-          /> */}
-
           <Panel
             strength={3}
-            className={twJoin('row-span-3 flex h-full flex-col lg:gap-3')}
-            attractorClassName={attractorClassName}>
-            <PanelHeader icon={Trophy} label="Leaderboard" className="" />
+            className={twJoin('row-span-3 row-start-3 xl:col-start-2 xl:row-start-1')}
+            attractorClassName="bg-emerald-400/15">
+            <PanelHeader icon={Trophy} label="Leaderboard" />
             <LeaderboardTable {...tableData} onStartSpeedRun={startCountdown} showCTA={false} />
           </Panel>
 
-          <div className="flex items-center justify-between gap-4">
-            <p className="flex text-xs text-white/60 lg:text-sm">
-              You completed the level, now do it again but be quicker.
-            </p>
+          <div className="col-span-full grid grid-cols-3 gap-3 xl:col-span-1 xl:gap-4">
+            <TimeScorePanel />
+            <RingsPanel />
+            <TimesFallenPanel />
+          </div>
+
+          <Panel className="flex items-center gap-3" strength={1}>
             {isShareSupported && (
               <Button
                 color="light"
                 variant="secondary"
+                endIcon={SmilePlus}
                 onClick={() => {
                   const seconds = (speedRunTimeCS / 100).toFixed(2)
                   handleShare({
@@ -93,7 +88,11 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
                 Share
               </Button>
             )}
-            <Button color="light" variant="primary" onClick={startCountdown}>
+            <Button
+              color="light"
+              variant="primary"
+              onClick={startCountdown}
+              endIcon={RotateCcwIcon}>
               Retry
             </Button>
             <Button
@@ -102,8 +101,8 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
               onClick={() => resetGame({ mode: GameMode.LEARN })}>
               Finish
             </Button>
-          </div>
-        </div>
+          </Panel>
+        </section>
       </div>
     </PointerProvider>
   )

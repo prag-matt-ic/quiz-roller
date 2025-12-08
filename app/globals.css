@@ -74,6 +74,24 @@ h6 {
     @apply text-xl font-bold text-black lg:text-2xl;
   }
 
+  /* Discreet scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/15;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/30;
+  }
+
   @keyframes reveal-logo {
     from {
       mask-position: 100% 0;

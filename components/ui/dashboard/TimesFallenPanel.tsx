@@ -16,10 +16,16 @@ export const TimesFallenPanel: FC<Props> = ({ className }) => {
 
   return (
     <Panel
-      className={twJoin('flex h-full flex-col justify-between gap-3', className)}
-      attractorClassName="bg-red-500/[0.125] bg-linear-70 from-white/10 to-transparent">
-      <PanelHeader icon={SkullIcon} label="Accidents" iconClassName="text-gray-200" />
-      <p className="text-3xl font-bold text-red-300 lg:text-5xl">{fallCount}</p>
+      className={twJoin('flex flex-col justify-between gap-3', className)}
+      attractorClassName="bg-red-500/20">
+      <PanelHeader icon={SkullIcon} iconClassName="text-red-300" label="Accidents" />
+      <p
+        className={twJoin(
+          'text-3xl font-bold xl:text-4xl',
+          fallCount > 0 ? 'text-red-400' : 'text-neutral-400',
+        )}>
+        {fallCount}
+      </p>
     </Panel>
   )
 }
