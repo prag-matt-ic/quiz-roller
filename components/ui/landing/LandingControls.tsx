@@ -1,21 +1,16 @@
 'use client'
+import { useMediaQuery } from '@mantine/hooks'
 import {
   ArrowLeft,
   ArrowRight,
   Joystick,
   Keyboard,
+  PlayIcon,
   RotateCcwIcon,
   Volume2,
   VolumeX,
 } from 'lucide-react'
-import {
-  type Dispatch,
-  type FC,
-  type ReactNode,
-  type SetStateAction,
-  useEffect,
-  useState,
-} from 'react'
+import { type FC, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -45,43 +40,26 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   const joystickPosition = useGameStore((s) => s.joystickPosition)
   const setJoystickPosition = useGameStore((s) => s.setJoystickPosition)
 
+  const isLandscape = useMediaQuery('(orientation: landscape)', true)
   const [startMuted, setStartMuted] = useState(isMuted)
-  const [isMobileLandscape, setIsMobileLandscape] = useState(!isMobile)
+  const isMobileLandscape = isMobile && isLandscape
 
   const canStart = isLoaded && (!isMobile || isMobileLandscape)
-
-  useDeviceOrientation({ isMobile, setIsLandscape: setIsMobileLandscape })
 
   const onStartClick = () => {
     setIsMuted(startMuted)
     onStart()
   }
 
-  const ctaLabel: ReactNode = !isMobile ? (
-    'Start experience'
-  ) : isMobileLandscape ? (
-    'Start experience'
-  ) : (
-    <>
-      Rotate to start <RotateCcwIcon />
-    </>
-  )
+  const showRotateHint = isMobile && !isMobileLandscape
 
   return (
     <PointerProvider isMobile={isMobile}>
       <Panel
         className={twJoin(
-          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-4 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none',
+          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4',
           isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
         )}>
-        {/* <CTAButton aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
-          {ctaLabel}
-        </CTAButton> */}
-
-        <Button aria-label="Start experience" disabled={!canStart} onClick={onStartClick}>
-          {ctaLabel}
-        </Button>
-
         <ButtonGroup
           value={startMuted ? 'off' : 'on'}
           onChange={(val) => setStartMuted(val === 'off')}
@@ -102,44 +80,26 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
           }))}
         />
 
-        {inputType === InputType.JOYSTICK && (
-          <ButtonGroup
-            value={joystickPosition}
-            onChange={setJoystickPosition}
-            items={[
-              { label: 'Left', value: 'left', Icon: ArrowLeft },
-              { label: 'Right', value: 'right', Icon: ArrowRight },
-            ]}
-          />
-        )}
+        <ButtonGroup
+          value={joystickPosition}
+          onChange={setJoystickPosition}
+          disabled={inputType !== InputType.JOYSTICK}
+          items={[
+            { label: null, value: 'left', Icon: ArrowLeft },
+            { label: null, value: 'right', Icon: ArrowRight },
+          ]}
+        />
+
+        <Button
+          aria-label="Start experience"
+          disabled={!canStart}
+          onClick={onStartClick}
+          endIcon={showRotateHint ? RotateCcwIcon : PlayIcon}>
+          {showRotateHint ? 'Rotate to start' : 'Start experience'}
+        </Button>
       </Panel>
     </PointerProvider>
   )
 }
 
 export default LandingControls
-
-function useDeviceOrientation({
-  isMobile,
-  setIsLandscape,
-}: {
-  isMobile: boolean
-  setIsLandscape: Dispatch<SetStateAction<boolean>>
-}) {
-  useEffect(() => {
-    if (!isMobile) return
-
-    const mediaQuery = window.matchMedia('(orientation: landscape)')
-
-    const onOrientationChange = (event: MediaQueryList | MediaQueryListEvent) => {
-      setIsLandscape(event.matches)
-    }
-
-    onOrientationChange(mediaQuery)
-
-    mediaQuery.addEventListener('change', onOrientationChange)
-    return () => {
-      mediaQuery.removeEventListener('change', onOrientationChange)
-    }
-  }, [isMobile, setIsLandscape])
-}

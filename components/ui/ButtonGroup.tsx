@@ -1,11 +1,11 @@
-import { type ComponentType } from 'react'
+import { type LucideIcon } from 'lucide-react'
 import { twJoin } from 'tailwind-merge'
 
 export type ButtonGroupItem<T> = {
   label: string | null
   value: T
   ariaLabel?: string
-  Icon?: ComponentType<{ className?: string; strokeWidth?: number }>
+  Icon?: LucideIcon
 }
 
 type ButtonGroupProps<T> = {
@@ -25,7 +25,7 @@ export const ButtonGroup = <T extends string | number>({
     <div
       className={twJoin(
         'relative flex items-center gap-2 rounded-xl border border-white/20 p-2 text-white',
-        disabled && 'pointer-events-none opacity-50',
+        disabled && 'pointer-events-none opacity-30',
       )}>
       {items.map((item) => {
         const isActive = value === item.value
