@@ -181,14 +181,14 @@ const LeaderboardRow: FC<RowProps> = ({
         ROW_CONTAINER_CLASSES,
         position % 2 === 0 && 'bg-black/20',
         isTopThree ? 'h-14 text-white' : 'h-11 text-white/90',
-        isCurrentUser && 'bg-green-600/5 text-green-400',
-        isLatestRun && 'border-leaderboard z-40 border!',
+        isCurrentUser && 'bg-green-600/5 text-emerald-400',
+        isLatestRun && 'z-40 border! border-emerald-600',
         className,
       )}>
       {isTopThree ? (
         <Medal position={position} />
       ) : (
-        <div className="flex w-full items-center justify-center pl-1 text-center">
+        <div className="flex w-full items-center justify-center pl-1 text-center font-semibold">
           {isCTAPosition ? '??' : `${position}.`}
         </div>
       )}
