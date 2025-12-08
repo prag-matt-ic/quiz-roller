@@ -21,7 +21,7 @@ const SpeedRunTimer: FC = () => {
     <div className="flex flex-col items-center gap-1.5 overflow-hidden">
       <div className="flex items-center gap-2">
         <div
-          className={twJoin('size-2 rounded-full', isAmber ? 'bg-amber-400' : 'bg-green-500')}
+          className={twJoin('size-2 rounded-full', isAmber ? 'bg-amber-400' : 'bg-emerald-500')}
         />
         <h2 className="text-xs tracking-wider text-white/60 uppercase">Speedroll</h2>
       </div>

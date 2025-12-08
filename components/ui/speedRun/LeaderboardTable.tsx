@@ -129,7 +129,7 @@ export const LeaderboardTable: FC<TableProps> = ({
       {showCTARow && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 mt-3 mb-2 h-fit rounded-full bg-green-400/20 text-white"
+          className="pointer-events-auto z-100 mt-3 mb-2 h-fit rounded-full bg-emerald-400/25 text-white"
           username="Set a time"
           time={0}
           position={CTA_POSITION}
@@ -139,7 +139,7 @@ export const LeaderboardTable: FC<TableProps> = ({
             <button
               type="button"
               onClick={onStartSpeedRun}
-              className="-mr-3 flex aspect-square size-12 items-center justify-center rounded-full bg-green-600 text-white ring ring-green-400 transition-all duration-200 hover:bg-green-500 hover:ring-green-200"
+              className="-mr-3 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
               aria-label="Start a speed run">
               <PlayIcon className="h-5 w-5" strokeWidth={1.75} />
             </button>
@@ -181,7 +181,7 @@ const LeaderboardRow: FC<RowProps> = ({
         ROW_CONTAINER_CLASSES,
         position % 2 === 0 && 'bg-black/20',
         isTopThree ? 'h-14 text-white' : 'h-11 text-white/90',
-        isCurrentUser && 'bg-green-600/5 text-emerald-400',
+        isCurrentUser && 'bg-emerald-600/5 text-emerald-400',
         isLatestRun && 'z-40 border! border-emerald-600',
         className,
       )}>
