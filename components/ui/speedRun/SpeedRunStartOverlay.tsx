@@ -38,13 +38,13 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-200 flex size-full flex-col items-center justify-center gap-6 bg-radial from-black/90 from-20% to-black/20 backdrop-blur-sm transition-opacity',
+        'fixed inset-0 z-500 flex size-full items-center justify-center bg-radial from-black/90 from-20% to-black/20 backdrop-blur-sm transition-opacity',
         transitionStatus === 'entering' && 'opacity-100 duration-300',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0 duration-500',
         transitionStatus === 'exited' && 'opacity-0',
       )}>
-      <section className="flex max-w-xl flex-col gap-6">
+      <section className="flex max-h-full max-w-xl flex-col gap-4 overflow-y-auto px-2 py-4 xl:gap-6">
         <h2 className="font-unbounded text-center text-2xl font-semibold lg:text-3xl">
           Race to the finish line
         </h2>

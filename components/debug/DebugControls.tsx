@@ -1,6 +1,7 @@
 'use client'
 
-import { type ChangeEvent, type FC, type ReactNode } from 'react'
+import { ExpandIcon, Eye, ToolCaseIcon } from 'lucide-react'
+import { type ChangeEvent, type FC, type ReactNode, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -51,6 +52,8 @@ const DebugControls: FC = () => {
   const overlay = useGameStore((s) => s.overlay)
   const setOverlay = useGameStore((s) => s.setOverlay)
 
+  const [isOpen, setIsOpen] = useState(true)
+
   const handleQualityChange = (event: ChangeEvent<HTMLSelectElement>) => {
     event.target.blur()
     setSceneQuality(event.target.value as SceneQuality)
@@ -78,61 +81,69 @@ const DebugControls: FC = () => {
   }
 
   return (
-    <div className="fixed bottom-48 left-0 z-5001 max-w-56 space-y-2 bg-black p-2 text-xs text-white">
-      <SelectRow
-        id="performance-debug-scene-quality"
-        label="Quality"
-        value={sceneQuality}
-        onChange={handleQualityChange}>
-        {Object.values(SceneQuality).map((quality) => (
-          <option key={quality} value={quality}>
-            {quality}
-          </option>
-        ))}
-      </SelectRow>
-      <SelectRow
-        id="performance-debug-dpr"
-        label="DPR"
-        value={maxDpr === undefined ? 'native' : maxDpr.toString()}
-        onChange={handleDprChange}>
-        {DPR_OPTIONS.map((option) => (
-          <option
-            key={option.label}
-            value={option.value === undefined ? 'native' : option.value.toString()}>
-            {option.label}
-          </option>
-        ))}
-      </SelectRow>
-      <SelectRow
-        id="performance-debug-physics"
-        label="Physics Debug"
-        value={isPhysicsDebug ? 'true' : 'false'}
-        onChange={handlePhysicsDebugChange}>
-        <option value="false">Off</option>
-        <option value="true">On</option>
-      </SelectRow>
-      <SelectRow
-        id="performance-debug-overlays"
-        label="Overlay"
-        value={overlay}
-        onChange={handleOverlayChange}>
-        {OVERLAY_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </SelectRow>
-      <SelectRow
-        id="performance-debug-mode"
-        label="Mode"
-        value={mode}
-        onChange={handleModeChange}>
-        {GAME_MODE_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </SelectRow>
+    <div className="fixed bottom-24 left-0 z-5001 max-w-56 space-y-2 bg-black p-1 text-xs text-white">
+      {isOpen && (
+        <>
+          <SelectRow
+            id="performance-debug-scene-quality"
+            label="Quality"
+            value={sceneQuality}
+            onChange={handleQualityChange}>
+            {Object.values(SceneQuality).map((quality) => (
+              <option key={quality} value={quality}>
+                {quality}
+              </option>
+            ))}
+          </SelectRow>
+          <SelectRow
+            id="performance-debug-dpr"
+            label="DPR"
+            value={maxDpr === undefined ? 'native' : maxDpr.toString()}
+            onChange={handleDprChange}>
+            {DPR_OPTIONS.map((option) => (
+              <option
+                key={option.label}
+                value={option.value === undefined ? 'native' : option.value.toString()}>
+                {option.label}
+              </option>
+            ))}
+          </SelectRow>
+          <SelectRow
+            id="performance-debug-physics"
+            label="Physics Debug"
+            value={isPhysicsDebug ? 'true' : 'false'}
+            onChange={handlePhysicsDebugChange}>
+            <option value="false">Off</option>
+            <option value="true">On</option>
+          </SelectRow>
+          <SelectRow
+            id="performance-debug-overlays"
+            label="Overlay"
+            value={overlay}
+            onChange={handleOverlayChange}>
+            {OVERLAY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectRow>
+          <SelectRow
+            id="performance-debug-mode"
+            label="Mode"
+            value={mode}
+            onChange={handleModeChange}>
+            {GAME_MODE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectRow>
+        </>
+      )}
+
+      <button onClick={() => setIsOpen((prev) => !prev)}>
+        <ToolCaseIcon />
+      </button>
     </div>
   )
 }

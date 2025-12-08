@@ -114,14 +114,13 @@ export const LeaderboardTable: FC<TableProps> = ({
           position={userRecentRun!.position}
           isCurrentUser={true}
           isLatestRun={true}
-          className="mt-4"
         />
       )}
 
       {showCTARow && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 mt-3 mb-2 h-fit rounded-full bg-emerald-400/25 text-white"
+          className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 text-white"
           username="Set a time"
           time={0}
           position={CTA_POSITION}
@@ -131,9 +130,9 @@ export const LeaderboardTable: FC<TableProps> = ({
             <button
               type="button"
               onClick={onStartSpeedRun}
-              className="-mr-3 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
-              aria-label="Start a speed run">
-              <PlayIcon className="h-5 w-5" strokeWidth={1.75} />
+              className="absolute right-6 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
+              aria-label="Start speed run">
+              <PlayIcon className="size-5" strokeWidth={2} />
             </button>
           }
         />
@@ -144,6 +143,8 @@ export const LeaderboardTable: FC<TableProps> = ({
 
 const CTA_POSITION = -1
 const ROW_CONTAINER_CLASSES = 'col-span-full grid grid-cols-subgrid items-center px-2'
+const TOP_3_CONTAINER_CLASSES = 'h-12 xl:h-14 text-white'
+const NOT_TOP_3_CONTAINER_CLASSES = 'h-9 xl:h-11 text-white/90'
 
 type RowProps = {
   username: string
@@ -172,7 +173,7 @@ const LeaderboardRow: FC<RowProps> = ({
       className={twMerge(
         ROW_CONTAINER_CLASSES,
         position % 2 === 0 && 'bg-black/20',
-        isTopThree ? 'h-14 text-white' : 'h-11 text-white/90',
+        isTopThree ? TOP_3_CONTAINER_CLASSES : NOT_TOP_3_CONTAINER_CLASSES,
         isCurrentUser && 'bg-emerald-600/5 text-emerald-400',
         isLatestRun && 'z-40 border! border-emerald-600',
         className,
@@ -185,7 +186,10 @@ const LeaderboardRow: FC<RowProps> = ({
         </div>
       )}
       <h4
-        className={twJoin('flex items-center text-left', isTopThree ? 'text-base' : 'text-sm')}>
+        className={twJoin(
+          'flex items-center text-left',
+          isTopThree ? 'text-sm xl:text-base' : 'text-xs xl:text-sm',
+        )}>
         {username}
       </h4>
       <div className="flex items-center justify-center text-center font-mono text-base tabular-nums">
@@ -205,7 +209,7 @@ const LoadingRow: FC<{ index: number }> = ({ index }) => {
       className={twJoin(
         ROW_CONTAINER_CLASSES,
         index % 2 === 0 && 'bg-white/1',
-        isTopThree ? 'h-14' : 'h-11',
+        isTopThree ? TOP_3_CONTAINER_CLASSES : NOT_TOP_3_CONTAINER_CLASSES,
         'animate-pulse',
       )}>
       <div className="flex w-full items-center justify-center">
