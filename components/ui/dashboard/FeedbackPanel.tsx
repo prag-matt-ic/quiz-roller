@@ -56,11 +56,7 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
       {hasSubmitted ? (
         <p className="text-sm xl:text-base">Thanks for your feedback!</p>
       ) : (
-        <p className="text-sm xl:text-base">
-          Share your thoughts and ideas, or report a bug.
-          <br />
-          <span className="text-white/60">We appreciate your feedback!</span>
-        </p>
+        <p className="text-sm xl:text-base">Share your thoughts and ideas, or report a bug.</p>
       )}
 
       <div className="flex gap-2">
@@ -68,7 +64,7 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder=""
+          placeholder="We appreciate your feedback..."
           className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none"
           maxLength={500}
           disabled={isSubmitting}

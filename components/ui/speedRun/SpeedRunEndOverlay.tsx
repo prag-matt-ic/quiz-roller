@@ -38,6 +38,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const startCountdown = useGameStore((s) => s.startCountdown)
   const resetGame = useGameStore((s) => s.resetGame)
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
+
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
   const { handleShare, isShareSupported } = useWebShare()

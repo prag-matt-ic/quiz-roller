@@ -87,6 +87,8 @@ export type InputSlice = {
   setPlayerInputIntent: (input: PlayerInput) => void
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
+
+  // MF: unsure if we need this as global state or it can just be set locally, defaulted to input type.
   leaderboardFilter: LeaderboardFilter
   setLeaderboardFilter: (filter: LeaderboardFilter) => void
 }
