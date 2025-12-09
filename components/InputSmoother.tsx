@@ -36,12 +36,12 @@ const isZeroInput = (input: PlayerInput): boolean =>
 const InputSmoother: FC = () => {
   const { inputIntent } = usePlayerInputIntent()
   const { input } = usePlayerInput()
-  const smoothedInput = useRef<PlayerInput>({ ...input.current })
+  const smoothedInput = useRef<PlayerInput>({ up: 0, down: 0, left: 0, right: 0 })
   const setPlayerInput = useGameStore((s) => s.setPlayerInput)
 
   const buffers = useRef<[PlayerInput, PlayerInput]>([
-    { ...input.current },
-    { ...input.current },
+    { up: 0, down: 0, left: 0, right: 0 },
+    { up: 0, down: 0, left: 0, right: 0 },
   ])
   const activeBufferIndex = useRef(0)
 
