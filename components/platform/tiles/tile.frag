@@ -19,6 +19,7 @@ varying mediump float vPlayerHighlight;
 varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
 varying lowp float vShade;
+varying lowp float vDetailIndex;
 
 // Constants
 const float HIGHLIGHTED_MIX_MIN = 0.16;
@@ -35,11 +36,6 @@ const float SHADOW_FADE_START_Y = 1.5; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
 const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
 const float SHADOW_MIN_PLAYER_Y = -0.5; // no shadow if player below this
-
-float selectDetailNoiseIndex(float seed) {
-  float hashed = fract(sin(seed * 438.54));
-  return floor(hashed * 3.0);
-}
 
 void main() {
   // Early discard for fully transparent tiles
@@ -59,8 +55,8 @@ void main() {
 
   // Apply detail noise when quality setting is not low.
   if (uAddDetailNoise > 0.5) {
-    float detailIndex = selectDetailNoiseIndex(vSeed);
-    mediump float detailNoise;
+    mediump float detailIndex = vDetailIndex;
+    mediump float detailNoise = 0.0;
     if (detailIndex < 0.5) {
       detailNoise = texture2D(uDetailNoiseMap1, vUv).r;
     } else if (detailIndex < 1.5) {
@@ -95,9 +91,9 @@ void main() {
   float shadowRadiusScale = mix(SHADOW_RADIUS_MAX_SCALE, SHADOW_RADIUS_MIN_SCALE, shadowHeightFade);
   float shadowRadius = SHADOW_RADIUS * shadowRadiusScale;
   float shadow = 1.0 - smoothstep(0.0, shadowRadius, distToPlayer);
-  shadow = pow(shadow, 2.5);
+  shadow = shadow * shadow * sqrt(shadow);
   shadow *= shadowHeightFade * uShadowEnabled;
-  background = mix(background, background * (1.0 - SHADOW_STRENGTH), shadow);
+  background *= 1.0 - shadow * SHADOW_STRENGTH;
 
   // Darken non-upward-facing surfaces
   background *= vShade;

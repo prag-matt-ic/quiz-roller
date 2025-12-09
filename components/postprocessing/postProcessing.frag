@@ -22,31 +22,30 @@ vec3 applyRadialBlur(
   if (intensity <= BLUR_INTENSITY_EPSILON || uBlurSteps == 0) return baseColor;
   const vec2 focus = vec2(0.5, 0.45);
   float directionSign = signedSpeed >= 0.0 ? 1.0 : -1.0;
-  // Positive (forward) pulls blur inward; negative (backward) pushes outward.
-  vec2 blurDir = directionSign >= 0.0 ? (focus - uv) : (uv - focus);
-  vec2 blurRadialDir = normalize(blurDir + 1e-5);
+  vec2 blurOffset = (focus - uv) * directionSign;
+  vec2 blurRadialDir = normalize(blurOffset + 1e-5);
   vec2 jitterDir = vec2(-blurRadialDir.y, blurRadialDir.x);
   float invSteps = 1.0 / float(uBlurSteps);
   float baseMix = 0.6 * intensity;
+  float timePhase = uTime * 3.7;
 
   vec3 blur = baseColor;
   float weightSum = 1.0;
 
   for (int i = 0; i < MAX_BLUR_STEPS; i++) {
     if (i >= uBlurSteps) break;
-    float t = (float(i) + 1.0) * invSteps;
-    float mixAmount = t * baseMix;
+    float stepIndex = float(i) + 1.0;
+    float stepT = stepIndex * invSteps;
+    float mixAmount = stepT * baseMix;
 
     // Minor temporal jitter to reduce banding without heavy noise.
-    float jitter = (sin(uTime * 3.7 + float(i) * 2.1) * 0.5 + 0.5) * 0.0015;
+    float jitter = (sin(timePhase + stepIndex * 2.1) * 0.5 + 0.5) * 0.0015;
 
-    vec2 inwardTarget = mix(uv, focus, mixAmount);
-    vec2 outwardTarget = mix(uv, focus, -mixAmount);
-    vec2 sampleUv = (directionSign > 0.0 ? inwardTarget : outwardTarget) + jitterDir * jitter;
+    vec2 sampleUv = uv + blurOffset * mixAmount + jitterDir * jitter;
     sampleUv = clamp(sampleUv, 0.001, 0.999);
 
     vec3 tap = texture2D(uSceneTexture, sampleUv).rgb;
-    float w = (1.0 - t * 0.6) * intensity;
+    float w = (1.0 - stepT * 0.6) * intensity;
 
     blur += tap * w;
     weightSum += w;

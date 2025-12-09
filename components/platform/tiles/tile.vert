@@ -32,6 +32,7 @@ varying mediump float vSeed;
 varying mediump float vIsHighlighted;
 varying mediump vec2 vUv;
 varying lowp float vShade;
+varying lowp float vDetailIndex;
 
 void main() {
   // Compute combined model-instance matrix once and reuse
@@ -93,6 +94,10 @@ void main() {
 
   // Pass isHighlighted to fragment shader
   vIsHighlighted = isHighlighted;
+
+  // Precompute detail noise index so the fragment shader stays branch-light
+  float detailHash = fract(sin(seed * 438.54));
+  vDetailIndex = floor(detailHash * 3.0);
 
   vUv = uv;
 
