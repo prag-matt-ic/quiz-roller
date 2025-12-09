@@ -7,7 +7,7 @@ import {
   type PlayerInput,
 } from './types'
 
-const createZeroInput = (): PlayerInput => ({
+const zeroInput = (): PlayerInput => ({
   up: 0,
   down: 0,
   left: 0,
@@ -18,8 +18,8 @@ export const getResetInputState = (): Pick<
   InputSlice,
   'playerInput' | 'playerInputIntent'
 > => ({
-  playerInput: createZeroInput(),
-  playerInputIntent: createZeroInput(),
+  playerInput: zeroInput(),
+  playerInputIntent: zeroInput(),
 })
 
 export const createInputSlice =

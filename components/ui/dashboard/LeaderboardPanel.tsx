@@ -1,14 +1,13 @@
 'use client'
-import { Joystick, Keyboard, Trophy, UsersRound } from 'lucide-react';
-import { type FC } from 'react';
+import { Joystick, Keyboard, Trophy, UsersRound } from 'lucide-react'
+import { type FC } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
-import Panel from '@/components/ui/panel/Panel';
-import { PanelHeader } from '@/components/ui/panel/PanelHeader';
-import { LeaderboardTable } from '@/components/ui/speedRun/LeaderboardTable';
-import { InputType } from '@/stores/types';
-
+import Panel from '@/components/ui/panel/Panel'
+import { PanelHeader } from '@/components/ui/panel/PanelHeader'
+import { LeaderboardTable } from '@/components/ui/speedRun/LeaderboardTable'
+import { InputType } from '@/stores/types'
 
 type Props = {
   className?: string
@@ -29,7 +28,7 @@ export const LeaderboardPanel: FC<Props> = ({
 
   return (
     <Panel strength={3} className={className} attractorClassName="bg-emerald-400/15">
-      <PanelHeader icon={Trophy} label="Leaderboard" className="">
+      <PanelHeader icon={Trophy} label="Leaderboard">
         <ButtonGroup
           value={leaderboardFilter}
           onChange={setLeaderboardFilter}

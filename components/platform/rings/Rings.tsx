@@ -208,7 +208,7 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     const material = shaderRefs[slotIndex].current
     if (!material) return
 
-    playSoundFX(SoundFX.COIN_COLLECTED)
+    playSoundFX(SoundFX.RING_COLLECTED)
     // Animate the ring out then mark it as collected
     gsap.to(material, {
       uExitProgress: 1,
