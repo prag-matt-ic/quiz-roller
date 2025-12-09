@@ -3,6 +3,7 @@ import {
   FloatingPortal,
   offset,
   safePolygon,
+  shift,
   useClick,
   useDismiss,
   useFloating,
@@ -47,7 +48,7 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
     onOpenChange: (open) => {
       setShow(open)
     },
-    middleware: [offset(12)],
+    middleware: [offset(12), shift({ padding: 8 })],
   })
 
   const { isMounted, status } = useTransitionStatus(context)
