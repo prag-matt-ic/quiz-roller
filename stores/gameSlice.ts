@@ -58,7 +58,7 @@ export const createGameSlice =
       if (mode === GameMode.DEV) {
         set({ _isHydrated: true, ...getPlatformDataForMode(GameMode.DEV) })
       } else {
-        set({ _isHydrated: true })
+        set({ _isHydrated: true, mode: GameMode.LEARN })
       }
     },
     setHtmlPortal: (htmlPortal) => {

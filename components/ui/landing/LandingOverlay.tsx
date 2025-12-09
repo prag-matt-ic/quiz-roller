@@ -42,8 +42,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
     setOverlay(Overlay.NONE)
-    const hud = MOVE_HUD_CONFIG[inputType]
-    respawnPlayer(PLAYER_INITIAL_POSITION, hud)
+    respawnPlayer(PLAYER_INITIAL_POSITION, MOVE_HUD_CONFIG[inputType])
   }
 
   if (!isShowingLandingOverlay) return null

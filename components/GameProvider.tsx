@@ -31,10 +31,10 @@ export const GameProvider: FC<Props> = ({ children, isMobile, insertSpeedRun }) 
   const [store] = useState(() =>
     createGameStore({
       isMobile,
+      insertSpeedRun,
       playSoundFX,
       stopSoundFX,
       switchBackgroundTrack,
-      insertSpeedRun,
     }),
   )
   return <GameContext value={store}>{children}</GameContext>

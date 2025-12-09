@@ -3,14 +3,12 @@ import { type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
 import { CollectibleID } from '@/model/schema'
-import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content/hud'
+import { getOutOfBoundsMessage } from '@/resources/content/hud'
 import { ringIndexToKey } from '@/utils/rings'
 
 import {
   type CreateGameStoreParams,
   type GameSliceCreator,
-  HudIndicatorConfig,
-  type OutOfBoundsEvent,
   type PlayerSlice,
   type PlayerStatus,
   RingCollection,
@@ -23,29 +21,6 @@ export const PLAYER_SPEED_MAX = 11.0
 const RING_SPEED_INCREMENT = 0.5
 const SPEED_COOLDOWN_S = 6.0
 const COLLECTIBLE_DURATION_S = 1.5
-
-const getOutOfBoundsMessage = (events: OutOfBoundsEvent[]): HudIndicatorConfig => {
-  const messagePosition = events.length % OUT_OF_BOUNDS_HUD_CONFIG.length
-  const firstMessage = events.length - messagePosition // ensures not same as last message of prev loop
-  const allMessages = events.slice(firstMessage).map((event) => event.hudId)
-
-  // use message from array of current loop of messages
-  const remainingMessages = OUT_OF_BOUNDS_HUD_CONFIG.filter(
-    (hud) => !allMessages.includes(hud.id),
-  )
-
-  // exclude the last message from previous loop when starting new loop
-  if (messagePosition === 0 && events.length > 0) {
-    const lastMessage = events[events.length - 1]?.hudId
-    const availableMessages = remainingMessages.filter((hud) => hud.id !== lastMessage)
-
-    if (availableMessages.length > 0) {
-      return availableMessages[Math.floor(Math.random() * availableMessages.length)]
-    }
-  }
-
-  return remainingMessages[Math.floor(Math.random() * remainingMessages.length)]
-}
 
 export const RESET_PLAYER_STATE: Pick<
   PlayerSlice,
@@ -221,21 +196,11 @@ export const createPlayerSlice =
         confirmationTweenTarget.value = 0
       },
       respawnPlayer: (position, hud) => {
-        let hudIndicator = hud
-        // If no hud provided, pick a random one from out-of-bounds configs
-        // TODO: read outOfBoundsEvents, try to a pick HUD message that hasn't been used recently
-        if (!hud) {
-          hudIndicator =
-            OUT_OF_BOUNDS_HUD_CONFIG[
-              Math.floor(Math.random() * OUT_OF_BOUNDS_HUD_CONFIG.length)
-            ]
-        }
-
         set((s) => ({
           playerStatus: 'respawning',
           playerRespawnTick: s.playerRespawnTick + 1,
           spawnPosition: position,
-          hudIndicator: hudIndicator,
+          hudIndicator: hud ?? s.hudIndicator,
         }))
       },
       onRespawnComplete: () => {

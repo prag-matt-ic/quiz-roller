@@ -26,10 +26,9 @@ const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
-  const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
 
   const showBar = confirmingCollectible !== null
-  const showContent = !!hudIndicator
+  const showContent = !!hudIndicator?.id
   const show = showBar || showContent
 
   const [isMounted, setIsMounted] = useState(show)
@@ -103,7 +102,7 @@ const PlayerHUD: FC = () => {
     })
   }
 
-  const switchKey = `${showBar}-${showContent}-${hudIndicator?.id ?? ''}-${playerRespawnTick}`
+  const switchKey = `${showBar}-${hudIndicator?.id ?? ''}`
 
   if (!isMounted) return null
 
@@ -147,6 +146,7 @@ const PlayerHUD: FC = () => {
               return (
                 <div
                   ref={container}
+                  key={hudIndicator.id}
                   className="flex items-center gap-2 overflow-hidden rounded-full bg-black/90 p-3 text-sm font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:text-base xl:p-4">
                   {!!hudIndicator.Icon && <hudIndicator.Icon className="size-4.5 xl:size-6" />}
                   {hudIndicator.label}
