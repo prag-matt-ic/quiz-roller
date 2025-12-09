@@ -91,6 +91,7 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
         />
 
         <Button
+          variant="primary"
           aria-label="Start experience"
           disabled={!canStart}
           onClick={onStartClick}

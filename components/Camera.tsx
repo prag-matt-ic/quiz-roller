@@ -17,21 +17,8 @@ type StageCameraPosition = {
   z: number
 }
 
-export const CAMERA_POSITION_FOR_STAGE_DESKTOP: Record<Stage, StageCameraPosition> = {
-  [Stage.HOME]: { y: 4, z: 8 },
-  [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.OBSTACLES]: { y: 6, z: 8 },
-  [Stage.CTA]: { y: 4, z: 10 },
-  [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
-}
-
-export const CAMERA_POSITION_FOR_STAGE_MOBILE: Record<Stage, StageCameraPosition> = {
-  [Stage.HOME]: { y: 4, z: 8 },
-  [Stage.INFO]: { y: 4, z: 8 },
-  [Stage.OBSTACLES]: { y: 6, z: 8 },
-  [Stage.CTA]: { y: 6, z: 8 },
-  [Stage.SPEED_RUN_FINISH]: { y: 4, z: 10 },
-}
+export const CAMERA_POSITION_DESKTOP: StageCameraPosition = { y: 4, z: 8 }
+export const CAMERA_POSITION_MOBILE: StageCameraPosition = { y: 4, z: 8 }
 
 export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
   [Stage.HOME]: 1.1,
@@ -51,10 +38,10 @@ export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
 
 type Props = {
   isMobile: boolean
-  positions: Record<Stage, StageCameraPosition>
+  position: StageCameraPosition
 }
 
-const Camera: FC<Props> = ({ isMobile, positions }) => {
+const Camera: FC<Props> = ({ isMobile, position }) => {
   const cameraControls = useRef<CameraControls>(null)
   const { playerPosition } = usePlayerPosition()
   const cameraLookAtPosition = useGameStore((s) => s.cameraLookAtPosition)
@@ -82,7 +69,7 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
     [cameraZoomForStage],
   )
 
-  const stage = useStage(handleStageChange)
+  useStage(handleStageChange)
 
   useEffect(() => {
     if (!cameraControls.current) return
@@ -95,7 +82,6 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
   useFrame(() => {
     if (!cameraControls.current) return
-    const stageCameraPosition = positions[stage.current]
 
     const lookAt = cameraLookAtPosition ?? playerPosition.current
 
@@ -107,8 +93,8 @@ const Camera: FC<Props> = ({ isMobile, positions }) => {
 
     cameraControls.current.setLookAt(
       playerPosition.current[0],
-      stageCameraPosition.y + overlayYOffset,
-      stageCameraPosition.z + positionZOffset + overlayZOffset,
+      position.y + overlayYOffset,
+      position.z + positionZOffset + overlayZOffset,
       lookAtX,
       3,
       lookAt[2],

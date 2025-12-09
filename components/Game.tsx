@@ -7,11 +7,7 @@ import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
 import { type FC, Suspense, useMemo } from 'react'
 
-import Camera, {
-  CAMERA_POSITION_FOR_STAGE_DESKTOP,
-  CAMERA_POSITION_FOR_STAGE_MOBILE,
-} from '@/components/Camera'
-import { Stage } from '@/components/GameProvider'
+import Camera, { CAMERA_POSITION_DESKTOP, CAMERA_POSITION_MOBILE } from '@/components/Camera'
 import InputSmoother from '@/components/InputSmoother'
 import OutOfBounds from '@/components/OutOfBounds'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
@@ -34,9 +30,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
 
-  const cameraPositions = isMobile
-    ? CAMERA_POSITION_FOR_STAGE_MOBILE
-    : CAMERA_POSITION_FOR_STAGE_DESKTOP
+  const cameraPosition = isMobile ? CAMERA_POSITION_MOBILE : CAMERA_POSITION_DESKTOP
 
   const dpr = useMemo<number>(() => {
     if (typeof window === 'undefined') return 1
@@ -50,7 +44,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
       onContextMenu={(e) => e.preventDefault()}
       dpr={dpr}
       camera={{
-        position: [0, cameraPositions[Stage.HOME].y, cameraPositions[Stage.HOME].z],
+        position: [0, cameraPosition.y, cameraPosition.z],
         far: process.env.NODE_ENV === 'development' ? 100 : 40,
         fov: 65,
       }}
@@ -72,7 +66,7 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         <Suspense>
           <PostProcessing>
             <InputSmoother />
-            <Camera isMobile={isMobile} positions={cameraPositions} />
+            <Camera isMobile={isMobile} position={cameraPosition} />
             {isDebug && <Stats />}
             <Backdrop />
             <Physics debug={isPhysicsDebug} timeStep={physicsTimeStep}>

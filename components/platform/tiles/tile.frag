@@ -24,7 +24,7 @@ varying lowp float vShade;
 const float HIGHLIGHTED_MIX_MIN = 0.16;
 const float HIGHLIGHTED_MIX_MAX = 0.32;
 
-const float REGULAR_MIX = 0.55;
+const float REGULAR_MIX = 0.5;
 const float PLAYER_PROXIMITY_MIX = 0.82;
 const vec3 WHITE = vec3(1.0);
 const float SHADOW_RADIUS = 0.8;
@@ -34,10 +34,10 @@ const float SHADOW_STRENGTH = 0.6;
 const float SHADOW_FADE_START_Y = 1.5; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
 const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
-const float DETAIL_VARIANT_SCALE = 17.13;
+const float SHADOW_MIN_PLAYER_Y = -0.5; // no shadow if player below this
 
 float selectDetailNoiseIndex(float seed) {
-  float hashed = fract(sin(seed * DETAIL_VARIANT_SCALE) * 43758.5453);
+  float hashed = fract(sin(seed * 438.54));
   return floor(hashed * 3.0);
 }
 
@@ -89,7 +89,9 @@ void main() {
     0.0,
     1.0
   );
+  float playerAboveGround = step(SHADOW_MIN_PLAYER_Y, uPlayerWorldPos.y);
   float shadowHeightFade = shadowHeightT * shadowHeightT * (3.0 - 2.0 * shadowHeightT);
+  shadowHeightFade *= playerAboveGround;
   float shadowRadiusScale = mix(SHADOW_RADIUS_MAX_SCALE, SHADOW_RADIUS_MIN_SCALE, shadowHeightFade);
   float shadowRadius = SHADOW_RADIUS * shadowRadiusScale;
   float shadow = 1.0 - smoothstep(0.0, shadowRadius, distToPlayer);

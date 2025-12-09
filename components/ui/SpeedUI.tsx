@@ -6,7 +6,7 @@ import { twJoin } from 'tailwind-merge'
 import { useGameStore } from '@/components/GameProvider'
 import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
 
-const RingsUI: FC = () => {
+const SpeedUI: FC = () => {
   const collectedRings = useGameStore((s) => s.collectedRings)
   // const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
   const collectedRingCount = Object.keys(collectedRings).length
@@ -24,4 +24,4 @@ const RingsUI: FC = () => {
     </div>
   )
 }
-export default RingsUI
+export default SpeedUI

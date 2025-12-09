@@ -8,7 +8,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI from '@/components/ui/CollectiblesUI'
-import RingsUI from '@/components/ui/RingsUI'
+import SpeedUI from '@/components/ui/SpeedUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import MiniMap from '@/components/ui/miniMap/MiniMap'
@@ -39,7 +39,7 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <div
         className={twJoin(
-          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 items-center gap-x-2 px-3 py-2 transition-opacity duration-300 select-none',
+          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 px-2.5 py-2.5 transition-opacity duration-300 select-none',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {/* Collectibles/Timer */}
@@ -67,7 +67,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         </SwitchTransition>
 
         {/* Speed/Rings */}
-        <RingsUI />
+        <SpeedUI />
       </div>
 
       {/* Top Right Dashboard toggle */}
@@ -81,7 +81,7 @@ const UI: FC<Props> = ({ isMobile }) => {
           }
         }}
         className={twJoin(
-          'pointer-events-auto fixed top-3 right-3 z-300 flex items-center rounded-xl border border-black/40 bg-black/35 p-3 text-xs text-white uppercase transition-all hover:border-black/30 hover:bg-black/20',
+          'pointer-events-auto fixed top-2.5 right-2.5 z-300 flex items-center rounded-xl border border-black/40 bg-black/35 p-3 text-xs text-white uppercase transition-all hover:border-black/30 hover:bg-black/20',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (

@@ -3,8 +3,7 @@ import type { ButtonHTMLAttributes, FC, ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary'
-  color?: 'light' | 'dark'
+  variant: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   children: ReactNode
   className?: string
@@ -14,7 +13,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const BASE_CLASSES =
-  'relative flex w-fit h-fit cursor-pointer disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold'
+  'relative flex size-fit cursor-pointer leading-none disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold'
 
 const SIZE_CLASSES = {
   sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
@@ -28,24 +27,15 @@ const ICON_SIZE_CLASSES = {
   lg: 'size-5 xl:size-6',
 }
 
-const COLOUR_CLASSES = {
-  light: {
-    primary:
-      'border border-white/20 bg-linear-90 from-white/5 to-white/15 text-white shadow-xl shadow-white/5 hover:from-white/10 hover:to-white/20',
-    secondary:
-      'border border-white/5 bg-white/3 text-white/70 hover:bg-white/8 hover:text-white',
-  },
-  dark: {
-    primary:
-      'border border-black/20 bg-linear-90 from-black/70 to-black/30 text-white shadow-xl shadow-black/20 hover:from-black/70 hover:to-black/40',
-    secondary:
-      'border border-black/20 bg-black/30 text-white/80 hover:bg-black/40 hover:text-white',
-  },
+const VARIANT_CLASSES: Record<ButtonProps['variant'], string> = {
+  primary:
+    'border border-white/15 bg-radial from-white/5 to-white/10 text-white hover:from-white/10 hover:to-white/20',
+  secondary:
+    'border border-white/5 bg-radial from-white/3 to-white/6 text-white/70 hover:from-white/6 hover:to-white/12 hover:text-white',
 }
 
 const Button: FC<ButtonProps> = ({
   variant = 'primary',
-  color = 'light',
   size = 'lg',
   children,
   className,
@@ -56,12 +46,7 @@ const Button: FC<ButtonProps> = ({
 }) => {
   return (
     <button
-      className={twMerge(
-        BASE_CLASSES,
-        SIZE_CLASSES[size],
-        COLOUR_CLASSES[color][variant],
-        className,
-      )}
+      className={twMerge(BASE_CLASSES, SIZE_CLASSES[size], VARIANT_CLASSES[variant], className)}
       {...props}>
       {!!StartIcon ? (
         <StartIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />

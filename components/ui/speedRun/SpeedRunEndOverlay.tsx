@@ -76,7 +76,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel className="flex items-center gap-3" strength={1}>
             {isShareSupported && (
               <Button
-                color="light"
                 variant="secondary"
                 endIcon={SmilePlus}
                 onClick={() => {
@@ -89,17 +88,10 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
                 Share
               </Button>
             )}
-            <Button
-              color="light"
-              variant="primary"
-              onClick={startCountdown}
-              endIcon={RotateCcwIcon}>
+            <Button variant="primary" onClick={startCountdown} endIcon={RotateCcwIcon}>
               Retry
             </Button>
-            <Button
-              color="light"
-              variant="secondary"
-              onClick={() => resetGame({ mode: GameMode.LEARN })}>
+            <Button variant="secondary" onClick={() => resetGame({ mode: GameMode.LEARN })}>
               Finish
             </Button>
           </Panel>

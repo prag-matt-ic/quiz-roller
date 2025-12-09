@@ -79,6 +79,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
 
         <Button
           type="button"
+          variant="secondary"
           onClick={() => setOverlay(Overlay.NONE)}
           className=""
           size="sm"

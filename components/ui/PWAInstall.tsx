@@ -43,8 +43,7 @@ const PWAInstall: FC<Props> = ({ isMobile }) => {
       {showInstallButton && (
         <Button
           variant="secondary"
-          color="light"
-          aria-label="Install Quizroller"
+          aria-label="Install"
           onClick={onInstallClick}
           disabled={isPrompting}
           startIcon={DownloadIcon}>
