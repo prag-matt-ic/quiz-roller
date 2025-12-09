@@ -95,7 +95,6 @@ const PlayerHUD: FC = () => {
   const onExit = () => {
     containerTween.current?.kill()
     containerTween.current = gsap.to(container.current, {
-      scale: 1.2,
       opacity: 0,
       duration: 0.2,
       ease: 'power1.out',
