@@ -1,5 +1,13 @@
 'use client'
-import { Joystick, Keyboard, RotateCcwIcon, SmilePlus, Trophy, UsersRound } from 'lucide-react'
+import {
+  Joystick,
+  Keyboard,
+  LogOutIcon,
+  RotateCcwIcon,
+  SmilePlus,
+  Trophy,
+  UsersRound,
+} from 'lucide-react'
 import { type FC, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -59,6 +67,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel
             className="row-span-3 row-start-3 xl:col-start-2 xl:row-start-1"
             attractorClassName="bg-emerald-400/15">
+            {/* TODO: this should only show the current input type for the recent run. */}
             <PanelHeader icon={Trophy} label="Leaderboard">
               <ButtonGroup
                 value={leaderboardFilter}
@@ -78,7 +87,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
               onPerformanceSummary={setPerformanceSummary}
             />
           </Panel>
-          <FeedbackPanel speedrunId={null} className="col-span-2 row-start-4" />
 
           <div className="col-span-full grid grid-cols-3 gap-3 xl:col-span-1 xl:gap-4">
             <TimeScorePanel />
@@ -86,10 +94,13 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             <TimesFallenPanel />
           </div>
 
-          <Panel className="flex items-center gap-3" strength={1}>
+          <FeedbackPanel speedrunId={null} className="" />
+
+          <Panel className="col-span-full flex items-center justify-center gap-3" strength={1}>
             {isShareSupported && (
               <Button
                 variant="secondary"
+                size="md"
                 endIcon={SmilePlus}
                 onClick={() => {
                   const seconds = (speedRunTimeCS / 100).toFixed(2)
@@ -104,7 +115,11 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             <Button variant="primary" onClick={startCountdown} endIcon={RotateCcwIcon}>
               Retry
             </Button>
-            <Button variant="secondary" onClick={() => resetGame({ mode: GameMode.LEARN })}>
+            <Button
+              size="md"
+              variant="secondary"
+              endIcon={LogOutIcon}
+              onClick={() => resetGame({ mode: GameMode.LEARN })}>
               Finish
             </Button>
           </Panel>

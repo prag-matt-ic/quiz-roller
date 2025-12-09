@@ -11,17 +11,11 @@ import { InputType } from '@/stores/types'
 
 type Props = {
   className?: string
-  count?: number
-  showCTA?: boolean
-  fetchLatestRun?: boolean
 }
 
-export const LeaderboardPanel: FC<Props> = ({
-  className,
-  count = 3,
-  showCTA = true,
-  fetchLatestRun = false,
-}) => {
+// For use in the Dashboard only..
+
+export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
   const startCountdown = useGameStore((s) => s.startCountdown)
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
@@ -40,10 +34,10 @@ export const LeaderboardPanel: FC<Props> = ({
         />
       </PanelHeader>
       <LeaderboardTable
-        count={count}
-        fetchLatestRun={fetchLatestRun}
+        count={10}
+        fetchLatestRun={false}
         startCountdown={startCountdown}
-        showCTA={showCTA}
+        showCTA={true}
       />
     </Panel>
   )
