@@ -14,7 +14,7 @@ import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
-import PostProcessing from '@/components/postProcessing/PostProcessing2'
+import PostProcessing from '@/components/postProcessing/Effects'
 
 gsap.registerPlugin(useGSAP)
 

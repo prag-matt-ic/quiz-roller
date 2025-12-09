@@ -9,8 +9,8 @@ import { usePlayerInput } from '@/hooks/usePlayerInput'
 import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import { PLAYER_SPEED_MAX } from '@/stores/playerSlice'
 
-import fragmentShader from './postProcessing.frag'
-import vertexShader from './postProcessing.vert'
+import fragmentShader from './effects.frag'
+import vertexShader from './effects.vert'
 
 type EffectsUniforms = {
   uTime: number
