@@ -88,7 +88,7 @@ function getRowAlpha(rowZ: number, playerZ: number): number {
 const Platform: FC = () => {
   const resetPlatformTick = useGameStore((s) => s.resetPlatformTick)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
-  const setPlatformReady = useGameStore((s) => s.setPlatformReady)
+  const setIsPlatformReady = useGameStore((s) => s.setIsPlatformReady)
   const goToStage = useGameStore((s) => s.goToStage)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const mode = useGameStore((s) => s.mode)
@@ -211,8 +211,8 @@ const Platform: FC = () => {
     floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
     nextRowDataIndex.current = ROWS_RENDERED
     markInstanceAttributesDirty()
-    setPlatformReady(true)
-  }, [rowsData, setPlatformReady])
+    setIsPlatformReady(true)
+  }, [rowsData, setIsPlatformReady])
 
   const checkReady = useCallback(
     (currentReadyState: ReadyState) => {

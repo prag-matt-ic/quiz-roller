@@ -73,7 +73,7 @@ export const createGameSlice =
     setCameraLookAtPosition: (cameraLookAtPosition) => {
       set({ cameraLookAtPosition })
     },
-    setPlatformReady: (isPlatformReady) => {
+    setIsPlatformReady: (isPlatformReady) => {
       set({ isPlatformReady })
     },
     setRowsData: (rowsData, totalCounts) => {

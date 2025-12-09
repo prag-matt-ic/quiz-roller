@@ -182,7 +182,7 @@ export type GameSlice = {
   resetPlatformTick: number
 
   isPlatformReady: boolean
-  setPlatformReady: (isReady: boolean) => void
+  setIsPlatformReady: (isReady: boolean) => void
 
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
