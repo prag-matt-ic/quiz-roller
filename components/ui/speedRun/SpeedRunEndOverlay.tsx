@@ -8,16 +8,16 @@ import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import { PointerProvider } from '@/components/ui/PointerProvider'
+import { FeedbackPanel } from '@/components/ui/dashboard/FeedbackPanel'
 import { RingsPanel } from '@/components/ui/dashboard/RingsPanel'
 import TimeScorePanel from '@/components/ui/dashboard/TimeScorePanel'
 import { TimesFallenPanel } from '@/components/ui/dashboard/TimesFallenPanel'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
+import { LeaderboardTable } from '@/components/ui/speedRun/LeaderboardTable'
+import { type PerformanceSummary } from '@/components/ui/speedRun/speedrunPerformanceSummary'
 import { useWebShare } from '@/hooks/useWebShare'
 import { GameMode, InputType } from '@/stores/types'
-
-import { LeaderboardTable } from './LeaderboardTable'
-import { type PerformanceSummary } from './speedrunPerformanceSummary'
 
 type Props = {
   ref: React.RefObject<HTMLDivElement | null>
@@ -26,7 +26,6 @@ type Props = {
 }
 
 // Fullscreen overlay shown at the end of a speedrun
-
 export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile }) => {
   const startCountdown = useGameStore((s) => s.startCountdown)
   const resetGame = useGameStore((s) => s.resetGame)
@@ -79,6 +78,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
               onPerformanceSummary={setPerformanceSummary}
             />
           </Panel>
+          <FeedbackPanel speedrunId={null} className="col-span-2 row-start-4" />
 
           <div className="col-span-full grid grid-cols-3 gap-3 xl:col-span-1 xl:gap-4">
             <TimeScorePanel />
