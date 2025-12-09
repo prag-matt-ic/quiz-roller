@@ -1,6 +1,14 @@
-import { type LucideIcon } from 'lucide-react'
-import type { ButtonHTMLAttributes, FC, ReactNode } from 'react'
+'use client'
+
+import { type LucideIcon, type LucideProps } from 'lucide-react'
+import type { ButtonHTMLAttributes, FC, PointerEventHandler, ReactNode } from 'react'
+import { useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
+
+import {
+  BUTTON_ATTRACTOR_CONFIG,
+  useSurfaceAttractor,
+} from '@/components/ui/attractors/useSurfaceAttractor'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: 'primary' | 'secondary'
@@ -13,7 +21,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const BASE_CLASSES =
-  'relative flex size-fit cursor-pointer leading-none disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold'
+  'relative flex size-fit tracking-wide cursor-pointer leading-none disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold overflow-hidden transition-colors duration-200'
 
 const SIZE_CLASSES = {
   sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
@@ -27,12 +35,20 @@ const ICON_SIZE_CLASSES = {
   lg: 'size-5 xl:size-6',
 }
 
+const ICON_PROPS: Partial<LucideProps> = {
+  strokeWidth: 1.5,
+}
+
 const VARIANT_CLASSES: Record<ButtonProps['variant'], string> = {
   primary:
-    'border border-white/15 bg-radial from-white/5 to-white/10 text-white hover:from-white/10 hover:to-white/20',
+    'border border-teal-100/20 bg-linear-0 from-teal-400/5 to-teal-400/10 text-white hover:border-teal-400/40 hover:from-teal-400/10 hover:to-teal-400/15',
   secondary:
     'border border-white/5 bg-radial from-white/3 to-white/6 text-white/70 hover:from-white/6 hover:to-white/12 hover:text-white',
 }
+
+const ATTRACTOR_CONTAINER_CLASSES =
+  'pointer-events-none absolute inset-0 -z-10 flex items-center justify-center'
+const ATTRACTOR_GLOW_CLASSES = 'size-20 rounded-full bg-teal-600/50 blur-2xl opacity-0'
 
 const Button: FC<ButtonProps> = ({
   variant = 'primary',
@@ -42,18 +58,57 @@ const Button: FC<ButtonProps> = ({
   startIcon: StartIcon,
   endIcon: EndIcon,
   iconClassName,
+  onPointerEnter,
+  onPointerLeave,
   ...props
 }) => {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const attractorRef = useRef<HTMLDivElement>(null)
+  const isPrimary = variant === 'primary'
+
+  const { containerHandlers, shouldAnimate } = useSurfaceAttractor({
+    isEnabled: isPrimary,
+    containerRef: buttonRef,
+    attractorRef,
+    config: BUTTON_ATTRACTOR_CONFIG,
+  })
+
+  const mergedOnPointerEnter: PointerEventHandler<HTMLButtonElement> | undefined = isPrimary
+    ? (event) => {
+        containerHandlers?.onPointerEnter?.()
+        onPointerEnter?.(event)
+      }
+    : onPointerEnter
+
+  const mergedOnPointerLeave: PointerEventHandler<HTMLButtonElement> | undefined = isPrimary
+    ? (event) => {
+        containerHandlers?.onPointerLeave?.()
+        onPointerLeave?.(event)
+      }
+    : onPointerLeave
+
   return (
     <button
+      ref={buttonRef}
+      onPointerEnter={mergedOnPointerEnter}
+      onPointerLeave={mergedOnPointerLeave}
       className={twMerge(BASE_CLASSES, SIZE_CLASSES[size], VARIANT_CLASSES[variant], className)}
       {...props}>
+      {isPrimary ? (
+        <div className={ATTRACTOR_CONTAINER_CLASSES} aria-hidden="true">
+          <div
+            ref={attractorRef}
+            data-surface-glow="true"
+            className={twMerge(ATTRACTOR_GLOW_CLASSES, shouldAnimate ? '' : 'hidden')}
+          />
+        </div>
+      ) : null}
       {!!StartIcon ? (
-        <StartIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
+        <StartIcon {...ICON_PROPS} className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
       ) : null}
       {children}
       {!!EndIcon ? (
-        <EndIcon className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
+        <EndIcon {...ICON_PROPS} className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
       ) : null}
     </button>
   )

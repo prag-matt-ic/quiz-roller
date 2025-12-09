@@ -1,13 +1,14 @@
 /* eslint-disable react-hooks/refs */
 'use client'
 
-import { useGSAP } from '@gsap/react'
 import { useInViewport, useMergedRef } from '@mantine/hooks'
-import gsap from 'gsap'
-import { type FC, type PropsWithChildren, type RefObject, useRef } from 'react'
+import { type FC, type PropsWithChildren, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-import { type PointerPosition, usePointerPosition } from '@/components/ui/PointerProvider'
+import {
+  PANEL_ATTRACTOR_CONFIG,
+  useSurfaceAttractor,
+} from '@/components/ui/attractors/useSurfaceAttractor'
 
 type Strength = 1 | 2 | 3
 
@@ -38,14 +39,15 @@ const Panel: FC<PanelProps> = ({
 
   const { containerHandlers } = useSurfaceAttractor({
     isEnabled: inViewport && enableAttractor,
-    container,
-    attractor,
+    containerRef: container,
+    attractorRef: attractor,
+    config: PANEL_ATTRACTOR_CONFIG,
   })
 
   return (
     <div
       ref={mergedRef}
-      {...containerHandlers}
+      {...(containerHandlers ?? {})}
       className={twMerge(
         'relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm lg:p-6',
         CONTAINER_STRENGTH_CLASSES[strength],
@@ -69,104 +71,3 @@ const Panel: FC<PanelProps> = ({
 }
 
 export default Panel
-
-const ACTIVE_PROXIMITY = 128
-const INACTIVE_PROXIMITY = 160
-
-function useSurfaceAttractor({
-  isEnabled,
-  container,
-  attractor,
-}: {
-  isEnabled: boolean
-  container: RefObject<HTMLDivElement | null>
-  attractor: RefObject<HTMLDivElement | null>
-}) {
-  const quickSetX = gsap.quickSetter(attractor.current, 'x', 'px')
-  const quickSetY = gsap.quickSetter(attractor.current, 'y', 'px')
-  const quickToOpacity = gsap.quickTo(attractor.current, 'opacity', {
-    duration: 0.5,
-    ease: 'power2.out',
-  })
-  const isPointerInside = useRef(false)
-
-  const { contextSafe } = useGSAP({
-    dependencies: [isEnabled],
-  })
-
-  const onPointerPositionChange = contextSafe((position: PointerPosition) => {
-    if (!isEnabled) return
-    if (!attractor.current || !container.current) return
-
-    const containerRect = container.current.getBoundingClientRect()
-    const activeZone = calculateProximityZone(containerRect, ACTIVE_PROXIMITY)
-
-    const isInActiveZone = isWithinZone(position, activeZone)
-
-    if (!isInActiveZone) {
-      const inactiveZone = calculateProximityZone(containerRect, INACTIVE_PROXIMITY)
-      if (isWithinZone(position, inactiveZone)) quickToOpacity(0)
-      return
-    }
-
-    const { x: targetX, y: targetY } = calculateAttractorPosition(position, containerRect)
-    quickSetX(targetX)
-    quickSetY(targetY)
-    quickToOpacity(isPointerInside.current ? 1 : 0.7)
-  })
-
-  usePointerPosition(onPointerPositionChange)
-
-  return {
-    containerHandlers: {
-      onPointerEnter: () => {
-        isPointerInside.current = true
-      },
-      onPointerLeave: () => {
-        isPointerInside.current = false
-      },
-    },
-  }
-}
-
-type ProximityZone = {
-  left: number
-  right: number
-  top: number
-  bottom: number
-}
-
-function calculateProximityZone(rect: DOMRect, proximity: number): ProximityZone {
-  return {
-    left: rect.left - proximity,
-    right: rect.right + proximity,
-    top: rect.top - proximity,
-    bottom: rect.bottom + proximity,
-  }
-}
-
-function isWithinZone(position: PointerPosition, zone: ProximityZone): boolean {
-  return (
-    position.x >= zone.left &&
-    position.x <= zone.right &&
-    position.y >= zone.top &&
-    position.y <= zone.bottom
-  )
-}
-
-function calculateAttractorPosition(
-  cursorPosition: PointerPosition,
-  containerRect: DOMRect,
-): { x: number; y: number } {
-  const localX = cursorPosition.x - containerRect.left
-  const localY = cursorPosition.y - containerRect.top
-
-  // Calculate offset from center since attractor is centered in container
-  const centerX = containerRect.width / 2
-  const centerY = containerRect.height / 2
-
-  const targetX = localX - centerX
-  const targetY = localY - centerY
-
-  return { x: targetX, y: targetY }
-}

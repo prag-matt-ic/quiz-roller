@@ -65,12 +65,6 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       />
 
       <header className="relative mx-auto flex w-xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden xl:w-3xl">
-        <div className="relative flex w-full flex-wrap gap-2 text-sm leading-3 xl:text-base">
-          <span className="font-unbounded font-medium">Pragmattic</span>
-          <span className="text-xs tracking-wide text-white/50">AND</span>
-          <span className="font-unbounded font-medium">Loopspeed</span>
-          <span className="text-xs tracking-wide text-white/50">PRESENTS</span>
-        </div>
         <div className="relative h-fit w-full">
           <Image
             src={speedrollerFaint}
@@ -88,6 +82,17 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       </header>
 
       <LandingControls isLoaded={isLoaded} isMobile={isMobile} onStart={onStart} />
+
+      <div
+        className={twJoin(
+          'absolute inset-x-5 bottom-0 flex w-full flex-wrap justify-center gap-2 py-4 text-sm leading-3 text-white/70 opacity-0 transition-opacity duration-1000 xl:py-6 xl:text-base',
+          isLoaded && 'opacity-100 delay-500',
+        )}>
+        <span className="text-xs tracking-wider text-white/40">BY</span>
+        <span className="font-unbounded font-medium">Pragmattic</span>
+        <span className="text-xs tracking-wider text-white/40">AND</span>
+        <span className="font-unbounded font-medium">Loopspeed</span>
+      </div>
     </div>
   )
 }

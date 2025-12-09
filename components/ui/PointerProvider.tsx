@@ -88,3 +88,26 @@ export function usePointerPosition(onPositionChange?: (value: PointerPosition) =
 
   return { value: position }
 }
+
+export function useOptionalPointerPosition(onPositionChange?: (value: PointerPosition) => void) {
+  const store = useContext(Context)
+  const position = useRef<PointerPosition | null>(store?.getState().position ?? null)
+
+  useEffect(() => {
+    if (!store || !onPositionChange) return
+    const unsubscribe = store.subscribe((state, prevState) => {
+      if (state.position === prevState.position) return
+      position.current = state.position
+      onPositionChange?.(state.position)
+    })
+    return unsubscribe
+  }, [store, onPositionChange])
+
+  useEffect(() => {
+    if (!store || !position.current) return
+    onPositionChange?.(position.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return { hasPointerProvider: Boolean(store), value: position }
+}

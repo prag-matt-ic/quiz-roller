@@ -42,7 +42,7 @@ const Key: FC<KeyProps> = ({ Icon, isActive }) => {
     <div
       className={twJoin(
         'flex h-7 w-10 items-center justify-center rounded-md text-black',
-        isActive ? 'bg-white/80' : 'bg-white/50',
+        isActive ? 'bg-white' : 'bg-neutral-300',
       )}>
       <Icon size={16} strokeWidth={3} />
     </div>

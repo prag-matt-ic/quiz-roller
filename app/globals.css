@@ -103,6 +103,15 @@ h6 {
     }
   }
 
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   .animate-reveal-logo {
     mask-image: linear-gradient(
       to right,
