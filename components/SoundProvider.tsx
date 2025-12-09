@@ -20,7 +20,7 @@ export enum SoundFX {
   COIN_COLLECTED = 'COIN_COLLECTED',
   CONFETTI_BURST = 'CONFETTI_BURST',
 }
-// TODO: add speed run countdown sound FX
+// TODO: add speed run countdown sound FX (3,2,1... go!)
 // TODO: add new coin collect sound fx perhaps speed boost related.
 // TODO: add more intense background music for speed run mode
 
@@ -31,8 +31,8 @@ const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
-  [SoundFX.COIN_COLLECTED]: '/audio/coin.aac',
-  [SoundFX.CONFETTI_BURST]: '/audio/coin.aac',
+  [SoundFX.COIN_COLLECTED]: '/audio/confetti.aac', // TODO: Replace with coin.aac
+  [SoundFX.CONFETTI_BURST]: '/audio/confetti.aac',
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>

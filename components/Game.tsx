@@ -85,7 +85,4 @@ export default Game
 
 // ------------------
 // Ideas
-
-// player fly in effect on initial spawn. Platform starts out of view, it then scrolls towards the player as the player's y position drops it onto the starting place.
-
 // Glass walls with text that shatter as you roll through them
