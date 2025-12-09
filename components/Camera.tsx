@@ -29,11 +29,11 @@ export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
-  [Stage.HOME]: 1.25,
-  [Stage.INFO]: 1.25,
+  [Stage.HOME]: 1.5,
+  [Stage.INFO]: 1.5,
   [Stage.OBSTACLES]: 1.3,
-  [Stage.CTA]: 1.25,
-  [Stage.SPEED_RUN_FINISH]: 1.25,
+  [Stage.CTA]: 1.5,
+  [Stage.SPEED_RUN_FINISH]: 1.5,
 }
 
 type Props = {
@@ -84,10 +84,8 @@ const Camera: FC<Props> = ({ isMobile, position }) => {
     if (!cameraControls.current) return
 
     const lookAt = cameraLookAtPosition ?? playerPosition.current
-
     // Adjust the position based on player input
     const positionZOffset = input.current.down * 5.0 - input.current.up * -3.0
-
     // Look left or right based on player input
     const lookAtX = lookAt[0] + (input.current.right - input.current.left) * 1.5
 

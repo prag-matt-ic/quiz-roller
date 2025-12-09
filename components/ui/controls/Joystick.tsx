@@ -7,10 +7,10 @@ const POINTER_MOVE_OPTIONS: AddEventListenerOptions = { passive: false }
 type NativePointerEvent = globalThis.PointerEvent
 
 const DEFAULT_OPTIONS = {
-  maxRange: 60,
+  maxRange: 70,
   level: 10,
-  radius: 50,
-  joystickRadius: 30,
+  radius: 60,
+  joystickRadius: 35,
   x: '2rem',
   y: '2rem',
 } as const
@@ -303,8 +303,8 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
       aria-hidden="true">
       <div
         ref={controllerRef}
-        className={twMerge('relative rounded-full bg-white/10', controllerClassName)}
-        style={{ width: radius * 2, height: radius * 2 }}>
+        className={twMerge('relative rounded-full bg-black/60', controllerClassName)}
+        style={{ width: radius * 1.5, height: radius * 1.5 }}>
         <div
           ref={joystickRef}
           className={joystickClasses}
