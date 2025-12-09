@@ -66,8 +66,8 @@ export type TimeSlice = {
 }
 
 export enum InputType {
-  KEYS = 'k',
-  JOYSTICK = 'j',
+  KEYS = 'keyboard',
+  JOYSTICK = 'joystick',
 }
 
 export type InputSlice = {

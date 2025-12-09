@@ -15,15 +15,20 @@ import { PLATFORM_VERSION } from '@/resources/rowsData'
 
 export async function getSpeedrunData(
   count: number,
+  inputType?: 'keyboard' | 'joystick',
   levelId: string = PLATFORM_VERSION,
 ): Promise<SpeedRunDatabase[]> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
 
+    const wherePlayerInput = inputType
+      ? sql`WHERE level_id = ${levelId} AND input_type = ${inputType}`
+      : sql`WHERE level_id = ${levelId}`
+
     const speedrun = await sql`
       SELECT id, username, time, date, ip, country, flag, attempt, input_type, level_id
-      FROM "quizroller_speedrun" 
-      WHERE level_id = ${levelId}
+      FROM "speedroller" 
+      ${wherePlayerInput}
       ORDER BY time ASC
       LIMIT ${count}
     `
@@ -59,7 +64,7 @@ export async function getSpeedrunPosition(
           input_type,
           level_id,
           ROW_NUMBER() OVER (ORDER BY time ASC) as position
-        FROM "quizroller_speedrun"
+        FROM "speedroller"
         WHERE level_id = ${levelId}
       )
       SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id
@@ -107,7 +112,7 @@ export async function insertSpeedRun({
     // Calculate attempt number based on username AND IP
     const previousAttempts = await sql`
       SELECT COUNT(*) as count
-      FROM "quizroller_speedrun"
+      FROM "speedroller"
       WHERE username = ${username}
       AND ip = ${ip}
     `
@@ -131,7 +136,7 @@ export async function insertSpeedRun({
 
     // TODO: Rename this table.
     const insertResult = await sql`
-      INSERT INTO "quizroller_speedrun" (username, time, date, ip, country, flag, attempt, input_type, level_id) 
+      INSERT INTO "speedroller" (username, time, date, ip, country, flag, attempt, input_type, level_id) 
       VALUES (${validatedInsert.username}, ${validatedInsert.time}, ${validatedInsert.date}, ${validatedInsert.ip}, ${validatedInsert.country}, ${validatedInsert.flag}, ${validatedInsert.attempt}, ${validatedInsert.input_type}, ${validatedInsert.level_id})
       RETURNING id, username, time, date, ip, country, flag, attempt, input_type, level_id
     `
@@ -156,7 +161,7 @@ export async function deleteAllSpeedRuns(): Promise<number> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const deletedRows = await sql`
-      DELETE FROM "quizroller_speedrun"
+      DELETE FROM "speedroller"
       RETURNING id
     `
     console.warn('Deleted speedrun rows:', deletedRows.length)

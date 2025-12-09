@@ -58,7 +58,7 @@ export const createTimeSlice =
         username,
         time: timeInSeconds,
         date: new Date().toISOString(),
-        input_type: inputType === InputType.KEYS ? 'keyboard' : 'joystick',
+        input_type: inputType,
         level_id: PLATFORM_VERSION,
       }
 
