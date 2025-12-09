@@ -289,7 +289,7 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
       'absolute left-1/2 bottom-1/2 rounded-full border-2 border-black',
       'transition-transform duration-100 ease-out',
       'touch-none select-none',
-      'shadow-[inset_0_-4px_8px_rgba(10,10,10,0.3)] bg-radial from-neutral-300 to-white',
+      'shadow-[inset_0_-4px_8px_rgba(10,10,10,0.3)] bg-radial from-neutral-200 to-white',
       isGrabbing ? 'cursor-grabbing' : 'cursor-grab',
     ),
     joystickClassName,
@@ -299,12 +299,13 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
     <div
       ref={containerRef}
       style={{ right: rightOffset, bottom: bottomOffset }}
-      className={twMerge('fixed select-none', className)}
+      className={twMerge('fixed flex items-center justify-center select-none', className)}
       role="presentation"
       aria-hidden="true">
+      <div className="absolute size-5 rounded-full bg-white" />
       <div
         ref={controllerRef}
-        className={twMerge('relative rounded-full bg-black/60', controllerClassName)}
+        className={twMerge('relative', controllerClassName)}
         style={{ width: radius * 1.5, height: radius * 1.5 }}>
         <div
           ref={joystickRef}

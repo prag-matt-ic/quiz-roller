@@ -81,13 +81,13 @@ const UI: FC<Props> = ({ isMobile }) => {
           }
         }}
         className={twJoin(
-          'pointer-events-auto fixed top-2.5 right-2.5 z-300 flex items-center rounded-xl border border-black/40 bg-black/35 p-3 text-xs text-white uppercase transition-all hover:border-black/30 hover:bg-black/20',
+          'pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-lg p-3 text-xs text-neutral-300 uppercase transition-all hover:bg-black/30 hover:text-white xl:top-4 xl:right-4',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (
-          <XIcon className="size-5 xl:size-6" />
+          <XIcon className="size-6 xl:size-8" />
         ) : (
-          <LayoutDashboardIcon className="size-5 xl:size-6" strokeWidth={1.5} />
+          <LayoutDashboardIcon className="size-6 xl:size-8" strokeWidth={1.5} />
         )}
       </button>
 

@@ -177,7 +177,7 @@ const Stick: FC = () => {
         joystickPosition === 'left' ? 'left-12' : 'right-12',
       )}
       onMove={onJoystickMove}>
-      <div className="flex size-full items-center justify-center text-black">
+      <div className="flex size-full items-center justify-center text-neutral-500">
         <Move size={24} strokeWidth={2} />
       </div>
     </Joystick>
