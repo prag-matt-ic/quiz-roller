@@ -58,7 +58,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           transitionStatus === 'exiting' && 'opacity-0',
         )}>
         <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:gap-4">
-          <Panel className="" strength={1}>
+          <Panel className="" strength={3}>
             <h2 className="text-2xl font-bold lg:text-4xl">{summaryHeading}</h2>
             <p className="mt-3 max-w-md text-sm text-white/80 xl:text-base">
               {summaryDescription}
@@ -66,6 +66,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           </Panel>
 
           <Panel
+            strength={3}
             className="row-span-3 row-start-3 xl:col-start-2 xl:row-start-1"
             attractorClassName="bg-emerald-400/15">
             {/* TODO: this should only show the current input type for the recent run. */}
@@ -100,7 +101,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel className="col-span-full flex items-center justify-center gap-3" strength={1}>
             {isShareSupported && (
               <Button
-                variant="secondary"
+                variant="primary"
                 size="md"
                 endIcon={SmilePlus}
                 onClick={() => {

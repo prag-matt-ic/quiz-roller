@@ -14,7 +14,9 @@ type TimeScorePanelProps = {
 
 export const TimeScorePanel: FC<TimeScorePanelProps> = ({ className }) => {
   return (
-    <Panel className={twJoin('flex h-full flex-col justify-between gap-3', className)}>
+    <Panel
+      strength={3}
+      className={twJoin('flex h-full flex-col justify-between gap-3', className)}>
       <PanelHeader icon={TimerIcon} label="Your Time" />
       <SpeedRunTimeDisplay className="font-mono text-2xl font-medium xl:text-4xl" />
     </Panel>

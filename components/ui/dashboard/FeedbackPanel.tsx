@@ -49,8 +49,9 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
 
   return (
     <Panel
+      strength={1}
       className={twJoin('flex flex-col justify-between gap-3', className)}
-      attractorClassName="bg-amber-600/20">
+      attractorClassName="bg-neutral-400/15">
       <PanelHeader icon={MessageCircle} iconClassName="text-white" label="Feedback" />
 
       {hasSubmitted ? (
