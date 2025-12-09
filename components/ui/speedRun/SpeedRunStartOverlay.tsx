@@ -65,12 +65,13 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
               onClick={start}
               disabled={!inputProps.isValid}
               className={twJoin(
-                'flex size-full items-center justify-center',
+                'flex h-full items-center justify-center gap-2 px-3',
                 inputProps.isValid
                   ? 'animate-pulse text-emerald-400 hover:text-emerald-200'
-                  : 'text-neutral-600',
+                  : 'cursor-not-allowed! text-neutral-600',
               )}>
-              <Play size={32} strokeWidth={2} />
+              <span className="text-lg font-medium tracking-wide uppercase">Play</span>
+              <Play size={32} strokeWidth={2} className="" />
             </button>
           }
         />
@@ -79,7 +80,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
 
         <Button
           type="button"
-          variant="secondary"
+          variant="primary"
           onClick={() => setOverlay(Overlay.NONE)}
           className=""
           size="sm"

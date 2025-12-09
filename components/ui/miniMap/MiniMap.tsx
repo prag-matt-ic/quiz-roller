@@ -143,8 +143,8 @@ const MiniMap: FC = () => {
     <aside
       id="mini-map"
       className={twJoin(
-        'pointer-events-none fixed bottom-3 z-5 flex items-center justify-center overflow-hidden rounded-full bg-black',
-        isMapOnRight ? 'right-3' : 'left-3',
+        'pointer-events-none fixed bottom-3 z-5 flex items-center justify-center overflow-hidden rounded-full bg-black xl:bottom-6',
+        isMapOnRight ? 'right-3 xl:right-6' : 'left-3 xl:left-6',
       )}
       style={{
         width: COLUMNS * mapTileSizePx,
@@ -172,7 +172,7 @@ const MiniMap: FC = () => {
       />
       <div
         ref={progressRef}
-        className="absolute inset-0 size-full rounded-full border-2 border-teal-300 bg-none"
+        className="absolute inset-0 size-full rounded-full border-2 border-teal-700 bg-none"
         style={{
           clipPath: 'inset(100% 0 0 0)',
         }}

@@ -286,9 +286,10 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
 
   const joystickClasses = twMerge(
     twJoin(
-      'absolute left-1/2 bottom-1/2 rounded-full bg-white border-2 border-black',
+      'absolute left-1/2 bottom-1/2 rounded-full border-2 border-black',
       'transition-transform duration-100 ease-out',
       'touch-none select-none',
+      'shadow-[inset_0_-4px_8px_rgba(10,10,10,0.3)] bg-radial from-neutral-300 to-white',
       isGrabbing ? 'cursor-grabbing' : 'cursor-grab',
     ),
     joystickClassName,
