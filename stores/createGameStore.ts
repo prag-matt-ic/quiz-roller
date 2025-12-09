@@ -49,7 +49,7 @@ export const createGameStore = ({
               joystickPosition: s.joystickPosition,
             }) as PersistedStore,
           version: 1,
-          onRehydrateStorage: (state) => {
+          onRehydrateStorage: () => {
             return (state, error) => {
               if (!!error) {
                 console.error('an error happened during hydration', error)

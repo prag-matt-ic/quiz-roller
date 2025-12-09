@@ -4,7 +4,6 @@ import { PLATFORM_VERSION } from '@/resources/rowsData'
 import {
   GameMode,
   type GameSliceCreator,
-  InputType,
   SpeedRunStage,
   type TimeSlice,
   getOverlayForSpeedRunStage,

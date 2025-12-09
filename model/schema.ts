@@ -80,6 +80,19 @@ export const speedrunDatabaseSchema = speedrunDatabaseInsertSchema.extend({
   date: databaseDateSchema,
 })
 
+export const feedbackSubmissionSchema = z.object({
+  message: z.string().min(10).max(500).trim(),
+  speedrun_id: z.number(),
+  username: z.string().min(6).max(12),
+})
+
+export const feedbackDatabaseSchema = feedbackSubmissionSchema.extend({
+  id: z.number(),
+  username: z.string(),
+  ip: z.string(),
+  created_at: databaseDateSchema,
+})
+
 export type SpeedRunSubmission = z.infer<typeof speedRunSubmissionSchema>
 
 export type ServerSpeedRunSubmission = Omit<SpeedRunSubmission, 'attempt'>
@@ -89,3 +102,9 @@ export type SpeedRunDatabaseInsert = z.infer<typeof speedrunDatabaseInsertSchema
 export type SpeedRunDatabase = z.infer<typeof speedrunDatabaseSchema>
 
 export type InsertSpeedRunResponse = Promise<SpeedRunDatabase | null>
+
+export type FeedbackSubmission = z.infer<typeof feedbackSubmissionSchema>
+
+export type FeedbackDatabase = z.infer<typeof feedbackDatabaseSchema>
+
+export type InsertFeedbackResponse = Promise<FeedbackDatabase | null>

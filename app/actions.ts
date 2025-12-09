@@ -4,10 +4,14 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 
 import {
+  type FeedbackSubmission,
+  type InsertFeedbackResponse,
   type InsertSpeedRunResponse,
   type ServerSpeedRunSubmission,
   type SpeedRunDatabase,
   type SpeedRunDatabaseInsert,
+  feedbackDatabaseSchema,
+  feedbackSubmissionSchema,
   speedrunDatabaseInsertSchema,
   speedrunDatabaseSchema,
 } from '@/model/schema'
@@ -155,7 +159,7 @@ export async function insertSpeedRun({
     return parsedInsert
   } catch (error) {
     console.error('Error submitting speedrun:', error)
-    
+
     if (error instanceof z.ZodError) {
       console.error('Zod validation error:', JSON.stringify(error.issues, null, 2))
       return null
@@ -177,5 +181,29 @@ export async function deleteAllSpeedRuns(): Promise<number> {
   } catch (error) {
     console.error('Error resetting speedruns:', error)
     return 0
+  }
+}
+
+export async function submitFeedback(data: FeedbackSubmission): InsertFeedbackResponse {
+  try {
+    const validatedData = feedbackSubmissionSchema.parse(data)
+    const sql = neon(process.env.DATABASE_URL!)
+
+    const result = await sql`
+      INSERT INTO "feedback" 
+        (speedrun_id, username, message, ip)
+      VALUES 
+        (${validatedData.speedrun_id}, ${validatedData.username}, ${validatedData.message}, 'client')
+      RETURNING id, speedrun_id, username, message, ip, created_at
+    `
+
+    return feedbackDatabaseSchema.parse(result[0])
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues)
+    } else {
+      console.error('Error submitting feedback:', error)
+    }
+    return null
   }
 }
