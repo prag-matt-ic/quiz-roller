@@ -1,10 +1,10 @@
 import {
+  type CreateGameStoreParams,
   type GameSliceCreator,
   type InputSlice,
   InputType,
   type LeaderboardFilter,
   type PlayerInput,
-  type SliceDeps,
 } from './types'
 
 const createZeroInput = (): PlayerInput => ({
@@ -14,13 +14,16 @@ const createZeroInput = (): PlayerInput => ({
   right: 0,
 })
 
-export const getResetInputState = (): Pick<InputSlice, 'playerInput' | 'playerInputIntent'> => ({
+export const getResetInputState = (): Pick<
+  InputSlice,
+  'playerInput' | 'playerInputIntent'
+> => ({
   playerInput: createZeroInput(),
   playerInputIntent: createZeroInput(),
 })
 
 export const createInputSlice =
-  ({ isMobile }: SliceDeps): GameSliceCreator<InputSlice> =>
+  (isMobile: CreateGameStoreParams['isMobile']): GameSliceCreator<InputSlice> =>
   (set) => {
     const initialInputType: InputType = isMobile ? InputType.JOYSTICK : InputType.KEYS
     return {

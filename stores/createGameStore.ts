@@ -1,41 +1,28 @@
 import { createStore } from 'zustand'
 import { type PersistOptions, persist, subscribeWithSelector } from 'zustand/middleware'
 
-import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
-import type { InsertSpeedRunResponse, ServerSpeedRunSubmission } from '@/model/schema'
-
 import { createGameSlice } from './gameSlice'
 import { createInputSlice } from './inputSlice'
 import { createOverlaysSlice } from './overlaysSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createTimeSlice } from './timeSlice'
-import { GameMode, type GameStore } from './types'
+import { type CreateGameStoreParams, GameMode, type GameStore } from './types'
 
 type PersistedStore = Pick<
   GameStore,
   'username' | 'totalTimeS' | 'completedSpeedRuns' | 'mode' | 'inputType' | 'joystickPosition'
 >
 
-export const createGameStore = ({
-  isMobile,
-  playSoundFX,
-  stopSoundFX,
-  insertSpeedRun,
-}: {
-  isMobile: boolean
-  playSoundFX: PlaySoundFX
-  stopSoundFX: (fx: SoundFX) => void
-  insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse
-}) => {
+export const createGameStore = (params: CreateGameStoreParams) => {
   return createStore<GameStore>()(
     subscribeWithSelector(
       persist<GameStore, [], [], PersistedStore>(
         (...a) => ({
-          ...createTimeSlice(insertSpeedRun)(...a),
-          ...createInputSlice({ isMobile, playSoundFX, stopSoundFX })(...a),
-          ...createPlayerSlice({ isMobile, playSoundFX, stopSoundFX })(...a),
+          ...createTimeSlice(params.insertSpeedRun)(...a),
+          ...createInputSlice(params.isMobile)(...a),
+          ...createPlayerSlice(params)(...a),
           ...createOverlaysSlice(...a),
-          ...createGameSlice(...a),
+          ...createGameSlice(params.switchBackgroundTrack)(...a),
         }),
         {
           name: 'quizroller-v2',
@@ -52,7 +39,7 @@ export const createGameStore = ({
           onRehydrateStorage: () => {
             return (state, error) => {
               if (!!error) {
-                console.error('an error happened during hydration', error)
+                console.error('Error during game store hydration:', error)
               } else {
                 state?.setHydrated(state?.mode ?? GameMode.LEARN)
               }

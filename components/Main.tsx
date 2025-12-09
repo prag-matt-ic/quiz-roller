@@ -1,7 +1,6 @@
 'use client'
 import { type FC } from 'react'
 
-import { BackgroundMusicController } from '@/components/BackgroundMusicController'
 import Game from '@/components/Game'
 import { PerformanceProvider } from '@/components/PerformanceProvider'
 import Timer from '@/components/Timer'
@@ -17,7 +16,6 @@ type Props = {
 const Main: FC<Props> = ({ isMobile, isDebug }) => {
   return (
     <PerformanceProvider isMobile={isMobile}>
-      <BackgroundMusicController />
       <Game isDebug={isDebug} isMobile={isMobile} />
       <UI isMobile={isMobile} />
       <HtmlPortal />

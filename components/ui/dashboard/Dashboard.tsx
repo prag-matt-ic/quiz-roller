@@ -4,9 +4,7 @@ import { type FC, type RefObject } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
-import { useGameStore } from '@/components/GameProvider'
 import { PointerProvider } from '@/components/ui/PointerProvider'
-import { FeedbackPanel } from '@/components/ui/dashboard/FeedbackPanel'
 import { LeaderboardPanel } from '@/components/ui/dashboard/LeaderboardPanel'
 import { SettingsPanel } from '@/components/ui/dashboard/SettingsPanel'
 import { SpeedPanel } from '@/components/ui/dashboard/SpeedPanel'
@@ -19,12 +17,6 @@ type DashboardProps = {
 }
 
 export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus }) => {
-  const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns)
-  const latestSpeedrunId =
-    completedSpeedRuns.length > 0
-      ? completedSpeedRuns[completedSpeedRuns.length - 1]?.id ?? null
-      : null
-
   return (
     <PointerProvider isMobile={isMobile}>
       <aside
@@ -40,7 +32,6 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus 
           <UsernamePanel />
           <LeaderboardPanel className="row-span-3" count={10} />
           <SpeedPanel />
-          <FeedbackPanel speedrunId={latestSpeedrunId} />
           <SettingsPanel />
         </div>
       </aside>

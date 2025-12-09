@@ -7,6 +7,7 @@ import { OUT_OF_BOUNDS_HUD_CONFIG } from '@/resources/content/hud'
 import { ringIndexToKey } from '@/utils/rings'
 
 import {
+  type CreateGameStoreParams,
   type GameSliceCreator,
   HudIndicatorConfig,
   type OutOfBoundsEvent,
@@ -14,7 +15,6 @@ import {
   type PlayerStatus,
   RingCollection,
   type RingIndex,
-  SliceDeps,
 } from './types'
 
 export const PLAYER_INITIAL_POSITION: Vector3Tuple = [0, 4, 0]
@@ -63,7 +63,7 @@ export const RESET_PLAYER_STATE: Pick<
 }
 
 export const createPlayerSlice =
-  ({ playSoundFX, stopSoundFX }: SliceDeps): GameSliceCreator<PlayerSlice> =>
+  ({ playSoundFX, stopSoundFX }: CreateGameStoreParams): GameSliceCreator<PlayerSlice> =>
   (set, get) => {
     let confirmationTween: GSAPTween | null = null
     const confirmationTweenTarget = { value: 0 }

@@ -9,6 +9,7 @@ import {
 import { type FC, type RefObject, useCallback, useEffect, useMemo } from 'react'
 import { type Vector3Tuple } from 'three'
 
+import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 import {
   default as ConfettiParticleEmitter,
   ConfettiParticleEmitterHandle,
@@ -42,6 +43,7 @@ const ConfettiRow: FC<Props> = ({
   index,
   palette,
 }) => {
+  const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const [leftEmitterRef, rightEmitterRef] = emitterRefs
 
   const emitterOffset = useMemo(() => width * 0.5 + EMITTER_EDGE_PADDING, [width])
@@ -66,7 +68,8 @@ const ConfettiRow: FC<Props> = ({
   const triggerBurst = useCallback(() => {
     leftEmitterRef.current?.burst()
     rightEmitterRef.current?.burst()
-  }, [leftEmitterRef, rightEmitterRef])
+    playSoundFX(SoundFX.CONFETTI_BURST)
+  }, [leftEmitterRef, rightEmitterRef, playSoundFX])
 
   const resetEmitters = useCallback(() => {
     leftEmitterRef.current?.reset()

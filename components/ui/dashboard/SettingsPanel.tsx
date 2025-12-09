@@ -14,11 +14,11 @@ import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
-import { SoundFX, useSoundStore } from '@/components/SoundProvider'
+import { useSoundStore } from '@/components/SoundProvider'
 import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
-import { GameMode, InputType } from '@/stores/types'
+import { InputType } from '@/stores/types'
 
 type Props = {
   className?: string
@@ -37,9 +37,6 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
   const isMuted = useSoundStore((s) => s.isMuted)
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
-  const currentBackgroundMusic =
-    mode === GameMode.SPEEDRUN ? SoundFX.BACKGROUND_SPEEDRUN : SoundFX.BACKGROUND_EXPLORE
-
   return (
     <Panel
       className={twMerge('h-full', className)}
@@ -53,7 +50,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
           <span className="text-sm font-medium text-white/70">Audio</span>
           <ButtonGroup
             value={isMuted ? 'off' : 'on'}
-            onChange={(val) => setIsMuted(val === 'off', currentBackgroundMusic)}
+            onChange={(val) => setIsMuted(val === 'off', mode)}
             items={[
               { label: 'On', value: 'on', Icon: Volume2 },
               { label: 'Off', value: 'off', Icon: VolumeX },

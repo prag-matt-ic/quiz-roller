@@ -1,12 +1,17 @@
-import { type LucideIcon } from 'lucide-react';
-import { type ReactNode } from 'react';
-import { type Vector3Tuple } from 'three';
-import { type StateCreator } from 'zustand';
+import { type LucideIcon } from 'lucide-react'
+import { type ReactNode } from 'react'
+import { type Vector3Tuple } from 'three'
+import { type StateCreator } from 'zustand'
 
-import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider';
-import { CollectibleID, SpeedRunDatabase } from '@/model/schema';
-import type { TotalCounts } from '@/stores/totalCounts';
-import type { RowData } from '@/utils/tiles';
+import { type SoundState } from '@/components/SoundProvider'
+import {
+  CollectibleID,
+  InsertSpeedRunResponse,
+  ServerSpeedRunSubmission,
+  SpeedRunDatabase,
+} from '@/model/schema'
+import type { TotalCounts } from '@/stores/totalCounts'
+import type { RowData } from '@/utils/tiles'
 
 export enum Stage {
   HOME = 1,
@@ -188,10 +193,9 @@ export type GameSlice = {
 
 export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice & OverlaysSlice
 
-export type SliceDeps = {
+export type CreateGameStoreParams = {
   isMobile: boolean
-  playSoundFX: PlaySoundFX
-  stopSoundFX: (fx: SoundFX) => void
-}
+  insertSpeedRun: (data: ServerSpeedRunSubmission) => InsertSpeedRunResponse
+} & Pick<SoundState, 'playSoundFX' | 'stopSoundFX' | 'switchBackgroundTrack'>
 
 export type GameSliceCreator<T> = StateCreator<GameStore, [['zustand/persist', unknown]], [], T>

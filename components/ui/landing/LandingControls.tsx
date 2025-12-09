@@ -33,6 +33,7 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
     { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
   ]
 
+  const mode = useGameStore((s) => s.mode)
   const isMuted = useSoundStore((s) => s.isMuted)
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
   const inputType = useGameStore((s) => s.inputType)
@@ -47,7 +48,7 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   const canStart = isLoaded && (!isMobile || isMobileLandscape)
 
   const onStartClick = () => {
-    setIsMuted(startMuted)
+    setIsMuted(startMuted, mode)
     onStart()
   }
 
