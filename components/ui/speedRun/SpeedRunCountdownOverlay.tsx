@@ -6,6 +6,7 @@ import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import { SoundFX, useSoundStore } from '@/components/SoundProvider'
 
 type Props = {
   ref: Ref<HTMLDivElement>
@@ -15,9 +16,13 @@ type Props = {
 // Start overlay handles the username input if needed and countdown
 export const SpeedRunCountdownOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const onCountdownComplete = useGameStore((s) => s.onCountdownComplete)
+  const playSoundFX = useSoundStore((s) => s.playSoundFX)
 
   useGSAP(() => {
     if (transitionStatus !== 'entered') return
+
+    playSoundFX(SoundFX.COUNTDOWN)
+
     gsap
       .timeline({
         defaults: { ease: 'linear' },
@@ -41,7 +46,7 @@ export const SpeedRunCountdownOverlay: FC<Props> = ({ ref, transitionStatus }) =
         duration: 1.0,
       })
       .set('#countdown-go', { opacity: 1 })
-  }, [transitionStatus])
+  }, [transitionStatus, playSoundFX])
 
   return (
     <div
