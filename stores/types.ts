@@ -1,12 +1,12 @@
-import { type LucideIcon } from 'lucide-react'
-import { type ReactNode } from 'react'
-import { type Vector3Tuple } from 'three'
-import { type StateCreator } from 'zustand'
+import { type LucideIcon } from 'lucide-react';
+import { type ReactNode } from 'react';
+import { type Vector3Tuple } from 'three';
+import { type StateCreator } from 'zustand';
 
-import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider'
-import { CollectibleID, SpeedRunDatabase } from '@/model/schema'
-import type { TotalCounts } from '@/stores/totalCounts'
-import type { RowData } from '@/utils/tiles'
+import { type PlaySoundFX, type SoundFX } from '@/components/SoundProvider';
+import { CollectibleID, SpeedRunDatabase } from '@/model/schema';
+import type { TotalCounts } from '@/stores/totalCounts';
+import type { RowData } from '@/utils/tiles';
 
 export enum Stage {
   HOME = 1,
@@ -70,6 +70,8 @@ export enum InputType {
   JOYSTICK = 'joystick',
 }
 
+export type LeaderboardFilter = 'all' | InputType
+
 export type InputSlice = {
   isMobile: boolean
   inputType: InputType
@@ -80,6 +82,8 @@ export type InputSlice = {
   setPlayerInputIntent: (input: PlayerInput) => void
   playerInput: PlayerInput
   setPlayerInput: (input: PlayerInput) => void
+  leaderboardFilter: LeaderboardFilter
+  setLeaderboardFilter: (filter: LeaderboardFilter) => void
 }
 
 export enum Overlay {
@@ -113,6 +117,11 @@ export type OverlaysSlice = {
   setOverlay: (overlay: Overlay) => void
 }
 
+export type OutOfBoundsEvent = {
+  hudId: string
+  timestamp: number
+}
+
 export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
@@ -126,7 +135,7 @@ export type PlayerSlice = {
   spawnPosition: Vector3Tuple | null
   playerRespawnTick: number
   playerStatus: PlayerStatus
-  fallCount: number
+  outOfBoundsEvents: OutOfBoundsEvent[]
 
   respawnPlayer: (position: Vector3Tuple, hud?: HudIndicatorConfig) => void
   onRespawnComplete: () => void

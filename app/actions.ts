@@ -46,10 +46,16 @@ export type RunWithPosition = {
 
 export async function getSpeedrunPosition(
   id: number,
+  inputType?: 'keyboard' | 'joystick',
   levelId: string = PLATFORM_VERSION,
 ): Promise<RunWithPosition | null> {
   try {
     const sql = neon(process.env.DATABASE_URL!)
+
+    const wherePlayerInput = inputType
+      ? sql`WHERE level_id = ${levelId} AND input_type = ${inputType}`
+      : sql`WHERE level_id = ${levelId}`
+
     const result = await sql`
       WITH ranked_runs AS (
         SELECT 
@@ -65,7 +71,7 @@ export async function getSpeedrunPosition(
           level_id,
           ROW_NUMBER() OVER (ORDER BY time ASC) as position
         FROM "speedroller"
-        WHERE level_id = ${levelId}
+        ${wherePlayerInput}
       )
       SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id
       FROM ranked_runs
@@ -149,10 +155,12 @@ export async function insertSpeedRun({
     return parsedInsert
   } catch (error) {
     console.error('Error submitting speedrun:', error)
+    
+    if (error instanceof z.ZodError) {
+      console.error('Zod validation error:', JSON.stringify(error.issues, null, 2))
+      return null
+    }
 
-    // TODO: handle returning an error and showing it in the UI with a toast or similar
-
-    if (error instanceof z.ZodError) return null
     return null
   }
 }

@@ -8,6 +8,8 @@ import { ringIndexToKey } from '@/utils/rings'
 
 import {
   type GameSliceCreator,
+  HudIndicatorConfig,
+  type OutOfBoundsEvent,
   type PlayerSlice,
   type PlayerStatus,
   RingCollection,
@@ -21,6 +23,29 @@ export const PLAYER_SPEED_MAX = 11.0
 const RING_SPEED_INCREMENT = 0.5
 const SPEED_COOLDOWN_S = 6.0
 const COLLECTIBLE_DURATION_S = 1.5
+
+const getOutOfBoundsMessage = (events: OutOfBoundsEvent[]): HudIndicatorConfig => {
+  const messagePosition = events.length % OUT_OF_BOUNDS_HUD_CONFIG.length
+  const firstMessage = events.length - messagePosition // ensures not same as last message of prev loop
+  const allMessages = events.slice(firstMessage).map((event) => event.hudId)
+
+  // use message from array of current loop of messages
+  const remainingMessages = OUT_OF_BOUNDS_HUD_CONFIG.filter(
+    (hud) => !allMessages.includes(hud.id),
+  )
+
+  // exclude the last message from previous loop when starting new loop
+  if (messagePosition === 0 && events.length > 0) {
+    const lastMessage = events[events.length - 1]?.hudId
+    const availableMessages = remainingMessages.filter((hud) => hud.id !== lastMessage)
+
+    if (availableMessages.length > 0) {
+      return availableMessages[Math.floor(Math.random() * availableMessages.length)]
+    }
+  }
+
+  return remainingMessages[Math.floor(Math.random() * remainingMessages.length)]
+}
 
 export const RESET_PLAYER_STATE: Pick<
   PlayerSlice,
@@ -130,7 +155,7 @@ export const createPlayerSlice =
       playerRespawnTick: 0,
       spawnPosition: null,
       playerStatus: 'idle' as PlayerStatus,
-      fallCount: 0,
+      outOfBoundsEvents: [],
       username: null,
       setUsername: (username: string) => {
         set({ username })
@@ -221,10 +246,15 @@ export const createPlayerSlice =
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
         resetSpeed()
+        const outOfBoundsMessage = getOutOfBoundsMessage(get().outOfBoundsEvents)
         set((s) => ({
           playerStatus: 'out-of-bounds',
           spawnPosition: null, // Calculated in usePlayerRespawn hook
-          fallCount: s.fallCount + 1,
+          hudIndicator: outOfBoundsMessage,
+          outOfBoundsEvents: [
+            ...s.outOfBoundsEvents,
+            { hudId: outOfBoundsMessage.id, timestamp: Date.now() },
+          ],
           playerInput: {
             up: 0,
             down: 0,

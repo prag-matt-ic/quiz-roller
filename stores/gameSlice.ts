@@ -114,7 +114,7 @@ export const createGameSlice: GameSliceCreator<GameSlice> = (set, get) => ({
         rowsData: isModeChange ? nextModeData.rowsData : s.rowsData,
         totalCounts: isModeChange ? nextModeData.totalCounts : s.totalCounts,
         overlay: nextOverlay,
-        fallCount: 0,
+        outOfBoundsEvents: [],
         playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
         spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
         playerRespawnTick: s.playerRespawnTick + 1,

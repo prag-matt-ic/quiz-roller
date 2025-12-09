@@ -1,11 +1,12 @@
 'use client'
-import { RotateCcwIcon, SmilePlus, Trophy } from 'lucide-react'
+import { Joystick, Keyboard, RotateCcwIcon, SmilePlus, Trophy, UsersRound } from 'lucide-react'
 import { type FC, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
+import { ButtonGroup } from '@/components/ui/ButtonGroup'
 import { PointerProvider } from '@/components/ui/PointerProvider'
 import { RingsPanel } from '@/components/ui/dashboard/RingsPanel'
 import TimeScorePanel from '@/components/ui/dashboard/TimeScorePanel'
@@ -13,7 +14,7 @@ import { TimesFallenPanel } from '@/components/ui/dashboard/TimesFallenPanel'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import { useWebShare } from '@/hooks/useWebShare'
-import { GameMode } from '@/stores/types'
+import { GameMode, InputType } from '@/stores/types'
 
 import { LeaderboardTable } from './LeaderboardTable'
 import { type PerformanceSummary } from './speedrunPerformanceSummary'
@@ -30,6 +31,8 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const startCountdown = useGameStore((s) => s.startCountdown)
   const resetGame = useGameStore((s) => s.resetGame)
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
+  const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
+  const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
   const { handleShare, isShareSupported } = useWebShare()
 
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
@@ -57,7 +60,17 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel
             className="row-span-3 row-start-3 xl:col-start-2 xl:row-start-1"
             attractorClassName="bg-emerald-400/15">
-            <PanelHeader icon={Trophy} label="Leaderboard" />
+            <PanelHeader icon={Trophy} label="Leaderboard">
+              <ButtonGroup
+                value={leaderboardFilter}
+                onChange={setLeaderboardFilter}
+                items={[
+                  { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
+                  { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
+                  { label: 'All', value: 'all', Icon: UsersRound },
+                ]}
+              />
+            </PanelHeader>
             <LeaderboardTable
               count={LEADERBOARD_COUNT}
               fetchLatestRun={true}

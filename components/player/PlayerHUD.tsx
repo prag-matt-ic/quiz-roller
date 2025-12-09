@@ -26,6 +26,7 @@ const PlayerHUD: FC = () => {
   const confirmingCollectible = useGameStore((s) => s.confirmingCollectible)
   const hudIndicator = useGameStore((s) => s.hudIndicator)
   const setHudIndicator = useGameStore((s) => s.setHudIndicator)
+  const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
 
   const showBar = confirmingCollectible !== null
   const showContent = !!hudIndicator
@@ -102,7 +103,7 @@ const PlayerHUD: FC = () => {
     })
   }
 
-  const switchKey = `${showBar}-${showContent}-${hudIndicator?.id ?? ''}`
+  const switchKey = `${showBar}-${showContent}-${hudIndicator?.id ?? ''}-${playerRespawnTick}`
 
   if (!isMounted) return null
 

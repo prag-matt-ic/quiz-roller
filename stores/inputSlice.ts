@@ -2,6 +2,7 @@ import {
   type GameSliceCreator,
   type InputSlice,
   InputType,
+  type LeaderboardFilter,
   type PlayerInput,
   type SliceDeps,
 } from './types'
@@ -27,6 +28,7 @@ export const createInputSlice =
       isMobile,
       inputType: initialInputType,
       joystickPosition: 'right',
+      leaderboardFilter: initialInputType,
       setInputType: (type: InputType) => {
         set({ inputType: type })
       },
@@ -38,6 +40,9 @@ export const createInputSlice =
       },
       setPlayerInput(input) {
         set({ playerInput: input })
+      },
+      setLeaderboardFilter: (filter: LeaderboardFilter) => {
+        set({ leaderboardFilter: filter })
       },
     }
   }

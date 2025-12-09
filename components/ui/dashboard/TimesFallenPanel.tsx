@@ -12,7 +12,7 @@ type Props = {
 }
 
 export const TimesFallenPanel: FC<Props> = ({ className }) => {
-  const fallCount = useGameStore((s) => s.fallCount)
+  const fallCount = useGameStore((s) => s.outOfBoundsEvents.length)
 
   return (
     <Panel

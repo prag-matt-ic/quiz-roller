@@ -6,7 +6,6 @@ import { twJoin, twMerge } from 'tailwind-merge'
 
 import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
-import type { SpeedRunDatabase } from '@/model/schema'
 
 import type { PerformanceSummary } from './speedrunPerformanceSummary'
 import { getSpeedrunPerformanceSummary } from './speedrunPerformanceSummary'
@@ -29,6 +28,7 @@ export const LeaderboardTable: FC<Props> = ({
   onPerformanceSummary,
 }) => {
   const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns)
+  const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const userSpeedRunIds = useMemo(
     () => completedSpeedRuns.map((run) => run.id),
     [completedSpeedRuns],
@@ -37,9 +37,11 @@ export const LeaderboardTable: FC<Props> = ({
     ? (completedSpeedRuns[completedSpeedRuns.length - 1]?.id ?? null)
     : null
 
+  const playerInputFilter = leaderboardFilter === 'all' ? undefined : leaderboardFilter
+
   const { data: leaderboardRuns = [], isPending: isLoadingLeaderboard } = useQuery({
-    queryKey: ['speedrun-leaderboard', count, latestRunId],
-    queryFn: () => getSpeedrunData(count),
+    queryKey: ['speedrun-leaderboard', count, latestRunId, leaderboardFilter],
+    queryFn: () => getSpeedrunData(count, playerInputFilter),
     staleTime: 30_000,
   })
 
@@ -49,8 +51,8 @@ export const LeaderboardTable: FC<Props> = ({
   const shouldFetchRecentRun = !!latestRunId && !isLoadingLeaderboard && !latestRunIsRanked
 
   const { data: recentRun } = useQuery({
-    queryKey: ['speedrun-recent-run', latestRunId],
-    queryFn: () => getSpeedrunPosition(latestRunId as number),
+    queryKey: ['speedrun-recent-run', latestRunId, leaderboardFilter],
+    queryFn: () => getSpeedrunPosition(latestRunId as number, playerInputFilter),
     enabled: shouldFetchRecentRun,
     staleTime: 30_000,
   })
