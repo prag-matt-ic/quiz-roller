@@ -23,7 +23,7 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus 
         ref={ref}
         className={twJoin(
           'fixed inset-0 z-200 flex items-center justify-center overflow-hidden px-18 transition-opacity duration-200',
-          'bg-black/35 backdrop-blur-lg',
+          'bg-linear-0 from-black/30 via-black/80 to-black/30 backdrop-blur-md xl:backdrop-blur-lg',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
           transitionStatus === 'exited' && 'opacity-0',
