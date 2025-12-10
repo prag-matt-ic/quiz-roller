@@ -191,10 +191,10 @@ export async function submitFeedback(data: FeedbackSubmission): InsertFeedbackRe
 
     const result = await sql`
       INSERT INTO "feedback" 
-        (speedrun_id, username, message, ip)
+        (username, message, ip)
       VALUES 
-        (${validatedData.speedrun_id}, ${validatedData.username}, ${validatedData.message}, 'client')
-      RETURNING id, speedrun_id, username, message, ip, created_at
+        (${validatedData.username}, ${validatedData.message}, 'client')
+      RETURNING id, username, message, ip, created_at
     `
 
     return feedbackDatabaseSchema.parse(result[0])

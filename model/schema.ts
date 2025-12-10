@@ -82,7 +82,6 @@ export const speedrunDatabaseSchema = speedrunDatabaseInsertSchema.extend({
 
 export const feedbackSubmissionSchema = z.object({
   message: z.string().min(10).max(500).trim(),
-  speedrun_id: z.number(),
   username: z.string().min(6).max(12),
 })
 

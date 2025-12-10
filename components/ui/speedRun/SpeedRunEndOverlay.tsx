@@ -96,7 +96,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             <TimesFallenPanel />
           </div>
 
-          <FeedbackPanel speedrunId={null} className="" />
+          <FeedbackPanel />
 
           <Panel className="col-span-full flex items-center justify-center gap-3" strength={1}>
             {isShareSupported && (

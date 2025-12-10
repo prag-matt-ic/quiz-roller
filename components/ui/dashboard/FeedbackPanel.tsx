@@ -10,12 +10,7 @@ import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import type { FeedbackSubmission } from '@/model/schema'
 
-type Props = {
-  className?: string
-  speedrunId: number | null
-}
-
-export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
+export const FeedbackPanel: FC = () => {
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
@@ -28,11 +23,8 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
     setIsSubmitting(true)
 
     try {
-      // TODO: linking it to the speed run means you can only send 1 feedback per run and we can't accept general feedback.
-      // K.I.S.S!
       const data: FeedbackSubmission = {
         message: message.trim(),
-        speedrun_id: speedrunId || 1,
         username,
       }
       const result = await submitFeedback(data)
@@ -50,7 +42,7 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
   return (
     <Panel
       strength={1}
-      className={twJoin('flex flex-col justify-between gap-3', className)}
+      className="flex flex-col justify-between gap-3"
       attractorClassName="bg-neutral-400/15">
       <PanelHeader icon={MessageCircle} iconClassName="text-white" label="Feedback" />
 
