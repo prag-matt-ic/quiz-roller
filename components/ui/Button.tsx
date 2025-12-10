@@ -21,7 +21,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const BASE_CLASSES =
-  'relative flex size-fit tracking-wide cursor-pointer leading-none disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold overflow-hidden transition-colors duration-200'
+  'group relative flex size-fit tracking-wide cursor-pointer leading-none disabled:opacity-70 uppercase items-center disabled:cursor-not-allowed justify-center rounded-full font-semibold overflow-hidden transition-colors duration-200'
 
 const SIZE_CLASSES = {
   sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',

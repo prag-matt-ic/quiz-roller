@@ -94,11 +94,13 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
 
         <Button
           variant="primary"
-          aria-label="Start experience"
+          aria-label="Enter"
           disabled={!canStart}
           onClick={onStartClick}
+          className="hover:text-teal-200"
+          iconClassName="transition-colors group-hover:text-teal-200"
           endIcon={showRotateHint ? RotateCcwIcon : PlayIcon}>
-          {showRotateHint ? 'Rotate to start' : 'Start experience'}
+          {showRotateHint ? 'Rotate device' : 'Enter'}
         </Button>
       </Panel>
     </PointerProvider>
