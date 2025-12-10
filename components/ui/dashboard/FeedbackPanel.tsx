@@ -5,7 +5,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { submitFeedback } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
-import Button from '@/components/ui/Button'
+import { Input } from '@/components/ui/input/UsernameInput'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import type { FeedbackSubmission } from '@/model/schema'
@@ -14,6 +14,7 @@ export const FeedbackPanel: FC = () => {
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const username = useGameStore((s) => s.username)
 
   const canSubmit = message.trim().length > 8 && !isSubmitting
@@ -34,6 +35,10 @@ export const FeedbackPanel: FC = () => {
       }
     } catch (error) {
       console.error('Error submitting feedback:', error)
+      setError(
+        'Failed to submit feedback. Please try again.' +
+          (error instanceof Error ? ` ${error.message}` : ''),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -49,29 +54,37 @@ export const FeedbackPanel: FC = () => {
       {hasSubmitted ? (
         <p className="text-sm xl:text-base">Thanks for your feedback!</p>
       ) : (
-        <p className="text-sm xl:text-base">Share your thoughts and ideas, or report a bug.</p>
+        <p className="text-sm xl:text-base">Share your ideas or report a bug.</p>
       )}
 
       <div className="flex gap-2">
-        <input
+        <Input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="We appreciate your feedback..."
-          className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none"
+          className="text-sm font-medium xl:text-base"
           maxLength={500}
+          isValid={canSubmit}
+          error={error}
           disabled={isSubmitting}
+          endAdornment={
+            <button
+              className={twJoin(
+                'relative flex h-full shrink-0 items-center gap-2.5 border-none bg-none px-4 font-medium uppercase outline-none',
+                canSubmit ? 'text-teal-200' : 'cursor-not-allowed opacity-40',
+              )}
+              onClick={onSubmit}
+              disabled={!canSubmit}>
+              Send{' '}
+              {isSubmitting ? (
+                <LoaderIcon className="animate-spin" size={20} />
+              ) : (
+                <SendHorizonal size={20} />
+              )}
+            </button>
+          }
         />
-        <Button
-          variant="primary"
-          size="md"
-          className="shrink-0"
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          iconClassName={twJoin(isSubmitting && 'animate-spin')}
-          endIcon={isSubmitting ? LoaderIcon : SendHorizonal}>
-          Send
-        </Button>
       </div>
     </Panel>
   )

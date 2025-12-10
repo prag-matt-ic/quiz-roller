@@ -29,11 +29,6 @@ body {
   overscroll-behavior-y: contain;
 }
 
-button,
-a {
-  cursor: pointer;
-}
-
 h1,
 h2,
 h3,
@@ -45,6 +40,11 @@ h6 {
 }
 
 @layer utilities {
+  button:not(:disabled),
+  a:not([aria-disabled='true']) {
+    @apply cursor-pointer;
+  }
+
   .heading-xl {
     @apply text-4xl leading-tight! font-medium tracking-tight sm:text-6xl md:text-8xl;
   }

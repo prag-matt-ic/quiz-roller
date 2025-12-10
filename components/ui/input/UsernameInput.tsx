@@ -38,7 +38,7 @@ export const Input = forwardRef(function Input(
           {...inputProps}
           className={twMerge(
             BASE_CLASSES,
-            hasEndAdornment && 'pr-28',
+            hasEndAdornment && 'pr-36',
             isValid ? 'focus:ring-emerald-500' : 'focus:ring-amber-500',
             className,
           )}
