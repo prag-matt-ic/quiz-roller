@@ -40,6 +40,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
             }) as PersistedStore,
           version: 3,
           migrate: (persistedState: any) => {
+            // TODO: remove this before going live...
             if (!persistedState) return persistedState
 
             const currentVersion = PLATFORM_VERSION
@@ -70,7 +71,6 @@ export const createGameStore = (params: CreateGameStoreParams) => {
             return {
               ...persistedState,
               completedSpeedRuns,
-              platformVersion: currentVersion,
             }
           },
           onRehydrateStorage: () => {
