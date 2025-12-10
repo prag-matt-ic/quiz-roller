@@ -89,7 +89,9 @@ export function usePointerPosition(onPositionChange?: (value: PointerPosition) =
   return { value: position }
 }
 
-export function useOptionalPointerPosition(onPositionChange?: (value: PointerPosition) => void) {
+export function useOptionalPointerPosition(
+  onPositionChange?: (value: PointerPosition) => void,
+) {
   const store = useContext(Context)
   const position = useRef<PointerPosition | null>(store?.getState().position ?? null)
 

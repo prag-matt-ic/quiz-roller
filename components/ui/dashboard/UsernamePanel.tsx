@@ -21,11 +21,13 @@ export const UsernamePanel: FC<Props> = ({ className }) => {
         {...inputProps}
         className="flex-1"
         endAdornment={
-          inputProps.isValid ? (
-            <CheckCircle className="size-6 text-emerald-400" />
-          ) : (
-            <AlertTriangle className="size-6 text-amber-600" />
-          )
+          <div className="flex h-full items-center justify-center px-4">
+            {inputProps.isValid ? (
+              <CheckCircle className="size-6 text-emerald-400" />
+            ) : (
+              <AlertTriangle className="size-6 text-amber-600" />
+            )}
+          </div>
         }
       />
     </Panel>

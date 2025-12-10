@@ -1,10 +1,14 @@
+/* eslint-disable react-hooks/refs */
 'use client'
 
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
-import { useRef, type RefObject } from 'react'
+import { type RefObject, useRef } from 'react'
 
-import { type PointerPosition, useOptionalPointerPosition } from '@/components/ui/PointerProvider'
+import {
+  type PointerPosition,
+  useOptionalPointerPosition,
+} from '@/components/ui/PointerProvider'
 
 export type SurfaceAttractorConfig = {
   activeProximity: number
@@ -62,52 +66,37 @@ export function useSurfaceAttractor({
     quickToEase = 'power2.out',
   } = config
 
-  const quickSetX = useRef<gsap.QuickSetter | null>(null)
-  const quickSetY = useRef<gsap.QuickSetter | null>(null)
-  const quickToOpacity = useRef<gsap.QuickToFunc | null>(null)
+  const quickSetX = gsap.quickSetter(attractorRef.current, 'x', 'px')
+  const quickSetY = gsap.quickSetter(attractorRef.current, 'y', 'px')
+  const quickToOpacity = gsap.quickTo(attractorRef.current, 'opacity', {
+    duration: 0.35,
+    ease: 'power2.out',
+  })
   const isPointerInside = useRef(false)
 
   const { contextSafe } = useGSAP({
-    dependencies: [isEnabled, quickToDuration, quickToEase, activeProximity, inactiveProximity],
+    dependencies: [isEnabled],
   })
-
-  // Update setters when the attractor element is available.
-  useGSAP(
-    () => {
-      if (!attractorRef.current) return
-      quickSetX.current = gsap.quickSetter(attractorRef.current, 'x', 'px')
-      quickSetY.current = gsap.quickSetter(attractorRef.current, 'y', 'px')
-      quickToOpacity.current = gsap.quickTo(attractorRef.current, 'opacity', {
-        duration: quickToDuration,
-        ease: quickToEase,
-      })
-    },
-    { dependencies: [attractorRef, quickToDuration, quickToEase] },
-  )
 
   const handlePointerPositionChange = contextSafe((position: PointerPosition) => {
     if (!isEnabled) return
+    if (!attractorRef.current || !containerRef.current) return
 
-    const containerEl = containerRef.current
-    const attractorEl = attractorRef.current
-    if (!containerEl || !attractorEl) return
-    if (!quickSetX.current || !quickSetY.current || !quickToOpacity.current) return
-
-    const containerRect = containerEl.getBoundingClientRect()
-    const activeZone = calculateProximityZone(containerRect, activeProximity)
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const activeZone = calculateProximityZone(containerRect, config.activeProximity)
 
     const isInActiveZone = isWithinZone(position, activeZone)
 
     if (!isInActiveZone) {
-      const inactiveZone = calculateProximityZone(containerRect, inactiveProximity)
-      if (isWithinZone(position, inactiveZone)) quickToOpacity.current(0)
+      const inactiveZone = calculateProximityZone(containerRect, config.inactiveProximity)
+      if (isWithinZone(position, inactiveZone)) quickToOpacity(0)
       return
     }
 
     const { x: targetX, y: targetY } = calculateAttractorPosition(position, containerRect)
-    quickSetX.current(targetX)
-    quickSetY.current(targetY)
-    quickToOpacity.current(isPointerInside.current ? insideOpacity : nearOpacity)
+    quickSetX(targetX)
+    quickSetY(targetY)
+    quickToOpacity(isPointerInside.current ? insideOpacity : nearOpacity)
   })
 
   const { hasPointerProvider } = useOptionalPointerPosition(
@@ -119,11 +108,11 @@ export function useSurfaceAttractor({
     ? {
         onPointerEnter: () => {
           isPointerInside.current = true
-          quickToOpacity.current?.(insideOpacity)
+          quickToOpacity?.(insideOpacity)
         },
         onPointerLeave: () => {
           isPointerInside.current = false
-          quickToOpacity.current?.(0)
+          quickToOpacity?.(0)
         },
       }
     : undefined

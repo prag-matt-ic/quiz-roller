@@ -24,7 +24,7 @@ export default SpeedPanel
 
 export const RingBoostInfo: FC = () => {
   return (
-    <div className="flex w-fit max-w-xl items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3">
+    <div className="flex w-fit max-w-xl items-center gap-4 rounded-xl border border-amber-200/5 bg-amber-200/3 p-3">
       <div className="relative flex size-20 items-center justify-center">
         <SpeedBoostDial className="size-18" progressOverride={0.5} strokeWidth={4} />
         <span className="pointer-events-none absolute text-[10px] tracking-[1px] text-white/70 uppercase">

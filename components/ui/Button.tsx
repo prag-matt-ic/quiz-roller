@@ -26,7 +26,7 @@ const BASE_CLASSES =
 const SIZE_CLASSES = {
   sm: 'gap-1.5 px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
   md: 'gap-2 px-4 py-2 text-sm lg:px-6 lg:py-2.5 lg:text-base',
-  lg: 'gap-3 px-6 py-2 text-base lg:px-8 lg:py-3 lg:text-lg',
+  lg: 'gap-3.5 px-6 py-2 text-base lg:px-8 lg:py-3 lg:text-lg',
 }
 
 const ICON_SIZE_CLASSES = {
@@ -48,7 +48,8 @@ const VARIANT_CLASSES: Record<ButtonProps['variant'], string> = {
 
 const ATTRACTOR_CONTAINER_CLASSES =
   'pointer-events-none absolute inset-0 -z-10 flex items-center justify-center'
-const ATTRACTOR_GLOW_CLASSES = 'size-20 rounded-full bg-teal-600/50 blur-2xl opacity-0'
+
+const ATTRACTOR_GLOW_CLASSES = 'size-20 rounded-full bg-teal-600/40 blur-2xl opacity-0'
 
 const Button: FC<ButtonProps> = ({
   variant = 'primary',
@@ -104,7 +105,10 @@ const Button: FC<ButtonProps> = ({
         </div>
       ) : null}
       {!!StartIcon ? (
-        <StartIcon {...ICON_PROPS} className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)} />
+        <StartIcon
+          {...ICON_PROPS}
+          className={twMerge(ICON_SIZE_CLASSES[size], iconClassName)}
+        />
       ) : null}
       {children}
       {!!EndIcon ? (

@@ -52,7 +52,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       id="landing-overlay"
       onTransitionEnd={onTransitionEnd}
       className={twJoin(
-        'fixed inset-0 z-1000 grid grid-cols-1 grid-rows-2 gap-2 px-6 py-4 xl:gap-6',
+        'fixed inset-0 z-1000 grid grid-cols-1 grid-rows-2 gap-2 px-6 py-4 xl:gap-5',
         'transition-opacity delay-50 duration-300 ease-out motion-reduce:duration-0',
         'bg-linear-0 from-black/30 via-black/80 to-black/30 backdrop-blur-md xl:backdrop-blur-lg',
         isExiting ? 'opacity-0' : 'opacity-100',
