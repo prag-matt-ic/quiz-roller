@@ -88,8 +88,9 @@ export const getSpeedrunPerformanceSummary = ({
       heading: 'Nice run!',
       description: (
         <>
-          You placed #${latestRunRank} globally with ${formattedTime}s. Keep pushing to break
-          into the top ${leaderboardCount}.`
+          You placed <b>#{latestRunRank}</b> globally with {formattedTime}s.
+          <br />
+          Keep pushing to break into the top {leaderboardCount}.
         </>
       ),
     }
