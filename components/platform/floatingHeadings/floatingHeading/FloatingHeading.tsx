@@ -71,6 +71,15 @@ const FloatingHeadingShader = shaderMaterial(
 
 const FloatingHeadingMaterial = extend(FloatingHeadingShader)
 
+const DEFAULT_FONT_SIZE = 64
+const DEFAULT_LINE_HEIGHT_MULTIPLIER = 1.25
+const DEFAULT_FONT_WEIGHT = 700
+
+const BASE_TEXT_CANVAS_OPTIONS: Pick<TextCanvasOptions, 'color' | 'fontFamily'> = {
+  color: '#ffffff',
+  fontFamily: '"Unbounded", "Unbounded Fallback", sans-serif',
+}
+
 export const FloatingHeading: FC<Props> = ({
   text,
   position,
@@ -101,16 +110,24 @@ export const FloatingHeading: FC<Props> = ({
     texture.wrapT = RepeatWrapping
   })
 
-  const canvasState = useTextCanvas(text, {
-    width: width * dpr * TEXT_CANVAS_SCALE,
-    height: height * dpr * TEXT_CANVAS_SCALE,
-    color: '#ffffff',
-    fontFamily: '"Unbounded", "Unbounded Fallback", sans-serif',
-    ...textCanvasOptions,
-    lineHeightMultiplier: 1.2,
-    fontSize: 64 * dpr,
-    fontWeight: 700,
-  })
+  const textCanvasOptionsWithDefaults = useMemo<TextCanvasOptions>(() => {
+    const baseFontSize = textCanvasOptions?.fontSize ?? DEFAULT_FONT_SIZE
+    const lineHeightMultiplier =
+      textCanvasOptions?.lineHeightMultiplier ?? DEFAULT_LINE_HEIGHT_MULTIPLIER
+    const fontWeight = textCanvasOptions?.fontWeight ?? DEFAULT_FONT_WEIGHT
+
+    return {
+      width: width * dpr * TEXT_CANVAS_SCALE,
+      height: height * dpr * TEXT_CANVAS_SCALE,
+      ...BASE_TEXT_CANVAS_OPTIONS,
+      ...(textCanvasOptions ?? {}),
+      lineHeightMultiplier,
+      fontSize: baseFontSize * dpr,
+      fontWeight,
+    }
+  }, [dpr, height, textCanvasOptions, width])
+
+  const canvasState = useTextCanvas(text, textCanvasOptionsWithDefaults)
 
   const { radius, thetaLength, thetaStart } = useMemo(() => {
     const arcLength = Math.PI * 0.8 // keeps a gentle bend without wrapping the texture

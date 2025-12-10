@@ -94,7 +94,8 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
   return (
     <>
       {refs.map((ref, contentIndex) => {
-        const text = HEADINGS_CONTENT[contentIndex] ?? ''
+        const heading = HEADINGS_CONTENT[contentIndex]
+        const text = heading?.text ?? ''
         return (
           <FloatingHeading
             key={`info-floating-heading-${contentIndex}`}
@@ -103,6 +104,7 @@ const FloatingHeadings: FC<Props> = ({ ref, onReadyChange }) => {
             position={HIDDEN_POSITION}
             width={HEADING_WIDTH}
             height={HEADING_HEIGHT}
+            textCanvasOptions={heading?.textCanvasOptions}
             isVisible={isVisibleStates[contentIndex]}
           />
         )
