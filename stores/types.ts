@@ -67,7 +67,8 @@ export type TimeSlice = {
   speedRunTimeCS: number // current speed run duration in 10 milliseconds (centi-seconds)
   setSpeedRunTimeCS: (centiSeconds: number) => void
 
-  completedSpeedRuns: SpeedRunDatabase[]
+  completedSpeedRuns: Record<string, SpeedRunDatabase[]>
+  platformVersion: string
 }
 
 export enum InputType {

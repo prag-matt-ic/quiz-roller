@@ -21,7 +21,8 @@ export const createTimeSlice =
   (set, get) => ({
     ...RESET_TIME_STATE,
     totalTimeS: 0,
-    completedSpeedRuns: [],
+    completedSpeedRuns: {},
+    platformVersion: PLATFORM_VERSION,
     setTotalTimeS: (seconds: number) => {
       set({ totalTimeS: seconds })
     },
@@ -42,7 +43,7 @@ export const createTimeSlice =
       })
     },
     finishSpeedRun: async () => {
-      const { speedRunTimeCS, username, inputType } = get()
+      const { speedRunTimeCS, username, inputType, platformVersion } = get()
       if (!username) return
       const speedRunStage = SpeedRunStage.SUBMITTING
 
@@ -58,7 +59,7 @@ export const createTimeSlice =
         time: timeInSeconds,
         date: new Date().toISOString(),
         input_type: inputType,
-        level_id: PLATFORM_VERSION,
+        level_id: platformVersion,
       }
 
       try {
@@ -66,8 +67,17 @@ export const createTimeSlice =
         if (!result) throw new Error('Inserting speedrun returned null')
         set((state) => {
           const speedRunStage = SpeedRunStage.END
+          const versionKey = platformVersion
+          const existingRuns = state.completedSpeedRuns[versionKey] ?? []
+          const runWithVersion = {
+            ...result,
+            level_id: result.level_id ?? versionKey,
+          }
           return {
-            completedSpeedRuns: [...state.completedSpeedRuns, result],
+            completedSpeedRuns: {
+              ...state.completedSpeedRuns,
+              [versionKey]: [...existingRuns, runWithVersion],
+            },
             speedRunStage: speedRunStage,
             overlay: getOverlayForSpeedRunStage(speedRunStage),
           }

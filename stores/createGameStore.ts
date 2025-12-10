@@ -1,6 +1,9 @@
 import { createStore } from 'zustand'
 import { type PersistOptions, persist, subscribeWithSelector } from 'zustand/middleware'
 
+import type { SpeedRunDatabase } from '@/model/schema'
+import { PLATFORM_VERSION } from '@/resources/rowsData'
+
 import { createGameSlice } from './gameSlice'
 import { createInputSlice } from './inputSlice'
 import { createOverlaysSlice } from './overlaysSlice'
@@ -35,7 +38,41 @@ export const createGameStore = (params: CreateGameStoreParams) => {
               inputType: s.inputType,
               joystickPosition: s.joystickPosition,
             }) as PersistedStore,
-          version: 1,
+          version: 3,
+          migrate: (persistedState: any) => {
+            if (!persistedState) return persistedState
+
+            const currentVersion = PLATFORM_VERSION
+            const persistedRuns = persistedState?.completedSpeedRuns
+            const runsByVersion: Record<string, unknown> =
+              persistedRuns && typeof persistedRuns === 'object' ? persistedRuns : {}
+
+            if (Array.isArray(persistedRuns)) {
+              for (const run of persistedRuns) {
+                if (!run) continue
+                const versionKey = (run as { level_id?: string })?.level_id ?? currentVersion
+                const existing = (runsByVersion[versionKey] as unknown[]) ?? []
+                runsByVersion[versionKey] = [...existing, run]
+              }
+            }
+
+            const completedSpeedRuns = Object.entries(runsByVersion).reduce<
+              Record<string, SpeedRunDatabase[]>
+            >((acc, [version, runs]) => {
+              if (Array.isArray(runs)) acc[version] = runs as SpeedRunDatabase[]
+              return acc
+            }, {})
+
+            if (!completedSpeedRuns[currentVersion]) {
+              completedSpeedRuns[currentVersion] = []
+            }
+
+            return {
+              ...persistedState,
+              completedSpeedRuns,
+              platformVersion: currentVersion,
+            }
+          },
           onRehydrateStorage: () => {
             return (state, error) => {
               if (!!error) {

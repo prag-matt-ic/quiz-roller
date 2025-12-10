@@ -21,7 +21,7 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const username = useGameStore((s) => s.username)
 
-  const canSubmit = message.trim().length >= 10 && message.trim().length <= 500 && !isSubmitting
+  const canSubmit = message.trim().length > 8 && !isSubmitting
 
   const onSubmit = async () => {
     if (!username) return
@@ -73,6 +73,7 @@ export const FeedbackPanel: FC<Props> = ({ className, speedrunId }) => {
         <Button
           variant="primary"
           size="md"
+          className="shrink-0"
           onClick={onSubmit}
           disabled={!canSubmit}
           iconClassName={twJoin(isSubmitting && 'animate-spin')}

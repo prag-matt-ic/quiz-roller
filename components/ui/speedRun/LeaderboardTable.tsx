@@ -6,9 +6,13 @@ import { twJoin, twMerge } from 'tailwind-merge'
 
 import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
+import type { SpeedRunDatabase } from '@/model/schema'
+import { PLATFORM_VERSION } from '@/resources/rowsData'
 
 import type { PerformanceSummary } from './speedrunPerformanceSummary'
 import { getSpeedrunPerformanceSummary } from './speedrunPerformanceSummary'
+
+const EMPTY_RUNS: SpeedRunDatabase[] = []
 
 type Props = {
   count: number
@@ -27,7 +31,9 @@ export const LeaderboardTable: FC<Props> = ({
   startCountdown,
   onPerformanceSummary,
 }) => {
-  const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns)
+  const completedSpeedRuns = useGameStore(
+    (s) => s.completedSpeedRuns[PLATFORM_VERSION] ?? EMPTY_RUNS,
+  )
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const userSpeedRunIds = useMemo(
     () => completedSpeedRuns.map((run) => run.id),
@@ -40,8 +46,8 @@ export const LeaderboardTable: FC<Props> = ({
   const playerInputFilter = leaderboardFilter === 'all' ? undefined : leaderboardFilter
 
   const { data: leaderboardRuns = [], isPending: isLoadingLeaderboard } = useQuery({
-    queryKey: ['speedrun-leaderboard', count, latestRunId, leaderboardFilter],
-    queryFn: () => getSpeedrunData(count, playerInputFilter),
+    queryKey: ['speedrun-leaderboard', count, latestRunId, leaderboardFilter, PLATFORM_VERSION],
+    queryFn: () => getSpeedrunData(count, playerInputFilter, PLATFORM_VERSION),
     staleTime: 30_000,
   })
 
@@ -51,8 +57,9 @@ export const LeaderboardTable: FC<Props> = ({
   const shouldFetchRecentRun = !!latestRunId && !isLoadingLeaderboard && !latestRunIsRanked
 
   const { data: recentRun } = useQuery({
-    queryKey: ['speedrun-recent-run', latestRunId, leaderboardFilter],
-    queryFn: () => getSpeedrunPosition(latestRunId as number, playerInputFilter),
+    queryKey: ['speedrun-recent-run', latestRunId, leaderboardFilter, PLATFORM_VERSION],
+    queryFn: () =>
+      getSpeedrunPosition(latestRunId as number, playerInputFilter, PLATFORM_VERSION),
     enabled: shouldFetchRecentRun,
     staleTime: 30_000,
   })
@@ -106,13 +113,13 @@ export const LeaderboardTable: FC<Props> = ({
 
     onPerformanceSummary(summary)
   }, [
-    completedSpeedRuns,
     count,
     isLoadingLeaderboard,
     latestRun,
     leaderboardRuns,
     onPerformanceSummary,
     recentRun,
+    completedSpeedRuns,
   ])
 
   return (

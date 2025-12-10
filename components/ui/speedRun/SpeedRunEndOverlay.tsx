@@ -101,7 +101,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <Panel className="col-span-full flex items-center justify-center gap-3" strength={1}>
             {isShareSupported && (
               <Button
-                variant="primary"
+                variant="secondary"
                 size="md"
                 endIcon={SmilePlus}
                 onClick={() => {
