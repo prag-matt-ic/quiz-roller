@@ -76,8 +76,6 @@ export enum InputType {
   JOYSTICK = 'joystick',
 }
 
-export type LeaderboardFilter = 'all' | InputType
-
 export type InputSlice = {
   isMobile: boolean
   inputType: InputType
@@ -90,8 +88,8 @@ export type InputSlice = {
   setPlayerInput: (input: PlayerInput) => void
 
   // MF: unsure if we need this as global state or it can just be set locally, defaulted to input type.
-  leaderboardFilter: LeaderboardFilter
-  setLeaderboardFilter: (filter: LeaderboardFilter) => void
+  leaderboardFilter: InputType
+  setLeaderboardFilter: (filter: InputType) => void
 }
 
 export enum Overlay {

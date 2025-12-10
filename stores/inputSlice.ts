@@ -3,7 +3,6 @@ import {
   type GameSliceCreator,
   type InputSlice,
   InputType,
-  type LeaderboardFilter,
   type PlayerInput,
 } from './types'
 
@@ -44,7 +43,7 @@ export const createInputSlice =
       setPlayerInput(input) {
         set({ playerInput: input })
       },
-      setLeaderboardFilter: (filter: LeaderboardFilter) => {
+      setLeaderboardFilter: (filter: InputType) => {
         set({ leaderboardFilter: filter })
       },
     }

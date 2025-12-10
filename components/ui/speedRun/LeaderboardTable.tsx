@@ -44,11 +44,9 @@ export const LeaderboardTable: FC<Props> = ({
     ? (completedSpeedRuns[completedSpeedRuns.length - 1]?.id ?? null)
     : null
 
-  const playerInputFilter = leaderboardFilter === 'all' ? undefined : leaderboardFilter
-
   const { data: leaderboardRuns = [], isPending: isLoadingLeaderboard } = useQuery({
     queryKey: ['speedrun-leaderboard', count, latestRunId, leaderboardFilter, PLATFORM_VERSION],
-    queryFn: () => getSpeedrunData(count, playerInputFilter, PLATFORM_VERSION),
+    queryFn: () => getSpeedrunData(count, leaderboardFilter, PLATFORM_VERSION),
     staleTime: 30_000,
   })
 
@@ -60,7 +58,7 @@ export const LeaderboardTable: FC<Props> = ({
   const { data: unrankedRecentRun } = useQuery({
     queryKey: ['speedrun-recent-run', latestRunId, leaderboardFilter, PLATFORM_VERSION],
     queryFn: () =>
-      getSpeedrunPosition(latestRunId as number, playerInputFilter, PLATFORM_VERSION),
+      getSpeedrunPosition(latestRunId as number, leaderboardFilter, PLATFORM_VERSION),
     enabled: shouldFetchRecentRun,
     staleTime: 30_000,
   })

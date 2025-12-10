@@ -5,8 +5,10 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
+import { GameMode } from '@/stores/types'
 
 const SpeedUI: FC = () => {
+  const isSpeedRunMode = useGameStore((s) => s.mode === GameMode.SPEEDRUN)
   const collectedRings = useGameStore((s) => s.collectedRings)
   // const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
   const collectedRingCount = Object.keys(collectedRings).length
@@ -17,8 +19,11 @@ const SpeedUI: FC = () => {
         'relative flex items-center justify-center place-self-center',
         collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
       )}>
-      <SpeedBoostDial className="size-14 xl:size-16" />
-      <span className="absolute text-center font-mono text-sm leading-none font-bold tracking-wide xl:text-base">
+      <SpeedBoostDial
+        className={twJoin(isSpeedRunMode ? 'size-16 xl:size-20' : 'size-14 xl:size-16')}
+        strokeWidth={isSpeedRunMode ? 5 : 4}
+      />
+      <span className="absolute text-center font-mono text-sm leading-none font-bold tracking-wide xl:text-lg">
         {collectedRingCount}
       </span>
     </div>

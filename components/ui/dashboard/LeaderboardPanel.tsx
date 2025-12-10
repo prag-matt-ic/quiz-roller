@@ -1,5 +1,5 @@
 'use client'
-import { Joystick, Keyboard, Trophy, UsersRound } from 'lucide-react'
+import { Joystick, Keyboard, Trophy } from 'lucide-react'
 import { type FC } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -16,8 +16,11 @@ type Props = {
 // For use in the Dashboard only..
 
 export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
+  const inputType = useGameStore((s) => s.inputType)
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
+
+  const showCTA = inputType === leaderboardFilter
 
   return (
     <Panel strength={3} className={className} attractorClassName="bg-emerald-400/15">
@@ -28,11 +31,10 @@ export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
           items={[
             { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
             { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
-            { label: 'All', value: 'all', Icon: UsersRound },
           ]}
         />
       </PanelHeader>
-      <LeaderboardTable count={10} fetchLatestRun={false} showCTA={true} />
+      <LeaderboardTable count={10} fetchLatestRun={false} showCTA={showCTA} />
     </Panel>
   )
 }

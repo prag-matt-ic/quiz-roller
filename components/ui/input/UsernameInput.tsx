@@ -22,7 +22,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 const BASE_CLASSES =
-  'w-full rounded-xl ring ring-teal-200/30 bg-black px-4 py-2.5 xl:py-3 text-left text-lg xl:text-2xl font-bold text-white outline-none placeholder:text-white/60 transition-colors focus:ring-2'
+  'w-full rounded-xl ring ring-teal-200/30 bg-black/80 px-4 py-2.5 xl:py-3 text-left text-lg xl:text-2xl font-bold text-white outline-none placeholder:text-white/60 transition-colors focus:ring-2'
 
 export const Input = forwardRef(function Input(
   { className, endAdornment, error, isValid, ...inputProps }: InputProps,

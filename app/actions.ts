@@ -16,10 +16,11 @@ import {
   speedrunDatabaseSchema,
 } from '@/model/schema'
 import { PLATFORM_VERSION } from '@/resources/rowsData'
+import { InputType } from '@/stores/types'
 
 export async function getSpeedrunData(
   count: number,
-  inputType?: 'keyboard' | 'joystick',
+  inputType: 'keyboard' | 'joystick',
   levelId: string = PLATFORM_VERSION,
 ): Promise<SpeedRunDatabase[]> {
   try {
@@ -50,7 +51,7 @@ export type RunWithPosition = {
 
 export async function getSpeedrunPosition(
   id: number,
-  inputType?: 'keyboard' | 'joystick',
+  inputType: InputType,
   levelId: string = PLATFORM_VERSION,
 ): Promise<RunWithPosition | null> {
   try {

@@ -1,14 +1,6 @@
 'use client'
-import {
-  Joystick,
-  Keyboard,
-  LogOutIcon,
-  RotateCcwIcon,
-  SmilePlus,
-  Trophy,
-  UsersRound,
-} from 'lucide-react'
-import { type FC, useState } from 'react'
+import { Joystick, Keyboard, LogOutIcon, RotateCcwIcon, SmilePlus, Trophy } from 'lucide-react'
+import { type FC, useEffect, useLayoutEffect, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
@@ -38,14 +30,24 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const startCountdown = useGameStore((s) => s.startCountdown)
   const resetGame = useGameStore((s) => s.resetGame)
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
-
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
+  const platformVersion = useGameStore((s) => s.platformVersion)
+  const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns[platformVersion] ?? [])
   const { handleShare, isShareSupported } = useWebShare()
 
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
-  const summaryHeading = performanceSummary?.heading ?? '...'
-  const summaryDescription = performanceSummary?.description ?? '...'
+  const summaryHeading = performanceSummary?.heading ?? ''
+  const summaryDescription = performanceSummary?.description ?? ''
+
+  const latestRunInputType =
+    completedSpeedRuns[completedSpeedRuns.length - 1]?.input_type ?? null
+
+  useLayoutEffect(() => {
+    if (latestRunInputType !== InputType.KEYS && latestRunInputType !== InputType.JOYSTICK)
+      return
+    setLeaderboardFilter(latestRunInputType as InputType)
+  }, [latestRunInputType, setLeaderboardFilter])
 
   return (
     <PointerProvider isMobile={isMobile}>
@@ -77,7 +79,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
                 items={[
                   { label: 'Keyboard', value: InputType.KEYS, Icon: Keyboard },
                   { label: 'Joystick', value: InputType.JOYSTICK, Icon: Joystick },
-                  { label: 'All', value: 'all', Icon: UsersRound },
                 ]}
               />
             </PanelHeader>
