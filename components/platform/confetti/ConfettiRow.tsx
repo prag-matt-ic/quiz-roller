@@ -29,7 +29,6 @@ type Props = {
     RefObject<ConfettiParticleEmitterHandle | null>,
   ]
   index: number
-  palette?: readonly string[]
 }
 
 const EMITTER_EDGE_PADDING = TILE_SIZE * 0.5
@@ -41,7 +40,6 @@ const ConfettiRow: FC<Props> = ({
   depth,
   emitterRefs,
   index,
-  palette,
 }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const [leftEmitterRef, rightEmitterRef] = emitterRefs
@@ -115,15 +113,15 @@ const ConfettiRow: FC<Props> = ({
         ref={leftEmitterRef}
         position={leftEmitterPosition}
         isVisible={isVisible}
+        confettiIndex={index}
         seedOffset={index * 2}
-        palette={palette}
       />
       <ConfettiParticleEmitter
         ref={rightEmitterRef}
         position={rightEmitterPosition}
         isVisible={isVisible}
+        confettiIndex={index}
         seedOffset={index * 5 + 1}
-        palette={palette}
       />
     </RigidBody>
   )

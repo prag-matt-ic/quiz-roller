@@ -13,7 +13,6 @@ import {
 import { useGameStore } from '@/components/GameProvider'
 import {
   type ConfettiParticleEmitterHandle,
-  PARTICLE_PALETTE,
 } from '@/components/platform/confetti/ConfettiParticleEmitter'
 import ConfettiRow from '@/components/platform/confetti/ConfettiRow'
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
@@ -28,7 +27,6 @@ export type ConfettiHandle = {
 type Props = {
   ref: RefObject<ConfettiHandle | null>
   onReadyChange: (isReady: boolean) => void
-  palette?: readonly string[]
 }
 
 type EmitterPair = [
@@ -41,10 +39,8 @@ const createEmitterPairs = (count: number): EmitterPair[] =>
 
 const createDimensionState = (count: number): number[] => Array.from({ length: count }, () => 1)
 
-const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
+const ConfettiRows: FC<Props> = ({ ref, onReadyChange }) => {
   const totalCount = useGameStore((s) => s.totalCounts.confetti)
-
-  const paletteToUse = palette ?? PARTICLE_PALETTE
 
   const { refs, isVisibleStates, translation, applyPlacement, hideRigidBodyAtIndex } =
     useDynamicRigidBodies(totalCount)
@@ -185,7 +181,6 @@ const ConfettiRows: FC<Props> = ({ ref, onReadyChange, palette }) => {
             width={width}
             depth={depth}
             index={index}
-            palette={paletteToUse}
           />
         )
       })}

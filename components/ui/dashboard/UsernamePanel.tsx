@@ -25,7 +25,7 @@ export const UsernamePanel: FC<Props> = ({ className }) => {
             {inputProps.isValid ? (
               <CheckCircle className="size-6 text-emerald-400" />
             ) : (
-              <AlertTriangle className="size-6 text-amber-600" />
+              <AlertTriangle className="size-6 text-teal-200 opacity-50" />
             )}
           </div>
         }

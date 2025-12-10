@@ -17,6 +17,9 @@ attribute vec3 colour;
 varying vec4 vColorAlpha;
 varying mediump float vSoftness;
 
+const float MIN_PARTICLE_SIZE = 12.0;
+const float MAX_PARTICLE_SIZE = 34.0;
+
 float easeOutCubic(in float t) {
   float inv = 1.0 - t;
   return 1.0 - inv * inv * inv;
@@ -55,7 +58,7 @@ void main() {
   vec4 viewPosition = viewMatrix * modelPosition;
   gl_Position = projectionMatrix * viewPosition;
 
-  float baseSize = mix(16.0, 42.0, seed);
+  float baseSize = mix(MIN_PARTICLE_SIZE, MAX_PARTICLE_SIZE, seed);
   float perspectiveScale = projectionMatrix[1][1];
   float distanceToCamera = max(-viewPosition.z, 0.1);
   float attenuation = clamp(perspectiveScale / distanceToCamera, 0.25, 2.6);

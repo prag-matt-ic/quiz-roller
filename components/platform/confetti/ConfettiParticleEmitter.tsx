@@ -8,6 +8,11 @@ import { AdditiveBlending, BufferAttribute, Color, type Vector3Tuple } from 'thr
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
+import {
+  CONFETTI_PARTICLE_COLOURS_GOLD,
+  CONFETTI_PARTICLE_COLOURS_GREEN,
+  CONFETTI_PARTICLE_COLOURS_TEAL,
+} from '@/resources/colours'
 
 import fragmentShader from './particles/confettiPoint.frag'
 import vertexShader from './particles/confettiPoint.vert'
@@ -40,30 +45,16 @@ export type ConfettiParticleEmitterHandle = {
   reset: () => void
 }
 
-export const PARTICLE_PALETTE = [
-  '#f6b253',
-  '#ffcb46',
-  '#f5cb00',
-  '#ffbe68',
-  '#ffcc56',
-  '#ffc735',
-  '#ffcc51',
-  '#ffd743',
-  '#ffd849',
-  '#ffd46d',
-  '#e7cf00',
-  '#fff9e2',
-  '#fee8d9',
-  '#fff6d3',
-  '#ab8d5f',
-  '#af9a6f',
-  '#826342',
+const CONFETTI_PALETTES = [
+  CONFETTI_PARTICLE_COLOURS_GOLD,
+  CONFETTI_PARTICLE_COLOURS_TEAL,
+  CONFETTI_PARTICLE_COLOURS_GREEN,
 ] as const
 
 type Props = {
   position: Vector3Tuple
   isVisible: boolean
-  palette?: readonly string[]
+  confettiIndex: number
   seedOffset?: number
 }
 
@@ -74,6 +65,8 @@ const MIN_DRIFT_SPEED = 0.45
 const MAX_DRIFT_SPEED = 2.0
 const MIN_LAUNCH_SPEED = 5.0
 const MAX_LAUNCH_SPEED = 10.0
+const MIN_PARTICLE_SIZE = 12.0
+const MAX_PARTICLE_SIZE = 31.5
 
 const createRandomSeeds = (count: number, offset: number): Float32Array => {
   const values = new Float32Array(count)
@@ -94,6 +87,13 @@ const createRandomColours = (count: number, palette: readonly string[]): Float32
     values[offset + 2] = tmpColor.b
   }
   return values
+}
+
+const getPaletteForIndex = (index: number): readonly string[] => {
+  const paletteIndex = Math.abs(index) % CONFETTI_PALETTES.length
+  const palette = CONFETTI_PALETTES[paletteIndex]
+  if (!palette || palette.length === 0) return CONFETTI_PALETTES[0]
+  return palette
 }
 
 const createSpawnPositions = (count: number): Float32Array => {
@@ -129,7 +129,7 @@ const createLaunchSpeeds = (count: number): Float32Array => {
 }
 
 const ConfettiParticleEmitter = forwardRef<ConfettiParticleEmitterHandle, Props>(
-  ({ position, isVisible, palette = PARTICLE_PALETTE, seedOffset = 0 }, ref) => {
+  ({ position, isVisible, confettiIndex, seedOffset = 0 }, ref) => {
     const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
     const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
     const dpr = useThree((s) => s.viewport.dpr)
@@ -141,6 +141,7 @@ const ConfettiParticleEmitter = forwardRef<ConfettiParticleEmitterHandle, Props>
     const progress = useRef({ value: 0 })
     const progressTween = useRef<gsap.core.Tween | null>(null)
 
+    const palette = useMemo(() => getPaletteForIndex(confettiIndex), [confettiIndex])
     const seeds = useMemo(
       () => createRandomSeeds(particleCount, seedOffset),
       [particleCount, seedOffset],
