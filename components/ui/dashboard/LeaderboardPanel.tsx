@@ -16,7 +16,6 @@ type Props = {
 // For use in the Dashboard only..
 
 export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
-  const startCountdown = useGameStore((s) => s.startCountdown)
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
 
@@ -33,12 +32,7 @@ export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
           ]}
         />
       </PanelHeader>
-      <LeaderboardTable
-        count={10}
-        fetchLatestRun={false}
-        startCountdown={startCountdown}
-        showCTA={true}
-      />
+      <LeaderboardTable count={10} fetchLatestRun={false} showCTA={true} />
     </Panel>
   )
 }

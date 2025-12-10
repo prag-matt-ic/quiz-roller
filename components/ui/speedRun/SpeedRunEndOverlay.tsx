@@ -84,7 +84,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             <LeaderboardTable
               count={LEADERBOARD_COUNT}
               fetchLatestRun={true}
-              startCountdown={startCountdown}
               showCTA={false}
               onPerformanceSummary={setPerformanceSummary}
             />

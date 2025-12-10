@@ -8,6 +8,7 @@ import { getSpeedrunData, getSpeedrunPosition } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
 import type { SpeedRunDatabase } from '@/model/schema'
 import { PLATFORM_VERSION } from '@/resources/rowsData'
+import { Overlay } from '@/stores/types'
 
 import type { PerformanceSummary } from './speedrunPerformanceSummary'
 import { getSpeedrunPerformanceSummary } from './speedrunPerformanceSummary'
@@ -19,7 +20,6 @@ type Props = {
   className?: string
   fetchLatestRun: boolean
   showCTA?: boolean
-  startCountdown?: () => void
   onPerformanceSummary?: (summary: PerformanceSummary | null) => void
 }
 
@@ -28,9 +28,10 @@ export const LeaderboardTable: FC<Props> = ({
   className,
   showCTA = true,
   fetchLatestRun,
-  startCountdown,
   onPerformanceSummary,
 }) => {
+  const setOverlay = useGameStore((s) => s.setOverlay)
+
   const completedSpeedRuns = useGameStore(
     (s) => s.completedSpeedRuns[PLATFORM_VERSION] ?? EMPTY_RUNS,
   )
@@ -65,7 +66,6 @@ export const LeaderboardTable: FC<Props> = ({
   })
 
   const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
-  const showCTARow = showCTA && !!startCountdown
 
   const latestRun = completedSpeedRuns[completedSpeedRuns.length - 1] ?? null
 
@@ -156,7 +156,7 @@ export const LeaderboardTable: FC<Props> = ({
         />
       )}
 
-      {showCTARow && (
+      {showCTA && (
         <LeaderboardRow
           key="cta-row"
           className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 text-white"
@@ -168,7 +168,7 @@ export const LeaderboardTable: FC<Props> = ({
           flag={
             <button
               type="button"
-              onClick={startCountdown}
+              onClick={() => setOverlay(Overlay.SPEEDRUN_START)}
               className="absolute right-6 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
               aria-label="Start speed run">
               <PlayIcon className="size-5" strokeWidth={2} />
