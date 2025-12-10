@@ -87,9 +87,6 @@ export const LeaderboardTable: FC<Props> = ({
 
     const latestRankInTop = leaderboardRuns.findIndex((run) => run.id === latestRun.id)
 
-    const bestLeaderboardTimeS =
-      leaderboardRuns.length > 0 ? (leaderboardRuns[0]?.time ?? null) : null
-
     const latestRunRank: number | null =
       latestRun == null
         ? null
@@ -103,7 +100,7 @@ export const LeaderboardTable: FC<Props> = ({
       latestRunTimeS: latestRun?.time ?? null,
       latestRunRank,
       leaderboardCount: count,
-      bestLeaderboardTimeS,
+      leaderboardRuns,
       previousBestTimeS,
       totalRunsCompleted: completedSpeedRuns.length,
     })

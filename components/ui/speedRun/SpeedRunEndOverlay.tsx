@@ -59,10 +59,10 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0',
         )}>
-        <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:gap-4">
-          <Panel className="" strength={3}>
+        <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:grid-rows-[1fr_auto_auto] xl:gap-4">
+          <Panel className="h-full" strength={3}>
             <h2 className="text-2xl font-bold lg:text-4xl">{summaryHeading}</h2>
-            <p className="mt-3 max-w-md text-sm text-white/80 xl:text-base">
+            <p className="mt-3 max-w-md text-sm text-white/80 xl:text-lg">
               {summaryDescription}
             </p>
           </Panel>
