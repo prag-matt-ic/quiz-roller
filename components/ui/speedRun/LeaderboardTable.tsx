@@ -57,7 +57,7 @@ export const LeaderboardTable: FC<Props> = ({
 
   const shouldFetchRecentRun = !!latestRunId && !isLoadingLeaderboard && !latestRunIsRanked
 
-  const { data: recentRun } = useQuery({
+  const { data: unrankedRecentRun } = useQuery({
     queryKey: ['speedrun-recent-run', latestRunId, leaderboardFilter, PLATFORM_VERSION],
     queryFn: () =>
       getSpeedrunPosition(latestRunId as number, playerInputFilter, PLATFORM_VERSION),
@@ -65,7 +65,7 @@ export const LeaderboardTable: FC<Props> = ({
     staleTime: 30_000,
   })
 
-  const placeholderRows = useMemo(() => Array.from({ length: count }), [count])
+  const placeholderRows = useMemo(() => Array.from({ length: count + 1 }), [count])
 
   const latestRun = completedSpeedRuns[completedSpeedRuns.length - 1] ?? null
 
@@ -97,8 +97,8 @@ export const LeaderboardTable: FC<Props> = ({
         ? null
         : latestRankInTop >= 0
           ? latestRankInTop + 1
-          : recentRun && recentRun.run.id === latestRun.id
-            ? recentRun.position
+          : !!unrankedRecentRun && unrankedRecentRun.run.id === latestRun.id
+            ? unrankedRecentRun.position
             : null
 
     const summary = getSpeedrunPerformanceSummary({
@@ -108,7 +108,6 @@ export const LeaderboardTable: FC<Props> = ({
       bestLeaderboardTimeS,
       previousBestTimeS,
       totalRunsCompleted: completedSpeedRuns.length,
-      latestAttempt: latestRun?.attempt ?? null,
     })
 
     onPerformanceSummary(summary)
@@ -118,7 +117,7 @@ export const LeaderboardTable: FC<Props> = ({
     latestRun,
     leaderboardRuns,
     onPerformanceSummary,
-    recentRun,
+    unrankedRecentRun,
     completedSpeedRuns,
   ])
 
@@ -140,17 +139,17 @@ export const LeaderboardTable: FC<Props> = ({
               flag={entry.flag}
               position={index + 1}
               isCurrentUser={userSpeedRunIds.includes(entry.id)}
-              isLatestRun={entry.id === recentRun?.run.id}
+              isLatestRun={entry.id === latestRun?.id}
             />
           ))}
 
-      {!isLoadingLeaderboard && !!recentRun && (
+      {!isLoadingLeaderboard && !!unrankedRecentRun && (
         <LeaderboardRow
-          key={recentRun.run.id}
-          username={recentRun.run.username}
-          time={recentRun.run.time}
-          flag={recentRun.run.flag}
-          position={recentRun.position}
+          key={unrankedRecentRun.run.id}
+          username={unrankedRecentRun.run.username}
+          time={unrankedRecentRun.run.time}
+          flag={unrankedRecentRun.run.flag}
+          position={unrankedRecentRun.position}
           isCurrentUser={true}
           isLatestRun={true}
         />

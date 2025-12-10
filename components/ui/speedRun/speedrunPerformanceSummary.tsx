@@ -1,3 +1,5 @@
+import { type ReactNode } from 'react'
+
 export type PerformanceSummaryInput = {
   latestRunTimeS: number | null
   latestRunRank: number | null
@@ -5,12 +7,11 @@ export type PerformanceSummaryInput = {
   bestLeaderboardTimeS: number | null
   previousBestTimeS: number | null
   totalRunsCompleted: number
-  latestAttempt: number | null
 }
 
 export type PerformanceSummary = {
-  heading: string
-  description: string
+  heading: ReactNode
+  description: ReactNode
 }
 
 export const getSpeedrunPerformanceSummary = ({
@@ -20,7 +21,6 @@ export const getSpeedrunPerformanceSummary = ({
   bestLeaderboardTimeS,
   previousBestTimeS,
   totalRunsCompleted,
-  latestAttempt,
 }: PerformanceSummaryInput): PerformanceSummary => {
   if (!latestRunTimeS || latestRunTimeS <= 0) {
     return {
@@ -37,7 +37,12 @@ export const getSpeedrunPerformanceSummary = ({
   if (latestRunRank === 1) {
     return {
       heading: 'New world record!',
-      description: `You set the fastest time with ${formattedTime}s and claimed the #1 spot on the global leaderboard.`,
+      description: (
+        <>
+          You set <b>the fastest time ever recorded</b> and claimed the <b>#1</b> spot on the
+          global leaderboard.
+        </>
+      ),
     }
   }
 
@@ -52,30 +57,48 @@ export const getSpeedrunPerformanceSummary = ({
 
     return {
       heading: 'Podium finish!',
-      description: deltaToFirst
-        ? `You are now #${latestRunRank} globally with ${formattedTime}s, just ${deltaToFirst}s behind the top time.`
-        : `You are now #${latestRunRank} globally with ${formattedTime}s on the global leaderboard.`,
+      description: deltaToFirst ? (
+        <>
+          You are now <b>#{latestRunRank}</b> globally with {formattedTime}s, just{' '}
+          {deltaToFirst}s behind the world record.
+        </>
+      ) : (
+        <>
+          You are now <b>#{latestRunRank}</b> globally with {formattedTime}s on the global
+          leaderboard.
+        </>
+      ),
     }
   }
 
   if (latestRunRank && latestRunRank > 3 && latestRunRank <= leaderboardCount) {
     return {
-      heading: 'Elite speedrunner!',
-      description: `You reached #${latestRunRank} on the global leaderboard with ${formattedTime}s — inside the top ${leaderboardCount} runs.`,
+      heading: 'Elite speedroller!',
+      description: (
+        <>
+          You reached <b>#{latestRunRank}</b> on the global leaderboard with {formattedTime}s.
+          Excellent work!
+        </>
+      ),
     }
   }
 
   if (latestRunRank && latestRunRank > leaderboardCount) {
     return {
       heading: 'Nice run!',
-      description: `You placed #${latestRunRank} globally with ${formattedTime}s. Keep pushing to break into the top ${leaderboardCount}.`,
+      description: (
+        <>
+          You placed #${latestRunRank} globally with ${formattedTime}s. Keep pushing to break
+          into the top ${leaderboardCount}.`
+        </>
+      ),
     }
   }
 
   if (isFirstRun) {
     return {
       heading: 'First run complete!',
-      description: `You finished your first speedrun in ${formattedTime}s. Retry to climb the leaderboard and beat your time.`,
+      description: `You finished your first speedrun in ${formattedTime}s. Good job!`,
     }
   }
 
@@ -91,10 +114,8 @@ export const getSpeedrunPerformanceSummary = ({
     }
   }
 
-  const attemptLabel = latestAttempt ? ` on attempt #${latestAttempt}` : ''
-
   return {
     heading: 'Good effort!',
-    description: `You completed the run in ${formattedTime}s${attemptLabel}. Keep refining your line to set a new personal best.`,
+    description: `You completed the run in ${formattedTime}s. Keep refining your line to set a new personal best.`,
   }
 }
