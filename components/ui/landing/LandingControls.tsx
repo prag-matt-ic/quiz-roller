@@ -57,6 +57,7 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   return (
     <PointerProvider isMobile={isMobile}>
       <Panel
+        strength={1}
         className={twJoin(
           'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4',
           isLoaded ? 'opacity-100 delay-200' : 'opacity-0',

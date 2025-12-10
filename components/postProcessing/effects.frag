@@ -12,6 +12,7 @@ varying vec2 vUv;
 const int MAX_BLUR_STEPS = 16;
 const float BLUR_INTENSITY_EPSILON = 0.001;
 const float EDGE_BLUR_THRESHOLD = 0.04;
+const float VIGNETTE_DARKNESS = 0.5;
 
 vec3 applyRadialBlur(
   vec2 uv,
@@ -76,14 +77,16 @@ void main() {
   centeredUv.x *= uResolution.x / uResolution.y;
   float dist = length(centeredUv);
 
-  // Center-preserving vignette. We reuse its inverse as the edge-only mask.
-  float vignette = 1.0 - smoothstep(0.4, 0.8, dist);
-
-  float vignetteDarkness = 0.5;
-  float vignetteFade = mix(1.0, vignette, vignetteDarkness);
-  float edgeMask = 1.0 - vignette;
   float signedSpeed = clamp(uSpeed, -1.0, 1.0);
   float speed = abs(signedSpeed);
+
+  // Center-preserving vignette. We reuse its inverse as the edge-only mask.
+  float vignetteStart = 0.4 - speed * 0.15;
+  float vignette = 1.0 - smoothstep(vignetteStart, 0.8, dist);
+
+  float vignetteFade = mix(1.0, vignette, VIGNETTE_DARKNESS);
+  float edgeMask = 1.0 - vignette;
+
   float intensity = clamp(edgeMask * speed, 0.0, 1.0);
 
   bool skipBlur =

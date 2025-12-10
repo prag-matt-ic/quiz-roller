@@ -23,7 +23,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({
       <span className="text-xs font-medium tracking-widest text-neutral-400 uppercase">
         {label}
       </span>
-      {children && <span className="ml-auto">{children}</span>}
+      {!!children && <span className="ml-auto">{children}</span>}
     </div>
   )
 }

@@ -64,7 +64,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
         )}
       />
 
-      <header className="relative mx-auto flex w-xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden xl:w-3xl">
+      <header className="relative mx-auto flex w-xl max-w-full flex-col justify-center gap-2 self-end overflow-hidden xl:w-4xl">
         <div className="relative h-fit w-full">
           <Image
             src={speedrollerFaint}
