@@ -71,7 +71,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             strength={3}
             className="row-span-3 row-start-3 xl:col-start-2 xl:row-start-1"
             attractorClassName="bg-emerald-400/15">
-            {/* TODO: this should only show the current input type for the recent run. */}
             <PanelHeader icon={Trophy} label="Leaderboard">
               <ButtonGroup
                 value={leaderboardFilter}
@@ -98,7 +97,9 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
 
           <FeedbackPanel />
 
-          <Panel className="col-span-full flex items-center justify-center gap-3" strength={1}>
+          <Panel
+            className="col-span-full mx-auto flex w-fit items-center justify-center gap-3"
+            strength={3}>
             {isShareSupported && (
               <Button
                 variant="secondary"
