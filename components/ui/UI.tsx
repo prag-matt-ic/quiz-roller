@@ -39,7 +39,7 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <div
         className={twJoin(
-          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 px-2.5 py-2.5 transition-opacity duration-300 select-none',
+          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 pt-3 transition-opacity duration-300 select-none xl:pt-4',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {/* Collectibles/Timer */}
@@ -54,7 +54,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'flex h-fit items-center gap-2.5 opacity-0 transition-opacity duration-200',
+                    'flex h-fit items-center gap-2.5 pl-3 opacity-0 transition-opacity duration-200 xl:gap-3 xl:pl-4',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
@@ -81,13 +81,16 @@ const UI: FC<Props> = ({ isMobile }) => {
           }
         }}
         className={twJoin(
-          'pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-lg p-3 text-xs text-neutral-300 uppercase transition-all outline-none hover:bg-black/30 hover:text-white xl:top-3 xl:right-3',
+          'group pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-lg p-3 text-xs uppercase transition-all duration-300 outline-none hover:bg-black/30 xl:top-3 xl:right-3',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (
           <XIcon className="size-6 xl:size-8" />
         ) : (
-          <LayoutDashboardIcon className="size-6 xl:size-8" strokeWidth={1.5} />
+          <LayoutDashboardIcon
+            className="size-6 text-white opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100 group-active:opacity-100 xl:size-8"
+            strokeWidth={1.5}
+          />
         )}
       </button>
 
