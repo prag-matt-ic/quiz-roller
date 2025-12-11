@@ -6,6 +6,7 @@ import { PLATFORM_VERSION } from '@/resources/rowsData'
 
 import { createGameSlice } from './gameSlice'
 import { createInputSlice } from './inputSlice'
+import { createMultiplayerSlice } from './multiplayerSlice'
 import { createOverlaysSlice } from './overlaysSlice'
 import { createPlayerSlice } from './playerSlice'
 import { createTimeSlice } from './timeSlice'
@@ -25,6 +26,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
           ...createInputSlice(params.isMobile)(...a),
           ...createPlayerSlice(params)(...a),
           ...createOverlaysSlice(...a),
+          ...createMultiplayerSlice(...a),
           ...createGameSlice(params.switchBackgroundTrack)(...a),
         }),
         {

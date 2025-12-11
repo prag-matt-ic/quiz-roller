@@ -1,7 +1,7 @@
 'use client'
 import { type FC, useState } from 'react'
 
-import { useWebRTCStore, WebRTCProvider, useWebRTC } from '@/components/webrtc/WebRTCProvider'
+import { WebRTCProvider, useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import { useSignaling } from '@/hooks/useSignaling'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 import { ConnectionState } from '@/stores/webrtc/types'
@@ -19,10 +19,15 @@ const MultiplayerLobby: FC = () => {
   // Subscribe to WebRTC state
   const localPeerId = useWebRTCStore((s) => s.localPeerId)
   const connectionState = useWebRTCStore((s) => s.connectionState)
-  const isDataChannelOpen = useWebRTCStore((s) => s.isDataChannelOpen)
+  const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
   const peers = useWebRTCStore((s) => s.peers)
   const error = useWebRTCStore((s) => s.error)
-  const messages = useWebRTCStore((s) => s.messagesReceived)
+  const messagesReceived = useWebRTCStore((s) => s.messagesReceived)
+
+  // Check if any peer has an open data channel
+  const hasAnyDataChannelOpen = Array.from(peers.keys()).some((peerId) =>
+    dataChannelStates.get(peerId),
+  )
 
   // Subscribe to messages
   useWebRTCMessages((message) => {
@@ -80,7 +85,7 @@ const MultiplayerLobby: FC = () => {
       return
     }
 
-    if (!isDataChannelOpen) {
+    if (!hasAnyDataChannelOpen) {
       console.error('Data channel not open yet - please wait for connection to establish')
       return
     }
@@ -146,7 +151,7 @@ const MultiplayerLobby: FC = () => {
           <div>
             <p className="text-sm text-gray-600">Data Channel</p>
             <p className="text-sm">
-              {isDataChannelOpen ? (
+              {hasAnyDataChannelOpen ? (
                 <span className="text-green-600">✓ Open</span>
               ) : (
                 <span className="text-gray-500">Not ready</span>
@@ -231,12 +236,12 @@ const MultiplayerLobby: FC = () => {
       )}
 
       {/* Chat/Messages (when data channel is open) */}
-      {isDataChannelOpen && (
+      {hasAnyDataChannelOpen && (
         <div className="mb-6 rounded-lg border p-4">
           <h2 className="mb-3 text-lg font-semibold">Messages</h2>
           <div className="mb-4 max-h-64 space-y-2 overflow-y-auto rounded bg-gray-50 p-3">
-            {messages.length > 0 ? (
-              messages.map((msg, idx) => (
+            {messagesReceived.length > 0 ? (
+              messagesReceived.map((msg, idx) => (
                 <div key={idx} className="rounded bg-white p-2 shadow-sm">
                   <p className="text-xs text-gray-500">
                     {new Date(msg.timestamp).toLocaleTimeString()}
@@ -260,7 +265,7 @@ const MultiplayerLobby: FC = () => {
             />
             <button
               onClick={handleSendMessage}
-              disabled={peers.size === 0 || !isDataChannelOpen}
+              disabled={peers.size === 0 || !hasAnyDataChannelOpen}
               className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300">
               Send
             </button>

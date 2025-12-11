@@ -10,8 +10,10 @@ import {
   useSurfaceAttractor,
 } from '@/components/ui/attractors/useSurfaceAttractor'
 
+type Variant = 'primary' | 'secondary'
+
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant: 'primary' | 'secondary'
+  variant?: Variant
   size?: 'sm' | 'md' | 'lg'
   children: ReactNode
   className?: string
@@ -39,7 +41,7 @@ const ICON_PROPS: Partial<LucideProps> = {
   strokeWidth: 1.5,
 }
 
-const VARIANT_CLASSES: Record<ButtonProps['variant'], string> = {
+const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
     'border border-teal-100/20 bg-linear-0 from-teal-400/5 to-teal-400/10 text-white hover:border-teal-300/40 hover:from-teal-400/10 hover:to-teal-400/15',
   secondary:

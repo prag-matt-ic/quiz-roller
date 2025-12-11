@@ -1,10 +1,10 @@
-import type { DataChannelSlice, WebRTCSliceCreator, WebRTCMessage } from './types'
+import type { DataChannelSlice, WebRTCSliceCreator } from './types'
 
 // Maximum number of messages to keep in history (prevents memory growth)
 const MAX_MESSAGES = 100
 
 const RESET_DATA_CHANNEL_STATE = {
-  isDataChannelOpen: false,
+  dataChannelStates: new Map<string, boolean>(),
   messagesReceived: [],
   messagesSent: [],
 }
@@ -12,8 +12,16 @@ const RESET_DATA_CHANNEL_STATE = {
 export const createDataChannelSlice: WebRTCSliceCreator<DataChannelSlice> = (set) => ({
   ...RESET_DATA_CHANNEL_STATE,
 
-  setDataChannelOpen: (isDataChannelOpen) => {
-    set({ isDataChannelOpen })
+  setDataChannelOpen: (peerId, isOpen) => {
+    set((state) => {
+      const newStates = new Map(state.dataChannelStates)
+      if (isOpen) {
+        newStates.set(peerId, true)
+      } else {
+        newStates.delete(peerId)
+      }
+      return { dataChannelStates: newStates }
+    })
   },
 
   addReceivedMessage: (message) => {

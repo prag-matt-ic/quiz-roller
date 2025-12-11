@@ -16,6 +16,7 @@ import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
+import { useBroadcastPlayerPosition } from '@/hooks/useBroadcastPlayerPosition'
 import usePlayerController from '@/hooks/usePlayerController'
 import { usePlayerInput } from '@/hooks/usePlayerInput'
 import usePlayerSpeed from '@/hooks/usePlayerSpeed'
@@ -50,6 +51,9 @@ const Player: FC = () => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
+
+  // Broadcast position to connected peers
+  useBroadcastPlayerPosition(sphereMeshRef)
 
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())

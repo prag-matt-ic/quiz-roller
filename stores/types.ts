@@ -11,6 +11,7 @@ import {
   SpeedRunDatabase,
 } from '@/model/schema'
 import type { TotalCounts } from '@/stores/totalCounts'
+import type { Position3D, Rotation } from '@/utils/multiplayer'
 import type { RowData } from '@/utils/tiles'
 
 export enum Stage {
@@ -185,6 +186,9 @@ export type GameSlice = {
   isPlatformReady: boolean
   setIsPlatformReady: (isReady: boolean) => void
 
+  platformScrollPosition: Vector3Tuple
+  setPlatformScrollPosition: (position: Vector3Tuple) => void
+
   htmlPortal: undefined | React.RefObject<HTMLDivElement>
   setHtmlPortal: (ref: undefined | React.RefObject<HTMLDivElement>) => void
 
@@ -192,7 +196,30 @@ export type GameSlice = {
   setHydrated: (mode: GameMode) => void
 }
 
-export type GameStore = TimeSlice & PlayerSlice & GameSlice & InputSlice & OverlaysSlice
+export type RemotePlayerData = {
+  peerId: string
+  // Ref to position data - updated directly without triggering re-renders
+  positionRef: React.RefObject<{
+    worldPosition: Position3D
+    platformScroll: Position3D
+    rotation?: Rotation
+  }>
+  lastUpdate: number
+}
+
+export type MultiplayerSlice = {
+  remotePlayers: Map<string, RemotePlayerData>
+  addRemotePlayer: (peerId: string, positionRef: React.RefObject<any>) => void
+  removeRemotePlayer: (peerId: string) => void
+  clearRemotePlayers: () => void
+}
+
+export type GameStore = TimeSlice &
+  PlayerSlice &
+  GameSlice &
+  InputSlice &
+  OverlaysSlice &
+  MultiplayerSlice
 
 export type CreateGameStoreParams = {
   isMobile: boolean

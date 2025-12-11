@@ -22,6 +22,7 @@ export type WebRTCMessage = {
   type: string
   timestamp: number
   data: unknown
+  from?: string // Sender's peer ID (optional for backwards compatibility)
 }
 
 export type ConnectionSlice = {
@@ -53,11 +54,11 @@ export type SignalingSlice = {
 }
 
 export type DataChannelSlice = {
-  isDataChannelOpen: boolean
+  dataChannelStates: Map<string, boolean> // Track per-peer data channel state
   messagesReceived: WebRTCMessage[]
   messagesSent: WebRTCMessage[]
 
-  setDataChannelOpen: (isOpen: boolean) => void
+  setDataChannelOpen: (peerId: string, isOpen: boolean) => void
   addReceivedMessage: (message: WebRTCMessage) => void
   addSentMessage: (message: WebRTCMessage) => void
   clearMessages: () => void

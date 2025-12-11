@@ -16,6 +16,7 @@ import useGameFrame from '@/hooks/useGameFrame'
 export type MarbleShaderUniforms = {
   uTime: number
   uConfirmingProgress: number
+  uColor: THREE.Vector3
   uNormalMap: THREE.Texture | null
   uNormalScale: number
   uIsFlat: boolean
@@ -25,6 +26,7 @@ export type MarbleShaderUniforms = {
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uTime: 0,
   uConfirmingProgress: 0,
+  uColor: new THREE.Vector3(1, 1, 1),
   uNormalMap: null,
   uNormalScale: 0.3,
   uIsFlat: false,
@@ -36,14 +38,18 @@ export const MarbleShaderMaterial = extend(MarbleShader)
 
 type MarbleProps = {
   ref: RefObject<THREE.Mesh | null>
+  color?: [number, number, number]
 }
 
-export const Marble: FC<MarbleProps> = ({ ref }) => {
+export const Marble: FC<MarbleProps> = ({ ref, color }) => {
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat, enableVeins } = playerConfig
   const normalMap = useTexture(normal.src)
 
   const shader = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
+
+  // Convert color to Vector3 if it's an array
+  const colorVec = !!color ? new THREE.Vector3(...color) : INITIAL_UNIFORMS.uColor
 
   // Shader time accumulator
   const shaderTime = useRef(0)
@@ -67,6 +73,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           key={MarbleShader.key}
           ref={shader}
           uTime={INITIAL_UNIFORMS.uTime}
+          uColor={colorVec}
           uNormalMap={normalMap}
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}

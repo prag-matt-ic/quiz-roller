@@ -3,21 +3,20 @@ import {
   type FC,
   type PropsWithChildren,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
-  useCallback,
 } from 'react'
 import { useStore } from 'zustand'
 
 import { createWebRTCStore } from '@/stores/webrtc/createWebRTCStore'
 import { ConnectionState, PeerRole, type WebRTCStore } from '@/stores/webrtc/types'
-
 import {
-  WebRTCConnection,
   type PeerConnectionCallbacks,
   type WebRTCConfig,
+  WebRTCConnection,
 } from '@/utils/webrtc/WebRTCConnection'
 
 // Context for the Zustand store - provides reactive state across the component tree
@@ -198,17 +197,22 @@ export function useWebRTC() {
 
       // Data channel opened - ready to send messages
       onDataChannelOpen: () => {
-        store.getState().setDataChannelOpen(true)
+        store.getState().setDataChannelOpen(peerId, true)
       },
 
       // Data channel closed - can't send messages anymore
       onDataChannelClose: () => {
-        store.getState().setDataChannelOpen(false)
+        store.getState().setDataChannelOpen(peerId, false)
       },
 
       // Message received from peer via data channel
       onDataChannelMessage: (message) => {
-        store.getState().addReceivedMessage(message)
+        // Add sender identification to received message
+        const messageWithSender = {
+          ...message,
+          from: peerId,
+        }
+        store.getState().addReceivedMessage(messageWithSender)
       },
 
       // Connection error occurred
@@ -346,7 +350,12 @@ export function useWebRTC() {
 
       const sent = connection.sendMessage(message)
       if (sent) {
-        store.getState().addSentMessage({ ...message, timestamp: Date.now() })
+        const fullMessage = {
+          ...message,
+          timestamp: Date.now(),
+          from: store.getState().localPeerId || 'unknown',
+        }
+        store.getState().addSentMessage(fullMessage)
       }
       return sent
     },

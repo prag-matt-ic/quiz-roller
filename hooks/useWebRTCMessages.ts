@@ -11,12 +11,18 @@ import type { WebRTCMessage } from '@/stores/webrtc/types'
  * WHAT IT DOES:
  * - Listens for new messages in the Zustand store
  * - Calls your callback whenever a new message arrives
- * - Only fires for NEW messages (uses length comparison to detect changes)
+ * - Handles both array growth and max capacity scenarios
  *
  * WHEN TO USE:
  * - Listen for game state updates from peers (positions, actions, etc.)
  * - Implement chat functionality
  * - Receive real-time multiplayer events
+ *
+ * IMPORTANT FIX:
+ * Previously only detected new messages when array length grew, which failed
+ * when the message array reached MAX_MESSAGES (100) and got sliced.
+ * Now also detects when the last message changes (different reference),
+ * ensuring continuous message processing even after 100+ messages.
  *
  * USAGE:
  * useWebRTCMessages((message) => {
@@ -41,10 +47,16 @@ export function useWebRTCMessages(onMessage?: (message: WebRTCMessage) => void):
     const unsubscribe = storeAPI.subscribe(
       (state) => state.messagesReceived,
       (newMessages, prevMessages) => {
-        // Only call handler for new messages (when array grows)
-        if (newMessages.length > prevMessages.length) {
-          // Get the most recent message
-          onMessage(newMessages[newMessages.length - 1])
+        // Check if there's a new message by comparing the last message
+        // This handles both array growth and when array is at MAX_MESSAGES
+        if (newMessages.length === 0) return
+
+        const lastMessage = newMessages[newMessages.length - 1]
+        const prevLastMessage = prevMessages[prevMessages.length - 1]
+
+        // New message if array grew OR if last message changed (when at max capacity)
+        if (newMessages.length > prevMessages.length || lastMessage !== prevLastMessage) {
+          onMessage(lastMessage)
         }
       },
     )

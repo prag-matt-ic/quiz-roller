@@ -1,7 +1,7 @@
 'use client'
 import { type FC, useState } from 'react'
 
-import { useWebRTC, useWebRTCStore, WebRTCProvider } from '@/components/webrtc/WebRTCProvider'
+import { WebRTCProvider, useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 import { ConnectionState, PeerRole } from '@/stores/webrtc/types'
 
@@ -31,12 +31,17 @@ const WebRTCExample: FC = () => {
   // Subscribe to store state
   const localPeerId = useWebRTCStore((s) => s.localPeerId)
   const connectionState = useWebRTCStore((s) => s.connectionState)
-  const isDataChannelOpen = useWebRTCStore((s) => s.isDataChannelOpen)
+  const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
   const peers = useWebRTCStore((s) => s.peers)
   const error = useWebRTCStore((s) => s.error)
   const pendingOffer = useWebRTCStore((s) => s.pendingOffer)
   const pendingIceCandidates = useWebRTCStore((s) => s.pendingIceCandidates)
   const messages = useWebRTCStore((s) => s.messagesReceived)
+
+  // Check if any peer has an open data channel
+  const hasAnyDataChannelOpen = Array.from(peers.keys()).some((peerId) =>
+    dataChannelStates.get(peerId),
+  )
 
   // Subscribe to messages
   useWebRTCMessages((message) => {
@@ -134,7 +139,7 @@ const WebRTCExample: FC = () => {
           <strong>Connection State:</strong> {connectionState}
         </p>
         <p className="mb-2">
-          <strong>Data Channel:</strong> {isDataChannelOpen ? 'Open ✓' : 'Closed'}
+          <strong>Data Channel:</strong> {hasAnyDataChannelOpen ? 'Open ✓' : 'Closed'}
         </p>
         <p className="mb-2">
           <strong>Connected Peers:</strong> {peers.size}
@@ -189,7 +194,7 @@ const WebRTCExample: FC = () => {
       )}
 
       {/* Message Controls */}
-      {isDataChannelOpen && (
+      {hasAnyDataChannelOpen && (
         <div className="mb-6">
           <h2 className="mb-2 text-xl font-semibold">Send Message</h2>
           <div className="flex gap-2">

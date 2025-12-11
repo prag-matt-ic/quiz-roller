@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 import { useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import { PeerRole } from '@/stores/webrtc/types'
+import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 
 type UseSignalingOptions = {
   signalingUrl: string // WebSocket URL of signaling server (e.g., 'ws://localhost:8080')
@@ -206,6 +206,7 @@ export function useSignaling({
   const isConnected = () => isSignalingConnected
 
   return {
+    isSignalingConnected,
     createRoom,
     joinRoom,
     leaveRoom,

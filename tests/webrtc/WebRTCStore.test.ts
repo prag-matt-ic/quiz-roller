@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { createWebRTCStore } from '@/stores/webrtc/createWebRTCStore'
 import { ConnectionState, PeerRole } from '@/stores/webrtc/types'
 
@@ -151,17 +152,26 @@ describe('WebRTC Store', () => {
     it('should initialize with default state', () => {
       const state = store.getState()
 
-      expect(state.isDataChannelOpen).toBe(false)
+      expect(state.dataChannelStates.size).toBe(0)
       expect(state.messagesReceived).toEqual([])
       expect(state.messagesSent).toEqual([])
     })
 
-    it('should set data channel open state', () => {
-      store.getState().setDataChannelOpen(true)
-      expect(store.getState().isDataChannelOpen).toBe(true)
+    it('should set data channel open state per peer', () => {
+      const peerId1 = 'peer-1'
+      const peerId2 = 'peer-2'
 
-      store.getState().setDataChannelOpen(false)
-      expect(store.getState().isDataChannelOpen).toBe(false)
+      store.getState().setDataChannelOpen(peerId1, true)
+      expect(store.getState().dataChannelStates.get(peerId1)).toBe(true)
+      expect(store.getState().dataChannelStates.get(peerId2)).toBeUndefined()
+
+      store.getState().setDataChannelOpen(peerId2, true)
+      expect(store.getState().dataChannelStates.get(peerId1)).toBe(true)
+      expect(store.getState().dataChannelStates.get(peerId2)).toBe(true)
+
+      store.getState().setDataChannelOpen(peerId1, false)
+      expect(store.getState().dataChannelStates.get(peerId1)).toBeUndefined()
+      expect(store.getState().dataChannelStates.get(peerId2)).toBe(true)
     })
 
     it('should add received message', () => {
@@ -228,14 +238,15 @@ describe('WebRTC Store', () => {
 
     it('should subscribe to data channel state changes', () => {
       const callback = vi.fn()
+      const peerId = 'peer-1'
 
       const unsubscribe = store.subscribe(
-        (state: ReturnType<typeof store.getState>) => state.isDataChannelOpen,
+        (state: ReturnType<typeof store.getState>) => state.dataChannelStates,
         callback,
       )
 
-      store.getState().setDataChannelOpen(true)
-      expect(callback).toHaveBeenCalledWith(true, false)
+      store.getState().setDataChannelOpen(peerId, true)
+      expect(callback).toHaveBeenCalled()
 
       unsubscribe()
     })

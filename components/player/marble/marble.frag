@@ -8,6 +8,7 @@ precision mediump int;
 
 uniform highp float uTime;
 uniform mediump float uConfirmingProgress; // [0,1]
+uniform vec3 uColor; // Color tint for the marble
 uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
 uniform bool uIsFlat;
@@ -78,6 +79,9 @@ void main() {
     vec3 veinColour = mix(marbleColor, vec3(1.0), VEIN_BRIGHTEN_STRENGTH);
     marbleColor += veinColour * veinMask * VEIN_INTENSITY;
   }
+
+  // Apply color tint to marble
+  marbleColor = mix(marbleColor, marbleColor * uColor, 0.6);
 
   // Surface lighting with normal map
   vec3 normal = normalize(vNormal); // perturbNormal();
