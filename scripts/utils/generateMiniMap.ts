@@ -2,12 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import { GEM_COLOURS, INFO_ZONE_SPHERE_COLOURS } from '../../resources/colours'
-import {
-  type IndexedPlacement,
-  type RowData,
-  TILE_SIZE,
-  clamp,
-} from '../../utils/tiles'
+import { type IndexedPlacement, type RowData, TILE_SIZE, clamp } from '../../utils/tiles'
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
 const MINI_MAP_TILE_SIZE_PX = 4
@@ -42,7 +37,7 @@ type WriteMiniMapParams = GenerateMiniMapParams & {
 }
 
 const DEFAULT_PALETTE: MiniMapPalette = {
-  raised: '#0D393B',
+  raised: '#53938C',
   infoZone: INFO_ZONE_SPHERE_COLOURS[0],
   collectible: GEM_COLOURS[0],
   finishLine: '#FFDD3F',

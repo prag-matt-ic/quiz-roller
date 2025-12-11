@@ -1,6 +1,6 @@
 import { useMediaQuery } from '@mantine/hooks'
 import Image from 'next/image'
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
@@ -56,31 +56,21 @@ const MiniMap: FC = () => {
 
   const {
     maxRowIndex: initialMaxRowIndex,
-    progressStartRow: initialProgressStartRow,
-    progressRange: initialProgressRange,
+    progressStartRow,
+    progressRange,
   } = getProgressWindow(totalRows)
 
-  const totalRowsRef = useRef(totalRows)
+  // const totalRowsRef = useRef(totalRows)
   const rowsToPixelsRef = useRef(
     totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / Math.max(1, initialMaxRowIndex),
   )
   const maxRowIndexRef = useRef(initialMaxRowIndex)
-  const progressStartRowRef = useRef(initialProgressStartRow)
-  const progressRangeRef = useRef(initialProgressRange)
+
   const miniMapAsset = MINI_MAP_ASSET_PATHS[mode] ?? MINI_MAP_ASSET_PATHS[GameMode.LEARN]
 
-  const progressRef = useRef<HTMLDivElement | null>(null)
+  // const progressRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<HTMLImageElement | null>(null)
-
-  useEffect(() => {
-    totalRowsRef.current = totalRows
-    const { maxRowIndex, progressRange, progressStartRow } = getProgressWindow(totalRows)
-    maxRowIndexRef.current = maxRowIndex
-    const denominator = Math.max(1, maxRowIndex)
-    rowsToPixelsRef.current = totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / denominator
-    progressStartRowRef.current = progressStartRow
-    progressRangeRef.current = progressRange
-  }, [mapTileSizePx, totalRows])
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const { playerPosition } = usePlayerPosition()
 
@@ -89,15 +79,15 @@ const MiniMap: FC = () => {
     let lastXRef = 0
     let lastYRef = 0
 
-    const updateProgress = (row: number) => {
-      if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
-      if (!progressRef.current) return
-      const rowsProgress = Math.min(
-        1,
-        Math.max(0, (row - progressStartRowRef.current) / progressRangeRef.current),
-      )
-      progressRef.current.style.clipPath = `inset(${100 - rowsProgress * 100}% 0 0 0)`
-    }
+    // const updateProgress = (row: number) => {
+    //   if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
+    //   if (!progressRef.current) return
+    //   const rowsProgress = Math.min(
+    //     1,
+    //     Math.max(0, (row - progressStartRowRef.current) / progressRangeRef.current),
+    //   )
+    //   progressRef.current.style.clipPath = `inset(${100 - rowsProgress * 100}% 0 0 0)`
+    // }
 
     const updateMapTransform = (row: number, playerX: number) => {
       if (!mapRef.current) return
@@ -119,7 +109,7 @@ const MiniMap: FC = () => {
 
     const loop = () => {
       updateMapTransform(currentRow, playerPosition.current[0])
-      updateProgress(currentRow)
+      // updateProgress(currentRow)
       animationFrameId = requestAnimationFrame(loop)
     }
 
@@ -142,13 +132,17 @@ const MiniMap: FC = () => {
   return (
     <aside
       id="mini-map"
+      onClick={() => setIsExpanded((prev) => !prev)}
       className={twJoin(
-        'pointer-events-none fixed bottom-3 z-5 flex items-center justify-center overflow-hidden rounded-full bg-black xl:bottom-6',
-        isMapOnRight ? 'right-3 xl:right-6' : 'left-3 xl:left-6',
+        'mini-map-fade-mask pointer-events-auto fixed bottom-0 z-20 flex max-h-full cursor-pointer items-center justify-center',
+        isMapOnRight ? 'right-0' : 'left-0',
+        isExpanded
+          ? 'overflow-visible bg-linear-0 from-black/50 from-20% to-black/5'
+          : 'overflow-hidden bg-black/50',
       )}
       style={{
         width: COLUMNS * mapTileSizePx,
-        height: COLUMNS * mapTileSizePx,
+        height: isExpanded ? '100%' : (COLUMNS + 8) * mapTileSizePx,
       }}>
       <Image
         src={miniMapAsset}
@@ -156,25 +150,18 @@ const MiniMap: FC = () => {
         alt="Mini Map"
         width={mapTileSizePx * COLUMNS}
         height={mapTileSizePx * totalRows}
-        className="absolute bottom-0 transition-transform duration-100 ease-linear will-change-transform"
+        className="absolute bottom-0 opacity-35 transition-transform duration-100 ease-linear will-change-transform"
         style={{
           transform: 'translate3d(0,0,0)',
         }}
       />
       <div
         id="mini-map-player"
-        className="absolute z-20 rounded-full bg-white"
+        className="absolute z-30 rounded-full bg-white"
         style={{
           bottom: playerIndicatorYOffsetPx - playerSizePx / 2,
           width: playerSizePx,
           height: playerSizePx,
-        }}
-      />
-      <div
-        ref={progressRef}
-        className="absolute inset-0 size-full rounded-full border-2 border-teal-600 bg-none"
-        style={{
-          clipPath: 'inset(100% 0 0 0)',
         }}
       />
     </aside>
@@ -182,3 +169,30 @@ const MiniMap: FC = () => {
 }
 
 export default MiniMap
+
+// TODO: create a standalone ProgressBar component
+
+// const ProgressBar: FC = () => {
+//   const progressStartRowRef = useRef(initialProgressStartRow)
+//   const progressRangeRef = useRef(initialProgressRange)
+
+//   useEffect(() => {
+//     totalRowsRef.current = totalRows
+//     const { maxRowIndex, progressRange, progressStartRow } = getProgressWindow(totalRows)
+//     maxRowIndexRef.current = maxRowIndex
+//     const denominator = Math.max(1, maxRowIndex)
+//     rowsToPixelsRef.current = totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / denominator
+//     progressStartRowRef.current = progressStartRow
+//     progressRangeRef.current = progressRange
+//   }, [mapTileSizePx, totalRows])
+
+//   return (
+//     <div
+//       ref={progressRef}
+//       className="absolute inset-0 size-full rounded-full border-2 border-teal-600 bg-none"
+//       style={{
+//         clipPath: 'inset(100% 0 0 0)',
+//       }}
+//     />
+//   )
+// }

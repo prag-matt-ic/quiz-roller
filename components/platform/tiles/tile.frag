@@ -29,11 +29,11 @@ const float REGULAR_MIX = 0.55;
 const float PLAYER_PROXIMITY_MIX = 0.88;
 const vec3 WHITE = vec3(1.0);
 
-const float SHADOW_RADIUS = 0.75;
+const float SHADOW_RADIUS = 0.9;
 const float SHADOW_RADIUS_MAX_SCALE = 1.5;
 const float SHADOW_RADIUS_MIN_SCALE = 1.0;
-const float SHADOW_STRENGTH = 0.8;
-const float SHADOW_FADE_START_Y = 1.5; // fully hidden
+const float SHADOW_STRENGTH = 0.85;
+const float SHADOW_FADE_START_Y = 1.8; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
 const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
 const float SHADOW_MIN_PLAYER_Y = -0.5; // no shadow if player below this
