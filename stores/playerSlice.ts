@@ -294,8 +294,6 @@ export const createPlayerSlice =
             left: 0,
             right: 0,
           },
-          collectedRings: {},
-          hasCollectedAllRings: false,
         }))
       },
     }
