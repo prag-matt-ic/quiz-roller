@@ -44,7 +44,6 @@ const GAME_MODE_BACKGROUND_TRACKS: Record<
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
-
 export type PlaySoundFX = (fx: SoundFX, loop?: boolean) => void
 
 export type SoundState = {
@@ -182,14 +181,13 @@ const createSoundStore = () => {
 
         setIsMuted: (isMuted: boolean, mode?: GameMode) => {
           const { playSoundFX, stopAllSounds } = get()
-          set({ isMuted })
           if (!isMuted) {
             const newBackgroundTrack = GAME_MODE_BACKGROUND_TRACKS[mode ?? GameMode.LEARN]
             playSoundFX(newBackgroundTrack, true)
-            set({ backgroundTrack: newBackgroundTrack })
+            set({ backgroundTrack: newBackgroundTrack, isMuted: false })
           } else {
             stopAllSounds()
-            set({ backgroundTrack: null })
+            set({ backgroundTrack: null, isMuted: true })
           }
         },
 

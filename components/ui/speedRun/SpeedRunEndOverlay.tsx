@@ -1,6 +1,6 @@
 'use client'
 import { Joystick, Keyboard, LogOutIcon, RotateCcwIcon, SmilePlus, Trophy } from 'lucide-react'
-import { type FC, useEffect, useLayoutEffect, useState } from 'react'
+import { type FC, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
