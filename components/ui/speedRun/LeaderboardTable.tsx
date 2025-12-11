@@ -266,7 +266,7 @@ const LoadingRow: FC<{ index: number }> = ({ index }) => {
 }
 
 const Medal: FC<{ position: number }> = ({ position }) => {
-  const medalColours = ['text-gold', 'text-silver', 'text-bronze']
+  const medalColours = ['text-amber-400', 'text-gray-300', 'text-amber-600']
 
   return (
     <div className="relative ml-1.25 flex size-8 items-center justify-center">
@@ -289,7 +289,7 @@ const Medal: FC<{ position: number }> = ({ position }) => {
         <path d="M8 7h8" stroke="currentColor" />
         <circle cx="12" cy="17" r="6" fill="currentColor" />
       </svg>
-      <p className="absolute top-3.25 text-sm font-bold text-black">{position}</p>
+      <p className="absolute top-3.25 text-[14px] font-bold text-black">{position}</p>
     </div>
   )
 }
