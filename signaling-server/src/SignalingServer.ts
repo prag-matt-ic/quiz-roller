@@ -1,5 +1,7 @@
-import type { WebSocket, RawData } from 'ws'
-import { type SignalingMessage, MessageType } from './types'
+import type { RawData, WebSocket } from 'ws'
+
+import { MAX_PEERS_PER_ROOM } from './config'
+import { MessageType, type SignalingMessage } from './types'
 
 /**
  * Represents a connected peer
@@ -28,7 +30,7 @@ export class SignalingServer {
   private rooms: Map<string, Room> = new Map()
   private readonly maxPeersPerRoom: number
 
-  constructor(maxPeersPerRoom = 4) {
+  constructor(maxPeersPerRoom = MAX_PEERS_PER_ROOM) {
     this.maxPeersPerRoom = maxPeersPerRoom
   }
 
