@@ -1,6 +1,6 @@
 'use client'
 import { Joystick, Keyboard, LogOutIcon, RotateCcwIcon, SmilePlus, Trophy } from 'lucide-react'
-import { type FC, useState } from 'react'
+import { type FC, type RefObject, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
@@ -20,7 +20,7 @@ import { useWebShare } from '@/hooks/useWebShare'
 import { GameMode, InputType } from '@/stores/types'
 
 type Props = {
-  ref: React.RefObject<HTMLDivElement | null>
+  ref: RefObject<HTMLDivElement | null>
   transitionStatus: TransitionStatus
   isMobile: boolean
 }
@@ -35,8 +35,6 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const { handleShare, isShareSupported } = useWebShare()
 
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
-  const summaryHeading = performanceSummary?.heading ?? ''
-  const summaryDescription = performanceSummary?.description ?? ''
 
   return (
     <PointerProvider isMobile={isMobile}>
@@ -50,9 +48,11 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
         )}>
         <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:grid-rows-[1fr_auto_auto] xl:gap-4">
           <Panel className="h-full" strength={3}>
-            <h2 className="text-2xl font-bold lg:text-4xl">{summaryHeading}</h2>
+            <h2 className="text-2xl font-bold lg:text-4xl">
+              {performanceSummary?.heading ?? ''}
+            </h2>
             <p className="mt-3 max-w-md text-sm text-white/80 xl:text-lg">
-              {summaryDescription}
+              {performanceSummary?.description ?? ''}
             </p>
           </Panel>
 

@@ -127,6 +127,7 @@ export const createPlayerSlice =
     return {
       ...RESET_PLAYER_STATE,
       collectedCollectibles: [],
+      seenCollectibles: {},
       playerRespawnTick: 0,
       spawnPosition: null,
       playerStatus: 'idle' as PlayerStatus,
@@ -140,6 +141,11 @@ export const createPlayerSlice =
         set({
           playerPosition: [position.x, position.y, position.z],
         })
+      },
+      markCollectibleSeen: (collectibleType) => {
+        set((s) => ({
+          seenCollectibles: { ...s.seenCollectibles, [collectibleType]: true },
+        }))
       },
       onRingCollected: (ringIndex: RingIndex) => {
         const ringKey = ringIndexToKey(ringIndex)

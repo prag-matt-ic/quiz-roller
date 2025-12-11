@@ -11,8 +11,8 @@ import {
   useInteractions,
   useTransitionStatus,
 } from '@floating-ui/react'
-import { GemIcon, LockIcon } from 'lucide-react'
-import { type CSSProperties, type FC, useState } from 'react'
+import { GemIcon, LockIcon, XIcon } from 'lucide-react'
+import { type CSSProperties, type FC, useEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -22,11 +22,19 @@ import { COLLECTIBLES_CONTENT } from '@/resources/content'
 
 const CollectiblesUI: FC = () => {
   const collectedCollectibles = useGameStore((s) => s.collectedCollectibles)
+  const seenCollectibles = useGameStore((s) => s.seenCollectibles)
+  const markCollectibleSeen = useGameStore((s) => s.markCollectibleSeen)
   return (
     <>
       {COLLECTIBLE_IDS.map((id) => {
         return (
-          <CollectibleIcon key={id} id={id} isCollected={collectedCollectibles.includes(id)} />
+          <CollectibleIcon
+            key={id}
+            id={id}
+            isCollected={collectedCollectibles.includes(id)}
+            hasSeen={!!seenCollectibles[id]}
+            markSeen={markCollectibleSeen}
+          />
         )
       })}
     </>
@@ -35,10 +43,12 @@ const CollectiblesUI: FC = () => {
 
 export default CollectiblesUI
 
-export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = ({
-  id,
-  isCollected,
-}) => {
+export const CollectibleIcon: FC<{
+  id: CollectibleID
+  isCollected: boolean
+  hasSeen: boolean
+  markSeen: (collectibleId: CollectibleID) => void
+}> = ({ id, isCollected, hasSeen, markSeen }) => {
   const [show, setShow] = useState(false)
 
   const { refs, floatingStyles, context } = useFloating({
@@ -47,6 +57,9 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
     placement: 'bottom',
     onOpenChange: (open) => {
       setShow(open)
+      if (!open && isCollected && !hasSeen) {
+        markSeen(id)
+      }
     },
     middleware: [offset(12), shift({ padding: 8 })],
   })
@@ -59,6 +72,15 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
 
   const collectedColour = GEMS_COLOURS_BY_ID[id]?.colour
   const ContentIcon = COLLECTIBLES_CONTENT[id].Icon
+
+  useEffect(() => {
+    if (!isCollected || hasSeen || show) return
+    // Auto-open once when just unlocked.
+    const timeout = setTimeout(() => {
+      setShow(true)
+    }, 1000)
+    return () => clearTimeout(timeout)
+  }, [hasSeen, isCollected, show])
 
   return (
     <>
@@ -102,12 +124,22 @@ export const CollectibleIcon: FC<{ id: CollectibleID; isCollected: boolean }> = 
             <div
               data-status={status}
               className={twJoin(
-                'flex w-fit max-w-lg origin-top items-center gap-3 overflow-hidden rounded-xl bg-black p-4 xl:gap-4 xl:p-6',
+                'relative flex w-fit max-w-lg origin-top items-center gap-3 overflow-hidden rounded-xl bg-black p-4 xl:gap-4 xl:p-6',
                 // Transition states
                 'data-[status=initial]:scale-90 data-[status=initial]:opacity-0',
                 'data-[status=open]:scale-100 data-[status=open]:opacity-100 data-[status=open]:duration-240',
                 'data-[status=close]:scale-90 data-[status=close]:opacity-0 data-[status=close]:duration-200',
               )}>
+              <button
+                type="button"
+                aria-label="Close collectible info"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setShow(false)
+                }}
+                className="absolute top-0 right-0 p-4 text-neutral-400 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:outline-none">
+                <XIcon className="size-4 xl:size-4.5" strokeWidth={1.5} />
+              </button>
               {isCollected ? (
                 <ContentIcon
                   strokeWidth={1}

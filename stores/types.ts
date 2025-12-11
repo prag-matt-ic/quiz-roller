@@ -151,11 +151,13 @@ export type PlayerSlice = {
   confirmationProgress: number
 
   collectedCollectibles: CollectibleID[]
+  seenCollectibles: Partial<Record<CollectibleID, boolean>>
 
   collectedRings: RingCollection
   hasCollectedAllRings: boolean
   onRingCollected: (indexes: RingIndex) => void
 
+  markCollectibleSeen: (collectibleType: CollectibleID) => void
   stopConfirmation: () => void
   onOutOfBounds: () => void
 }
