@@ -150,7 +150,7 @@ const MiniMap: FC = () => {
         alt="Mini Map"
         width={mapTileSizePx * COLUMNS}
         height={mapTileSizePx * totalRows}
-        className="absolute bottom-0 opacity-35 transition-transform duration-100 ease-linear will-change-transform"
+        className="pointer-events-none absolute bottom-0 opacity-35 transition-transform duration-100 ease-linear will-change-transform select-none"
         style={{
           transform: 'translate3d(0,0,0)',
         }}
