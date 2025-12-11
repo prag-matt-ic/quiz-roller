@@ -9,6 +9,7 @@ export type ReadyState = {
   confetti: boolean
   speedRun: boolean
   floatingTiles: boolean
+  colourPicker: boolean
 }
 export type ReadyStateKey = keyof ReadyState
 type ReadyChangeHandler = (isReady: boolean) => void
@@ -22,6 +23,7 @@ const INITIAL_READY_STATE: ReadyState = {
   confetti: false,
   speedRun: false,
   floatingTiles: false,
+  colourPicker: false,
 }
 
 const READY_STATE_KEYS: ReadyStateKey[] = Object.keys(INITIAL_READY_STATE) as ReadyStateKey[]

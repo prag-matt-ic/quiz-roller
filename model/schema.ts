@@ -43,6 +43,11 @@ export type SpeedRunLineUserData = {
   type: 'speed-run-line'
 }
 
+export type ColourTileUserData = {
+  type: 'colour-tile'
+  paletteIndex: number
+}
+
 export type RigidBodyUserData =
   | PlayerUserData
   | OutOfBoundsUserData
@@ -51,6 +56,7 @@ export type RigidBodyUserData =
   | InfoZoneUserData
   | CtaZoneUserData
   | SpeedRunLineUserData
+  | ColourTileUserData
 
 const isoDateStringSchema = z
   .string()

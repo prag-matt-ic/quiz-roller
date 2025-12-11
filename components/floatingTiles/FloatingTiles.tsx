@@ -26,6 +26,7 @@ import {
   type Variable,
 } from 'three/addons/misc/GPUComputationRenderer.js'
 
+import { useGameStore } from '@/components/GameProvider'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import floatingTilesFragment from '@/components/floatingTiles/shaders/floatingTiles.frag'
 import floatingTilesVertex from '@/components/floatingTiles/shaders/floatingTiles.vert'
@@ -54,11 +55,11 @@ const TILE_THICKNESS = 0.1
 const BOX_SIZE_SCALE = 0.5
 const Y_MIN = -8
 const Y_MAX = 8
-const Z_FADE_START = 25
-const Z_FADE_END = 35
+const Z_FADE_START = 16
+const Z_FADE_END = 32
 const MAX_DELTA_TIME = 0.05
 const SPEED_MIN = 0.4
-const SPEED_RANGE = 0.4
+const SPEED_RANGE = 0.8
 
 const INITIAL_FLOATING_TILE_UNIFORMS: FloatingTilesUniforms = {
   uMix: 0.4,
@@ -119,6 +120,7 @@ const createRowPositionsTexture = (data: Float32Array) => {
 
 const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   const count = usePerformanceStore((s) => s.sceneConfig.floatingTiles.instanceCount)
+  const rowsData = useGameStore((s) => s.rowsData)
   const renderer = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
 
@@ -155,6 +157,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   if (rowPositionsDataRef.current == null) {
     rowPositionsDataRef.current = new Float32Array(ROWS_RENDERED)
   }
+  const hasInitializedSpawnMaskRef = useRef(false)
   const rowPositionsTextureRef = useRef<DataTexture | null>(null)
   if (rowPositionsTextureRef.current == null) {
     rowPositionsTextureRef.current = createRowPositionsTexture(rowPositionsDataRef.current)
@@ -249,7 +252,13 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
       textureBufferRef.current[base + 2] = 0
       textureBufferRef.current[base + 3] = SPEED_MIN
     }
-  }, [ensureTextureBufferSize, instanceCount, rebuildSpawnableCells, seedInstance, textureSlotCount])
+  }, [
+    ensureTextureBufferSize,
+    instanceCount,
+    rebuildSpawnableCells,
+    seedInstance,
+    textureSlotCount,
+  ])
 
   const writeBufferToTexture = useCallback((texture: DataTexture) => {
     const target = texture.image.data as Float32Array
@@ -259,17 +268,34 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
   const initializeSpawnMaskDefaults = useCallback(() => {
     const mask = spawnMaskData
+    const columnStates = rowColumnSpawnable
+    if (!columnStates) return
+
     for (let row = 0; row < ROWS_RENDERED; row++) {
       const rowStart = row * GRID_COLS
-      for (let col = 0; col < GRID_COLS; col++) {
-        const isSide = col < GRID_OFFSET || col >= GRID_OFFSET + COLUMNS
-        mask[rowStart + col] = isSide ? 1 : 0
+      const columnStateOffset = row * COLUMNS
+      const rowData = rowsData?.[row]
+
+      for (let col = 0; col < GRID_OFFSET; col++) {
+        mask[rowStart + col] = 1
+      }
+
+      for (let col = 0; col < COLUMNS; col++) {
+        const isRaised = rowData?.isRaised?.[col] === 1 ? 1 : 0
+        const isSpawnable = isRaised === 1 ? 0 : 1
+        const stateIndex = columnStateOffset + col
+        columnStates[stateIndex] = isSpawnable
+        mask[rowStart + GRID_OFFSET + col] = isSpawnable
+      }
+
+      for (let col = GRID_OFFSET + COLUMNS; col < GRID_COLS; col++) {
+        mask[rowStart + col] = 1
       }
     }
     spawnMaskTextureRef.current!.needsUpdate = true
     spawnableCellsDirtyRef.current = false
     rebuildSpawnableCells()
-  }, [rebuildSpawnableCells, spawnMaskData])
+  }, [rebuildSpawnableCells, rowColumnSpawnable, rowsData, spawnMaskData])
 
   const initializeSimulation = useCallback(() => {
     if (!renderer || isDisabled) return
@@ -316,6 +342,8 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
   }, [isDisabled, renderer, seedAllInstances, textureSize, writeBufferToTexture])
 
   useEffect(() => {
+    if (hasInitializedSpawnMaskRef.current) return
+    hasInitializedSpawnMaskRef.current = true
     initializeSpawnMaskDefaults()
   }, [initializeSpawnMaskDefaults])
 

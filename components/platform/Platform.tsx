@@ -11,6 +11,9 @@ import Collectibles, {
   type CollectiblesHandle,
 } from '@/components/platform/collectibles/Collectibles'
 import ConfettiRows, { type ConfettiHandle } from '@/components/platform/confetti/ConfettiRows'
+import ColourPickerRow, {
+  type ColourPickerHandle,
+} from '@/components/platform/colourPicker/ColourPickerRow'
 import FloatingHeadings, {
   type FloatingHeadingsHandle,
 } from '@/components/platform/floatingHeadings/FloatingHeadings'
@@ -125,6 +128,7 @@ const Platform: FC = () => {
   const speedRunElements = useRef<SpeedRunElementsHandle | null>(null)
   const floatingTilesHandle = useRef<FloatingTilesHandle | null>(null)
   const confettiHandle = useRef<ConfettiHandle | null>(null)
+  const colourPickerHandle = useRef<ColourPickerHandle | null>(null)
 
   const setupInitialRowsAndTiles = useCallback(() => {
     const tilesHandle = tiles.current
@@ -223,6 +227,7 @@ const Platform: FC = () => {
         if (isSpeedRunMode && key === 'headings') return true
         if (isSpeedRunMode && key === 'collectibles') return true
         if (isSpeedRunMode && key === 'infoZones') return true
+        if (isSpeedRunMode && key === 'colourPicker') return true
         return false
       }
 
@@ -284,6 +289,7 @@ const Platform: FC = () => {
     confettiHandle.current?.hideElementsIfNeeded(row)
     ringsHandle.current?.hideElementsIfNeeded(row)
     speedRunElements.current?.hideElementsIfNeeded(row)
+    colourPickerHandle.current?.hideElementsIfNeeded(row)
   }
 
   function positionElements(rowIndex: number, rowZ: number) {
@@ -295,6 +301,7 @@ const Platform: FC = () => {
     confettiHandle.current?.positionElementsIfNeeded(row, rowZ)
     ringsHandle.current?.positionElementsIfNeeded(row, rowZ)
     speedRunElements.current?.positionElementsIfNeeded(row, rowZ)
+    colourPickerHandle.current?.positionElementsIfNeeded(row, rowZ)
   }
 
   function getRowIndexClosestToOrigin() {
@@ -509,6 +516,7 @@ const Platform: FC = () => {
       floatingHeadings.current!.moveElements(totalScrollDelta)
       collectibles.current!.moveElements(totalScrollDelta)
       infoZones.current!.moveElements(totalScrollDelta)
+      colourPickerHandle.current?.moveElements(totalScrollDelta)
     }
 
     ringsHandle.current.moveElements(totalScrollDelta)
@@ -561,6 +569,14 @@ const Platform: FC = () => {
           ref={collectibles}
           key={`collectibles-${resetPlatformTick}`}
           onReadyChange={readyChangeHandlers.collectibles}
+        />
+      )}
+
+      {!isSpeedRunMode && (
+        <ColourPickerRow
+          ref={colourPickerHandle}
+          key={`colour-picker-${resetPlatformTick}`}
+          onReadyChange={readyChangeHandlers.colourPicker}
         />
       )}
 

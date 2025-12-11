@@ -44,11 +44,13 @@ type BitmapRow = {
   ringColumns: number[]
   infoZoneColumns: number[]
   collectibleColumns: number[]
+  colourPickerColumns: number[]
   finishLineColumns: number[]
   floatingHeadingColumns: number[]
   confettiColumns: number[]
   infoZonePlacements?: BitmapPlacement[]
   collectiblePlacements?: BitmapPlacement[]
+  colourPickerPlacements?: BitmapPlacement[]
   finishLinePlacement?: BitmapPlacement | null
   floatingHeadingPlacement?: BitmapPlacement | null
   confettiPlacements?: BitmapPlacement[]
@@ -97,6 +99,7 @@ const COLOUR_CODES = {
   FLOATING_HEADING: [128, 128, 128] as const,
   INFO_ZONE: [0, 255, 0] as const,
   COLLECTIBLE: [0, 0, 255] as const,
+  COLOUR_PICKER: [255, 128, 0] as const,
   HIGHLIGHT: [0, 255, 255] as const,
   FINISH_LINE: [255, 255, 0] as const,
   CONFETTI: [255, 0, 128] as const,
@@ -233,6 +236,7 @@ async function parseSectionBitmapFromFile(
     const infoZoneColumns: number[] = []
     const highlightColumns: number[] = []
     const collectibleColumns: number[] = []
+    const colourPickerColumns: number[] = []
     const finishLineColumns: number[] = []
     const floatingHeadingColumns: number[] = []
     const confettiColumns: number[] = []
@@ -249,6 +253,7 @@ async function parseSectionBitmapFromFile(
       if (isColour(r, g, b, COLOUR_CODES.RING)) ringColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.INFO_ZONE)) infoZoneColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.COLLECTIBLE)) collectibleColumns.push(column)
+      if (isColour(r, g, b, COLOUR_CODES.COLOUR_PICKER)) colourPickerColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.FINISH_LINE)) finishLineColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.HIGHLIGHT)) highlightColumns.push(column)
       if (isColour(r, g, b, COLOUR_CODES.FLOATING_HEADING)) floatingHeadingColumns.push(column)
@@ -260,6 +265,7 @@ async function parseSectionBitmapFromFile(
       ringColumns,
       infoZoneColumns,
       collectibleColumns,
+      colourPickerColumns,
       finishLineColumns,
       highlightColumns,
       floatingHeadingColumns,
@@ -282,6 +288,15 @@ async function parseSectionBitmapFromFile(
     (rowIndex, placements) => {
       if (!placements.length) return
       rows[rowIndex].collectiblePlacements = placements
+    },
+  )
+
+  assignBitmapPlacements(
+    rows,
+    (row) => row.colourPickerColumns,
+    (rowIndex, placements) => {
+      if (!placements.length) return
+      rows[rowIndex].colourPickerPlacements = placements
     },
   )
 
@@ -427,6 +442,7 @@ function buildRowDataFromBitmapRows({
     applyRingColumns(baseRow, layoutRow.ringColumns)
     applyInfoColumns(baseRow, layoutRow, globalIndexes)
     applyCollectiblePlacements(baseRow, layoutRow, globalIndexes)
+    applyColourPickerPlacement(baseRow, layoutRow, globalIndexes)
     applyFinishLineColumn(baseRow, layoutRow)
     applyFloatingHeadingPlacement(baseRow, layoutRow, globalIndexes)
     applyHighlightColumns(baseRow, layoutRow.highlightColumns)
@@ -484,6 +500,30 @@ function applyCollectiblePlacements(
 
   if (placements?.length) {
     row.collectiblePlacements = placements
+  }
+}
+
+function applyColourPickerPlacement(
+  row: RowData,
+  layoutRow: BitmapRow,
+  globalIndexes: TotalCounts,
+) {
+  const placements =
+    buildPlacementsFromBitmap(
+      layoutRow.colourPickerPlacements,
+      ON_TILE_Y,
+      'colourPickers',
+      globalIndexes,
+    ) ??
+    buildPlacementsFromColumns(
+      layoutRow.colourPickerColumns,
+      ON_TILE_Y,
+      'colourPickers',
+      globalIndexes,
+    )
+
+  if (placements?.length) {
+    row.colourPickerPlacement = placements[0]
   }
 }
 
@@ -674,7 +714,7 @@ function createIndexedPlacement(
   globalIndexes: TotalCounts,
 ): IndexedPlacement | null {
   if (columnIndex < 0 || columnIndex >= COLUMNS) return null
-  const placementIndex = globalIndexes[indexKey]
+  const placementIndex = globalIndexes[indexKey] ?? 0
   globalIndexes[indexKey] = placementIndex + 1
   const placement: IndexedPlacement = [colToX(columnIndex), y, zOffset, placementIndex]
   return placement

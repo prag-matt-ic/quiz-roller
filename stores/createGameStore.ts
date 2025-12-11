@@ -13,7 +13,13 @@ import { type CreateGameStoreParams, GameMode, type GameStore } from './types'
 
 type PersistedStore = Pick<
   GameStore,
-  'username' | 'totalTimeS' | 'completedSpeedRuns' | 'mode' | 'inputType' | 'joystickPosition'
+  | 'username'
+  | 'totalTimeS'
+  | 'completedSpeedRuns'
+  | 'mode'
+  | 'inputType'
+  | 'joystickPosition'
+  | 'paletteIndex'
 >
 
 export const createGameStore = (params: CreateGameStoreParams) => {
@@ -37,6 +43,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
               mode: s.mode,
               inputType: s.inputType,
               joystickPosition: s.joystickPosition,
+              paletteIndex: s.paletteIndex,
             }) as PersistedStore,
           version: 3,
           migrate: (persistedState: any) => {

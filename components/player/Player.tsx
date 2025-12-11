@@ -36,6 +36,7 @@ const Player: FC = () => {
   const onOutOfBounds = useGameStore((s) => s.onOutOfBounds)
   const setPlayerPosition = useGameStore((s) => s.setPlayerPosition)
   const setConfirmingCollectible = useGameStore((s) => s.setConfirmingCollectible)
+  const setConfirmingPaletteIndex = useGameStore((s) => s.setConfirmingPaletteIndex)
   const isPlatformReady = useGameStore((s) => s.isPlatformReady)
   const playerStatus = useGameStore((s) => s.playerStatus)
   const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
@@ -144,6 +145,11 @@ const Player: FC = () => {
       return
     }
 
+    if (otherUserData.type === 'colour-tile') {
+      setConfirmingPaletteIndex(otherUserData.paletteIndex)
+      return
+    }
+
     if (otherUserData.type === 'out-of-bounds') {
       onOutOfBounds()
       return
@@ -156,6 +162,11 @@ const Player: FC = () => {
 
     if (otherUserData.type === 'collectible') {
       setConfirmingCollectible(null)
+      return
+    }
+
+    if (otherUserData.type === 'colour-tile') {
+      setConfirmingPaletteIndex(null)
       return
     }
   }

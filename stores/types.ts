@@ -143,6 +143,11 @@ export type PlayerSlice = {
   playerStatus: PlayerStatus
   outOfBoundsEvents: OutOfBoundsEvent[]
 
+  paletteIndex: number
+  confirmingPaletteIndex: number | null
+  setPaletteIndex: (paletteIndex: number) => void
+  setConfirmingPaletteIndex: (paletteIndex: number | null) => void
+
   respawnPlayer: (position: Vector3Tuple, hud?: HudIndicatorConfig) => void
   onRespawnComplete: () => void
 

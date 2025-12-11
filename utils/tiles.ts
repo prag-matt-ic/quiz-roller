@@ -81,4 +81,5 @@ export type RowData = {
   floatingHeadingPlacements?: IndexedPlacement[] // Floating heading above the platform but still aligned to the row
   finishLinePosition?: [number, number, number] // Finish line position
   confettiPlacements?: ConfettiPlacement[] // Confetti platforms rendered on the platform
+  colourPickerPlacement?: IndexedPlacement // Colour picker placement (single instance)
 }

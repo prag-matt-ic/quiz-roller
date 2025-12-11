@@ -33,7 +33,33 @@ const PLAYER_PALETTE_PARAMS: PaletteParams = {
   d: [0.75, 0.91, 0.3],
 }
 
-const PALETTES: readonly PaletteParams[] = [PLAYER_PALETTE_PARAMS] as const
+const PLAYER_PALETTE_PARAMS_ALT_1: PaletteParams = {
+  a: [1.0, 0.5, 0.5],
+  b: [0.5, 0.5, 0.5],
+  c: [0.568, 1.0, 0.667],
+  d: [0.8, 1.0, 0.333],
+}
+
+const PLAYER_PALETTE_PARAMS_ALT_2: PaletteParams = {
+  a: [0.938, 0.328, 0.718],
+  b: [0.659, 0.438, 0.328],
+  c: [0.388, 0.388, 0.296],
+  d: [2.538, 2.478, 0.168],
+}
+
+const PLAYER_PALETTE_PARAMS_ALT_3: PaletteParams = {
+  a: [0.5, 0.5, 0.5],
+  b: [0.5, 0.5, 0.5],
+  c: [1.0, 0.7, 0.4],
+  d: [0.0, 0.15, 0.2],
+}
+
+const PALETTES: readonly PaletteParams[] = [
+  PLAYER_PALETTE_PARAMS,
+  PLAYER_PALETTE_PARAMS_ALT_1,
+  PLAYER_PALETTE_PARAMS_ALT_2,
+  PLAYER_PALETTE_PARAMS_ALT_3,
+] as const
 
 export const PALETTE_COUNT = PALETTES.length
 export const GRADIENT_STEPS = 8
@@ -47,6 +73,7 @@ const clampPaletteIndex = (index: number): number => {
   const rounded = Math.round(index)
   return Math.min(PALETTE_COUNT - 1, Math.max(0, rounded))
 }
+export const clampPaletteIndexSafe = clampPaletteIndex
 const clampT = (t: number): number => clampUnit(Number.isFinite(t) ? t : 0)
 
 const cosinePalette = (t: number, { a, b, c, d }: PaletteParams): Vector3Tuple => {

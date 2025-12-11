@@ -8,6 +8,7 @@ const COLLECTIBLE_GROUP = 2
 const INFO_ZONE_GROUP = 3
 const OUT_OF_BOUNDS_GROUP = 4
 const CONFETTI_GROUP = 5
+const COLOUR_TILE_GROUP = 6
 
 export const COLLISION_GROUPS = {
   // Player colliders stay in their own group but filter against everything.
@@ -24,4 +25,6 @@ export const COLLISION_GROUPS = {
   outOfBoundsSensor: interactionGroups([OUT_OF_BOUNDS_GROUP], [PLAYER_GROUP]),
   // Confetti sensors also only care about the player.
   confettiSensor: interactionGroups([CONFETTI_GROUP], [PLAYER_GROUP]),
+  // Colour tile sensors only need to interact with the player.
+  colourTileSensor: interactionGroups([COLOUR_TILE_GROUP], [PLAYER_GROUP]),
 } as const

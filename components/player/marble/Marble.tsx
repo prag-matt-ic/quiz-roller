@@ -7,6 +7,7 @@ import * as THREE from 'three'
 
 import normal from '@/assets/textures/marble/normal.webp'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
+import { useGameStore } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import fragment from '@/components/player/marble/marble.frag'
 import vertex from '@/components/player/marble/marble.vert'
@@ -20,6 +21,7 @@ export type MarbleShaderUniforms = {
   uNormalScale: number
   uIsFlat: boolean
   uEnableVeins: boolean
+  uPaletteIndex: number
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -29,6 +31,7 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uNormalScale: 0.3,
   uIsFlat: false,
   uEnableVeins: false,
+  uPaletteIndex: 0,
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -42,6 +45,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat, enableVeins } = playerConfig
   const normalMap = useTexture(normal.src)
+  const paletteIndex = useGameStore((s) => s.paletteIndex)
 
   const shader = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
 
@@ -71,6 +75,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}
           uEnableVeins={enableVeins}
+          uPaletteIndex={paletteIndex}
           transparent
         />
       </Suspense>

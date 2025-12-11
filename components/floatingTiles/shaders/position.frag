@@ -9,7 +9,7 @@ uniform float uRowCount;
 uniform sampler2D uSpawnMask;
 uniform vec2 uSpawnMaskSize;
 
-const float SPEED_MIN = 0.3;
+const float SPEED_MIN = 1.0;
 const float SPEED_RANGE = 0.6;
 const float EPSILON = 1e-5;
 

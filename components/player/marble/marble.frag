@@ -12,6 +12,7 @@ uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
 uniform bool uIsFlat;
 uniform bool uEnableVeins;
+uniform lowp int uPaletteIndex;
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
@@ -62,7 +63,7 @@ void main() {
   noiseValue = noiseValue * 0.5 + 0.5;
 
   float paletteT = clamp(noiseValue, 0.0, 1.0);
-  vec3 baseColor = samplePlayerPalette(paletteT);
+  vec3 baseColor = samplePlayerPalette(paletteT, uPaletteIndex);
   vec3 marbleColor = baseColor;
 
   if (uIsFlat) {

@@ -2,6 +2,7 @@ import gsap from 'gsap'
 import { type Vector3Tuple } from 'three'
 
 import { SoundFX } from '@/components/SoundProvider'
+import { clampPaletteIndexSafe } from '@/components/palette'
 import { CollectibleID } from '@/model/schema'
 import { getOutOfBoundsMessage } from '@/resources/content/hud'
 import { ringIndexToKey } from '@/utils/rings'
@@ -25,16 +26,20 @@ const COLLECTIBLE_DURATION_S = 1.5
 export const RESET_PLAYER_STATE: Pick<
   PlayerSlice,
   | 'confirmingCollectible'
+  | 'confirmingPaletteIndex'
   | 'collectedRings'
   | 'confirmationProgress'
   | 'hasCollectedAllRings'
   | 'playerSpeedUnits'
+  | 'paletteIndex'
 > = {
   confirmingCollectible: null,
+  confirmingPaletteIndex: null,
   collectedRings: {},
   confirmationProgress: 0,
   hasCollectedAllRings: false,
   playerSpeedUnits: PLAYER_SPEED_BASE,
+  paletteIndex: 0,
 }
 
 export const createPlayerSlice =
@@ -67,6 +72,7 @@ export const createPlayerSlice =
     function cancelConfirmation() {
       set({
         confirmingCollectible: null,
+        confirmingPaletteIndex: null,
       })
       confirmationTween = gsap.to(confirmationTweenTarget, {
         duration: 0.3,
@@ -133,6 +139,8 @@ export const createPlayerSlice =
       playerStatus: 'idle' as PlayerStatus,
       outOfBoundsEvents: [],
       username: null,
+      paletteIndex: RESET_PLAYER_STATE.paletteIndex,
+      confirmingPaletteIndex: RESET_PLAYER_STATE.confirmingPaletteIndex,
       setUsername: (username: string) => {
         set({ username })
       },
@@ -141,6 +149,9 @@ export const createPlayerSlice =
         set({
           playerPosition: [position.x, position.y, position.z],
         })
+      },
+      setPaletteIndex: (paletteIndex: number) => {
+        set({ paletteIndex: clampPaletteIndexSafe(paletteIndex) })
       },
       markCollectibleSeen: (collectibleType) => {
         set((s) => ({
@@ -168,7 +179,7 @@ export const createPlayerSlice =
 
         if (collectibleType === null) {
           cancelConfirmation()
-          set({ confirmingCollectible: null })
+          set({ confirmingCollectible: null, confirmingPaletteIndex: null })
           stopSoundFX(SoundFX.CHANGE_COLOUR)
           return
         }
@@ -178,6 +189,7 @@ export const createPlayerSlice =
 
         set({
           confirmingCollectible: collectibleType,
+          confirmingPaletteIndex: null,
           confirmationProgress: 0,
         })
 
@@ -196,10 +208,54 @@ export const createPlayerSlice =
 
         startConfirmation(onConfirmed, COLLECTIBLE_DURATION_S)
       },
+      setConfirmingPaletteIndex: (paletteIndex: number | null) => {
+        confirmationTween?.kill()
+
+        if (paletteIndex === null) {
+          cancelConfirmation()
+          set({ confirmingCollectible: null, confirmingPaletteIndex: null })
+          stopSoundFX(SoundFX.CHANGE_COLOUR)
+          return
+        }
+
+        const clamped = clampPaletteIndexSafe(paletteIndex)
+        const currentPalette = get().paletteIndex
+        if (clamped === currentPalette) {
+          cancelConfirmation()
+          set({ confirmingCollectible: null, confirmingPaletteIndex: null })
+          return
+        }
+
+        set({
+          confirmingCollectible: null,
+          confirmingPaletteIndex: clamped,
+          confirmationProgress: 0,
+        })
+
+        playSoundFX(SoundFX.CHANGE_COLOUR)
+
+        const onConfirmed = () => {
+          const currentConfirming = get().confirmingPaletteIndex
+          if (currentConfirming !== clamped) return
+          set({
+            paletteIndex: clamped,
+            confirmingPaletteIndex: null,
+            hudIndicator: null,
+          })
+          playSoundFX(SoundFX.OPEN_INFO)
+        }
+
+        startConfirmation(onConfirmed, COLLECTIBLE_DURATION_S)
+      },
       stopConfirmation: () => {
         confirmationTween?.kill()
         confirmationTween = null
         confirmationTweenTarget.value = 0
+        set({
+          confirmingCollectible: null,
+          confirmingPaletteIndex: null,
+          confirmationProgress: 0,
+        })
       },
       respawnPlayer: (position, hud) => {
         set((s) => ({
