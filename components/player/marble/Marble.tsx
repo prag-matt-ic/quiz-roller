@@ -22,6 +22,8 @@ export type MarbleShaderUniforms = {
   uIsFlat: boolean
   uEnableVeins: boolean
   uDistanceFadeEnabled: number
+  uPaletteMin: number
+  uPaletteMax: number
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -33,6 +35,8 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uIsFlat: false,
   uEnableVeins: false,
   uDistanceFadeEnabled: 0,
+  uPaletteMin: 0.0,
+  uPaletteMax: 1.0,
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -42,9 +46,15 @@ type MarbleProps = {
   ref: RefObject<THREE.Mesh | null>
   color?: [number, number, number]
   distanceFadeEnabled?: boolean
+  paletteRange?: [number, number]
 }
 
-export const Marble: FC<MarbleProps> = ({ ref, color, distanceFadeEnabled = false }) => {
+export const Marble: FC<MarbleProps> = ({
+  ref,
+  color,
+  distanceFadeEnabled = false,
+  paletteRange = [0.0, 1.0],
+}) => {
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat, enableVeins } = playerConfig
   const normalMap = useTexture(normal.src)
@@ -82,6 +92,8 @@ export const Marble: FC<MarbleProps> = ({ ref, color, distanceFadeEnabled = fals
           uIsFlat={isFlat}
           uEnableVeins={enableVeins}
           uDistanceFadeEnabled={distanceFadeEnabled ? 1 : 0}
+          uPaletteMin={paletteRange[0]}
+          uPaletteMax={paletteRange[1]}
           transparent
         />
       </Suspense>

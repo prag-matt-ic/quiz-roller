@@ -42,6 +42,8 @@ const Player: FC = () => {
   const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
   const spawnPosition = useGameStore((s) => s.spawnPosition)
   const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
+  const remotePlayers = useGameStore((s) => s.remotePlayers)
+  const isMultiplayer = remotePlayers.size > 0
 
   const { input } = usePlayerInput()
   const { controllerRef } = usePlayerController()
@@ -194,7 +196,7 @@ const Player: FC = () => {
         ref={ballColliderRef}
         collisionGroups={COLLISION_GROUPS.player}
       />
-      <Marble ref={sphereMeshRef} />
+      <Marble ref={sphereMeshRef} paletteRange={isMultiplayer ? [0.0, 0.35] : undefined} />
       <PlayerHUD />
     </RigidBody>
   )
