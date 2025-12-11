@@ -23,22 +23,19 @@ export const RingsPanel: FC<RingsPanelProps> = ({ className }) => {
   return (
     <Panel
       strength={1}
-      className={twMerge('h-full', className)}
+      className={twMerge('flex h-full flex-col justify-between', className)}
       attractorClassName="bg-amber-400/15">
-      <div className="flex h-full flex-col justify-between">
-        <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
-
-        <div>
-          <div className="mb-2 text-2xl font-bold text-white">
-            {collectedRingCount}
-            <span className="text-base text-white/40 lg:text-lg">/{totalRingsCount}</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/20">
-            <div
-              className="h-1.5 rounded-full bg-linear-to-r from-amber-500 to-amber-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      <PanelHeader icon={Circle} label="Rings" iconClassName="text-amber-400" />
+      <div>
+        <div className="mb-2 font-mono text-2xl font-semibold text-amber-400 lg:text-3xl">
+          {collectedRingCount}
+          <span className="text-base text-amber-100/50 lg:text-lg">/{totalRingsCount}</span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-amber-200/10">
+          <div
+            className="h-1 rounded-full bg-linear-to-r from-amber-500 to-amber-300"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
     </Panel>

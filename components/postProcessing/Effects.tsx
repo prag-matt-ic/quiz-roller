@@ -8,6 +8,7 @@ import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvi
 import { usePlayerInput } from '@/hooks/usePlayerInput'
 import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import { PLAYER_SPEED_MAX } from '@/stores/playerSlice'
+import { SPEED_SMOOTH_HALF_LIFE, stepSmoothedSpeed } from '@/utils/smoothedSpeed'
 
 import fragmentShader from './effects.frag'
 import vertexShader from './effects.vert'
@@ -39,8 +40,6 @@ const BLUR_SAMPLES_BY_QUALITY: Record<SceneQuality, number> = {
   [SceneQuality.MEDIUM]: 6,
   [SceneQuality.LOW]: 0,
 }
-
-const SPEED_SMOOTH_HALF_LIFE = 0.5
 
 const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
   const noiseMap = useTexture(noiseTexture.src)
@@ -86,8 +85,7 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
         -1,
         Math.min(1, (inputZ * speedUnits.current) / PLAYER_SPEED_MAX),
       )
-      const smoothingFactor = 1 - Math.exp(-delta / SPEED_SMOOTH_HALF_LIFE)
-      smoothedSpeed.current += (targetSpeed - smoothedSpeed.current) * smoothingFactor
+      stepSmoothedSpeed(smoothedSpeed, targetSpeed, delta, SPEED_SMOOTH_HALF_LIFE)
       material.current.uSceneTexture = renderTarget.texture
       material.current.uTime = clock.elapsedTime
       material.current.uSpeed = smoothedSpeed.current

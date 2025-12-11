@@ -15,6 +15,7 @@ uniform bool uIsFlat;
 uniform bool uEnableVeins;
 uniform mediump int uPaletteIndex; // 0,1,2: selected palette
 uniform mediump int uConfirmingPaletteIndex; // -1 when not confirming
+uniform mediump float uSpeed;
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
@@ -33,11 +34,14 @@ const float NOISE_FREQUENCY = 0.2;
 const float REVEAL_SMOOTHNESS = 0.12;
 
 // -------- Mineral vein constants --------
-const float VEIN_NOISE_FREQUENCY = 0.9;
+const float VEIN_NOISE_FREQUENCY = 0.8;
 const float VEIN_ANIMATION_SPEED = 0.06;
-const float VEIN_POWER = 3.5;
+const float VEIN_POWER = 2.5;
 const float VEIN_INTENSITY = 0.2;
 const float VEIN_BRIGHTEN_STRENGTH = 0.5;
+const float SPEED_DARKEN_MAX = 0.1;
+const float SPEED_VEIN_INTENSITY_BOOST = 0.35;
+const float SPEED_VEIN_BRIGHTEN_BOOST = 0.05;
 
 vec3 applyConfirmingReveal(vec3 baseColor, float paletteT, highp vec3 unitLocalPos) {
   if (uConfirmingPaletteIndex < 0 || uConfirmingProgress <= 0.0) {
@@ -90,11 +94,18 @@ void main() {
   }
 
   if (uEnableVeins) {
+    float speedAmount = clamp(uSpeed, 0.0, 1.0);
+    float speedEase = speedAmount * speedAmount; // softer response at low speed
+    float darken = SPEED_DARKEN_MAX * speedEase;
+    marbleColor *= (1.0 - darken);
+
     // High-frequency ridges for mineral veins
     float veinNoise = noise(unitLocalPos * VEIN_NOISE_FREQUENCY + animatedTime);
     float veinMask = pow(clamp(1.0 - abs(veinNoise), 0.0, 1.0), VEIN_POWER);
-    vec3 veinColour = mix(marbleColor, vec3(1.0), VEIN_BRIGHTEN_STRENGTH);
-    marbleColor += veinColour * veinMask * VEIN_INTENSITY;
+    float veinBrighten = VEIN_BRIGHTEN_STRENGTH + SPEED_VEIN_BRIGHTEN_BOOST * speedEase;
+    float veinIntensity = VEIN_INTENSITY + SPEED_VEIN_INTENSITY_BOOST * speedEase;
+    vec3 veinColour = mix(marbleColor, vec3(1.0), veinBrighten);
+    marbleColor += veinColour * veinMask * veinIntensity;
   }
 
   // Surface lighting with normal map

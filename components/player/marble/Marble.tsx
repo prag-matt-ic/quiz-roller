@@ -13,6 +13,10 @@ import fragment from '@/components/player/marble/marble.frag'
 import vertex from '@/components/player/marble/marble.vert'
 import { useConfirmationProgress } from '@/hooks/useConfirmationProgress'
 import useGameFrame from '@/hooks/useGameFrame'
+import { usePlayerInput } from '@/hooks/usePlayerInput'
+import usePlayerSpeed from '@/hooks/usePlayerSpeed'
+import { PLAYER_SPEED_MAX } from '@/stores/playerSlice'
+import { SPEED_SMOOTH_HALF_LIFE, stepSmoothedSpeed } from '@/utils/smoothedSpeed'
 
 export type MarbleShaderUniforms = {
   uTime: number
@@ -23,6 +27,7 @@ export type MarbleShaderUniforms = {
   uEnableVeins: boolean
   uPaletteIndex: number
   uConfirmingPaletteIndex: number
+  uSpeed: number
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -34,6 +39,7 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uEnableVeins: false,
   uPaletteIndex: 0,
   uConfirmingPaletteIndex: -1,
+  uSpeed: 0,
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -55,12 +61,24 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
   // Shader time accumulator
   const shaderTime = useRef(0)
   const { confirmationProgress } = useConfirmationProgress()
+  const smoothedSpeed = useRef(0)
+  const { input } = usePlayerInput()
+  const { speedUnits } = usePlayerSpeed()
 
   useGameFrame((_, deltaTime) => {
     if (!shader.current) return
     // Update shader animation time
     shaderTime.current += deltaTime
     shader.current.uTime = shaderTime.current
+
+    const inputZ = input.current.up - input.current.down
+    const targetSpeed = Math.min(1, Math.abs((inputZ * speedUnits.current) / PLAYER_SPEED_MAX))
+    shader.current.uSpeed = stepSmoothedSpeed(
+      smoothedSpeed,
+      targetSpeed,
+      deltaTime,
+      SPEED_SMOOTH_HALF_LIFE,
+    )
 
     if (confirmationProgress.current === 0 && shader.current.uConfirmingProgress === 0) return
     shader.current.uConfirmingProgress = confirmationProgress.current
@@ -80,6 +98,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           uEnableVeins={enableVeins}
           uPaletteIndex={paletteIndex}
           uConfirmingPaletteIndex={confirmingPaletteIndex}
+          uSpeed={INITIAL_UNIFORMS.uSpeed}
           transparent
         />
       </Suspense>
