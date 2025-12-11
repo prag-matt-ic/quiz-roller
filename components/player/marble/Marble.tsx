@@ -21,6 +21,7 @@ export type MarbleShaderUniforms = {
   uNormalScale: number
   uIsFlat: boolean
   uEnableVeins: boolean
+  uDistanceFadeEnabled: number
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -31,6 +32,7 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uNormalScale: 0.3,
   uIsFlat: false,
   uEnableVeins: false,
+  uDistanceFadeEnabled: 0,
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -39,9 +41,10 @@ export const MarbleShaderMaterial = extend(MarbleShader)
 type MarbleProps = {
   ref: RefObject<THREE.Mesh | null>
   color?: [number, number, number]
+  distanceFadeEnabled?: boolean
 }
 
-export const Marble: FC<MarbleProps> = ({ ref, color }) => {
+export const Marble: FC<MarbleProps> = ({ ref, color, distanceFadeEnabled = false }) => {
   const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
   const { segments, isFlat, enableVeins } = playerConfig
   const normalMap = useTexture(normal.src)
@@ -78,6 +81,7 @@ export const Marble: FC<MarbleProps> = ({ ref, color }) => {
           uNormalScale={INITIAL_UNIFORMS.uNormalScale}
           uIsFlat={isFlat}
           uEnableVeins={enableVeins}
+          uDistanceFadeEnabled={distanceFadeEnabled ? 1 : 0}
           transparent
         />
       </Suspense>

@@ -2,11 +2,16 @@
 // Pass object-space position and normal to fragment for seamless spherical mapping
 // Normal mapping for surface detail
 
+#pragma glslify: fadeDistance = require('../../../resources/glsl/fadeDistance.glsl')
+
+uniform mediump float uDistanceFadeEnabled;
+
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
 varying mediump vec2 vUv;
 varying highp vec3 vViewPosition;
 varying mediump float vRespawnFade;
+varying mediump float vDistanceFade;
 
 const float PI = 3.14159265359;
 const float RESPAWN_FADE_START_Y = 3.5;
@@ -35,6 +40,13 @@ void main() {
   vec4 worldCenter = modelMatrix * vec4(0.0, 0.0, 0.0, 1.0);
   float fadeT = (RESPAWN_FADE_START_Y - worldCenter.y) / RESPAWN_FADE_RANGE;
   vRespawnFade = clamp(fadeT, 0.0, 1.0);
+  
+  // Calculate distance fade for remote players
+  if (uDistanceFadeEnabled > 0.5) {
+    vDistanceFade = fadeDistance(worldCenter.z);
+  } else {
+    vDistanceFade = 1.0;
+  }
   
   gl_Position = projectionMatrix * mvPosition;
 }
