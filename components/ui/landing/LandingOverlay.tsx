@@ -85,13 +85,25 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
 
       <div
         className={twJoin(
-          'absolute inset-x-5 bottom-0 flex w-full flex-wrap justify-center gap-2 py-4 text-sm leading-3 text-white/70 opacity-0 transition-opacity duration-1000 xl:py-6 xl:text-base',
+          'absolute inset-x-5 bottom-6 flex w-full flex-wrap justify-center gap-2 text-sm leading-3 text-white/70 opacity-0 transition-opacity duration-1000 xl:bottom-8',
           isLoaded && 'opacity-100 delay-500',
         )}>
         <span className="text-xs tracking-wider text-white/40">BY</span>
-        <span className="font-unbounded font-medium">Pragmattic</span>
+        <a
+          href="https://pragmattic.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-unbounded font-medium">
+          Pragmattic
+        </a>
         <span className="text-xs tracking-wider text-white/40">AND</span>
-        <span className="font-unbounded font-medium">Loopspeed</span>
+        <a
+          href="https://loopspeed.co.uk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-unbounded font-medium">
+          Loopspeed
+        </a>
       </div>
     </div>
   )

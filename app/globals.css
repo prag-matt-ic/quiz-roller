@@ -133,6 +133,6 @@ h6 {
     -webkit-mask-repeat: no-repeat;
     mask-position: 100% 0;
     -webkit-mask-position: 100% 0;
-    animation: reveal-logo 4s cubic-bezier(0.33, 1, 0.68, 1) 300ms forwards;
+    animation: reveal-logo 4.5s cubic-bezier(0.33, 1, 0.68, 1) 300ms forwards;
   }
 }
