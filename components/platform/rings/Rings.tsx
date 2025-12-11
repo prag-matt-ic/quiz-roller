@@ -205,6 +205,8 @@ const Rings: FC<Props> = ({ ref, onReadyChange }) => {
     const indexes = slotAssignments.current[slotIndex]
     if (!indexes) return
 
+    if (collectedRings[getRingKey(indexes[0], indexes[1])]) return
+
     const material = shaderRefs[slotIndex].current
     if (!material) return
 

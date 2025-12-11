@@ -16,8 +16,7 @@ import { type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { PALETTE_COUNT } from '@/components/palette'
-import {
-  ColourTile,
+import ColourTile, {
   type ColourTileOption,
 } from '@/components/platform/colourPicker/ColourPicker'
 import { type ColourTileUserData } from '@/model/schema'

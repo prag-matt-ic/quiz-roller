@@ -142,9 +142,6 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
     <PanelHeader icon={BoxIcon} label="Technologies Used" />
     <ul className="list-inside list-disc text-sm xl:text-lg">
       <li>
-        <b>Next.js</b> as the web framework
-      </li>
-      <li>
         <b>React Three Fiber</b> for 3D rendering
       </li>
       <li>
@@ -158,6 +155,9 @@ export const INFO_ZONES_CARD_CONTENT: ReactNode[] = [
       </li>
       <li>
         <b>GSAP</b> for animations
+      </li>
+      <li>
+        <b>Next.js</b> as the web framework
       </li>
       <li>
         <b>Tailwind CSS</b> for UI styling

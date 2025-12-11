@@ -63,10 +63,12 @@ function useDynamicMeshes(totalCount: number, positionOffset = [0, 0, 0]) {
     (placement: IndexedPlacement, rowZ: number) => {
       const [x, y, relativeZ, contentIndex] = placement
       if (contentIndex < 0 || contentIndex >= refs.length) {
-        console.warn('Invalid placement index', {
-          placement,
-          poolSize: refs.length,
-        })
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Invalid placement index', {
+            placement,
+            poolSize: refs.length,
+          })
+        }
         return
       }
       const targetZ = rowZ + relativeZ

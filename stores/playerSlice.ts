@@ -167,7 +167,7 @@ export const createPlayerSlice =
         const playerRingsCount = Object.keys(newCollectedRings).length
         const hasCollectedAllRings = playerRingsCount >= totalRingsCount
         if (hasCollectedAllRings) {
-          console.warn('[PlayerStore] All rings collected!')
+          console.log('[PlayerStore] All rings collected!')
         }
 
         increaseSpeed(RING_SPEED_INCREMENT)

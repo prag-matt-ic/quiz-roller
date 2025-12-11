@@ -243,7 +243,6 @@ export function usePlayerRespawn({
     )
 
     if (!bestSelection) {
-      console.warn('[Platform] Respawn: No valid safe row found in active set to snap to.')
       // Fallback to current position
       targetScrollPosition.current = scrollPos
       pendingRespawnX.current = 0

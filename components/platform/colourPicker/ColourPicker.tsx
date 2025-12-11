@@ -1,7 +1,7 @@
 'use client'
 import { shaderMaterial } from '@react-three/drei'
 import { extend, useFrame } from '@react-three/fiber'
-import { CylinderCollider, type RapierRigidBody, RigidBody } from '@react-three/rapier'
+import { CuboidCollider, type RapierRigidBody, RigidBody } from '@react-three/rapier'
 import { type FC, type RefObject, useRef } from 'react'
 import { type Vector3Tuple } from 'three'
 
@@ -71,9 +71,8 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView })
       rotation={[-Math.PI / 2, 0, 0]}
       colliders={false}
       userData={option.userData}>
-      <CylinderCollider
-        rotation={[-Math.PI / 2, 0, 0]}
-        args={[COLOUR_TILE_SIZE / 2, PLAYER_RADIUS * 2]}
+      <CuboidCollider
+        args={[COLOUR_TILE_SIZE / 2, COLOUR_TILE_SIZE / 2, PLAYER_RADIUS * 2]}
         sensor={true}
         collisionGroups={COLLISION_GROUPS.colourTileSensor}
       />
@@ -91,5 +90,4 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView })
   )
 }
 
-export { ColourTile }
 export default ColourTile
