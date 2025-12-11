@@ -4,7 +4,8 @@ precision mediump int;
 
 #pragma glslify: noise = require('glsl-noise/simplex/3d')
 
-#pragma glslify: samplePlayerPalette = require(../../../resources/glsl/playerPalette.glsl)
+#pragma glslify: samplePlayerPalette = require(../../../resources/glsl/playerPalette.glsl).samplePlayerPalette
+#pragma glslify: getColourFromPalette = require(../../../resources/glsl/playerPalette.glsl).getColourFromPalette
 
 uniform highp float uTime;
 uniform mediump float uConfirmingProgress; // [0,1]
@@ -12,7 +13,8 @@ uniform sampler2D uNormalMap;
 uniform mediump float uNormalScale;
 uniform bool uIsFlat;
 uniform bool uEnableVeins;
-uniform lowp int uPaletteIndex;
+uniform mediump int uPaletteIndex; // 0,1,2: selected palette
+uniform mediump int uConfirmingPaletteIndex; // -1 when not confirming
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
@@ -37,6 +39,21 @@ const float VEIN_POWER = 3.5;
 const float VEIN_INTENSITY = 0.2;
 const float VEIN_BRIGHTEN_STRENGTH = 0.5;
 
+vec3 applyConfirmingReveal(vec3 baseColor, float paletteT, highp vec3 unitLocalPos) {
+  if (uConfirmingPaletteIndex < 0 || uConfirmingProgress <= 0.0) {
+    return baseColor;
+  }
+
+  vec3 confirmingColor = getColourFromPalette(uConfirmingPaletteIndex, paletteT);
+  float clampedProgress = clamp(uConfirmingProgress, 0.0, 1.0);
+  float height01 = unitLocalPos.y * 0.5 + 0.5;
+  float revealSmoothness = REVEAL_SMOOTHNESS * 1.35; // soften blend band
+  vec2 revealEdges = clamp(vec2(height01 - revealSmoothness, height01 + revealSmoothness), 0.0, 1.0);
+  float reveal = smoothstep(revealEdges.x, revealEdges.y, clampedProgress);
+
+  return mix(baseColor, confirmingColor, reveal);
+}
+
 // -------- Helpers --------
 // Perturb normal with normal map using tangent-space normal mapping
 vec3 perturbNormal() {
@@ -59,22 +76,22 @@ vec3 perturbNormal() {
 void main() {
   // Base palette color via 3D noise in object space
   highp vec3 unitLocalPos = normalize(vLocalPos);
-  float noiseValue = noise(unitLocalPos * NOISE_FREQUENCY + uTime * 0.06);
+  float animatedTime = uTime * VEIN_ANIMATION_SPEED;
+  float noiseValue = noise(unitLocalPos * NOISE_FREQUENCY + animatedTime);
   noiseValue = noiseValue * 0.5 + 0.5;
 
   float paletteT = clamp(noiseValue, 0.0, 1.0);
   vec3 baseColor = samplePlayerPalette(paletteT, uPaletteIndex);
-  vec3 marbleColor = baseColor;
+  vec3 marbleColor = applyConfirmingReveal(baseColor, paletteT, unitLocalPos);
 
   if (uIsFlat) {
     gl_FragColor = vec4(marbleColor, vRespawnFade);
     return;
   }
 
-
   if (uEnableVeins) {
     // High-frequency ridges for mineral veins
-    float veinNoise = noise(unitLocalPos * VEIN_NOISE_FREQUENCY + uTime * VEIN_ANIMATION_SPEED);
+    float veinNoise = noise(unitLocalPos * VEIN_NOISE_FREQUENCY + animatedTime);
     float veinMask = pow(clamp(1.0 - abs(veinNoise), 0.0, 1.0), VEIN_POWER);
     vec3 veinColour = mix(marbleColor, vec3(1.0), VEIN_BRIGHTEN_STRENGTH);
     marbleColor += veinColour * veinMask * VEIN_INTENSITY;

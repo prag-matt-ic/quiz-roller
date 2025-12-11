@@ -2,12 +2,12 @@
 
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
-import { FC, type RefObject, Suspense, useRef } from 'react'
-import * as THREE from 'three'
+import { type FC, type RefObject, Suspense, useRef } from 'react'
+import { Mesh, Texture } from 'three'
 
 import normal from '@/assets/textures/marble/normal.webp'
-import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { useGameStore } from '@/components/GameProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import fragment from '@/components/player/marble/marble.frag'
 import vertex from '@/components/player/marble/marble.vert'
@@ -17,11 +17,12 @@ import useGameFrame from '@/hooks/useGameFrame'
 export type MarbleShaderUniforms = {
   uTime: number
   uConfirmingProgress: number
-  uNormalMap: THREE.Texture | null
+  uNormalMap: Texture | null
   uNormalScale: number
   uIsFlat: boolean
   uEnableVeins: boolean
   uPaletteIndex: number
+  uConfirmingPaletteIndex: number
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -32,13 +33,14 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uIsFlat: false,
   uEnableVeins: false,
   uPaletteIndex: 0,
+  uConfirmingPaletteIndex: -1,
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
 export const MarbleShaderMaterial = extend(MarbleShader)
 
 type MarbleProps = {
-  ref: RefObject<THREE.Mesh | null>
+  ref: RefObject<Mesh | null>
 }
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
@@ -46,6 +48,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
   const { segments, isFlat, enableVeins } = playerConfig
   const normalMap = useTexture(normal.src)
   const paletteIndex = useGameStore((s) => s.paletteIndex)
+  const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex ?? -1)
 
   const shader = useRef<typeof MarbleShaderMaterial & MarbleShaderUniforms>(null)
 
@@ -76,6 +79,7 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           uIsFlat={isFlat}
           uEnableVeins={enableVeins}
           uPaletteIndex={paletteIndex}
+          uConfirmingPaletteIndex={confirmingPaletteIndex}
           transparent
         />
       </Suspense>

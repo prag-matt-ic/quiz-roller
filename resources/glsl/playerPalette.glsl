@@ -10,10 +10,10 @@ void getPlayerPaletteParams(in int index, out vec3 a, out vec3 b, out vec3 c, ou
         return;
     }
     if (index == 2) {
-        a = vec3(0.938, 0.328, 0.718);
-        b = vec3(0.659, 0.438, 0.328);
-        c = vec3(0.388, 0.388, 0.296);
-        d = vec3(2.538, 2.478, 0.168);
+        a = vec3(0.530, 0.390, 0.340);
+        b = vec3(0.440, 0.530, 0.530);
+        c = vec3(1.020, 0.802, 0.625);
+        d = vec3(0.245, 0.275, 0.319);
         return;
     }
     if (index == 3) {
