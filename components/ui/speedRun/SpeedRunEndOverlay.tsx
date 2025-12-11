@@ -32,22 +32,11 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const speedRunTimeCS = useGameStore((s) => s.speedRunTimeCS)
   const leaderboardFilter = useGameStore((s) => s.leaderboardFilter)
   const setLeaderboardFilter = useGameStore((s) => s.setLeaderboardFilter)
-  const platformVersion = useGameStore((s) => s.platformVersion)
-  const completedSpeedRuns = useGameStore((s) => s.completedSpeedRuns[platformVersion] ?? [])
   const { handleShare, isShareSupported } = useWebShare()
 
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
   const summaryHeading = performanceSummary?.heading ?? ''
   const summaryDescription = performanceSummary?.description ?? ''
-
-  const latestRunInputType =
-    completedSpeedRuns[completedSpeedRuns.length - 1]?.input_type ?? null
-
-  useLayoutEffect(() => {
-    if (latestRunInputType !== InputType.KEYS && latestRunInputType !== InputType.JOYSTICK)
-      return
-    setLeaderboardFilter(latestRunInputType as InputType)
-  }, [latestRunInputType, setLeaderboardFilter])
 
   return (
     <PointerProvider isMobile={isMobile}>
