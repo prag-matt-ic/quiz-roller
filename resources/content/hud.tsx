@@ -1,6 +1,6 @@
 import {
   AlertTriangleIcon,
-  ArrowBigUpDashIcon,
+  ArrowBigDownDashIcon,
   FlameIcon,
   LaughIcon,
   MoveIcon,
@@ -40,7 +40,7 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
     id: 'oob-1',
     autoDismissS: 3,
     Icon: AlertTriangleIcon,
-    label: 'Nothing to see down there!',
+    label: 'Nothing much down there!',
   },
   {
     id: 'oob-2',
@@ -48,7 +48,7 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
     Icon: RotateCcwIcon,
     label: (
       <>
-        You unlocked: <b>1 free life</b>
+        You unlocked <b>1 free life</b>
       </>
     ),
   },
@@ -58,15 +58,15 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
     Icon: SparklesIcon,
     label: (
       <>
-        <b>Still no secrets</b>
+        <b>No secrets</b> to see
       </>
     ),
   },
   {
     id: 'oob-4',
     autoDismissS: 3,
-    Icon: ArrowBigUpDashIcon,
-    label: 'Thanks for testing gravity!',
+    Icon: ArrowBigDownDashIcon,
+    label: <>Thanks for testing gravity!</>,
   },
   {
     id: 'oob-5',
@@ -81,13 +81,13 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
   {
     id: 'oob-6',
     autoDismissS: 3,
-    Icon: FlameIcon,
+    Icon: LaughIcon,
     label: 'Failure is not fatal',
   },
   {
     id: 'oob-7',
     autoDismissS: 3,
-    Icon: LaughIcon,
+    Icon: FlameIcon,
     label: (
       <>
         <b>Rise.</b> Wiser than before.

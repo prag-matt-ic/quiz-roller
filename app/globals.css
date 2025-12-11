@@ -145,3 +145,17 @@ h6 {
     -webkit-mask-size: 100% 100%;
   }
 }
+
+.speech-bubble:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border: 30px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.6);
+  border-bottom: 0;
+  margin-left: -30px;
+  margin-bottom: -30px;
+}
