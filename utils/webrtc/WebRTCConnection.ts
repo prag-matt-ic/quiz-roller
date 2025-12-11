@@ -1,16 +1,39 @@
 import type { WebRTCMessage } from '@/stores/webrtc/types'
 
 /**
- * Default STUN servers for NAT traversal
+ * Default ICE servers for NAT traversal
  *
  * STUN (Session Traversal Utilities for NAT) helps peers discover their public IP address
  * and port when behind a NAT/firewall. Google's STUN servers are free and reliable.
  *
- * For production, you may want to add TURN servers for cases where direct connection fails.
+ * TURN (Traversal Using Relays around NAT) relays traffic when direct P2P connection fails.
+ * This is essential for users on different networks with restrictive NATs/firewalls.
+ *
+ * Using public TURN servers from Open Relay Project and Metered.
+ * For production with high traffic, consider running your own TURN server (coturn).
  */
 const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
+  // STUN servers for discovering public IP
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
+  
+  // TURN servers for relaying traffic when direct connection fails
+  // Open Relay Project - free public TURN server
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
 ]
 
 export type WebRTCConfig = {
