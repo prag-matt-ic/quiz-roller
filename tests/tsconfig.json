@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "strict": true,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["../*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "../components/**/*.ts",
+    "../components/**/*.tsx",
+    "../stores/**/*.ts",
+    "../hooks/**/*.ts",
+    "../utils/**/*.ts",
+    "../model/**/*.ts"
+  ],
+  "exclude": ["node_modules", "../signaling-server"]
+}
