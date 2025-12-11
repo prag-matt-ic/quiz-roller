@@ -5,7 +5,7 @@ import { extend } from '@react-three/fiber'
 import { type FC, Suspense, useLayoutEffect, useRef } from 'react'
 import { BufferAttribute, type PlaneGeometry, Texture } from 'three'
 
-import backdrop from '@/assets/textures/backdrop/bg-1.webp'
+import backdrop from '@/assets/textures/backdrop/bg-03.webp'
 import fragmentShader from '@/components/backdrop/backdrop.frag'
 import vertexShader from '@/components/backdrop/backdrop.vert'
 import { TILE_SIZE } from '@/utils/tiles'
@@ -19,8 +19,8 @@ const BACKDROP_WIDTH = TILE_SIZE * BACKDROP_WIDTH_TILES
 const BACKDROP_DEPTH = TILE_SIZE * BACKDROP_DEPTH_TILES
 const BACKDROP_POSITION: [number, number, number] = [0, -5, -14]
 const BACKDROP_ROTATION: [number, number, number] = [-Math.PI / 2, 0, Math.PI / 2]
-const BACKDROP_DARKNESS = 0.42
-const BACKDROP_EDGE_FADE = 0.16
+const BACKDROP_DARKNESS = 0.1
+const BACKDROP_EDGE_FADE = 0.2
 // TODO: re-export backdrop with optimal aspect ratio based on calculations in Backdrop component
 
 type BackdropShaderUniforms = {
@@ -95,7 +95,7 @@ const Backdrop: FC = () => {
         'Backdrop Texture Optimal Aspect Ratio (Width / ArcLength):',
         BACKDROP_WIDTH / totalArcLength,
       )
-      // CURRENT: 1.325
+      // CURRENT: 1.38
     }
     for (let x = 0; x <= segmentCount; x++) {
       const v = arcLengths[x] / totalArcLength
