@@ -172,7 +172,7 @@ const MiniMap: FC = () => {
       />
       <div
         ref={progressRef}
-        className="absolute inset-0 size-full rounded-full border-2 border-teal-700 bg-none"
+        className="absolute inset-0 size-full rounded-full border-2 border-teal-600 bg-none"
         style={{
           clipPath: 'inset(100% 0 0 0)',
         }}

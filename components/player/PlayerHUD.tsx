@@ -146,8 +146,8 @@ const PlayerHUD: FC = () => {
                 <div
                   ref={container}
                   key={hudIndicator.id}
-                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black/90 p-3 text-sm font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:text-base xl:p-4">
-                  {!!hudIndicator.Icon && <hudIndicator.Icon className="size-4.5 xl:size-6" />}
+                  className="flex items-center gap-2 overflow-hidden rounded-full bg-black p-3 text-xs font-semibold whitespace-nowrap text-white uppercase opacity-0 lg:text-base xl:p-4">
+                  {!!hudIndicator.Icon && <hudIndicator.Icon className="size-4 xl:size-6" />}
                   {hudIndicator.label}
                 </div>
               )

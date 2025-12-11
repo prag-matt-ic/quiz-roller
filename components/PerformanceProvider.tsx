@@ -51,7 +51,7 @@ const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
   [SceneQuality.HIGH]: {
     isDistanceFadeEnabled: true,
     player: { segments: 64, isFlat: false, enableVeins: true },
-    ring: { radialSegments: 12, tubularSegments: 24 },
+    ring: { radialSegments: 16, tubularSegments: 32 },
     gem: { particleCount: 160 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },

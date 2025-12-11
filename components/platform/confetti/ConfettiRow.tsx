@@ -33,14 +33,7 @@ type Props = {
 
 const EMITTER_EDGE_PADDING = TILE_SIZE * 0.5
 
-const ConfettiRow: FC<Props> = ({
-  ref,
-  isVisible,
-  width,
-  depth,
-  emitterRefs,
-  index,
-}) => {
+const ConfettiRow: FC<Props> = ({ ref, isVisible, width, depth, emitterRefs, index }) => {
   const playSoundFX = useSoundStore((s) => s.playSoundFX)
   const [leftEmitterRef, rightEmitterRef] = emitterRefs
 

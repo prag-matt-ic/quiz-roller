@@ -25,13 +25,14 @@ varying lowp float vDetailIndex;
 const float HIGHLIGHTED_MIX_MIN = 0.16;
 const float HIGHLIGHTED_MIX_MAX = 0.32;
 
-const float REGULAR_MIX = 0.5;
-const float PLAYER_PROXIMITY_MIX = 0.82;
+const float REGULAR_MIX = 0.55;
+const float PLAYER_PROXIMITY_MIX = 0.88;
 const vec3 WHITE = vec3(1.0);
-const float SHADOW_RADIUS = 0.8;
+
+const float SHADOW_RADIUS = 0.75;
 const float SHADOW_RADIUS_MAX_SCALE = 1.5;
 const float SHADOW_RADIUS_MIN_SCALE = 1.0;
-const float SHADOW_STRENGTH = 0.6;
+const float SHADOW_STRENGTH = 0.8;
 const float SHADOW_FADE_START_Y = 1.5; // fully hidden
 const float SHADOW_FADE_END_Y = 0.5; // fully visible
 const float SHADOW_FADE_RANGE_INV = 1.0 / (SHADOW_FADE_START_Y - SHADOW_FADE_END_Y);
@@ -64,7 +65,7 @@ void main() {
     } else {
       detailNoise = texture2D(uDetailNoiseMap3, vUv).r;
     }
-    bgColour -= detailNoise * 0.14;
+    bgColour -= detailNoise * 0.12;
   }
 
   // Mix with white based on tile type

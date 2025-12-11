@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, type LucideIcon, Move } from 'lucide-react'
-import { type FC, useCallback, useEffect, useRef } from 'react'
+import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { type PlayerInput, useGameStore } from '@/components/GameProvider'
@@ -155,10 +155,12 @@ const Stick: FC = () => {
   const { disableInput, setPlayerInputIntent } = useControls()
   const JOYSTICK_LEVELS = 10
   const joystickPosition = useGameStore((s) => s.joystickPosition)
+  const [hasMoved, setHasMoved] = useState(false)
 
   const onJoystickMove = useCallback(
     (e: OnJoystickMove) => {
       if (disableInput) return
+      setHasMoved(true)
       setPlayerInputIntent({
         up: e.leveledY > 0 ? Math.min(e.leveledY / JOYSTICK_LEVELS, 1) : 0,
         down: e.leveledY < 0 ? Math.min(-e.leveledY / JOYSTICK_LEVELS, 1) : 0,
@@ -177,8 +179,12 @@ const Stick: FC = () => {
         joystickPosition === 'left' ? 'left-12' : 'right-12',
       )}
       onMove={onJoystickMove}>
-      <div className="flex size-full items-center justify-center text-neutral-500">
-        <Move size={24} strokeWidth={2} />
+      <div
+        className={twJoin(
+          'flex size-full items-center justify-center text-neutral-600',
+          hasMoved ? 'hidden' : 'animate-pulse',
+        )}>
+        <Move size={28} strokeWidth={1.5} />
       </div>
     </Joystick>
   )

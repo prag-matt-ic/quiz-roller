@@ -2,6 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
+import { useControls } from 'leva'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -17,23 +18,23 @@ type StageCameraPosition = {
   z: number
 }
 
-export const CAMERA_POSITION_DESKTOP: StageCameraPosition = { y: 4, z: 8 }
-export const CAMERA_POSITION_MOBILE: StageCameraPosition = { y: 6, z: 8 }
+export const CAMERA_POSITION_DESKTOP: StageCameraPosition = { y: 4.5, z: 8 }
+export const CAMERA_POSITION_MOBILE: StageCameraPosition = { y: 5.5, z: 10 }
 
 export const CAMERA_ZOOM_FOR_STAGE_DESKTOP: Record<Stage, number> = {
-  [Stage.HOME]: 1.1,
-  [Stage.INFO]: 1.1,
+  [Stage.HOME]: 1.2,
+  [Stage.INFO]: 1.2,
   [Stage.OBSTACLES]: 1.3,
-  [Stage.CTA]: 1.1,
-  [Stage.SPEED_RUN_FINISH]: 1.1,
+  [Stage.CTA]: 1.2,
+  [Stage.SPEED_RUN_FINISH]: 1.2,
 }
 
 export const CAMERA_ZOOM_FOR_STAGE_MOBILE: Record<Stage, number> = {
-  [Stage.HOME]: 1.5,
-  [Stage.INFO]: 1.5,
-  [Stage.OBSTACLES]: 1.3,
-  [Stage.CTA]: 1.5,
-  [Stage.SPEED_RUN_FINISH]: 1.5,
+  [Stage.HOME]: 1.6,
+  [Stage.INFO]: 1.6,
+  [Stage.OBSTACLES]: 1.7,
+  [Stage.CTA]: 1.6,
+  [Stage.SPEED_RUN_FINISH]: 1.6,
 }
 
 type Props = {
@@ -58,6 +59,19 @@ const Camera: FC<Props> = ({ isMobile, position }) => {
   const currentZoom = useRef<number>(cameraZoomForStage[Stage.HOME])
 
   const { input } = usePlayerInput()
+
+  // useControls(() => ({
+  //   cameraZoom: {
+  //     value: currentZoom.current,
+  //     min: 0,
+  //     max: 2,
+  //     onChange: (value: number) => {
+  //       currentZoom.current = value
+  //       if (!cameraControls.current) return
+  //       cameraControls.current.zoomTo(value, false)
+  //     },
+  //   },
+  // }))
 
   const handleStageChange = useCallback(
     (nextStage: Stage) => {
