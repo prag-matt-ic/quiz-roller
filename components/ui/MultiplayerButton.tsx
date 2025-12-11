@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button'
 import { useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import { useSignaling } from '@/hooks/useSignaling'
 
+const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
+
 /**
  * MultiplayerButton
  *
@@ -34,7 +36,7 @@ const MultiplayerButton: FC = () => {
     joinRoom,
     leaveRoom,
   } = useSignaling({
-    signalingUrl: 'ws://localhost:8080',
+    signalingUrl: SIGNALING_URL,
     autoConnect: true,
     onRoomCreated: () => setSignalingConnected(true),
     onRoomJoined: () => setSignalingConnected(true),

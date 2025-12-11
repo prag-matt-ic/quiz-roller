@@ -1,5 +1,7 @@
 import SignalingExample from '@/components/webrtc/SignalingExample'
 
+const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
+
 export default function MultiplayerTestPage() {
   return (
     <div className="h-screen overflow-y-auto bg-linear-to-b from-gray-900 to-gray-800">
@@ -69,7 +71,7 @@ export default function MultiplayerTestPage() {
             <ul className="space-y-1 text-sm text-yellow-200/80">
               <li>
                 • If &quot;Signaling: Disconnected&quot; - Check server is running on
-                ws://localhost:8080
+                {SIGNALING_URL}
               </li>
               <li>
                 • If &quot;Connection: Failed&quot; - Check browser console for WebRTC errors
