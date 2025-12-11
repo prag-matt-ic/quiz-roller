@@ -20,13 +20,13 @@ const unbounded = Unbounded({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Quizroller',
-    default: 'Quizroller | 3D Quiz Game',
+    template: '%s | Speedroller',
+    default: 'Speedroller | 3D Game',
   },
   description:
-    'A 3D quiz game built using React Three Fiber and Rapier physics. How far can you roll?',
+    'A 3D game built using React Three Fiber and Rapier physics. How fast can you roll?',
   appleWebApp: {
-    title: 'Quizroller',
+    title: 'Speedroller',
     statusBarStyle: 'black',
     capable: true,
   },
