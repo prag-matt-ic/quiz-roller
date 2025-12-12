@@ -154,7 +154,7 @@ export const LeaderboardTable: FC<Props> = ({
         <LeaderboardRow
           key="cta-row"
           className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 font-semibold text-white uppercase ring ring-emerald-400/30 ring-inset"
-          username="Start a speed run"
+          username="Start speed run"
           time={0}
           position={CTA_POSITION}
           isCurrentUser={false}
