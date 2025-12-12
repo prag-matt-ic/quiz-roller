@@ -146,7 +146,7 @@ h6 {
   width: 0;
   height: 0;
   border: 12px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.33);
+  border-top-color: rgba(0, 0, 0, 0.75);
   border-bottom: 0;
   margin-left: -12px;
   margin-bottom: -12px;
@@ -155,11 +155,11 @@ h6 {
 @media (min-width: 1440px) {
   .speech-bubble:after {
     /* Only update the width, preserving the color and style */
-    border-width: 24px;
+    border-width: 20px;
     /* Re-apply the removal of the bottom border */
     border-bottom-width: 0;
-    margin-left: -24px;
-    margin-bottom: -24px;
+    margin-left: -20px;
+    margin-bottom: -20px;
   }
 }
 /* .safe-ui {

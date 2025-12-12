@@ -98,7 +98,19 @@ export const OUT_OF_BOUNDS_HUD_CONFIG: HudIndicatorConfig[] = [
 
 const OUT_OF_BOUNDS_MESSAGE_COUNT = OUT_OF_BOUNDS_HUD_CONFIG.length
 
-export const getOutOfBoundsMessage = (events: OutOfBoundsEvent[]): HudIndicatorConfig => {
+export const getOutOfBoundsMessage = (
+  events: OutOfBoundsEvent[],
+): HudIndicatorConfig | null => {
+  const seenHudIds = new Set<string>()
+  for (let i = 0; i < events.length; i += 1) {
+    const hudId = events[i].hudId
+    if (!hudId) continue
+    seenHudIds.add(hudId)
+    if (seenHudIds.size === OUT_OF_BOUNDS_MESSAGE_COUNT) {
+      return null
+    }
+  }
+
   const eventCount = events.length
   const messagePosition = eventCount % OUT_OF_BOUNDS_MESSAGE_COUNT
   const loopStartIndex = eventCount - messagePosition // start index of current loop
@@ -106,23 +118,17 @@ export const getOutOfBoundsMessage = (events: OutOfBoundsEvent[]): HudIndicatorC
   // Track which HUD messages are already used in the current loop without allocating extra arrays.
   const usedHudIds = new Set<string>()
   for (let i = loopStartIndex; i < eventCount; i += 1) {
-    usedHudIds.add(events[i].hudId)
+    const hudId = events[i].hudId
+    if (!hudId) continue
+    usedHudIds.add(hudId)
   }
 
-  const avoidRepeatingLastMessage = messagePosition === 0 && eventCount > 0
-  const lastMessageId = avoidRepeatingLastMessage ? events[eventCount - 1].hudId : null
-
   let selectedHud: HudIndicatorConfig | null = null
-  let fallbackHud: HudIndicatorConfig | null = null
   let availableCount = 0
 
   for (let i = 0; i < OUT_OF_BOUNDS_MESSAGE_COUNT; i += 1) {
     const hud = OUT_OF_BOUNDS_HUD_CONFIG[i]
     if (usedHudIds.has(hud.id)) continue
-    if (avoidRepeatingLastMessage && hud.id === lastMessageId) {
-      fallbackHud = hud
-      continue
-    }
     // Reservoir sampling to pick a random HUD without building an array.
     availableCount += 1
     if (Math.floor(Math.random() * availableCount) === 0) {
@@ -130,7 +136,6 @@ export const getOutOfBoundsMessage = (events: OutOfBoundsEvent[]): HudIndicatorC
     }
   }
   if (!!selectedHud) return selectedHud
-  if (!!fallbackHud) return fallbackHud
   // If everything was filtered out (should not happen), fall back to any random HUD.
   return OUT_OF_BOUNDS_HUD_CONFIG[Math.floor(Math.random() * OUT_OF_BOUNDS_MESSAGE_COUNT)]
 }

@@ -124,7 +124,7 @@ export type OverlaysSlice = {
 }
 
 export type OutOfBoundsEvent = {
-  hudId: string
+  hudId: string | null
   timestamp: number
 }
 

@@ -280,7 +280,7 @@ export const createPlayerSlice =
           hudIndicator: outOfBoundsMessage,
           outOfBoundsEvents: [
             ...s.outOfBoundsEvents,
-            { hudId: outOfBoundsMessage.id, timestamp: Date.now() },
+            { hudId: outOfBoundsMessage?.id ?? null, timestamp: Date.now() },
           ],
           playerInput: {
             up: 0,
