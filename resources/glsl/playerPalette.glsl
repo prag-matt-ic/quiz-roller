@@ -2,6 +2,7 @@
 #pragma glslify: palette = require('./palette.glsl')
 
 void getPlayerPaletteParams(in int index, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
+    // Pink
     if (index == 1) {
         a = vec3(1.000, 0.500, 0.500);
         b = vec3(0.500, 0.500, 0.500);
@@ -9,13 +10,15 @@ void getPlayerPaletteParams(in int index, out vec3 a, out vec3 b, out vec3 c, ou
         d = vec3(0.800, 1.000, 0.333);
         return;
     }
+    // Blue
     if (index == 2) {
-        a = vec3(0.530, 0.390, 0.340);
-        b = vec3(0.440, 0.530, 0.530);
-        c = vec3(1.020, 0.802, 0.625);
-        d = vec3(0.245, 0.275, 0.319);
+        a = vec3(0.200, 0.470, 0.542);
+        b = vec3(0.731, 0.486, 0.400);
+        c = vec3(0.619, 0.864, 0.950);
+        d = vec3(0.380, 0.290, 0.280);
         return;
     }
+    // Mixed
     if (index == 3) {
         a = vec3(0.500, 0.500, 0.500);
         b = vec3(0.500, 0.500, 0.500);
@@ -24,6 +27,7 @@ void getPlayerPaletteParams(in int index, out vec3 a, out vec3 b, out vec3 c, ou
         return;
     }
 
+    // Default palette (0)
     a = vec3(0.470, 0.500, 0.500);
     b = vec3(0.500, 0.500, 0.500);
     c = vec3(1.000, 1.000, 0.490);

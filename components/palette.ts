@@ -41,10 +41,10 @@ const PLAYER_PALETTE_PARAMS_ALT_1: PaletteParams = {
 }
 
 const PLAYER_PALETTE_PARAMS_ALT_2: PaletteParams = {
-  a: [0.938, 0.328, 0.718],
-  b: [0.659, 0.438, 0.328],
-  c: [0.388, 0.388, 0.296],
-  d: [2.538, 2.478, 0.168],
+  a: [0.2, 0.47, 0.542],
+  b: [0.731, 0.486, 0.4],
+  c: [0.619, 0.864, 0.95],
+  d: [0.38, 0.29, 0.28],
 }
 
 const PLAYER_PALETTE_PARAMS_ALT_3: PaletteParams = {
