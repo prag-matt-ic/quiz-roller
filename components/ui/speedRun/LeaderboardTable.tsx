@@ -153,7 +153,7 @@ export const LeaderboardTable: FC<Props> = ({
       {showCTA && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 text-white"
+          className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 font-bold! text-white ring ring-emerald-400/30 ring-inset"
           username="Set a time"
           time={0}
           position={CTA_POSITION}
