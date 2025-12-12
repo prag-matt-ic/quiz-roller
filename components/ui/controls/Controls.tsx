@@ -171,21 +171,17 @@ const Stick: FC = () => {
     [disableInput, setPlayerInputIntent],
   )
 
-  // TODO: joystick positioning isn't quite right
-
   return (
     <Joystick
+      position={joystickPosition}
       level={JOYSTICK_LEVELS}
-      className={twJoin(
-        'pointer-events-auto fixed bottom-18 z-200',
-        joystickPosition === 'left' ? 'left-20' : 'right-20',
-      )}
-      // x={joystickPosition === 'left' ? '40px' : '-24px'}
-      y={'72px'}
+      className="pointer-events-auto fixed z-200"
+      x="72px"
+      y="72px"
       onMove={onJoystickMove}>
       <div
         className={twJoin(
-          'flex size-full items-center justify-center text-neutral-600',
+          'flex size-full items-center justify-center text-teal-600',
           hasMoved ? 'hidden' : 'animate-pulse',
         )}>
         <Move size={28} strokeWidth={1.5} />
