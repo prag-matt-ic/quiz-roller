@@ -26,10 +26,10 @@ import { COLLISION_GROUPS } from '@/utils/collisionGroups'
 import { getRingKey } from '@/utils/rings'
 import { HIDDEN_POSITION, ON_TILE_Y, type RowData, colToX } from '@/utils/tiles'
 
-const MAX_RING_INSTANCES = 16
+const MAX_RING_INSTANCES = 20
 const instancesArray = Array.from({ length: MAX_RING_INSTANCES }, (_, i) => i)
-const RING_MAJOR_RADIUS = 0.3
-const RING_TUBE_RADIUS = 0.05
+const RING_MAJOR_RADIUS = 0.32
+const RING_TUBE_RADIUS = 0.06
 const RING_WORLD_Y = ON_TILE_Y + RING_MAJOR_RADIUS * 2
 
 const IS_DEV_ENV = process.env.NODE_ENV !== 'production'

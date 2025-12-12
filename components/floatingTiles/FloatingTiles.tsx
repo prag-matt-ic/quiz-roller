@@ -48,7 +48,7 @@ type FloatingTilesUniforms = {
   uScrollZ: number
 }
 
-const EXTRA_SIDE_COLUMNS = 5
+const EXTRA_SIDE_COLUMNS = 4
 const GRID_COLS = COLUMNS + EXTRA_SIDE_COLUMNS * 2
 const GRID_OFFSET = EXTRA_SIDE_COLUMNS
 const TILE_THICKNESS = 0.1
@@ -377,15 +377,7 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
 
   useEffect(() => {
     if (!materialRef.current) return
-    materialRef.current.uGridCols = GRID_COLS
-    materialRef.current.uTileSize = TILE_SIZE
-    materialRef.current.uYMin = Y_MIN
-    materialRef.current.uYMax = Y_MAX
-    materialRef.current.uZFadeStart = Z_FADE_START
-    materialRef.current.uZFadeEnd = Z_FADE_END
-    materialRef.current.uRowCount = ROWS_RENDERED
     materialRef.current.uRowWorldPositions = rowPositionsTextureRef.current ?? null
-    materialRef.current.uScrollZ = 0
   }, [])
 
   const updateRowMask = useCallback(
@@ -544,11 +536,17 @@ const FloatingTiles: FC<FloatingTilesProps> = ({ ref, onReadyChange }) => {
         transparent={true}
         depthTest={true}
         depthWrite={false}
+        uGridCols={GRID_COLS}
+        uTileSize={TILE_SIZE}
+        uYMin={Y_MIN}
+        uYMax={Y_MAX}
+        uZFadeStart={Z_FADE_START}
+        uZFadeEnd={Z_FADE_END}
+        uRowCount={ROWS_RENDERED}
+        uScrollZ={0}
       />
     </instancedMesh>
   )
 }
 
 export default FloatingTiles
-
-/* eslint-enable react-hooks/refs */

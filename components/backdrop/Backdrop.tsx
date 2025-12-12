@@ -2,7 +2,7 @@
 
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
-import { type FC, Suspense, useLayoutEffect, useRef } from 'react'
+import { type FC, useLayoutEffect, useRef } from 'react'
 import { BufferAttribute, type PlaneGeometry, Texture } from 'three'
 
 import backdrop from '@/assets/textures/backdrop/bg-03.webp'
@@ -50,6 +50,8 @@ const Backdrop: FC = () => {
     const geometry = geometryRef.current
     if (!geometry) return
 
+    // Create curved backdrop geometry
+
     const segmentCount = BACKDROP_SEGMENT_COUNT
     let i = 0
     const offset = 0.5
@@ -91,10 +93,7 @@ const Backdrop: FC = () => {
     // Log the optimal aspect ratio for the texture
     // This helps in preparing the texture image with the correct dimensions to avoid stretching
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
-        'Backdrop Texture Optimal Aspect Ratio (Width / ArcLength):',
-        BACKDROP_WIDTH / totalArcLength,
-      )
+      console.warn('Backdrop Aspect Ratio (Width / Height):', BACKDROP_WIDTH / totalArcLength)
       // CURRENT: 1.38
     }
     for (let x = 0; x <= segmentCount; x++) {
@@ -111,21 +110,19 @@ const Backdrop: FC = () => {
   }, [])
 
   return (
-    <Suspense fallback={null}>
-      <mesh position={BACKDROP_POSITION} rotation={BACKDROP_ROTATION}>
-        <planeGeometry
-          ref={geometryRef}
-          args={[1, 1, BACKDROP_SEGMENT_COUNT, BACKDROP_SEGMENT_COUNT]}
-        />
-        <BackdropShaderMaterial
-          depthTest={false}
-          key={BackdropShader.key}
-          uBackdrop={backdropColour}
-          uDarkness={BACKDROP_DARKNESS}
-          uEdgeFade={BACKDROP_EDGE_FADE}
-        />
-      </mesh>
-    </Suspense>
+    <mesh position={BACKDROP_POSITION} rotation={BACKDROP_ROTATION}>
+      <planeGeometry
+        ref={geometryRef}
+        args={[1, 1, BACKDROP_SEGMENT_COUNT, BACKDROP_SEGMENT_COUNT]}
+      />
+      <BackdropShaderMaterial
+        depthTest={false}
+        key={BackdropShader.key}
+        uBackdrop={backdropColour}
+        uDarkness={BACKDROP_DARKNESS}
+        uEdgeFade={BACKDROP_EDGE_FADE}
+      />
+    </mesh>
   )
 }
 

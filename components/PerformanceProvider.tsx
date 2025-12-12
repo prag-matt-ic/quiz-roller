@@ -116,8 +116,6 @@ const createPerformanceStore = (initialState: Pick<PerformanceState, 'isMobile'>
     hasBeenManuallySet: false,
     isPhysicsDebug: false,
     setSimFps: (fps: RapierSimFPS) => {
-      const previous = get().simFps
-      logPerformanceDebug('simFps updated', { previous, next: fps })
       set({ simFps: fps })
     },
     setSceneQuality: (quality: SceneQuality) => {

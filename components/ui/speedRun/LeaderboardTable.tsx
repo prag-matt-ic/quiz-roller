@@ -163,7 +163,7 @@ export const LeaderboardTable: FC<Props> = ({
             <button
               type="button"
               onClick={() => setOverlay(Overlay.SPEEDRUN_START)}
-              className="absolute right-0.5 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
+              className="absolute right-px flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
               aria-label="Start speed run">
               <PlayIcon className="ml-0.5 size-5" strokeWidth={2.5} />
             </button>
