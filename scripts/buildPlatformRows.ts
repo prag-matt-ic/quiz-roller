@@ -83,10 +83,7 @@ const CORE_SOURCES: SectionSource[] = [
 
 const MODE_SOURCES: Record<GameMode, SectionSource[]> = {
   [GameMode.LEARN]: [...CORE_SOURCES, { file: 'cta.png', stage: Stage.CTA }],
-  [GameMode.SPEEDRUN]: [
-    ...CORE_SOURCES,
-    { file: 'speed-run-finish.png', stage: Stage.SPEED_RUN_FINISH },
-  ],
+  [GameMode.SPEEDRUN]: [...CORE_SOURCES, { file: 'cta.png', stage: Stage.SPEED_RUN_FINISH }],
   [GameMode.DEV]: [
     { file: 'test.png', stage: Stage.HOME },
     { file: 'cta.png', stage: Stage.CTA },
