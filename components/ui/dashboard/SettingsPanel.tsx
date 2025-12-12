@@ -50,7 +50,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
           <span className="text-sm font-medium text-white/70">Audio</span>
           <ButtonGroup
             value={isMuted ? 'off' : 'on'}
-            onChange={(val) => setIsMuted(val === 'off', mode)}
+            onChange={(val) => setIsMuted(val === 'off')}
             items={[
               { label: 'On', value: 'on', Icon: Volume2 },
               { label: 'Off', value: 'off', Icon: VolumeX },
