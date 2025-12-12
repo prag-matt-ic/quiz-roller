@@ -37,17 +37,18 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null)
 
   return (
-    <PointerProvider isMobile={isMobile}>
-      <div
-        ref={ref}
-        className={twJoin(
-          'fixed inset-0 z-500 flex items-center justify-center bg-radial from-black/90 from-20% to-black/20 backdrop-blur-md transition-opacity duration-300 ease-out xl:backdrop-blur-lg',
-          transitionStatus === 'entering' && 'opacity-0',
-          transitionStatus === 'entered' && 'opacity-100',
-          transitionStatus === 'exiting' && 'opacity-0',
-        )}>
-        <section className="grid max-h-full w-xl max-w-full grid-cols-1 gap-3 overflow-y-auto px-2 py-8 xl:w-6xl xl:grid-cols-2 xl:grid-rows-[1fr_auto_auto] xl:gap-4">
-          <Panel className="h-full" strength={3}>
+    <div
+      ref={ref}
+      className={twJoin(
+        'fixed inset-0 z-200 flex items-center justify-center overflow-hidden px-18 transition-opacity duration-200',
+        'bg-linear-0 from-black/30 via-black/80 to-black/30 backdrop-blur-md xl:backdrop-blur-lg',
+        transitionStatus === 'entering' && 'opacity-0',
+        transitionStatus === 'entered' && 'opacity-100',
+        transitionStatus === 'exiting' && 'opacity-0',
+      )}>
+      <PointerProvider isMobile={isMobile}>
+        <section className="mx-auto grid max-h-full w-full max-w-xl grid-cols-1 gap-2 overflow-y-auto px-2 py-6 xl:max-w-6xl xl:grid-cols-2 xl:gap-3">
+          <Panel className="shrink-0" strength={3}>
             <h2 className="text-2xl font-bold lg:text-4xl">
               {performanceSummary?.heading ?? ''}
             </h2>
@@ -116,8 +117,8 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
             </Button>
           </Panel>
         </section>
-      </div>
-    </PointerProvider>
+      </PointerProvider>
+    </div>
   )
 }
 

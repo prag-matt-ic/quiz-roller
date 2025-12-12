@@ -18,7 +18,7 @@ import { useGameStore } from '@/components/GameProvider'
 import { PALETTE_COUNT } from '@/components/palette'
 import ColourTile, {
   type ColourTileOption,
-} from '@/components/platform/colourPicker/ColourPicker'
+} from '@/components/platform/colourPicker/ColourTile'
 import { type ColourTileUserData } from '@/model/schema'
 import { HIDDEN_POSITION, type RowData, TILE_SIZE } from '@/utils/tiles'
 
