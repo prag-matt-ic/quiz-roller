@@ -1,19 +1,19 @@
 import fs from 'fs'
 import path from 'path'
 
-import { GEM_COLOURS, INFO_ZONE_SPHERE_COLOURS } from '../../resources/colours'
 import { type IndexedPlacement, type RowData, TILE_SIZE, clamp } from '../../utils/tiles'
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
 const MINI_MAP_TILE_SIZE_PX = 4
+const POINT_OF_INTEREST_COLOUR = '#37D6C7'
 const INFO_COLLECTIBLE_AREA_SIZE = { width: 5, height: 5 }
 const FINISH_LINE_AREA_SIZE = { width: 9, height: 5 }
+const COLOUR_PICKER_AREA_SIZE = { width: 11, height: 2 }
 
 type MiniMapPalette = {
   raised: string
-  infoZone: string
-  collectible: string
   finishLine: string
+  pointOfInterest: string
   background?: string
 }
 
@@ -38,9 +38,8 @@ type WriteMiniMapParams = GenerateMiniMapParams & {
 
 const DEFAULT_PALETTE: MiniMapPalette = {
   raised: '#53938C',
-  infoZone: INFO_ZONE_SPHERE_COLOURS[0],
-  collectible: GEM_COLOURS[0],
   finishLine: '#FFDD3F',
+  pointOfInterest: POINT_OF_INTEREST_COLOUR,
 }
 
 const getColumns = (columns: number, rows: RowData[]): number => {
@@ -64,13 +63,14 @@ export const buildMiniMapSVG = ({
     return { svg: '', width: 0, height: 0 }
   }
 
-  const { background, raised, finishLine } = { ...DEFAULT_PALETTE, ...palette }
+  const { background, raised, finishLine, pointOfInterest } = { ...DEFAULT_PALETTE, ...palette }
   const width = columnCount * tileSize
   const height = rowCount * tileSize
   const tiles: string[] = []
   const finishLineTiles: string[] = []
   const infoZoneTiles: string[] = []
   const collectibleTiles: string[] = []
+  const colourPickerTiles: string[] = []
 
   const infoZoneCells = collectIndicatorCells(
     rows,
@@ -85,6 +85,7 @@ export const buildMiniMapSVG = ({
     INFO_COLLECTIBLE_AREA_SIZE,
   )
   const finishLineCells = collectFinishLineCells(rows, columnCount)
+  const colourPickerCells = collectColourPickerCells(rows, columnCount)
 
   rows.forEach((row, rowIndex) => {
     const y = (rowCount - 1 - rowIndex) * tileSize // bottom-up orientation
@@ -106,21 +107,27 @@ export const buildMiniMapSVG = ({
     )
   })
 
-  infoZoneCells.forEach(({ rowIndex, columnIndex, contentIndex }) => {
+  infoZoneCells.forEach(({ rowIndex, columnIndex }) => {
     const y = (rowCount - 1 - rowIndex) * tileSize
     const x = columnIndex * tileSize
-    const fill = getInfoZoneColour(contentIndex)
     infoZoneTiles.push(
-      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${fill}" />`,
+      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${pointOfInterest}" />`,
     )
   })
 
-  collectibleCells.forEach(({ rowIndex, columnIndex, contentIndex }) => {
+  collectibleCells.forEach(({ rowIndex, columnIndex }) => {
     const y = (rowCount - 1 - rowIndex) * tileSize
     const x = columnIndex * tileSize
-    const fill = getCollectibleColour(contentIndex)
     collectibleTiles.push(
-      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${fill}" />`,
+      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${pointOfInterest}" />`,
+    )
+  })
+
+  colourPickerCells.forEach(({ rowIndex, columnIndex }) => {
+    const y = (rowCount - 1 - rowIndex) * tileSize
+    const x = columnIndex * tileSize
+    colourPickerTiles.push(
+      `<rect x="${x}" y="${y}" width="${tileSize}" height="${tileSize}" fill="${pointOfInterest}" />`,
     )
   })
 
@@ -132,7 +139,14 @@ export const buildMiniMapSVG = ({
     svgParts.push(`<rect width="${width}" height="${height}" fill="${background}" />`)
   }
 
-  svgParts.push(...tiles, ...finishLineTiles, ...infoZoneTiles, ...collectibleTiles, '</svg>')
+  svgParts.push(
+    ...tiles,
+    ...finishLineTiles,
+    ...infoZoneTiles,
+    ...collectibleTiles,
+    ...colourPickerTiles,
+    '</svg>',
+  )
 
   const svg = svgParts.join('')
 
@@ -189,8 +203,6 @@ const collectIndicatorCells = (
   const rowCount = rows.length
   const seen = new Set<string>()
   const cells: IndicatorCell[] = []
-  const halfHeight = Math.max(0, Math.floor(areaSize.height / 2))
-  const halfWidth = Math.max(0, Math.floor(areaSize.width / 2))
 
   rows.forEach((row, rowIndex) => {
     const placements = getPlacements(row)
@@ -209,8 +221,7 @@ const collectIndicatorCells = (
         contentIndex,
         columnCount,
         rowCount,
-        halfHeight,
-        halfWidth,
+        areaSize,
         seen,
         cells,
       })
@@ -224,8 +235,6 @@ const collectFinishLineCells = (rows: RowData[], columnCount: number): Indicator
   const rowCount = rows.length
   const seen = new Set<string>()
   const cells: IndicatorCell[] = []
-  const halfHeight = Math.max(0, Math.floor(FINISH_LINE_AREA_SIZE.height / 2))
-  const halfWidth = Math.max(0, Math.floor(FINISH_LINE_AREA_SIZE.width / 2))
 
   rows.forEach((row, rowIndex) => {
     const position = row.finishLinePosition
@@ -240,8 +249,36 @@ const collectFinishLineCells = (rows: RowData[], columnCount: number): Indicator
       centerColumn: columnIndex,
       columnCount,
       rowCount,
-      halfHeight,
-      halfWidth,
+      areaSize: FINISH_LINE_AREA_SIZE,
+      seen,
+      cells,
+    })
+  })
+
+  return cells
+}
+
+const collectColourPickerCells = (rows: RowData[], columnCount: number): IndicatorCell[] => {
+  const rowCount = rows.length
+  const seen = new Set<string>()
+  const cells: IndicatorCell[] = []
+
+  rows.forEach((row, rowIndex) => {
+    const placement = row.colourPickerPlacement
+    if (!placement) return
+    const [x, , relativeZ, contentIndex] = placement
+    const targetRow = getRowIndexFromRelativeZ(rowIndex, relativeZ, rowCount)
+    const columnIndex = getColumnIndexFromX(x, columnCount)
+
+    if (targetRow == null || columnIndex == null) return
+
+    pushIndicatorAreaCells({
+      centerRow: targetRow,
+      centerColumn: columnIndex,
+      contentIndex,
+      columnCount,
+      rowCount,
+      areaSize: COLOUR_PICKER_AREA_SIZE,
       seen,
       cells,
     })
@@ -256,8 +293,7 @@ const pushIndicatorAreaCells = ({
   contentIndex,
   columnCount,
   rowCount,
-  halfHeight,
-  halfWidth,
+  areaSize,
   seen,
   cells,
 }: {
@@ -266,15 +302,20 @@ const pushIndicatorAreaCells = ({
   contentIndex?: number
   columnCount: number
   rowCount: number
-  halfHeight: number
-  halfWidth: number
+  areaSize: IndicatorAreaSize
   seen: Set<string>
   cells: IndicatorCell[]
 }) => {
-  const startRow = Math.max(0, centerRow - halfHeight)
-  const endRow = Math.min(rowCount - 1, centerRow + halfHeight)
-  const startColumn = Math.max(0, centerColumn - halfWidth)
-  const endColumn = Math.min(columnCount - 1, centerColumn + halfWidth)
+  const { start: startRow, end: endRow } = getIndicatorBounds({
+    center: centerRow,
+    size: areaSize.height,
+    limit: rowCount,
+  })
+  const { start: startColumn, end: endColumn } = getIndicatorBounds({
+    center: centerColumn,
+    size: areaSize.width,
+    limit: columnCount,
+  })
 
   for (let row = startRow; row <= endRow; row++) {
     for (let column = startColumn; column <= endColumn; column++) {
@@ -286,18 +327,32 @@ const pushIndicatorAreaCells = ({
   }
 }
 
-function getInfoZoneColour(contentIndex: number | undefined): string {
-  if (!INFO_ZONE_SPHERE_COLOURS.length) return '#FFFFFF'
-  const index = typeof contentIndex === 'number' ? contentIndex : 0
-  const wrappedIndex =
-    ((index % INFO_ZONE_SPHERE_COLOURS.length) + INFO_ZONE_SPHERE_COLOURS.length) %
-    INFO_ZONE_SPHERE_COLOURS.length
-  return INFO_ZONE_SPHERE_COLOURS[wrappedIndex]
-}
+const getIndicatorBounds = ({
+  center,
+  size,
+  limit,
+}: {
+  center: number
+  size: number
+  limit: number
+}): { start: number; end: number } => {
+  const clampedSize = Math.max(1, size)
+  const before = Math.floor((clampedSize - 1) / 2)
+  const after = clampedSize - 1 - before
 
-function getCollectibleColour(contentIndex: number | undefined): string {
-  if (!GEM_COLOURS.length) return '#FFFFFF'
-  const index = typeof contentIndex === 'number' ? contentIndex : 0
-  const wrappedIndex = ((index % GEM_COLOURS.length) + GEM_COLOURS.length) % GEM_COLOURS.length
-  return GEM_COLOURS[wrappedIndex]
+  let start = center - before
+  let end = center + after
+
+  if (start < 0) {
+    end = Math.min(limit - 1, end + Math.abs(start))
+    start = 0
+  }
+
+  if (end > limit - 1) {
+    const overshoot = end - (limit - 1)
+    start = Math.max(0, start - overshoot)
+    end = limit - 1
+  }
+
+  return { start, end }
 }
