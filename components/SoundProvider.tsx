@@ -269,7 +269,7 @@ const createSoundStore = () => {
         },
       }),
       {
-        name: 'quizroller-sound',
+        name: 'speedroller-sound',
         partialize: (state) => ({ isMuted: state.isMuted }),
       },
     ),

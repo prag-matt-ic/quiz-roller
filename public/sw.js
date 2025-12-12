@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quizroller-shell-v1'
+const CACHE_NAME = 'speedroller-shell-v1'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting())

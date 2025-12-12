@@ -47,25 +47,26 @@ export default async function Home(props: PageProps) {
 
 const FAQS: { question: string; answer: string }[] = [
   {
-    question: 'What is Quizroller?',
-    answer: 'A free 3D endless runner quiz game you play in the browser.',
+    question: 'What is Speedroller?',
+    answer: 'A 3D racing game you play in the browser.',
   },
   {
     question: 'How do I move my player?',
     answer: 'On desktop use WASD or the arrow keys. On mobile, use the virtual joystick.',
   },
   {
-    question: 'Is Quizroller free to play?',
+    question: 'Is Speedroller free to play?',
     answer: 'Yes. It is free and runs entirely in your web browser.',
   },
   {
     question: 'Which devices and browsers are supported?',
-    answer: 'Any modern desktop or mobile browser that supports WebGL 2 and JavaScript.',
+    answer:
+      'Any modern desktop or mobile browser that supports WebGL 2 and JavaScript. Chrome is the recommended browser.',
   },
   {
     question: 'What is the goal of the game?',
     answer:
-      'Navigate your marble across the terrain and answer multiple choice questions to see how far you can roll.',
+      'Navigate your marble across the terrain, collect rings, and complete speedruns as fast as possible.',
   },
   {
     question: 'Can I change my marble colour?',
@@ -82,12 +83,8 @@ const FAQS: { question: string; answer: string }[] = [
       'Next.js, React Three Fiber, Rapier physics, custom WebGL/GLSL materials, Zustand for state, GSAP for animation, and Tailwind for UI.',
   },
   {
-    question: 'Does the game require a server or store data there?',
-    answer: 'No. There is no server state - all game logic runs client side.',
-  },
-  {
-    question: 'Who created Quizroller?',
-    answer: 'Matthew Frawley of Pragmattic Ltd.',
+    question: 'Who designed Speedroller?',
+    answer: 'Matthew Frawley aka Pragmattic',
   },
 ]
 
@@ -98,11 +95,11 @@ const StructuredData: FC = () => {
     acceptedAnswer: { '@type': 'Answer', text: answer },
   }))
 
-  const BASE_URL = 'https://quizroller.vercel.app'
+  const BASE_URL = 'https://speedroller.vercel.app'
 
   return (
     <>
-      {/* Organization (minimal) for the Quizroller site */}
+      {/* Organization (minimal) for the Speedroller site */}
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -119,7 +116,7 @@ const StructuredData: FC = () => {
           }),
         }}
       />
-      {/* Software Application details for the Quizroller game */}
+      {/* Software Application details for the Speedroller game */}
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -128,7 +125,7 @@ const StructuredData: FC = () => {
             '@context': 'https://schema.org',
             '@type': ['SoftwareApplication', 'WebApplication', 'VideoGame'],
             '@id': `${BASE_URL}/#software-application`,
-            name: 'Quizroller',
+            name: 'Speedroller',
             url: BASE_URL,
             applicationCategory: 'GameApplication',
             operatingSystem: 'WEB',
@@ -155,7 +152,7 @@ const StructuredData: FC = () => {
             '@type': 'WebSite',
             '@id': `${BASE_URL}/#website`,
             url: BASE_URL,
-            name: 'Quizroller',
+            name: 'Speedroller',
             inLanguage: 'en-GB',
             publisher: { '@id': `${BASE_URL}/#organization` },
           }),

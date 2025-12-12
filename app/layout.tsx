@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     default: 'Speedroller | 3D Game',
   },
   description:
-    'A 3D game built using React Three Fiber and Rapier physics. How fast can you roll?',
+    'A 3D web game built using React Three Fiber, WebGL and Rapier physics. How fast can you roll?',
   appleWebApp: {
     title: 'Speedroller',
     statusBarStyle: 'black',
