@@ -39,7 +39,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
 
   return (
     <Panel
-      className={twMerge('h-full', className)}
+      className={className}
       strength={1}
       attractorClassName="bg-white/5 bg-linear-70 from-white/10 to-transparent">
       <PanelHeader icon={Settings2} label="Settings" />
@@ -50,7 +50,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
           <span className="text-sm font-medium text-white/70">Audio</span>
           <ButtonGroup
             value={isMuted ? 'off' : 'on'}
-            onChange={(val) => setIsMuted(val === 'off')}
+            onChange={(val) => setIsMuted(val === 'off', mode)}
             items={[
               { label: 'On', value: 'on', Icon: Volume2 },
               { label: 'Off', value: 'off', Icon: VolumeX },

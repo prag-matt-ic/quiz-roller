@@ -181,14 +181,15 @@ const createSoundStore = () => {
 
         setIsMuted: (isMuted: boolean, mode?: GameMode) => {
           const { playSoundFX, stopAllSounds } = get()
+
           if (!isMuted) {
             const backgroundTrack = GAME_MODE_BACKGROUND_TRACKS[mode ?? GameMode.LEARN]
-            playSoundFX(backgroundTrack, true)
             set({ backgroundTrack, isMuted: false })
-          } else {
-            stopAllSounds()
-            set({ backgroundTrack: null, isMuted: true })
+            playSoundFX(backgroundTrack, true)
+            return
           }
+          stopAllSounds()
+          set({ backgroundTrack: null, isMuted: true })
         },
 
         stopAllSounds: () => {

@@ -153,8 +153,8 @@ export const LeaderboardTable: FC<Props> = ({
       {showCTA && (
         <LeaderboardRow
           key="cta-row"
-          className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 font-bold! text-white ring ring-emerald-400/30 ring-inset"
-          username="Set a time"
+          className="pointer-events-auto z-100 my-3 h-12 rounded-full bg-emerald-400/20 py-0 font-semibold text-white uppercase ring ring-emerald-400/30 ring-inset"
+          username="Start a speed run"
           time={0}
           position={CTA_POSITION}
           isCurrentUser={false}
@@ -163,9 +163,9 @@ export const LeaderboardTable: FC<Props> = ({
             <button
               type="button"
               onClick={() => setOverlay(Overlay.SPEEDRUN_START)}
-              className="absolute right-6 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
+              className="absolute right-0.5 flex aspect-square size-12 items-center justify-center rounded-full bg-emerald-600 text-white ring ring-emerald-400 transition-all duration-200 hover:bg-emerald-500 hover:ring-emerald-200"
               aria-label="Start speed run">
-              <PlayIcon className="size-5" strokeWidth={2} />
+              <PlayIcon className="ml-0.5 size-5" strokeWidth={2.5} />
             </button>
           }
         />
@@ -175,7 +175,7 @@ export const LeaderboardTable: FC<Props> = ({
 }
 
 const CTA_POSITION = -1
-const ROW_CONTAINER_CLASSES = 'col-span-full grid grid-cols-subgrid items-center px-2'
+const ROW_CONTAINER_CLASSES = 'relative col-span-full grid grid-cols-subgrid items-center px-2'
 const TOP_3_CONTAINER_CLASSES = 'h-12 xl:h-14 text-white'
 const NOT_TOP_3_CONTAINER_CLASSES = 'h-9 xl:h-11 text-white/90'
 
