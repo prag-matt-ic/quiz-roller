@@ -1,3 +1,6 @@
+precision highp float;
+precision highp int;
+
 varying mediump vec2 vUv;
 
 void main() {

@@ -46,13 +46,12 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   const isMobileLandscape = isMobile && isLandscape
 
   const canStart = isLoaded && (!isMobile || isMobileLandscape)
+  const showRotateHint = isMobile && !isMobileLandscape
 
   const onStartClick = () => {
     setIsMuted(startMuted, mode)
     onStart()
   }
-
-  const showRotateHint = isMobile && !isMobileLandscape
 
   return (
     <PointerProvider isMobile={isMobile}>
@@ -97,8 +96,6 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
           aria-label="Enter"
           disabled={!canStart}
           onClick={onStartClick}
-          className="hover:text-teal-200"
-          iconClassName="transition-colors group-hover:text-teal-200"
           endIcon={showRotateHint ? RotateCcwIcon : PlayIcon}>
           {showRotateHint ? 'Rotate device' : 'Enter'}
         </Button>

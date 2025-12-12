@@ -37,11 +37,12 @@ const ICON_SIZE_CLASSES = {
 
 const ICON_PROPS: Partial<LucideProps> = {
   strokeWidth: 1.5,
+  className: 'transition-colors',
 }
 
 const VARIANT_CLASSES: Record<ButtonProps['variant'], string> = {
   primary:
-    'border border-teal-100/20 bg-linear-0 from-teal-400/5 to-teal-400/10 text-white hover:border-teal-300/40 hover:from-teal-400/10 hover:to-teal-400/15',
+    'border border-teal-100/20 bg-linear-0 hover:text-teal-200 from-teal-400/5 to-teal-400/10 text-white hover:border-teal-300/40 hover:from-teal-400/10 hover:to-teal-400/15',
   secondary:
     'border border-white/5 bg-radial from-white/3 to-white/6 text-white/70 hover:from-white/6 hover:to-white/12 hover:text-white',
 }
