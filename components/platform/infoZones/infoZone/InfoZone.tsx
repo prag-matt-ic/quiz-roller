@@ -77,7 +77,6 @@ export type InfoZoneProps = PropsWithChildren<{
   alwaysShowInfo?: boolean
   infoContentHtmlProps?: HtmlProps
   iconSrc: string
-  sphereColour?: string // If other than default
 }>
 
 const userData: InfoZoneUserData = {
@@ -94,7 +93,6 @@ export const InfoZone: FC<InfoZoneProps> = ({
   alwaysShowInfo = false,
   infoContentHtmlProps = {},
   iconSrc,
-  sphereColour,
 }) => {
   const isMobile = useGameStore((s) => s.isMobile)
   const htmlPortal = useGameStore((s) => s.htmlPortal)
@@ -218,7 +216,6 @@ export const InfoZone: FC<InfoZoneProps> = ({
         <Suspense fallback={null}>
           <IconSphere
             iconSrc={iconSrc}
-            colour={sphereColour}
             isVisible={isVisible}
             shouldHide={showInfo}
           />

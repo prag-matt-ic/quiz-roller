@@ -1,12 +1,12 @@
 import { type FC, type RefObject, useCallback, useEffect, useImperativeHandle } from 'react'
 
-import infoIcon from '@/assets/icons/info-icon.png'
-// import timerIcon from '@/assets/icons/timer-icon.png'
-// import trophyIcon from '@/assets/icons/trophy-icon.png'
+import compassIcon from '@/assets/icons/info-compass.png'
+import infoIcon from '@/assets/icons/info-general.png'
+import ideaIcon from '@/assets/icons/info-idea.png'
+import techIcon from '@/assets/icons/info-technologies.png'
 import { useGameStore } from '@/components/GameProvider'
 import { InfoZone, type InfoZoneProps } from '@/components/platform/infoZones/infoZone/InfoZone'
 import useDynamicRigidBodies from '@/components/platform/useDynamicRigidBodies'
-import { INFO_ZONE_SPHERE_COLOURS } from '@/resources/colours'
 import { INFO_ZONES_CARD_CONTENT } from '@/resources/content'
 import { type RowData } from '@/utils/tiles'
 
@@ -97,7 +97,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
             key={`info-zone-${index}`}
             ref={ref}
             isVisible={isVisibleStates[index]}
-            {...getInfoZonePropsForIndex(index)}>
+            {...getInfoZoneProps(index)}>
             {getContentForPlacementIndex(index)}
           </InfoZone>
         )
@@ -108,20 +108,17 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
 export default InfoZones
 
-function getInfoZonePropsForIndex(
-  placementIndex: number,
+const ICONS = [compassIcon, ideaIcon, techIcon, infoIcon, infoIcon]
+
+function getInfoZoneProps(
+  index: number,
 ): Pick<
   InfoZoneProps,
-  | 'infoContainerClassName'
-  | 'iconSrc'
-  | 'infoContentHtmlProps'
-  | 'infoPositionOffset'
-  | 'sphereColour'
+  'infoContainerClassName' | 'iconSrc' | 'infoContentHtmlProps' | 'infoPositionOffset'
 > {
   return {
     infoContainerClassName: 'w-[360px] xl:w-[480px]',
-    iconSrc: infoIcon.src,
-    sphereColour: INFO_ZONE_SPHERE_COLOURS[placementIndex],
+    iconSrc: ICONS[index % ICONS.length].src,
   }
 }
 

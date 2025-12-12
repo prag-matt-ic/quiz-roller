@@ -87,10 +87,9 @@ export type IconSphereProps = {
   iconSrc: string
   shouldHide: boolean
   isVisible: boolean
-  colour?: string
 }
 
-const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colour }) => {
+const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => {
   const shader = useRef<typeof SphereShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
   const sphereSegments = usePerformanceStore((s) => s.sceneConfig.infoZoneSphere.segments)
@@ -115,18 +114,6 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
       surfaceGeometry.dispose()
     }
   }, [surfaceGeometry])
-
-  const { surfaceColour, lineColour } = useMemo(() => {
-    if (!colour)
-      return {
-        surfaceColour: DEFAULT_SURFACE_COLOR,
-        lineColour: DEFAULT_LINE_COLOR,
-      }
-    const surfaceColour = new Color(colour)
-    const lineColour = surfaceColour.clone()
-    lineColour.offsetHSL(0, 0, 0.12)
-    return { surfaceColour, lineColour }
-  }, [colour])
 
   useGSAP(
     () => {
@@ -181,8 +168,8 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible, colou
           depthTest={true}
           toneMapped={false}
           blending={AdditiveBlending}
-          uSurfaceColor={surfaceColour}
-          uLineColor={lineColour}
+          uSurfaceColor={DEFAULT_SURFACE_COLOR}
+          uLineColor={DEFAULT_LINE_COLOR}
           uLineWidth={lineWidth}
           uDistanceFadeEnabled={isDistanceFadeEnabled ? 1 : 0}
         />
