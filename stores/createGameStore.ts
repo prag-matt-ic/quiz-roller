@@ -1,9 +1,6 @@
 import { createStore } from 'zustand'
 import { type PersistOptions, persist, subscribeWithSelector } from 'zustand/middleware'
 
-import type { SpeedRunDatabase } from '@/model/schema'
-import { PLATFORM_VERSION } from '@/resources/rowsData'
-
 import { createGameSlice } from './gameSlice'
 import { createInputSlice } from './inputSlice'
 import { createOverlaysSlice } from './overlaysSlice'
@@ -34,7 +31,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
           ...createGameSlice(params.switchBackgroundTrack)(...a),
         }),
         {
-          name: 'quizroller-v2',
+          name: 'speedroller-game',
           partialize: (s) =>
             ({
               username: s.username,
@@ -45,41 +42,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
               joystickPosition: s.joystickPosition,
               paletteIndex: s.paletteIndex,
             }) as PersistedStore,
-          version: 3,
-          migrate: (persistedState: any) => {
-            // TODO: remove this before going live...
-            if (!persistedState) return persistedState
-
-            const currentVersion = PLATFORM_VERSION
-            const persistedRuns = persistedState?.completedSpeedRuns
-            const runsByVersion: Record<string, unknown> =
-              persistedRuns && typeof persistedRuns === 'object' ? persistedRuns : {}
-
-            if (Array.isArray(persistedRuns)) {
-              for (const run of persistedRuns) {
-                if (!run) continue
-                const versionKey = (run as { level_id?: string })?.level_id ?? currentVersion
-                const existing = (runsByVersion[versionKey] as unknown[]) ?? []
-                runsByVersion[versionKey] = [...existing, run]
-              }
-            }
-
-            const completedSpeedRuns = Object.entries(runsByVersion).reduce<
-              Record<string, SpeedRunDatabase[]>
-            >((acc, [version, runs]) => {
-              if (Array.isArray(runs)) acc[version] = runs as SpeedRunDatabase[]
-              return acc
-            }, {})
-
-            if (!completedSpeedRuns[currentVersion]) {
-              completedSpeedRuns[currentVersion] = []
-            }
-
-            return {
-              ...persistedState,
-              completedSpeedRuns,
-            }
-          },
+          version: 1,
           onRehydrateStorage: () => {
             return (state, error) => {
               if (!!error) {
