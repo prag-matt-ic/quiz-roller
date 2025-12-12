@@ -153,7 +153,7 @@ const PlayerHUD: FC = () => {
                   ref={container}
                   key={hudIndicator.id}
                   className={twJoin(
-                    'speech-bubble flex items-center gap-2 rounded-full bg-black p-3 text-base font-medium tracking-wide whitespace-nowrap text-white xl:p-4 xl:text-lg',
+                    'speech-bubble mb-8 flex items-center gap-2 rounded-full bg-black p-3 text-base font-medium tracking-wide whitespace-nowrap text-white xl:mb-0 xl:p-4 xl:text-lg',
                     baseTransitionClasses,
                     visibilityClasses,
                   )}>

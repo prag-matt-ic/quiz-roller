@@ -6,13 +6,21 @@ const BASE_TRANSFORM = 'translate(-50%, 50%)'
 const POINTER_MOVE_OPTIONS: AddEventListenerOptions = { passive: false }
 type NativePointerEvent = globalThis.PointerEvent
 
+// TODO: support left/right positioning based on user preference
+
+// Joystick geometry & positioning defaults (all pixel values except x/y offsets)
+// - maxRange: max travel distance from the pad center; movement is clamped to this radius.
+// - level: number of discrete steps; outputs are scaled to integers in [-level, level].
+// - radius: visual radius of the outer pad; also used to compute the interaction center.
+// - joystickRadius: visual radius of the inner knob.
+// - x/y: CSS offsets that anchor the whole control relative to the viewport bottom-right.
 const DEFAULT_OPTIONS = {
   maxRange: 70,
   level: 10,
   radius: 60,
   joystickRadius: 35,
-  x: '2rem',
-  y: '2rem',
+  x: '40px',
+  y: '40px',
 } as const
 
 export type OnJoystickMove = {
@@ -297,10 +305,10 @@ const Joystick: FC<PropsWithChildren<JoystickProps>> = ({
     <div
       ref={containerRef}
       style={{ right: rightOffset, bottom: bottomOffset }}
-      className={twMerge('fixed flex items-center justify-center select-none', className)}
+      className={twMerge('fixed flex w-fit items-center justify-center select-none', className)}
       role="presentation"
       aria-hidden="true">
-      <div className="absolute size-5 rounded-full bg-teal-200" />
+      <div className="absolute size-5 rounded-full bg-neutral-400" />
       <div
         ref={controllerRef}
         className={twMerge('relative', controllerClassName)}

@@ -39,7 +39,7 @@ const UI: FC<Props> = ({ isMobile }) => {
     <>
       <div
         className={twJoin(
-          'gap-y-auto pointer-events-none fixed inset-x-0 top-0 z-100 grid grid-cols-3 grid-rows-1 gap-x-2 pt-3 transition-opacity duration-300 select-none xl:pt-4',
+          'pointer-events-none fixed inset-x-0 top-0 z-100 grid w-full grid-cols-3 grid-rows-1 items-center gap-x-2 pt-2 transition-opacity duration-300 select-none xl:pt-3',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {/* Collectibles/Timer */}
@@ -54,7 +54,7 @@ const UI: FC<Props> = ({ isMobile }) => {
                 <section
                   ref={infoContainer}
                   className={twJoin(
-                    'flex h-fit items-center gap-2.5 pl-3 opacity-0 transition-opacity duration-200 xl:gap-3 xl:pl-4',
+                    'flex h-fit items-center gap-2.5 pl-4 opacity-0 transition-opacity duration-200 xl:gap-3 xl:pl-5',
                     status === 'exiting' && 'opacity-0',
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
@@ -95,6 +95,7 @@ const UI: FC<Props> = ({ isMobile }) => {
       </button>
 
       <MiniMap />
+
       <MovementControls />
 
       {/* Fullscreen overlays */}

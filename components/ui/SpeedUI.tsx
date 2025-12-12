@@ -20,8 +20,8 @@ const SpeedUI: FC = () => {
         collectedRingCount > 0 ? 'text-amber-300' : 'text-white/50',
       )}>
       <SpeedBoostDial
-        className={twJoin(isSpeedRunMode ? 'size-16 xl:size-20' : 'size-12 xl:size-14')}
-        strokeWidth={isSpeedRunMode ? 5 : 4}
+        className={twJoin(isSpeedRunMode ? 'size-16 xl:size-20' : 'size-12 xl:size-16')}
+        strokeWidth={isSpeedRunMode ? 5 : 3}
       />
       <span className="absolute text-center font-mono text-sm leading-none font-bold tracking-wide xl:text-lg">
         {collectedRingCount}

@@ -1,18 +1,14 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #0f0d0f;
+  --background: #000;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: #fff;
   --font-sans: var(--font-nunito-sans);
-  --font-serif: var(--font-cinzel);
   --font-unbounded: var(--font-unbounded);
-
-  --color-teal-accent: #37d6c7;
-  --color-orange-accent: #e97449;
 }
 
 @theme {
@@ -22,7 +18,7 @@ body {
   background: var(--background);
   color: #fff;
   font-family: var(--font-nunito-sans), sans-serif;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
 }
 
 h1,
@@ -149,9 +145,23 @@ h6 {
   left: 50%;
   width: 0;
   height: 0;
-  border: 30px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.6);
+  border: 12px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.33);
   border-bottom: 0;
-  margin-left: -30px;
-  margin-bottom: -30px;
+  margin-left: -12px;
+  margin-bottom: -12px;
 }
+
+@media (min-width: 1440px) {
+  .speech-bubble:after {
+    border: 30px solid transparent;
+    margin-left: -30px;
+    margin-bottom: -30px;
+  }
+}
+
+/* .safe-ui {
+  width: 100vw;
+  padding-left: env(safe-area-inset-left, 12px) !important;
+  padding-right: env(safe-area-inset-right, 12px) !important;
+} */

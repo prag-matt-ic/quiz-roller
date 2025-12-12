@@ -49,7 +49,7 @@ const MiniMap: FC = () => {
   const isMapOnRight = isUsingJoystick && joystickIsOnLeft
 
   const isXL = useMediaQuery('(min-width: 1280px)', true)
-  const sizeScale = isXL ? 1 : 0.5
+  const sizeScale = isXL ? 1.25 : 1
   const playerSizePx = BASE_PLAYER_SIZE_PX * sizeScale
   const playerIndicatorYOffsetPx = BASE_PLAYER_INDICATOR_Y_OFFSET_PX * sizeScale
   const mapTileSizePx = BASE_MAP_TILE_SIZE_PX * sizeScale
