@@ -16,7 +16,7 @@ import {
 
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
-import { INFO_ZONE_SPHERE_COLOURS } from '@/resources/colours'
+import { INFO_ZONE_SPHERE_COLOUR } from '@/resources/colours'
 
 import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
@@ -29,7 +29,11 @@ const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
 
 const createIconSphereSurfaceGeometry = (segments: number) => {
   const heightSegments = Math.max(3, Math.floor(segments / 2))
-  const geometry = new SphereGeometry(ICON_SPHERE_RADIUS, segments, heightSegments).toNonIndexed()
+  const geometry = new SphereGeometry(
+    ICON_SPHERE_RADIUS,
+    segments,
+    heightSegments,
+  ).toNonIndexed()
   const positionCount = geometry.attributes.position.count
   const barycentric = new Float32Array(positionCount * 3)
 
@@ -64,9 +68,9 @@ type IconSphereUniforms = {
   uTime: number
 }
 
-const DEFAULT_SURFACE_COLOR = new Color(INFO_ZONE_SPHERE_COLOURS[0]) // teal accent
+const DEFAULT_SURFACE_COLOR = new Color(INFO_ZONE_SPHERE_COLOUR) // teal accent
 const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
-DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.2)
+DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.16)
 
 const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
   uSurfaceColor: DEFAULT_SURFACE_COLOR,

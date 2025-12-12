@@ -108,7 +108,7 @@ const InfoZones: FC<Props> = ({ ref, onReadyChange }) => {
 
 export default InfoZones
 
-const ICONS = [compassIcon, ideaIcon, techIcon, infoIcon, infoIcon]
+const ICONS = [compassIcon, ideaIcon, techIcon, infoIcon]
 
 function getInfoZoneProps(
   index: number,

@@ -1,12 +1,6 @@
-import { CollectibleID } from '../model/schema'
+import { CollectibleID } from '@/model/schema'
 
-export const INFO_ZONE_SPHERE_COLOURS: readonly string[] = [
-  '#37D6C7',
-  '#00EDC6',
-  '#00EDC6',
-  '#00FFFF',
-  '#00FFD2',
-]
+export const INFO_ZONE_SPHERE_COLOUR: string = '#37D6C7'
 
 export const GOLD_PARTICLE_PALETTE: readonly string[] = [
   '#f6b253',
