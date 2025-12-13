@@ -2,7 +2,7 @@
 
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useControls } from 'leva'
+// import { useControls } from 'leva'
 import { type FC, useCallback, useEffect, useRef } from 'react'
 
 import { Stage, useGameStore } from '@/components/GameProvider'
@@ -49,8 +49,8 @@ const Camera: FC<Props> = ({ isMobile, position }) => {
   const isConfirmingCollectible = useGameStore((s) => !!s.confirmingCollectible)
 
   const isOverlayOpen = useGameStore((s) => s.overlay !== Overlay.NONE)
-  const overlayZOffset = isOverlayOpen ? 3.0 : 0
-  const overlayYOffset = isOverlayOpen ? 5.5 : 0
+  const overlayZOffset = isOverlayOpen ? 5.0 : 0
+  const overlayYOffset = isOverlayOpen ? 5.0 : 0
 
   const cameraZoomForStage = isMobile
     ? CAMERA_ZOOM_FOR_STAGE_MOBILE

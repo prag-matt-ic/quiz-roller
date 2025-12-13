@@ -145,21 +145,21 @@ h6 {
   left: 50%;
   width: 0;
   height: 0;
-  border: 12px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.75);
+  border: 8px solid transparent;
+  border-top-color: #000;
   border-bottom: 0;
-  margin-left: -12px;
-  margin-bottom: -12px;
+  margin-left: -8px;
+  margin-bottom: -8px;
 }
 
 @media (min-width: 1440px) {
   .speech-bubble:after {
     /* Only update the width, preserving the color and style */
-    border-width: 20px;
+    border-width: 16px;
     /* Re-apply the removal of the bottom border */
     border-bottom-width: 0;
-    margin-left: -20px;
-    margin-bottom: -20px;
+    margin-left: -16px;
+    margin-bottom: -16px;
   }
 }
 /* .safe-ui {

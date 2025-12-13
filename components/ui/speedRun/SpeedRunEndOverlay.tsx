@@ -40,7 +40,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-200 flex items-center justify-center overflow-hidden px-18 transition-opacity duration-200',
+        'fixed inset-0 z-500 flex items-center justify-center overflow-hidden px-18 transition-opacity duration-200',
         'bg-linear-0 from-black/30 via-black/80 to-black/30 backdrop-blur-md xl:backdrop-blur-lg',
         transitionStatus === 'entering' && 'opacity-0',
         transitionStatus === 'entered' && 'opacity-100',

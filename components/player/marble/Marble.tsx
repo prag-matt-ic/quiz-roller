@@ -50,8 +50,8 @@ type MarbleProps = {
 }
 
 export const Marble: FC<MarbleProps> = ({ ref }) => {
-  const playerConfig = usePerformanceStore((s) => s.sceneConfig.player)
-  const { segments, isFlat, enableVeins } = playerConfig
+  const config = usePerformanceStore((s) => s.sceneConfig.marble)
+  const { segments, isFlat, enableVeins } = config
   const normalMap = useTexture(normal.src)
   const paletteIndex = useGameStore((s) => s.paletteIndex)
   const confirmingPaletteIndex = useGameStore((s) => s.confirmingPaletteIndex ?? -1)
@@ -70,6 +70,8 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
     // Update shader animation time
     shaderTime.current += deltaTime
     shader.current.uTime = shaderTime.current
+
+    // TODO: this should only apply when higher quality.
 
     const inputZ = input.current.up - input.current.down
     const targetSpeed = Math.min(1, Math.abs((inputZ * speedUnits.current) / PLAYER_SPEED_MAX))

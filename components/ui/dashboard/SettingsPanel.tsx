@@ -10,7 +10,6 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { type FC } from 'react'
-import { twMerge } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
@@ -38,10 +37,7 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
   const setIsMuted = useSoundStore((s) => s.setIsMuted)
 
   return (
-    <Panel
-      className={className}
-      strength={1}
-      attractorClassName="bg-white/5 bg-linear-70 from-white/10 to-transparent">
+    <Panel className={className} strength={1}>
       <PanelHeader icon={Settings2} label="Settings" />
 
       <div className="flex flex-col gap-4">
@@ -91,11 +87,12 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
           <ButtonGroup
             value={sceneQuality}
             onChange={setSceneQuality}
-            items={[
-              { label: 'Low', value: SceneQuality.LOW },
-              { label: 'Med', value: SceneQuality.MEDIUM },
-              { label: 'High', value: SceneQuality.HIGH },
-            ]}
+            items={Object.values(SceneQuality)
+              .reverse()
+              .map((quality) => ({
+                label: quality,
+                value: quality,
+              }))}
           />
         </div>
       </div>

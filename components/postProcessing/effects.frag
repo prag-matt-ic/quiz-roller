@@ -9,11 +9,20 @@ uniform sampler2D uNoiseTexture;
 
 varying vec2 vUv;
 
-const int MAX_BLUR_STEPS = 16;
+// Tuning constants for the post effect.
+const int MAX_BLUR_STEPS = 24;
 const float BLUR_INTENSITY_EPSILON = 0.001;
 const float EDGE_BLUR_THRESHOLD = 0.04;
-const float VIGNETTE_DARKNESS = 0.5;
+const float VIGNETTE_DARKNESS = 0.6;
+const float BLUR_EXPOSURE = 1.0;
+const float NOISE_JITTER_SCALE = 0.006;
 
+// Deterministic 2D noise to break up banding without temporal flicker.
+float interleavedGradientNoise(vec2 position) {
+  return fract(52.9829189 * fract(dot(position, vec2(0.06711056, 0.00583715))));
+}
+
+// Radial blur: sample toward a focus point, weighted by edge intensity.
 vec3 applyRadialBlur(
   vec2 uv,
   vec3 baseColor,
@@ -28,7 +37,7 @@ vec3 applyRadialBlur(
   vec2 jitterDir = vec2(-blurRadialDir.y, blurRadialDir.x);
   float invSteps = 1.0 / float(uBlurSteps);
   float baseMix = 0.6 * intensity;
-  float timePhase = uTime * 3.7;
+  float noise = interleavedGradientNoise(gl_FragCoord.xy + vec2(uTime));
 
   vec3 blur = baseColor;
   float weightSum = 1.0;
@@ -39,8 +48,8 @@ vec3 applyRadialBlur(
     float stepT = stepIndex * invSteps;
     float mixAmount = stepT * baseMix;
 
-    // Minor temporal jitter to reduce banding without heavy noise.
-    float jitter = (sin(timePhase + stepIndex * 2.1) * 0.5 + 0.5) * 0.0015;
+    // Deterministic per-pixel jitter to reduce banding without heavy noise.
+    float jitter = (noise - 0.5) * NOISE_JITTER_SCALE;
 
     vec2 sampleUv = uv + blurOffset * mixAmount + jitterDir * jitter;
     sampleUv = clamp(sampleUv, 0.001, 0.999);
@@ -53,9 +62,11 @@ vec3 applyRadialBlur(
   }
 
   blur /= weightSum;
+  blur *= BLUR_EXPOSURE;
   return mix(baseColor, blur, intensity);
 }
 
+// Adds subtle edge noise-based darkening to keep motion blur from looking flat.
 vec3 applyNoiseDarkening(
   in vec2 uv,
   in vec3 baseColor,
@@ -89,6 +100,7 @@ void main() {
 
   float intensity = clamp(edgeMask * speed, 0.0, 1.0);
 
+  // Skip blur when intensity is negligible to save work.
   bool skipBlur =
       intensity <= BLUR_INTENSITY_EPSILON || edgeMask <= EDGE_BLUR_THRESHOLD || uBlurSteps == 0;
 

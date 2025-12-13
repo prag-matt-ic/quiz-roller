@@ -58,7 +58,7 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
       <Panel
         strength={1}
         className={twJoin(
-          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4',
+          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start rounded-full pl-6 transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4 xl:pl-8',
           isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
         )}>
         <ButtonGroup
@@ -69,7 +69,6 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
             { label: null, value: 'off', Icon: VolumeX },
           ]}
         />
-
         <ButtonGroup
           value={inputType}
           onChange={setInputType}
@@ -80,7 +79,6 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
             ariaLabel: label,
           }))}
         />
-
         <ButtonGroup
           value={joystickPosition}
           onChange={setJoystickPosition}
@@ -90,7 +88,6 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
             { label: null, value: 'right', Icon: ArrowRight },
           ]}
         />
-
         <Button
           variant="primary"
           aria-label="Enter"

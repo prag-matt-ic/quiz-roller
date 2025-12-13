@@ -85,11 +85,11 @@ const UI: FC<Props> = ({ isMobile }) => {
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (
-          <XIcon className="size-6 xl:size-8" />
+          <XIcon className="size-6 xl:size-8" strokeWidth={1} />
         ) : (
           <LayoutDashboardIcon
             className="size-6 text-white opacity-50 transition-opacity duration-300 group-hover:opacity-100 group-focus:opacity-100 group-active:opacity-100 xl:size-8"
-            strokeWidth={1.5}
+            strokeWidth={1}
           />
         )}
       </button>

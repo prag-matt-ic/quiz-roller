@@ -4,6 +4,7 @@ import { type StoreApi, createStore, useStore } from 'zustand'
 export type RapierSimFPS = 0 | 30 | 60 | 120 // 0 = 'vary'
 
 export enum SceneQuality {
+  ULTRA = 'Ultra',
   HIGH = 'High',
   MEDIUM = 'Medium',
   LOW = 'Low',
@@ -11,7 +12,7 @@ export enum SceneQuality {
 
 export type SceneConfig = {
   isDistanceFadeEnabled: boolean
-  player: {
+  marble: {
     segments: number
     isFlat: boolean
     enableVeins: boolean
@@ -38,8 +39,14 @@ export type SceneConfig = {
   }
   infoZoneSphere: {
     segments: number
+    enableVeins: boolean
   }
-  // backdrop: {}
+  confetti: {
+    particleCount: number
+  }
+  postProcessing: {
+    blurSamples: number
+  }
 }
 
 const logPerformanceDebug = (...payload: unknown[]) => {
@@ -48,38 +55,57 @@ const logPerformanceDebug = (...payload: unknown[]) => {
 }
 
 const SCENE_CONFIGS: Record<SceneQuality, SceneConfig> = {
+  [SceneQuality.ULTRA]: {
+    isDistanceFadeEnabled: true,
+    marble: { segments: 80, isFlat: false, enableVeins: true },
+    ring: { radialSegments: 24, tubularSegments: 48 },
+    gem: { particleCount: 180 },
+    floatingTiles: { instanceCount: Math.pow(13, 2) },
+    platformTiles: { addDetailNoise: true },
+    colourTile: { useNoise: true },
+    floatingHeading: { shouldRotate: true, useNoiseFade: true },
+    infoZoneSphere: { segments: 64, enableVeins: true },
+    confetti: { particleCount: 240 },
+    postProcessing: { blurSamples: 24 },
+  },
   [SceneQuality.HIGH]: {
     isDistanceFadeEnabled: true,
-    player: { segments: 64, isFlat: false, enableVeins: true },
+    marble: { segments: 64, isFlat: false, enableVeins: true },
     ring: { radialSegments: 16, tubularSegments: 32 },
     gem: { particleCount: 160 },
     floatingTiles: { instanceCount: Math.pow(13, 2) },
     platformTiles: { addDetailNoise: true },
     colourTile: { useNoise: true },
     floatingHeading: { shouldRotate: true, useNoiseFade: true },
-    infoZoneSphere: { segments: 48 },
+    infoZoneSphere: { segments: 48, enableVeins: true },
+    confetti: { particleCount: 160 },
+    postProcessing: { blurSamples: 16 },
   },
   [SceneQuality.MEDIUM]: {
     isDistanceFadeEnabled: true,
-    player: { segments: 40, isFlat: false, enableVeins: false },
+    marble: { segments: 40, isFlat: false, enableVeins: false },
     ring: { radialSegments: 8, tubularSegments: 16 },
     gem: { particleCount: 80 },
     floatingTiles: { instanceCount: Math.pow(8, 2) },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: true },
     floatingHeading: { shouldRotate: false, useNoiseFade: true },
-    infoZoneSphere: { segments: 32 },
+    infoZoneSphere: { segments: 32, enableVeins: false },
+    confetti: { particleCount: 80 },
+    postProcessing: { blurSamples: 8 },
   },
   [SceneQuality.LOW]: {
     isDistanceFadeEnabled: false,
-    player: { segments: 24, isFlat: true, enableVeins: false },
+    marble: { segments: 24, isFlat: true, enableVeins: false },
     ring: { radialSegments: 6, tubularSegments: 12 },
     gem: { particleCount: 40 },
     floatingTiles: { instanceCount: 0 },
     platformTiles: { addDetailNoise: false },
     colourTile: { useNoise: false },
     floatingHeading: { shouldRotate: false, useNoiseFade: false },
-    infoZoneSphere: { segments: 20 },
+    infoZoneSphere: { segments: 20, enableVeins: false },
+    confetti: { particleCount: 48 },
+    postProcessing: { blurSamples: 0 },
   },
 }
 

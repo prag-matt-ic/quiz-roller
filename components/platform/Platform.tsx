@@ -10,10 +10,10 @@ import FloatingTiles, {
 import Collectibles, {
   type CollectiblesHandle,
 } from '@/components/platform/collectibles/Collectibles'
-import ConfettiRows, { type ConfettiHandle } from '@/components/platform/confetti/ConfettiRows'
 import ColourPickerRow, {
   type ColourPickerHandle,
 } from '@/components/platform/colourPicker/ColourPickerRow'
+import ConfettiRows, { type ConfettiHandle } from '@/components/platform/confetti/ConfettiRows'
 import FloatingHeadings, {
   type FloatingHeadingsHandle,
 } from '@/components/platform/floatingHeadings/FloatingHeadings'
@@ -61,7 +61,7 @@ const ROW_FADE_DENOM = Math.max(EPSILON.SMALL, FADE_MIN_RADIUS_SQ - FADE_FULL_RA
 const ROW_CYCLE_DISTANCE = ROWS_RENDERED * TILE_SIZE
 const ROWS_COVERAGE_HALF_SPAN = (ROWS_RENDERED - 1) * TILE_SIZE * 0.5
 const VISIBILITY_WINDOW_SPAN = ROW_VISIBILITY_HALF_SPAN * 2
-const INITIAL_ROW_BACK_OFFSET_ROWS = 12
+const INITIAL_ROW_BACK_OFFSET_ROWS = 16
 const INITIAL_ROW_BACK_OFFSET = INITIAL_ROW_BACK_OFFSET_ROWS * TILE_SIZE
 
 const warnVisibilityCoverageIfNeeded = (() => {
@@ -82,6 +82,9 @@ const warnVisibilityCoverageIfNeeded = (() => {
 })()
 
 function getRowAlpha(rowZ: number, playerZ: number): number {
+  // Rows in front of the player (z >= 0) are either behind the camera or immediately adjacent,
+  // so skip distance-based fading to save per-frame math.
+  if (rowZ > 0) return 1
   const dz = rowZ - playerZ
   const distSq = dz * dz
   const fadeT = clamp((distSq - FADE_FULL_RADIUS_SQ) / ROW_FADE_DENOM, 0, 1)

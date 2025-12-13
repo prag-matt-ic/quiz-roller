@@ -130,7 +130,7 @@ const createLaunchSpeeds = (count: number): Float32Array => {
 
 const ConfettiParticleEmitter = forwardRef<ConfettiParticleEmitterHandle, Props>(
   ({ position, isVisible, confettiIndex, seedOffset = 0 }, ref) => {
-    const particleCount = usePerformanceStore((s) => s.sceneConfig.gem.particleCount)
+    const particleCount = usePerformanceStore((s) => s.sceneConfig.confetti.particleCount)
     const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
     const dpr = useThree((s) => s.viewport.dpr)
 

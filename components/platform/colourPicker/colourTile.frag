@@ -8,8 +8,10 @@ uniform float uTime;
 uniform lowp int uPaletteIndex;
 uniform lowp float uIsActive;
 uniform lowp float uUseNoise;
+uniform mediump float uDistanceFadeEnabled;
 
 varying mediump vec2 vUv;
+varying mediump float vDistanceFade;
 
 const float BORDER_THICKNESS = 0.04;
 const float INNER_EDGE = 0.5 - BORDER_THICKNESS;
@@ -56,5 +58,5 @@ void main() {
   lowp vec3 borderColour = vec3(1.0 - activeMix);
   finalColour = mix(finalColour, borderColour, borderMask);
 
-  gl_FragColor = vec4(finalColour, 1.0);
+  gl_FragColor = vec4(finalColour, 1.0 * mix(1.0, vDistanceFade, uDistanceFadeEnabled));
 }

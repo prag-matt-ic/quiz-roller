@@ -19,6 +19,7 @@ type ColourTileShaderUniforms = {
   uPaletteIndex: number
   uIsActive: number
   uUseNoise: number
+  uDistanceFadeEnabled: number
 }
 
 const INITIAL_COLOUR_TILE_UNIFORMS: ColourTileShaderUniforms = {
@@ -26,6 +27,7 @@ const INITIAL_COLOUR_TILE_UNIFORMS: ColourTileShaderUniforms = {
   uPaletteIndex: 0,
   uIsActive: 0,
   uUseNoise: 1,
+  uDistanceFadeEnabled: 1,
 }
 
 const ColourTileShader = shaderMaterial(
@@ -52,6 +54,7 @@ type ColourTileProps = {
 const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView }) => {
   const shader = useRef<typeof ColourTileShaderMaterial & ColourTileShaderUniforms>(null)
   const useNoise = usePerformanceStore((s) => s.sceneConfig.colourTile.useNoise)
+  const useDistanceFade = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
 
   useFrame(({ clock }) => {
     if (!shader.current) return
@@ -81,9 +84,12 @@ const ColourTile: FC<ColourTileProps> = ({ option, isActive, ref, isOutOfView })
         <ColourTileShaderMaterial
           ref={shader}
           key={ColourTileShader.key}
+          transparent={true}
+          depthWrite={false}
           uPaletteIndex={option.index}
           uIsActive={isActive ? 1 : 0}
           uUseNoise={useNoise ? 1 : 0}
+          uDistanceFadeEnabled={useDistanceFade ? 1 : 0}
         />
       </mesh>
     </RigidBody>

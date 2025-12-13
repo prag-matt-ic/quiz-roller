@@ -1,9 +1,9 @@
-import { type MutableRefObject } from 'react'
+import { type RefObject } from 'react'
 
 export const SPEED_SMOOTH_HALF_LIFE = 0.5
 
 export function stepSmoothedSpeed(
-  smoothedSpeed: MutableRefObject<number>,
+  smoothedSpeed: RefObject<number>,
   targetSpeed: number,
   deltaTime: number,
   halfLife = SPEED_SMOOTH_HALF_LIFE,

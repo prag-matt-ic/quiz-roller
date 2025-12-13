@@ -4,7 +4,7 @@ import { type FC, type PropsWithChildren, useEffect, useMemo, useRef } from 'rea
 import { OrthographicCamera, Scene, Texture } from 'three'
 
 import noiseTexture from '@/assets/textures/postprocessing/noise.webp'
-import { SceneQuality, usePerformanceStore } from '@/components/PerformanceProvider'
+import { usePerformanceStore } from '@/components/PerformanceProvider'
 import { usePlayerInput } from '@/hooks/usePlayerInput'
 import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import { PLAYER_SPEED_MAX } from '@/stores/playerSlice'
@@ -35,17 +35,10 @@ const EffectsShader = shaderMaterial(INITIAL_UNIFORMS, vertexShader, fragmentSha
 
 const EffectsShaderMaterial = extend(EffectsShader)
 
-const BLUR_SAMPLES_BY_QUALITY: Record<SceneQuality, number> = {
-  [SceneQuality.HIGH]: 16,
-  [SceneQuality.MEDIUM]: 6,
-  [SceneQuality.LOW]: 0,
-}
-
 const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
   const noiseMap = useTexture(noiseTexture.src)
-  const sceneQuality = usePerformanceStore((s) => s.sceneQuality)
-  const blurSteps = BLUR_SAMPLES_BY_QUALITY[sceneQuality]
-  const isEnabled = blurSteps > 0
+  const blurSamples = usePerformanceStore((s) => s.sceneConfig.postProcessing.blurSamples)
+  const isEnabled = blurSamples > 0
 
   const { viewport } = useThree()
   const material = useRef<typeof EffectsShaderMaterial & EffectsUniforms>(null)
@@ -62,11 +55,6 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
 
   const { input } = usePlayerInput()
   const { speedUnits } = usePlayerSpeed()
-
-  useEffect(() => {
-    if (!material.current) return
-    material.current.uBlurSteps = blurSteps
-  }, [blurSteps])
 
   useEffect(() => {
     if (!material.current) return
@@ -89,7 +77,6 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
       material.current.uSceneTexture = renderTarget.texture
       material.current.uTime = clock.elapsedTime
       material.current.uSpeed = smoothedSpeed.current
-      material.current.uBlurSteps = blurSteps
       // Render the effects scene (default scene) using the effects shader
       gl.render(scene, orthographicCamera)
     } else {
@@ -109,7 +96,7 @@ const PostProcessing: FC<PropsWithChildren> = ({ children }) => {
           uResolution={[viewport.width, viewport.height]}
           uSceneTexture={null}
           uSpeed={0}
-          uBlurSteps={blurSteps}
+          uBlurSteps={blurSamples}
           uNoiseTexture={noiseMap ?? null}
         />
       </ScreenQuad>

@@ -4,16 +4,10 @@ import { useGSAP } from '@gsap/react'
 import { shaderMaterial, useTexture } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 import gsap from 'gsap'
-import { type FC, Suspense, useEffect, useMemo, useRef } from 'react'
-import {
-  AdditiveBlending,
-  Color,
-  Float32BufferAttribute,
-  SphereGeometry,
-  SpriteMaterial,
-  type Vector3Tuple,
-} from 'three'
+import { type FC, Suspense, useRef } from 'react'
+import { AdditiveBlending, Color, SpriteMaterial, Texture, type Vector3Tuple } from 'three'
 
+import noise from '@/assets/textures/iconSphere/noise.webp'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { INFO_ZONE_SPHERE_COLOUR } from '@/resources/colours'
@@ -22,65 +16,35 @@ import sphereFragment from './iconSphere.frag'
 import sphereVertex from './iconSphere.vert'
 
 const ICON_SPHERE_RADIUS = 1
-const ICON_SPHERE_HIGH_SEGMENTS = 48
-const ICON_SPHERE_LINE_WIDTH = 0.5
 const ICON_SPHERE_GLOW_STRENGTH = 4.0
 const ICON_SPHERE_POSITION: Vector3Tuple = [0, 3, 0]
-
-const createIconSphereSurfaceGeometry = (segments: number) => {
-  const heightSegments = Math.max(3, Math.floor(segments / 2))
-  const geometry = new SphereGeometry(
-    ICON_SPHERE_RADIUS,
-    segments,
-    heightSegments,
-  ).toNonIndexed()
-  const positionCount = geometry.attributes.position.count
-  const barycentric = new Float32Array(positionCount * 3)
-
-  for (let i = 0; i < positionCount; i += 3) {
-    const start = i * 3
-    barycentric[start + 0] = 1
-    barycentric[start + 1] = 0
-    barycentric[start + 2] = 0
-
-    barycentric[start + 3] = 0
-    barycentric[start + 4] = 1
-    barycentric[start + 5] = 0
-
-    barycentric[start + 6] = 0
-    barycentric[start + 7] = 0
-    barycentric[start + 8] = 1
-  }
-
-  geometry.setAttribute('aBarycentric', new Float32BufferAttribute(barycentric, 3))
-  geometry.computeVertexNormals()
-  return geometry
-}
 
 type IconSphereUniforms = {
   uSurfaceColor: Color
   uLineColor: Color
   uOpacity: number
-  uLineWidth: number
   uGlowStrength: number
   uHiddenProgress: number
   uDistanceFadeEnabled: number
+  uVeinsEnabled: number
   uTime: number
+  uNoiseTexture: Texture
 }
 
-const DEFAULT_SURFACE_COLOR = new Color(INFO_ZONE_SPHERE_COLOUR) // teal accent
-const DEFAULT_LINE_COLOR = DEFAULT_SURFACE_COLOR.clone()
-DEFAULT_LINE_COLOR.offsetHSL(0, 0, 0.16)
+const SURFACE_COLOR = new Color(INFO_ZONE_SPHERE_COLOUR) // teal accent
+const LINE_COLOR = SURFACE_COLOR.clone()
+LINE_COLOR.offsetHSL(0, 0, 0.16)
 
 const INITIAL_ICON_SPHERE_UNIFORMS: IconSphereUniforms = {
-  uSurfaceColor: DEFAULT_SURFACE_COLOR,
-  uLineColor: DEFAULT_LINE_COLOR,
-  uOpacity: 0.12,
+  uSurfaceColor: SURFACE_COLOR,
+  uLineColor: LINE_COLOR,
+  uOpacity: 0.16,
   uHiddenProgress: 0,
   uTime: 0,
-  uLineWidth: ICON_SPHERE_LINE_WIDTH,
   uGlowStrength: ICON_SPHERE_GLOW_STRENGTH,
   uDistanceFadeEnabled: 1,
+  uVeinsEnabled: 1,
+  uNoiseTexture: null as unknown as Texture,
 }
 
 const SphereShader = shaderMaterial(INITIAL_ICON_SPHERE_UNIFORMS, sphereVertex, sphereFragment)
@@ -97,27 +61,12 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
   const shader = useRef<typeof SphereShaderMaterial & IconSphereUniforms>(null)
   const isDistanceFadeEnabled = usePerformanceStore((s) => s.sceneConfig.isDistanceFadeEnabled)
   const sphereSegments = usePerformanceStore((s) => s.sceneConfig.infoZoneSphere.segments)
+  const enableVeins = usePerformanceStore((s) => s.sceneConfig.infoZoneSphere.enableVeins)
 
   const hasInitialized = useRef(false)
 
-  const iconTexture = useTexture(iconSrc)
+  const [iconTexture, noiseTexture] = useTexture([iconSrc, noise.src])
   const spriteMaterialRef = useRef<SpriteMaterial>(null)
-
-  const surfaceGeometry = useMemo(
-    () => createIconSphereSurfaceGeometry(sphereSegments),
-    [sphereSegments],
-  )
-
-  const lineWidth = useMemo(() => {
-    const safeSegments = Math.max(1, sphereSegments)
-    return (ICON_SPHERE_LINE_WIDTH * ICON_SPHERE_HIGH_SEGMENTS) / safeSegments
-  }, [sphereSegments])
-
-  useEffect(() => {
-    return () => {
-      surfaceGeometry.dispose()
-    }
-  }, [surfaceGeometry])
 
   useGSAP(
     () => {
@@ -153,7 +102,7 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
     if (!isVisible) return
     const sphereShader = shader.current
     if (!sphereShader) return
-    // Pass time so it can rotate
+    // Drive animated veins in shader
     sphereShader.uTime = clock.elapsedTime
   })
 
@@ -163,7 +112,8 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
       position={[0, 0, 0]}
       rotation={[Math.PI / 2, 0, 0]}
       visible={isVisible}>
-      <mesh key={sphereSegments} geometry={surfaceGeometry} position={ICON_SPHERE_POSITION}>
+      <mesh position={ICON_SPHERE_POSITION}>
+        <sphereGeometry args={[ICON_SPHERE_RADIUS, sphereSegments, sphereSegments]} />
         <SphereShaderMaterial
           key={SphereShader.key}
           ref={shader}
@@ -172,10 +122,11 @@ const IconSphere: FC<IconSphereProps> = ({ iconSrc, shouldHide, isVisible }) => 
           depthTest={true}
           toneMapped={false}
           blending={AdditiveBlending}
-          uSurfaceColor={DEFAULT_SURFACE_COLOR}
-          uLineColor={DEFAULT_LINE_COLOR}
-          uLineWidth={lineWidth}
+          uSurfaceColor={SURFACE_COLOR}
+          uLineColor={LINE_COLOR}
           uDistanceFadeEnabled={isDistanceFadeEnabled ? 1 : 0}
+          uVeinsEnabled={enableVeins ? 1 : 0}
+          uNoiseTexture={noiseTexture}
         />
       </mesh>
 

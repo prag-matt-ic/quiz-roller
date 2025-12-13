@@ -37,8 +37,9 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-transition-group": "^4.4.5",
+    "resend": "^6.6.0",
     "tailwind-merge": "^3.3.1",
-    "three": "^0.180.0",
+    "three": "^0.182.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {

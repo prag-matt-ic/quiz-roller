@@ -27,7 +27,7 @@ export const TEXT_CANVAS_SCALE = 64
 
 const DEFAULTS: Required<Omit<TextCanvasOptions, 'width' | 'height'>> = {
   color: '#ffffff',
-  fontFamily: '"Nunito Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+  fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
   fontWeight: 600,
   fontSize: 32,
   scaleStep: 0.95,

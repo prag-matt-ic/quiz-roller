@@ -4,8 +4,8 @@ import { Stage } from '@/stores/types'
 export const TILE_SIZE = 1.0
 export const TILE_THICKNESS = 0.08
 export const TILE_PLAYER_HIGHLIGHT_ROW_COUNT = 4
-export const TILE_PLAYER_FADE_FULL_ROWS = 6
-export const TILE_PLAYER_FADE_MIN_ROWS = 12
+export const TILE_PLAYER_FADE_FULL_ROWS = 8
+export const TILE_PLAYER_FADE_MIN_ROWS = 14
 export const TILE_PLAYER_FADE_MIN_ALPHA = 0
 export const TILE_PLAYER_HIGHLIGHT_RADIUS = TILE_PLAYER_HIGHLIGHT_ROW_COUNT * TILE_SIZE
 export const TILE_PLAYER_FADE_FULL_RADIUS = TILE_PLAYER_FADE_FULL_ROWS * TILE_SIZE
@@ -29,7 +29,7 @@ export const EPSILON = {
 
 // Grid configuration
 export const COLUMNS = 33 // odd number so that there is a center column
-export const ROWS_RENDERED = 31
+export const ROWS_RENDERED = 40
 
 // Heights
 export const RAISED_Y = -TILE_SIZE / 2 // top of tile at y=0

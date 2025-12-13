@@ -19,20 +19,13 @@ const BACKDROP_WIDTH = TILE_SIZE * BACKDROP_WIDTH_TILES
 const BACKDROP_DEPTH = TILE_SIZE * BACKDROP_DEPTH_TILES
 const BACKDROP_POSITION: [number, number, number] = [0, -5, -14]
 const BACKDROP_ROTATION: [number, number, number] = [-Math.PI / 2, 0, Math.PI / 2]
-const BACKDROP_DARKNESS = 0.1
-const BACKDROP_EDGE_FADE = 0.2
-// TODO: re-export backdrop with optimal aspect ratio based on calculations in Backdrop component
 
 type BackdropShaderUniforms = {
   uBackdrop: Texture | null
-  uDarkness: number
-  uEdgeFade: number
 }
 
 const INITIAL_BACKDROP_UNIFORMS: BackdropShaderUniforms = {
   uBackdrop: null,
-  uDarkness: BACKDROP_DARKNESS,
-  uEdgeFade: BACKDROP_EDGE_FADE,
 }
 
 const BackdropShader = shaderMaterial(INITIAL_BACKDROP_UNIFORMS, vertexShader, fragmentShader)
@@ -119,8 +112,6 @@ const Backdrop: FC = () => {
         depthTest={false}
         key={BackdropShader.key}
         uBackdrop={backdropColour}
-        uDarkness={BACKDROP_DARKNESS}
-        uEdgeFade={BACKDROP_EDGE_FADE}
       />
     </mesh>
   )
