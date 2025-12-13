@@ -14,7 +14,7 @@ import { GameMode } from '@/stores/types'
 
 export enum SoundFX {
   COUNTDOWN = 'COUNTDOWN',
-  BACKGROUND_EXPLORE = 'BACKGROUND_EXPLORE',
+  BACKGROUND = 'BACKGROUND',
   BACKGROUND_SPEEDRUN = 'BACKGROUND_SPEEDRUN',
   OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
   OPEN_INFO = 'OPEN_INFO',
@@ -25,8 +25,8 @@ export enum SoundFX {
 
 const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.COUNTDOWN]: '/audio/countdown.aac',
-  [SoundFX.BACKGROUND_EXPLORE]: '/audio/background.aac',
-  [SoundFX.BACKGROUND_SPEEDRUN]: '/audio/background-speedrun.aac',
+  [SoundFX.BACKGROUND]: '/audio/music/on-my-way.mp3',
+  [SoundFX.BACKGROUND_SPEEDRUN]: '/audio/music/alluminium.mp3',
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
@@ -36,15 +36,15 @@ const SOUND_FILES: Record<SoundFX, string> = {
 
 const GAME_MODE_BACKGROUND_TRACKS: Record<
   GameMode,
-  SoundFX.BACKGROUND_EXPLORE | SoundFX.BACKGROUND_SPEEDRUN
+  SoundFX.BACKGROUND | SoundFX.BACKGROUND_SPEEDRUN
 > = {
-  [GameMode.LEARN]: SoundFX.BACKGROUND_EXPLORE,
+  [GameMode.LEARN]: SoundFX.BACKGROUND,
   [GameMode.SPEEDRUN]: SoundFX.BACKGROUND_SPEEDRUN,
-  [GameMode.DEV]: SoundFX.BACKGROUND_EXPLORE,
+  [GameMode.DEV]: SoundFX.BACKGROUND,
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
-export type PlaySoundFX = (fx: SoundFX, loop?: boolean) => void
+export type PlaySoundFX = (fx: SoundFX, loop?: boolean, volume?: number) => void
 
 export type SoundState = {
   isLoading: boolean
@@ -73,7 +73,6 @@ const createSoundStore = () => {
   const gainNodesBySource = new Map<AudioBufferSourceNode, GainNode>()
 
   const DEFAULT_MASTER_GAIN = 0.5
-  const DEFAULT_SOURCE_GAIN = 1
   const STOP_FX_FADE_SECONDS = 0.3
 
   const safelyDisconnect = (node: AudioNode | null | undefined) => {
@@ -184,8 +183,9 @@ const createSoundStore = () => {
 
           if (!isMuted) {
             const backgroundTrack = GAME_MODE_BACKGROUND_TRACKS[mode ?? GameMode.LEARN]
+            const volume = mode === GameMode.SPEEDRUN ? 0.7 : 0.5
             set({ backgroundTrack, isMuted: false })
-            playSoundFX(backgroundTrack, true)
+            playSoundFX(backgroundTrack, true, volume)
             return
           }
           stopAllSounds()
@@ -214,8 +214,8 @@ const createSoundStore = () => {
           const newBackgroundTrack = GAME_MODE_BACKGROUND_TRACKS[mode]
           if (backgroundTrack === newBackgroundTrack) return
 
-          if (backgroundTrack === SoundFX.BACKGROUND_EXPLORE) {
-            stopSoundFX(SoundFX.BACKGROUND_EXPLORE)
+          if (backgroundTrack === SoundFX.BACKGROUND) {
+            stopSoundFX(SoundFX.BACKGROUND)
           } else if (backgroundTrack === SoundFX.BACKGROUND_SPEEDRUN) {
             stopSoundFX(SoundFX.BACKGROUND_SPEEDRUN)
           }
@@ -223,13 +223,13 @@ const createSoundStore = () => {
           // small buffer to ensure clean transition
           setTimeout(() => {
             if (get().isMuted) return // Don't play if muted during the delay
-            playSoundFX(newBackgroundTrack, true)
+            playSoundFX(newBackgroundTrack, true, 0.5)
           }, STOP_FX_FADE_SECONDS * 1000)
 
           set({ backgroundTrack: newBackgroundTrack })
         },
 
-        playSoundFX: async (fx: SoundFX, loop: boolean = false) => {
+        playSoundFX: async (fx: SoundFX, loop: boolean = false, volume: number = 1) => {
           if (get().isMuted) return
 
           const startPlayback = async () => {
@@ -246,7 +246,7 @@ const createSoundStore = () => {
             bufferSource.buffer = audioBuffer
             bufferSource.loop = loop
             const gainNode = audioContext!.createGain()
-            gainNode.gain.value = DEFAULT_SOURCE_GAIN
+            gainNode.gain.value = volume
             bufferSource.connect(gainNode)
             gainNode.connect(masterGain!)
             registerSource(bufferSource, gainNode)
