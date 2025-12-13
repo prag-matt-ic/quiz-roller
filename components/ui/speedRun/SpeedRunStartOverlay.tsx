@@ -7,8 +7,9 @@ import { twJoin } from 'tailwind-merge'
 import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
 import { PointerProvider } from '@/components/ui/PointerProvider'
-import { RingBoostInfo } from '@/components/ui/dashboard/SpeedPanel'
-import { Input, useUsernameInput } from '@/components/ui/input/UsernameInput'
+import SpeedPanel from '@/components/ui/dashboard/SpeedPanel'
+import { Input } from '@/components/ui/input/Input'
+import { useUsernameInput } from '@/components/ui/input/useUsernameInput'
 import { Overlay } from '@/stores/types'
 
 type Props = {
@@ -19,6 +20,7 @@ type Props = {
 // Start overlay handles the username input if needed and countdown
 export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const isMobile = useGameStore((s) => s.isMobile)
+  const username = useGameStore((s) => s.username)
   const startCountdown = useGameStore((s) => s.startCountdown)
   const setOverlay = useGameStore((s) => s.setOverlay)
   const usernameInput = useRef<HTMLInputElement>(null)
@@ -30,10 +32,13 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   }
 
   useEffect(() => {
+    if (!!username) return
+
     const timeout = setTimeout(() => {
       usernameInput.current?.focus()
     }, 50)
     return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -55,6 +60,8 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
           <Input
             ref={usernameInput}
             {...inputProps}
+            autoCapitalize="off"
+            autoComplete="off"
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === 'NumpadEnter') {
                 e.preventDefault()
@@ -82,7 +89,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
             }
           />
 
-          <RingBoostInfo />
+          <SpeedPanel />
 
           <Button
             type="button"

@@ -14,6 +14,7 @@ import { Dashboard } from '@/components/ui/dashboard/Dashboard'
 import MiniMap from '@/components/ui/miniMap/MiniMap'
 import { GameMode, Overlay } from '@/stores/types'
 
+import { SubscribeOverlay } from './SubscribeOverlay'
 import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
 import { SpeedRunStartOverlay } from './speedRun/SpeedRunStartOverlay'
@@ -31,6 +32,7 @@ const UI: FC<Props> = ({ isMobile }) => {
 
   const infoContainer = useRef<HTMLDivElement>(null)
   const dashboardRef = useRef<HTMLDivElement>(null)
+  const subscribeOverlay = useRef<HTMLDivElement>(null)
   const speedRunStartOverlay = useRef<HTMLDivElement>(null)
   const speedRunCountdownOverlay = useRef<HTMLDivElement>(null)
   const speedRunEndOverlay = useRef<HTMLDivElement>(null)
@@ -107,6 +109,17 @@ const UI: FC<Props> = ({ isMobile }) => {
         nodeRef={dashboardRef}>
         {(status) => (
           <Dashboard ref={dashboardRef} isMobile={isMobile} transitionStatus={status} />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.SUBSCRIBE}
+        timeout={{ enter: 0, exit: 400 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={subscribeOverlay}>
+        {(status) => (
+          <SubscribeOverlay ref={subscribeOverlay} transitionStatus={status} />
         )}
       </Transition>
 

@@ -1,5 +1,5 @@
-const float FADE_DISTANCE_START = 7.0;
-const float FADE_DISTANCE_END = 12.0;
+const float FADE_DISTANCE_START = 8.0;
+const float FADE_DISTANCE_END = 14.0;
 
 float fadeDistance(float worldZ) {
   float distFromOrigin = abs(worldZ);

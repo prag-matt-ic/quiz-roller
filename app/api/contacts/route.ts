@@ -8,7 +8,7 @@ const RESEND_AUDIENCE_ID =
 
 const contactPayloadSchema = z.object({
   email: z.email(),
-  username: z.string().min(6),
+  firstName: z.string().trim().min(1),
 })
 
 const resendClient = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null
@@ -40,11 +40,11 @@ export async function POST(request: Request) {
     )
   }
 
-  const { email, username } = parsedBody.data
+  const { email, firstName } = parsedBody.data
 
   const { data, error } = await resendClient.contacts.create({
     email,
-    firstName: username,
+    firstName,
     lastName: '',
     audienceId: RESEND_AUDIENCE_ID,
   })

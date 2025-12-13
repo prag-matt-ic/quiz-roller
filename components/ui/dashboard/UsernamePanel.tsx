@@ -4,7 +4,8 @@ import { AlertTriangle, CheckCircle, UserIcon } from 'lucide-react'
 import { type FC } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-import { Input, useUsernameInput } from '@/components/ui/input/UsernameInput'
+import { Input } from '@/components/ui/input/Input'
+import { useUsernameInput } from '@/components/ui/input/useUsernameInput'
 import Panel from '@/components/ui/panel/Panel'
 
 type Props = {
@@ -15,7 +16,7 @@ export const UsernamePanel: FC<Props> = ({ className }) => {
   const inputProps = useUsernameInput()
 
   return (
-    <Panel className={twMerge('flex h-full items-center gap-4', className)} strength={3}>
+    <Panel className={twMerge('flex h-full items-center gap-4', className)} strength={1}>
       <UserIcon className="size-6 text-teal-200/70" />
       <Input
         {...inputProps}

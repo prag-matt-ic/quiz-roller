@@ -96,6 +96,7 @@ export enum Overlay {
   NONE = 'none',
   LANDING = 'landing',
   DASHBOARD = 'dashboard',
+  SUBSCRIBE = 'subscribe',
   SPEEDRUN_START = 'speedrun-start',
   SPEEDRUN_COUNTDOWN = 'speedrun-countdown',
   SPEEDRUN_END = 'speedrun-end',

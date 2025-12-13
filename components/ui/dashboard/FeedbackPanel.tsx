@@ -5,7 +5,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { submitFeedback } from '@/app/actions'
 import { useGameStore } from '@/components/GameProvider'
-import { Input } from '@/components/ui/input/UsernameInput'
+import { Input } from '@/components/ui/input/Input'
 import Panel from '@/components/ui/panel/Panel'
 import { PanelHeader } from '@/components/ui/panel/PanelHeader'
 import type { FeedbackSubmission } from '@/model/schema'
