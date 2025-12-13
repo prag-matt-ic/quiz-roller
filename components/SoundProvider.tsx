@@ -28,6 +28,7 @@ const SOUND_FILES: Record<SoundFX, string> = {
   [SoundFX.BACKGROUND]: '/audio/music/on-my-way.mp3',
   [SoundFX.BACKGROUND_SPEEDRUN]: '/audio/music/alluminium.mp3',
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
+  // TODO: Add Collectible unlocking sound effect
   [SoundFX.CHANGE_COLOUR]: '/audio/transform.aac',
   [SoundFX.OUT_OF_BOUNDS]: '/audio/outofbounds.aac',
   [SoundFX.RING_COLLECTED]: '/audio/ring.aac',
