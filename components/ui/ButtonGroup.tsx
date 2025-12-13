@@ -1,12 +1,22 @@
 import { type LucideIcon } from 'lucide-react'
 import { twJoin } from 'tailwind-merge'
 
-export type ButtonGroupItem<T> = {
-  label: string | null
+type BaseButtonGroupItem<T> = {
   value: T
-  ariaLabel?: string
   Icon?: LucideIcon
 }
+
+type LabeledButtonGroupItem<T> = BaseButtonGroupItem<T> & {
+  label: string
+  ariaLabel?: string
+}
+
+type IconOnlyButtonGroupItem<T> = BaseButtonGroupItem<T> & {
+  label: null
+  ariaLabel: string
+}
+
+export type ButtonGroupItem<T> = LabeledButtonGroupItem<T> | IconOnlyButtonGroupItem<T>
 
 type ButtonGroupProps<T> = {
   items: ButtonGroupItem<T>[]

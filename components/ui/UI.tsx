@@ -82,6 +82,7 @@ const UI: FC<Props> = ({ isMobile }) => {
             setOverlay(Overlay.DASHBOARD)
           }
         }}
+        aria-label={overlay === Overlay.DASHBOARD ? 'Close dashboard' : 'Open dashboard'}
         className={twJoin(
           'group pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-lg p-3 text-xs uppercase transition-all duration-300 outline-none hover:bg-black/30 xl:top-3 xl:right-3',
           overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',

@@ -73,8 +73,8 @@ export const SettingsPanel: FC<Props> = ({ className }) => {
                 onChange={setJoystickPosition}
                 disabled={inputType !== InputType.JOYSTICK}
                 items={[
-                  { label: null, value: 'left', Icon: ArrowLeft },
-                  { label: null, value: 'right', Icon: ArrowRight },
+                  { label: null, ariaLabel: 'Joystick on left', value: 'left', Icon: ArrowLeft },
+                  { label: null, ariaLabel: 'Joystick on right', value: 'right', Icon: ArrowRight },
                 ]}
               />
             </div>

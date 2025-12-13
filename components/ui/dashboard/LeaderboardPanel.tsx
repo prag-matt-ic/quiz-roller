@@ -29,8 +29,8 @@ export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
           value={leaderboardFilter}
           onChange={setLeaderboardFilter}
           items={[
-            { label: null, value: InputType.KEYS, Icon: Keyboard },
-            { label: null, value: InputType.JOYSTICK, Icon: Joystick },
+            { label: null, ariaLabel: 'Show keyboard leaderboard', value: InputType.KEYS, Icon: Keyboard },
+            { label: null, ariaLabel: 'Show joystick leaderboard', value: InputType.JOYSTICK, Icon: Joystick },
           ]}
         />
       </PanelHeader>

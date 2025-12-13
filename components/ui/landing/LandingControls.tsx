@@ -65,8 +65,8 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
           value={startMuted ? 'off' : 'on'}
           onChange={(val) => setStartMuted(val === 'off')}
           items={[
-            { label: null, value: 'on', Icon: Volume2 },
-            { label: null, value: 'off', Icon: VolumeX },
+            { label: null, ariaLabel: 'Sound on', value: 'on', Icon: Volume2 },
+            { label: null, ariaLabel: 'Sound off', value: 'off', Icon: VolumeX },
           ]}
         />
         <ButtonGroup
@@ -84,8 +84,8 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
           onChange={setJoystickPosition}
           disabled={inputType !== InputType.JOYSTICK}
           items={[
-            { label: null, value: 'left', Icon: ArrowLeft },
-            { label: null, value: 'right', Icon: ArrowRight },
+            { label: null, ariaLabel: 'Joystick on left', value: 'left', Icon: ArrowLeft },
+            { label: null, ariaLabel: 'Joystick on right', value: 'right', Icon: ArrowRight },
           ]}
         />
         <Button
