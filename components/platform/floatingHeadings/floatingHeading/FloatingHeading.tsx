@@ -19,6 +19,7 @@ import floatingHeadingNoise from '@/assets/textures/platform/heading-noise.webp'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import useGameFrame from '@/hooks/useGameFrame'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
+import { UNBOUNDED_FONT_FAMILY } from '@/components/platform/fonts'
 import {
   TEXT_CANVAS_SCALE,
   TRANSPARENT_TEXTURE,
@@ -77,7 +78,7 @@ const DEFAULT_FONT_WEIGHT = 700
 
 const BASE_TEXT_CANVAS_OPTIONS: Pick<TextCanvasOptions, 'color' | 'fontFamily'> = {
   color: '#ffffff',
-  fontFamily: '"Unbounded", "Unbounded Fallback", sans-serif',
+  fontFamily: UNBOUNDED_FONT_FAMILY,
 }
 
 export const FloatingHeading: FC<Props> = ({

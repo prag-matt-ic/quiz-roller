@@ -12,15 +12,17 @@ import {
   useRef,
   useState,
 } from 'react'
-import { type Vector3Tuple } from 'three'
+import { Mesh, type Vector3Tuple } from 'three'
 
 import { useGameStore } from '@/components/GameProvider'
 import { PALETTE_COUNT } from '@/components/palette'
+import { Text } from '@/components/platform/Text'
 import ColourTile, {
   type ColourTileOption,
 } from '@/components/platform/colourPicker/ColourTile'
+import { UNBOUNDED_FONT_FAMILY } from '@/components/platform/fonts'
 import { type ColourTileUserData } from '@/model/schema'
-import { HIDDEN_POSITION, type RowData, TILE_SIZE } from '@/utils/tiles'
+import { HIDDEN_POSITION, ON_TILE_Y, type RowData, TILE_SIZE } from '@/utils/tiles'
 
 export type ColourPickerHandle = {
   moveElements: (zStep: number) => void
@@ -35,6 +37,12 @@ type Props = {
 
 const OPTION_X_OFFSETS = [-4.5, -1.5, 1.5, 4.5].map((offset) => offset * TILE_SIZE)
 const COLOUR_PICKER_Z_OFFSET = -TILE_SIZE * 0.5
+
+const COLOUR_PICKER_TEXT_WIDTH = 5
+const COLOUR_PICKER_TEXT_HEIGHT = 2
+const COLOUR_PICKER_TEXT_Y_OFFSET = 0.005
+const COLOUR_PICKER_TEXT_Z_OFFSET = COLOUR_PICKER_Z_OFFSET + COLOUR_PICKER_TEXT_HEIGHT
+const COLOUR_PICKER_TEXT_LABEL = 'Paint Shop'
 
 const createOptions = (x: number, y: number, z: number): ColourTileOption[] =>
   OPTION_X_OFFSETS.map((offset, index) => ({
@@ -57,6 +65,8 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
     () => Array.from({ length: PALETTE_COUNT }, () => createRef<RapierRigidBody | null>()),
     [],
   )
+  const textRef: RefObject<Mesh | null> = useRef(null)
+  const textPosition = useRef<Vector3Tuple>([...HIDDEN_POSITION])
 
   const translation = useRef({
     x: HIDDEN_POSITION[0],
@@ -66,6 +76,23 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
 
   const isOutOfView = useRef(true)
 
+  const updateTextPosition = useCallback((x: number, y: number, z: number) => {
+    textPosition.current[0] = x
+    textPosition.current[1] = y
+    textPosition.current[2] = z
+    if (!textRef.current) return
+    textRef.current.position.set(x, y, z)
+  }, [])
+
+  const positionText = useCallback(
+    (x: number, y: number, targetZ: number) => {
+      const nextY = y + COLOUR_PICKER_TEXT_Y_OFFSET
+      const nextZ = targetZ + COLOUR_PICKER_TEXT_Z_OFFSET
+      updateTextPosition(x, nextY, nextZ)
+    },
+    [updateTextPosition],
+  )
+
   const positionElementsIfNeeded = useCallback(
     (row: RowData, rowZ: number) => {
       const placement = row.colourPickerPlacement
@@ -74,6 +101,7 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
       const targetZ = rowZ + relativeZ
 
       setOptions(createOptions(x, y, targetZ))
+      positionText(x, y, targetZ)
 
       optionRefs.forEach((bodyRef, index) => {
         const body = bodyRef.current
@@ -86,7 +114,7 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
 
       isOutOfView.current = false
     },
-    [optionRefs],
+    [optionRefs, positionText],
   )
 
   const hideElementsIfNeeded = useCallback(
@@ -100,10 +128,11 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
         translation.current.z = HIDDEN_POSITION[2]
         body.setTranslation(translation.current, true)
       })
+      updateTextPosition(HIDDEN_POSITION[0], HIDDEN_POSITION[1], HIDDEN_POSITION[2])
       setOptions(createOptions(HIDDEN_POSITION[0], HIDDEN_POSITION[1], HIDDEN_POSITION[2]))
       isOutOfView.current = true
     },
-    [optionRefs],
+    [optionRefs, updateTextPosition],
   )
 
   const moveElements = useCallback(
@@ -118,8 +147,11 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
         translation.current.z = currentPosition.z + zStep
         body.setTranslation(translation.current, true)
       })
+      const currentTextZ = textPosition.current[2]
+      const nextTextZ = currentTextZ + zStep
+      updateTextPosition(textPosition.current[0], textPosition.current[1], nextTextZ)
     },
-    [optionRefs],
+    [optionRefs, updateTextPosition],
   )
 
   useImperativeHandle(
@@ -150,6 +182,14 @@ const ColourPickerRow: FC<Props> = ({ ref, onReadyChange }) => {
           isOutOfView={isOutOfView}
         />
       ))}
+      <Text
+        ref={textRef}
+        text={COLOUR_PICKER_TEXT_LABEL}
+        position={HIDDEN_POSITION}
+        width={COLOUR_PICKER_TEXT_WIDTH}
+        height={COLOUR_PICKER_TEXT_HEIGHT}
+        textCanvasOptions={{ fontFamily: UNBOUNDED_FONT_FAMILY }}
+      />
     </group>
   )
 }

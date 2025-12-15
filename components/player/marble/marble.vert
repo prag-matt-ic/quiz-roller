@@ -1,6 +1,5 @@
 // Marble vertex shader
 // Pass object-space position and normal to fragment for seamless spherical mapping
-// Normal mapping for surface detail
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;

@@ -46,7 +46,7 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
       <div
         ref={ref}
         className={twJoin(
-          'fixed inset-0 z-500 flex size-full items-center justify-center bg-radial from-black/90 from-20% to-black/20 backdrop-blur-md transition-opacity ease-out xl:backdrop-blur-lg',
+          'fixed inset-0 z-500 flex size-full items-center justify-center transition-opacity ease-out',
           transitionStatus === 'entering' && 'opacity-100 duration-300',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0 duration-500',
@@ -76,9 +76,8 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
                 disabled={!inputProps.isValid}
                 className={twJoin(
                   'flex h-full items-center justify-center gap-2 overflow-hidden rounded-none! border-none',
-
                   inputProps.isValid
-                    ? 'bg-emerald-400/10 text-emerald-300 hover:text-emerald-200'
+                    ? 'text-teal-300 hover:text-teal-200'
                     : 'cursor-not-allowed! text-neutral-600 before:opacity-20',
                 )}
                 endIcon={Play}>

@@ -52,7 +52,7 @@ export const SpeedRunCountdownOverlay: FC<Props> = ({ ref, transitionStatus }) =
     <div
       ref={ref}
       className={twJoin(
-        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 bg-black/50 transition-opacity',
+        'fixed inset-0 z-10 flex size-full flex-col items-center justify-center gap-6 transition-opacity',
         transitionStatus === 'entering' && 'opacity-100 duration-300',
         transitionStatus === 'entered' && 'opacity-100',
         transitionStatus === 'exiting' && 'opacity-0 duration-300',

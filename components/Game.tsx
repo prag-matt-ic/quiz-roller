@@ -1,7 +1,7 @@
 'use client'
 
 import { useGSAP } from '@gsap/react'
-import { OrbitControls, PerformanceMonitor, Stats } from '@react-three/drei'
+import { PerformanceMonitor, Stats } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
 import gsap from 'gsap'
@@ -62,10 +62,11 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
         onDecline={() => onPerformanceChange(false)}
         flipflops={2}>
         {/* <ambientLight intensity={1.0} /> */}
-        {/* <OrbitControls /> */}
+
         <Suspense>
           <PostProcessing>
             <InputSmoother />
+            {/* <OrbitControls /> */}
             <Camera isMobile={isMobile} position={cameraPosition} />
             {isDebug && <Stats />}
             <Backdrop />

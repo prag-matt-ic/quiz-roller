@@ -139,10 +139,14 @@ export const createPlayerSlice =
       playerStatus: 'idle' as PlayerStatus,
       outOfBoundsEvents: [],
       username: null,
+      isSubscribed: false,
       paletteIndex: RESET_PLAYER_STATE.paletteIndex,
       confirmingPaletteIndex: RESET_PLAYER_STATE.confirmingPaletteIndex,
       setUsername: (username: string) => {
         set({ username })
+      },
+      setIsSubscribed: (isSubscribed) => {
+        set({ isSubscribed })
       },
       playerPosition: PLAYER_INITIAL_POSITION,
       setPlayerPosition: (position) => {

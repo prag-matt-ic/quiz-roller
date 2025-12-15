@@ -132,6 +132,8 @@ export type OutOfBoundsEvent = {
 export type PlayerSlice = {
   username: null | string
   setUsername: (username: string) => void
+  isSubscribed: boolean
+  setIsSubscribed: (isSubscribed: boolean) => void
 
   playerPosition: Vector3Tuple
   setPlayerPosition: (pos: { x: number; y: number; z: number }) => void

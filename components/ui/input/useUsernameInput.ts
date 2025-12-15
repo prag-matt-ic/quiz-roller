@@ -22,7 +22,7 @@ export function useUsernameInput(): InputProps {
     const validValue = usernameSchema.safeParse(username ?? '')
     const isValid = validValue.success
     const error = !isValid ? errorMessage : null
-    setError(error)
+    if (value.length > 2) setError(error)
     setIsValid(isValid)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

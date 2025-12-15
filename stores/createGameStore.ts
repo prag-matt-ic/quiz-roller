@@ -17,6 +17,7 @@ type PersistedStore = Pick<
   | 'inputType'
   | 'joystickPosition'
   | 'paletteIndex'
+  | 'isSubscribed'
 >
 
 export const createGameStore = (params: CreateGameStoreParams) => {
@@ -35,6 +36,7 @@ export const createGameStore = (params: CreateGameStoreParams) => {
           partialize: (s) =>
             ({
               username: s.username,
+              isSubscribed: s.isSubscribed,
               totalTimeS: s.totalTimeS,
               completedSpeedRuns: s.completedSpeedRuns,
               mode: s.mode,

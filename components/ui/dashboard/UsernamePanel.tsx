@@ -17,16 +17,16 @@ export const UsernamePanel: FC<Props> = ({ className }) => {
 
   return (
     <Panel className={twMerge('flex h-full items-center gap-4', className)} strength={1}>
-      <UserIcon className="size-6 text-teal-200/70" />
+      <UserIcon className="size-6 text-teal-200/50" />
       <Input
         {...inputProps}
         className="flex-1"
         endAdornment={
           <div className="flex h-full items-center justify-center px-4">
             {inputProps.isValid ? (
-              <CheckCircle className="size-6 text-emerald-400" />
+              <CheckCircle className="size-6 text-teal-400" strokeWidth={1.5} />
             ) : (
-              <AlertTriangle className="size-6 text-teal-200 opacity-50" />
+              <AlertTriangle className="size-6 text-teal-200 opacity-50" strokeWidth={1.5} />
             )}
           </div>
         }

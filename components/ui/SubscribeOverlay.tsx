@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Send, X } from 'lucide-react'
+import { ArrowLeft, Check, Send, X } from 'lucide-react'
 import { type FC, type FormEvent, type Ref, useMemo, useState } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
@@ -20,7 +20,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const SubscribeOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const isMobile = useGameStore((s) => s.isMobile)
+  const isSubscribed = useGameStore((s) => s.isSubscribed)
   const setOverlay = useGameStore((s) => s.setOverlay)
+  const setIsSubscribed = useGameStore((s) => s.setIsSubscribed)
 
   const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
@@ -57,6 +59,7 @@ export const SubscribeOverlay: FC<Props> = ({ ref, transitionStatus }) => {
         return
       }
 
+      setIsSubscribed(true)
       setStatus('success')
     } catch (err) {
       console.error('[SubscribeOverlay]: failed to submit contact', err)
@@ -70,72 +73,84 @@ export const SubscribeOverlay: FC<Props> = ({ ref, transitionStatus }) => {
       <div
         ref={ref}
         className={twJoin(
-          'fixed inset-0 z-500 flex size-full items-center justify-center bg-radial from-black/90 from-20% to-black/20 backdrop-blur-md transition-opacity ease-out xl:backdrop-blur-lg',
+          'fixed inset-0 z-500 flex size-full items-center justify-center',
           transitionStatus === 'entering' && 'opacity-100 duration-300',
           transitionStatus === 'entered' && 'opacity-100',
           transitionStatus === 'exiting' && 'opacity-0 duration-500',
           transitionStatus === 'exited' && 'opacity-0',
         )}>
         <section className="flex max-h-full max-w-xl flex-col gap-5 overflow-y-auto px-4 py-5 xl:gap-6">
-          <header className="space-y-2 text-center">
-            <h2 className="font-unbounded text-2xl font-semibold lg:text-3xl">
-              Stay in the loop
+          <header className="space-y-3 text-center">
+            <h2
+              className={twJoin(
+                'font-unbounded text-2xl font-semibold xl:text-4xl',
+                isSubscribed && 'text-emerald-400',
+              )}>
+              {isSubscribed ? "You're in the loop!" : 'Stay in the loop'}
             </h2>
-            <p className="text-base text-white xl:text-lg">
-              Get updates on multiplayer, new levels, and other fresh developments.
-            </p>
-          </header>
-
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <Input
-              required={true}
-              name="firstName"
-              autoComplete="given-name"
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              placeholder="First name"
-              isValid={trimmedFirstName.length > 0}
-            />
-            <Input
-              required={true}
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              isValid={isEmailValid}
-            />
-
-            {!!error && <p className="text-sm text-amber-400">{error}</p>}
-            {isSuccess && (
-              <p className="flex items-center gap-2 text-sm text-emerald-300">
-                <Check className="size-5" strokeWidth={1.5} />
-                You are subscribed!
+            {!isSubscribed && (
+              <p className="max-w-md text-sm text-neutral-400 xl:text-base">
+                Get updates on multiplayer, new levels, and other fresh developments from the
+                team.
               </p>
             )}
+          </header>
 
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="w-full justify-center sm:w-auto"
-                onClick={() => setOverlay(Overlay.NONE)}
-                endIcon={X}>
-                Close
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="md"
-                className="w-full justify-center sm:w-auto"
-                disabled={!isFormValid || isSubmitting}
-                endIcon={isSuccess ? Check : Send}>
-                {isSubmitting ? 'Submitting…' : isSuccess ? 'Subscribed' : 'Subscribe'}
-              </Button>
-            </div>
-          </form>
+          {isSubscribed ? (
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full justify-center sm:w-auto"
+              onClick={() => setOverlay(Overlay.DASHBOARD)}
+              startIcon={ArrowLeft}>
+              Return to Dashboard
+            </Button>
+          ) : (
+            <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+              <Input
+                required={true}
+                name="firstName"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                placeholder="First name"
+                isValid={trimmedFirstName.length > 0}
+              />
+              <Input
+                required={true}
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Your best email"
+                isValid={isEmailValid}
+              />
+
+              {!!error && <p className="text-sm text-amber-400">{error}</p>}
+
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  className="w-full justify-center sm:w-auto"
+                  onClick={() => setOverlay(Overlay.DASHBOARD)}
+                  endIcon={X}>
+                  Close
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  className="w-full justify-center sm:w-auto"
+                  disabled={!isFormValid || isSubmitting}
+                  endIcon={isSuccess ? Check : Send}>
+                  {isSubmitting ? 'Submitting…' : isSuccess ? 'Subscribed' : 'Subscribe'}
+                </Button>
+              </div>
+            </form>
+          )}
         </section>
       </div>
     </PointerProvider>

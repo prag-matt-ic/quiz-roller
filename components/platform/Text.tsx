@@ -20,8 +20,6 @@ type Props = {
   textCanvasOptions?: Partial<TextCanvasOptions>
 }
 
-const textColour = '#000000'
-
 export const Text: FC<Props> = ({
   text,
   position,
@@ -35,9 +33,9 @@ export const Text: FC<Props> = ({
   const canvasState = useTextCanvas(text, {
     width: width * dpr * TEXT_CANVAS_SCALE,
     height: height * dpr * TEXT_CANVAS_SCALE,
-    color: textColour,
+    color: '#000000',
     ...textCanvasOptions,
-    fontSize: 22 * dpr,
+    fontSize: 30 * dpr,
   })
 
   return (
@@ -49,6 +47,7 @@ export const Text: FC<Props> = ({
           transparent={true}
           depthTest={true}
           depthWrite={false}
+          toneMapped={false}
         />
       </mesh>
     </Suspense>

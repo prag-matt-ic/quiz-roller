@@ -31,6 +31,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
 
   const infoContainer = useRef<HTMLDivElement>(null)
+  const overlayBackdropRef = useRef<HTMLDivElement>(null)
   const dashboardRef = useRef<HTMLDivElement>(null)
   const subscribeOverlay = useRef<HTMLDivElement>(null)
   const speedRunStartOverlay = useRef<HTMLDivElement>(null)
@@ -103,6 +104,26 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       {/* Fullscreen overlays */}
       <Transition
+        in={overlay !== Overlay.NONE}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={overlayBackdropRef}>
+        {(status) => (
+          <div
+            ref={overlayBackdropRef}
+            className={twJoin(
+              'pointer-events-none fixed inset-0 z-100 bg-linear-0 from-black/25 via-black/80 to-black/25 backdrop-blur-md duration-250 xl:backdrop-blur-lg',
+              status === 'entered' && 'opacity-100',
+              (status === 'exiting' || status === 'exited') && 'opacity-0',
+            )}
+          />
+        )}
+      </Transition>
+
+      {/* bg-radial from-black/90 from-20% to-black/20 backdrop-blur-md transition-opacity ease-out xl:backdrop-blur-lg */}
+
+      <Transition
         in={overlay === Overlay.DASHBOARD}
         timeout={{ enter: 0, exit: 400 }}
         mountOnEnter={true}
@@ -119,9 +140,7 @@ const UI: FC<Props> = ({ isMobile }) => {
         mountOnEnter={true}
         unmountOnExit={true}
         nodeRef={subscribeOverlay}>
-        {(status) => (
-          <SubscribeOverlay ref={subscribeOverlay} transitionStatus={status} />
-        )}
+        {(status) => <SubscribeOverlay ref={subscribeOverlay} transitionStatus={status} />}
       </Transition>
 
       <Transition
