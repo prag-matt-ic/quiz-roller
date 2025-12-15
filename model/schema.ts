@@ -73,6 +73,8 @@ export const speedRunSubmissionSchema = z.object({
   date: isoDateStringSchema,
   input_type: z.enum(['keyboard', 'joystick']),
   level_id: z.string(),
+  accidents: z.number().min(0),
+  rings: z.number().min(0).max(60),
 })
 
 export const speedrunDatabaseInsertSchema = speedRunSubmissionSchema.extend({
