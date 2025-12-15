@@ -31,7 +31,7 @@ export async function getSpeedrunData(
       : sql`WHERE level_id = ${levelId}`
 
     const speedrun = await sql`
-      SELECT id, username, time, date, ip, country, flag, attempt, input_type, level_id
+      SELECT id, username, time, date, ip, country, flag, attempt, input_type, level_id, accidents, rings
       FROM "speedroller" 
       ${wherePlayerInput}
       ORDER BY time ASC
@@ -74,11 +74,13 @@ export async function getSpeedrunPosition(
           attempt,
           input_type,
           level_id,
+          accidents,
+          rings,
           ROW_NUMBER() OVER (ORDER BY time ASC) as position
         FROM "speedroller"
         ${wherePlayerInput}
       )
-      SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id
+      SELECT id, username, time, date, ip, country, flag, attempt, position, input_type, level_id, accidents, rings
       FROM ranked_runs
       WHERE id = ${id}
     `
@@ -101,6 +103,8 @@ export async function insertSpeedRun({
   time,
   input_type,
   level_id = LEVEL_ID,
+  accidents,
+  rings,
 }: ServerSpeedRunSubmission): InsertSpeedRunResponse {
   try {
     const headersList = await headers()
@@ -140,15 +144,17 @@ export async function insertSpeedRun({
       flag: flag ?? null,
       input_type,
       level_id,
+      accidents,
+      rings,
     }
 
     const validatedInsert = speedrunDatabaseInsertSchema.parse(insert)
 
     // TODO: Rename this table.
     const insertResult = await sql`
-      INSERT INTO "speedroller" (username, time, date, ip, country, flag, attempt, input_type, level_id) 
-      VALUES (${validatedInsert.username}, ${validatedInsert.time}, ${validatedInsert.date}, ${validatedInsert.ip}, ${validatedInsert.country}, ${validatedInsert.flag}, ${validatedInsert.attempt}, ${validatedInsert.input_type}, ${validatedInsert.level_id})
-      RETURNING id, username, time, date, ip, country, flag, attempt, input_type, level_id
+      INSERT INTO "speedroller" (username, time, date, ip, country, flag, attempt, input_type, level_id, accidents, rings) 
+      VALUES (${validatedInsert.username}, ${validatedInsert.time}, ${validatedInsert.date}, ${validatedInsert.ip}, ${validatedInsert.country}, ${validatedInsert.flag}, ${validatedInsert.attempt}, ${validatedInsert.input_type}, ${validatedInsert.level_id}, ${validatedInsert.accidents}, ${validatedInsert.rings})
+      RETURNING id, username, time, date, ip, country, flag, attempt, input_type, level_id, accidents, rings
     `
     if (!insertResult || insertResult.length === 0)
       throw new Error('No data returned from insert')

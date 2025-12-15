@@ -43,7 +43,14 @@ export const createTimeSlice =
       })
     },
     finishSpeedRun: async () => {
-      const { speedRunTimeCS, username, inputType, platformVersion } = get()
+      const {
+        speedRunTimeCS,
+        username,
+        inputType,
+        platformVersion,
+        outOfBoundsEvents,
+        collectedRings,
+      } = get()
       if (!username) return
       const speedRunStage = SpeedRunStage.SUBMITTING
 
@@ -60,6 +67,8 @@ export const createTimeSlice =
         date: new Date().toISOString(),
         input_type: inputType,
         level_id: platformVersion,
+        accidents: outOfBoundsEvents.length,
+        rings: Object.keys(collectedRings).length,
       }
 
       try {
