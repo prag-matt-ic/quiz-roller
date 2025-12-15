@@ -6,6 +6,7 @@ import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
+import Credits from '@/components/ui/Credits'
 import { PointerProvider } from '@/components/ui/PointerProvider'
 import { DashboardLeaderboardPanel } from '@/components/ui/dashboard/LeaderboardPanel'
 import { RingsPanel } from '@/components/ui/dashboard/RingsPanel'
@@ -56,6 +57,8 @@ export const Dashboard: FC<DashboardProps> = ({ ref, isMobile, transitionStatus 
             <SpeedPanel className="col-span-2" />
           </div>
           <SettingsPanel />
+
+          <Credits show={transitionStatus === 'entered'} className="col-span-full mt-8" />
         </div>
       </aside>
     </PointerProvider>
