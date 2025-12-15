@@ -131,7 +131,7 @@ const Keys: FC = () => {
   }, [disableInput, setPlayerInput, setPlayerInputIntent])
 
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-4 z-50 grid h-fit w-fit grid-cols-3 gap-1 place-self-end">
+    <aside className="pointer-events-none fixed right-4 bottom-4 z-150 grid h-fit w-fit grid-cols-3 gap-1 place-self-end">
       <div />
       <Key Icon={ArrowUp} isActive={playerInputIntent.up > 0} />
       <div />
@@ -175,7 +175,7 @@ const Stick: FC = () => {
     <Joystick
       position={joystickPosition}
       level={JOYSTICK_LEVELS}
-      className="pointer-events-auto fixed z-200"
+      className="pointer-events-auto fixed z-150"
       x="72px"
       y="72px"
       onMove={onJoystickMove}>
