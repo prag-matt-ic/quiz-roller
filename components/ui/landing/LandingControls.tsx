@@ -54,50 +54,62 @@ const LandingControls: FC<Props> = ({ isLoaded, isMobile, onStart }) => {
   }
 
   return (
-    <PointerProvider isMobile={isMobile}>
-      <Panel
-        strength={1}
-        className={twJoin(
-          'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start rounded-full pl-6 transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4 xl:pl-8',
-          isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
-        )}>
-        <ButtonGroup
-          value={startMuted ? 'off' : 'on'}
-          onChange={(val) => setStartMuted(val === 'off')}
-          items={[
-            { label: null, ariaLabel: 'Sound on', value: 'on', Icon: Volume2 },
-            { label: null, ariaLabel: 'Sound off', value: 'off', Icon: VolumeX },
-          ]}
-        />
-        <ButtonGroup
-          value={inputType}
-          onChange={setInputType}
-          items={INPUT_TYPE_OPTIONS.map(({ value, Icon, label }) => ({
-            value,
-            Icon,
-            label: null,
-            ariaLabel: label,
-          }))}
-        />
-        <ButtonGroup
-          value={joystickPosition}
-          onChange={setJoystickPosition}
-          disabled={inputType !== InputType.JOYSTICK}
-          items={[
-            { label: null, ariaLabel: 'Joystick on left', value: 'left', Icon: ArrowLeft },
-            { label: null, ariaLabel: 'Joystick on right', value: 'right', Icon: ArrowRight },
-          ]}
-        />
-        <Button
-          variant="primary"
-          aria-label="Enter"
-          disabled={!canStart}
-          onClick={onStartClick}
-          endIcon={showRotateHint ? RotateCcwIcon : PlayIcon}>
-          {showRotateHint ? 'Rotate device' : 'Enter'}
-        </Button>
-      </Panel>
-    </PointerProvider>
+    <>
+      {isMobile && (
+        <span
+          className={twJoin(
+            'fixed inset-x-0 top-4 text-center text-sm font-medium text-teal-200/50 transition-opacity delay-500 duration-500 ease-out motion-reduce:transition-none',
+            isLoaded ? 'opacity-100' : 'opacity-0',
+          )}>
+          Hide the toolbar for a fullscreen experience!
+        </span>
+      )}
+
+      <PointerProvider isMobile={isMobile}>
+        <Panel
+          strength={1}
+          className={twJoin(
+            'relative mx-auto flex w-fit flex-wrap items-center justify-center gap-3 self-start rounded-full pl-6 transition-opacity duration-500 ease-out motion-reduce:transition-none xl:gap-4 xl:pl-8',
+            isLoaded ? 'opacity-100 delay-200' : 'opacity-0',
+          )}>
+          <ButtonGroup
+            value={startMuted ? 'off' : 'on'}
+            onChange={(val) => setStartMuted(val === 'off')}
+            items={[
+              { label: null, ariaLabel: 'Sound on', value: 'on', Icon: Volume2 },
+              { label: null, ariaLabel: 'Sound off', value: 'off', Icon: VolumeX },
+            ]}
+          />
+          <ButtonGroup
+            value={inputType}
+            onChange={setInputType}
+            items={INPUT_TYPE_OPTIONS.map(({ value, Icon, label }) => ({
+              value,
+              Icon,
+              label: null,
+              ariaLabel: label,
+            }))}
+          />
+          <ButtonGroup
+            value={joystickPosition}
+            onChange={setJoystickPosition}
+            disabled={inputType !== InputType.JOYSTICK}
+            items={[
+              { label: null, ariaLabel: 'Joystick on left', value: 'left', Icon: ArrowLeft },
+              { label: null, ariaLabel: 'Joystick on right', value: 'right', Icon: ArrowRight },
+            ]}
+          />
+          <Button
+            variant="primary"
+            aria-label="Enter"
+            disabled={!canStart}
+            onClick={onStartClick}
+            endIcon={showRotateHint ? RotateCcwIcon : PlayIcon}>
+            {showRotateHint ? 'Rotate device' : 'Enter'}
+          </Button>
+        </Panel>
+      </PointerProvider>
+    </>
   )
 }
 
