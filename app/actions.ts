@@ -128,7 +128,6 @@ export async function insertSpeedRun({
       AND ip = ${ip}
     `
 
-    console.warn('Previous attempts for', { username, ip, previousAttempts })
     const attempt = (Number(previousAttempts[0]?.count) || 0) + 1
 
     const insert: SpeedRunDatabaseInsert = {
