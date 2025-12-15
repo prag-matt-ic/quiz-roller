@@ -9,6 +9,7 @@ import { ringIndexToKey } from '@/utils/rings'
 
 import {
   type CreateGameStoreParams,
+  GameMode,
   type GameSliceCreator,
   type PlayerSlice,
   type PlayerStatus,
@@ -171,7 +172,7 @@ export const createPlayerSlice =
         const playerRingsCount = Object.keys(newCollectedRings).length
         const hasCollectedAllRings = playerRingsCount >= totalRingsCount
         if (hasCollectedAllRings) {
-          console.log('[PlayerStore] All rings collected!')
+          console.warn('All rings collected!')
         }
 
         increaseSpeed(RING_SPEED_INCREMENT)
@@ -277,7 +278,10 @@ export const createPlayerSlice =
       onOutOfBounds: () => {
         playSoundFX(SoundFX.OUT_OF_BOUNDS)
         resetSpeed()
-        const outOfBoundsMessage = getOutOfBoundsMessage(get().outOfBoundsEvents)
+        const mode = get().mode
+        const outOfBoundsMessage =
+          mode === GameMode.SPEEDRUN ? null : getOutOfBoundsMessage(get().outOfBoundsEvents)
+
         set((s) => ({
           playerStatus: 'out-of-bounds',
           spawnPosition: null, // Calculated in usePlayerRespawn hook

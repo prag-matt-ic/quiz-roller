@@ -41,8 +41,8 @@ export const COLLECTIBLES_CONTENT: Record<
         <span className="mt-1 block text-sm font-medium text-neutral-300">
           A set of design tools developed alongside this project.
           <br />
-          Used for generating gradients (like the marble), subtle colour variations (think
-          particles), and grainy noise-based textures (perfect for backgrounds).
+          Used for generating gradients, subtle colour variations, and grainy noise-based
+          textures.
         </span>
       </>
     ),
@@ -60,9 +60,8 @@ export const COLLECTIBLES_CONTENT: Record<
           <DownloadCloud />
         </Link>
         <span className="mt-1 block text-sm font-medium text-white/80">
-          These instructions will help an AI refactor existing code for readability, best
-          practices and performance. Useful for keeping AI-generated code clean and efficient
-          whilst you move quickly.
+          Instructions to help an AI refactor existing code for readability, best practices and
+          performance. Useful for keeping code clean and efficient whilst you move quickly.
         </span>
       </>
     ),

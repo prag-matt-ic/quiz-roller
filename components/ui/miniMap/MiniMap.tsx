@@ -1,6 +1,6 @@
 import { useMediaQuery } from '@mantine/hooks'
 import Image from 'next/image'
-import { type FC, useEffect, useRef, useState } from 'react'
+import { type FC, forwardRef, useEffect, useRef, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
@@ -65,29 +65,51 @@ const MiniMap: FC = () => {
     totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / Math.max(1, initialMaxRowIndex),
   )
   const maxRowIndexRef = useRef(initialMaxRowIndex)
+  const progressStartRowRef = useRef(progressStartRow)
+  const progressRangeRef = useRef(progressRange)
 
   const miniMapAsset = MINI_MAP_ASSET_PATHS[mode] ?? MINI_MAP_ASSET_PATHS[GameMode.LEARN]
 
-  // const progressRef = useRef<HTMLDivElement | null>(null)
+  const progressRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<HTMLImageElement | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
 
   const { playerPosition } = usePlayerPosition()
 
   useEffect(() => {
+    const {
+      maxRowIndex,
+      progressRange: newProgressRange,
+      progressStartRow: newProgressStartRow,
+    } = getProgressWindow(totalRows)
+    const denominator = Math.max(1, maxRowIndex)
+    rowsToPixelsRef.current = totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / denominator
+    maxRowIndexRef.current = maxRowIndex
+    progressStartRowRef.current = newProgressStartRow
+    progressRangeRef.current = newProgressRange
+  }, [mapTileSizePx, totalRows])
+
+  useEffect(() => {
     let currentRow = 3
     let lastXRef = 0
     let lastYRef = 0
+    let lastProgressRef = -1
 
-    // const updateProgress = (row: number) => {
-    //   if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
-    //   if (!progressRef.current) return
-    //   const rowsProgress = Math.min(
-    //     1,
-    //     Math.max(0, (row - progressStartRowRef.current) / progressRangeRef.current),
-    //   )
-    //   progressRef.current.style.clipPath = `inset(${100 - rowsProgress * 100}% 0 0 0)`
-    // }
+    const updateProgress = (row: number) => {
+      if (row === EMPTY_ROW_INDEX) return // fallen off front or back of the platform
+      if (!progressRef.current) return
+      const rowsProgress = Math.min(
+        1,
+        Math.max(
+          0,
+          (row - progressStartRowRef.current) / Math.max(1, progressRangeRef.current),
+        ),
+      )
+      if (rowsProgress === lastProgressRef) return
+      lastProgressRef = rowsProgress
+      const translatePercent = (rowsProgress - 1) * 100
+      progressRef.current.style.transform = `translate3d(${translatePercent}%,0,0)`
+    }
 
     const updateMapTransform = (row: number, playerX: number) => {
       if (!mapRef.current) return
@@ -109,16 +131,17 @@ const MiniMap: FC = () => {
 
     const loop = () => {
       updateMapTransform(currentRow, playerPosition.current[0])
-      // updateProgress(currentRow)
       animationFrameId = requestAnimationFrame(loop)
     }
 
+    updateProgress(currentRow)
     loop()
 
     const unsubscribe = gameStoreAPI.subscribe(
       (s) => s.currentRow,
       (newCurrentRow) => {
         currentRow = newCurrentRow
+        updateProgress(newCurrentRow)
       },
     )
 
@@ -164,35 +187,29 @@ const MiniMap: FC = () => {
           height: playerSizePx,
         }}
       />
+      <ProgressBar ref={progressRef} height={mapTileSizePx * totalRows} />
     </aside>
   )
 }
 
 export default MiniMap
 
-// TODO: create a standalone ProgressBar component
+type ProgressBarProps = {
+  height: number
+}
 
-// const ProgressBar: FC = () => {
-//   const progressStartRowRef = useRef(initialProgressStartRow)
-//   const progressRangeRef = useRef(initialProgressRange)
+const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(({ height }, forwardedRef) => (
+  <div
+    className="pointer-events-none absolute inset-x-4 bottom-4 z-10 h-1.5! overflow-hidden rounded-full bg-teal-800"
+    style={{ height }}>
+    <div
+      ref={forwardedRef}
+      className="relative h-1.5 w-full rounded-full bg-teal-300 will-change-transform"
+      style={{
+        transform: 'translate3d(-100%,0,0)',
+      }}
+    />
+  </div>
+))
 
-//   useEffect(() => {
-//     totalRowsRef.current = totalRows
-//     const { maxRowIndex, progressRange, progressStartRow } = getProgressWindow(totalRows)
-//     maxRowIndexRef.current = maxRowIndex
-//     const denominator = Math.max(1, maxRowIndex)
-//     rowsToPixelsRef.current = totalRows === 0 ? 0 : (mapTileSizePx * totalRows) / denominator
-//     progressStartRowRef.current = progressStartRow
-//     progressRangeRef.current = progressRange
-//   }, [mapTileSizePx, totalRows])
-
-//   return (
-//     <div
-//       ref={progressRef}
-//       className="absolute inset-0 size-full rounded-full border-2 border-teal-600 bg-none"
-//       style={{
-//         clipPath: 'inset(100% 0 0 0)',
-//       }}
-//     />
-//   )
-// }
+ProgressBar.displayName = 'ProgressBar'

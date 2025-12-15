@@ -24,7 +24,7 @@ export enum SoundFX {
 }
 
 const SOUND_FILES: Record<SoundFX, string> = {
-  [SoundFX.COUNTDOWN]: '/audio/countdown.aac',
+  [SoundFX.COUNTDOWN]: '/audio/grenade-countdown.aac',
   [SoundFX.BACKGROUND]: '/audio/music/on-my-way.mp3',
   [SoundFX.BACKGROUND_SPEEDRUN]: '/audio/music/alluminium.mp3',
   [SoundFX.OPEN_INFO]: '/audio/reveal.aac',
@@ -129,9 +129,10 @@ const createSoundStore = () => {
 
   async function ensureContext() {
     if (!audioContext) {
-      audioContext = new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext)()
+      audioContext = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      )()
       masterGain = audioContext.createGain()
       masterGain.connect(audioContext.destination)
       masterGain.gain.value = DEFAULT_MASTER_GAIN

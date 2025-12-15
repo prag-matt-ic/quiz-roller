@@ -87,7 +87,7 @@ export const SpeedrunEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile 
           <FeedbackPanel />
 
           <Panel
-            className="col-span-full mx-auto flex w-fit items-center justify-center gap-3"
+            className="col-span-full mx-auto flex w-fit items-center justify-center gap-3 rounded-full"
             strength={3}>
             {isShareSupported && (
               <Button

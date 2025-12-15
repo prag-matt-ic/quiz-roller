@@ -23,14 +23,24 @@ export const DashboardLeaderboardPanel: FC<Props> = ({ className }) => {
   const showCTA = inputType === leaderboardFilter
 
   return (
-    <Panel strength={3} className={className} attractorClassName="bg-emerald-400/15">
+    <Panel strength={2} className={className} attractorClassName="bg-emerald-400/15">
       <PanelHeader icon={Trophy} label="Leaderboard">
         <ButtonGroup
           value={leaderboardFilter}
           onChange={setLeaderboardFilter}
           items={[
-            { label: null, ariaLabel: 'Show keyboard leaderboard', value: InputType.KEYS, Icon: Keyboard },
-            { label: null, ariaLabel: 'Show joystick leaderboard', value: InputType.JOYSTICK, Icon: Joystick },
+            {
+              label: null,
+              ariaLabel: 'Show keyboard leaderboard',
+              value: InputType.KEYS,
+              Icon: Keyboard,
+            },
+            {
+              label: null,
+              ariaLabel: 'Show joystick leaderboard',
+              value: InputType.JOYSTICK,
+              Icon: Joystick,
+            },
           ]}
         />
       </PanelHeader>

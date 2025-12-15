@@ -1,6 +1,6 @@
 'use client'
 
-import { InboxIcon, MailCheckIcon, MailIcon, User } from 'lucide-react'
+import { MailIcon } from 'lucide-react'
 import { type FC, type RefObject } from 'react'
 import { type TransitionStatus } from 'react-transition-group'
 import { twJoin } from 'tailwind-merge'
