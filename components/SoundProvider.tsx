@@ -185,7 +185,7 @@ const createSoundStore = () => {
 
           if (!isMuted) {
             const backgroundTrack = GAME_MODE_BACKGROUND_TRACKS[mode ?? GameMode.LEARN]
-            const volume = mode === GameMode.SPEEDRUN ? 0.7 : 0.5
+            const volume = mode === GameMode.SPEEDRUN ? 0.6 : 0.35
             set({ backgroundTrack, isMuted: false })
             playSoundFX(backgroundTrack, true, volume)
             return
