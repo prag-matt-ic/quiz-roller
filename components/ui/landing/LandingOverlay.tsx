@@ -12,6 +12,7 @@ import { MOVE_HUD_CONFIG } from '@/resources/content/hud'
 import { Overlay } from '@/stores/types'
 
 const LandingControls = dynamic(() => import('./LandingControls'), { ssr: false })
+const Credits = dynamic(() => import('@/components/ui/Credits'), { ssr: false })
 
 type Props = {
   isMobile: boolean
@@ -81,29 +82,7 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
       </header>
 
       <LandingControls isLoaded={isLoaded} isMobile={isMobile} onStart={onStart} />
-
-      <div
-        className={twJoin(
-          'absolute inset-x-5 bottom-6 flex w-full flex-wrap justify-center gap-2 text-sm leading-3 tracking-wide text-teal-50/70 opacity-0 transition-opacity duration-1000 xl:bottom-8',
-          isLoaded && 'opacity-100 delay-500',
-        )}>
-        <span className="text-teal-50/40">BY</span>
-        <a
-          href="https://github.com/prag-matt-ic"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold hover:text-teal-100">
-          Pragmattic
-        </a>
-        <span className="text-teal-50/40">AND</span>
-        <a
-          href="https://loopspeed.co.uk"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold hover:text-teal-100">
-          Loopspeed
-        </a>
-      </div>
+      <Credits show={isLoaded} className="absolute inset-x-5 bottom-6 xl:bottom-8" />
     </div>
   )
 }
