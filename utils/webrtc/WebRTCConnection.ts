@@ -123,11 +123,18 @@ export class WebRTCConnection {
 
     // Log ICE server configuration
     const serverCount = config.iceServers?.length ?? 0
-    const turnServers = config.iceServers?.filter(s => 
-      typeof s.urls === 'string' ? s.urls.startsWith('turn') : s.urls.some(u => u.startsWith('turn'))
-    ).length ?? 0
-    console.log(`[WebRTC][${peerId}] Created with ${serverCount} ICE servers (${turnServers} TURN)`)
-    console.log(`[WebRTC][${peerId}] ICE transport policy: ${config.iceTransportPolicy ?? 'default (all)'}`)
+    const turnServers =
+      config.iceServers?.filter((s) =>
+        typeof s.urls === 'string'
+          ? s.urls.startsWith('turn')
+          : s.urls.some((u) => u.startsWith('turn')),
+      ).length ?? 0
+    console.log(
+      `[WebRTC][${peerId}] Created with ${serverCount} ICE servers (${turnServers} TURN)`,
+    )
+    console.log(
+      `[WebRTC][${peerId}] ICE transport policy: ${config.iceTransportPolicy ?? 'default (all)'}`,
+    )
     if (config.iceServers) {
       config.iceServers.forEach((server, i) => {
         const urls = Array.isArray(server.urls) ? server.urls.join(', ') : server.urls
@@ -169,7 +176,9 @@ export class WebRTCConnection {
 
     // Client waits for data channel from host via ondatachannel event
     this.peerConnection.ondatachannel = (event) => {
-      console.log(`[WebRTC][${this.peerId}] Received data channel from host: ${event.channel.label}`)
+      console.log(
+        `[WebRTC][${this.peerId}] Received data channel from host: ${event.channel.label}`,
+      )
       this.dataChannel = event.channel
       this.setupDataChannelHandlers(this.dataChannel)
     }
@@ -194,7 +203,9 @@ export class WebRTCConnection {
         if (event.candidate) {
           const candidateType = event.candidate.type ?? 'unknown'
           const protocol = event.candidate.protocol ?? 'unknown'
-          console.log(`[WebRTC][${this.peerId}] ICE candidate: type=${candidateType}, protocol=${protocol}, address=${event.candidate.address ?? 'hidden'}`)
+          console.log(
+            `[WebRTC][${this.peerId}] ICE candidate: type=${candidateType}, protocol=${protocol}, address=${event.candidate.address ?? 'hidden'}`,
+          )
           this.callbacks.onIceCandidate(event.candidate)
         } else {
           console.log(`[WebRTC][${this.peerId}] ICE gathering complete`)
@@ -230,14 +241,18 @@ export class WebRTCConnection {
       // Add ICE connection state logging
       this.peerConnection.oniceconnectionstatechange = () => {
         if (this.peerConnection) {
-          console.log(`[WebRTC][${this.peerId}] ICE connection state: ${this.peerConnection.iceConnectionState}`)
+          console.log(
+            `[WebRTC][${this.peerId}] ICE connection state: ${this.peerConnection.iceConnectionState}`,
+          )
         }
       }
 
       // Add ICE gathering state logging
       this.peerConnection.onicegatheringstatechange = () => {
         if (this.peerConnection) {
-          console.log(`[WebRTC][${this.peerId}] ICE gathering state: ${this.peerConnection.iceGatheringState}`)
+          console.log(
+            `[WebRTC][${this.peerId}] ICE gathering state: ${this.peerConnection.iceGatheringState}`,
+          )
         }
       }
 

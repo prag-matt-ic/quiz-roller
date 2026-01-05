@@ -5,7 +5,7 @@ const METERED_APP_NAME = process.env.METERED_APP_NAME || 'quiz-roller'
 
 export async function GET() {
   console.log('[API /turn-credentials] Request received')
-  
+
   if (!METERED_API_KEY) {
     console.error('[API /turn-credentials] ❌ METERED_API_KEY not configured in environment')
     return NextResponse.json({ error: 'TURN server not configured' }, { status: 500 })
@@ -22,7 +22,9 @@ export async function GET() {
 
     if (!response.ok) {
       const text = await response.text()
-      console.error(`[API /turn-credentials] ❌ Metered API error: ${response.status} - ${text}`)
+      console.error(
+        `[API /turn-credentials] ❌ Metered API error: ${response.status} - ${text}`,
+      )
       throw new Error(`Metered API error: ${response.status}`)
     }
 
