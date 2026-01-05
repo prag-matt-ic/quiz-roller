@@ -92,14 +92,16 @@ export class WebRTCConnection {
 
       // ICE errors are often benign - connection may still succeed
       this.peerConnection.onicecandidateerror = (event) => {
-        console.warn(`[WebRTC][${this.peerId}] ICE error: ${event.errorCode} - ${event.errorText}`)
+        console.warn(
+          `[WebRTC][${this.peerId}] ICE error: ${event.errorCode} - ${event.errorText}`,
+        )
       }
 
       this.peerConnection.onconnectionstatechange = () => {
         if (!this.peerConnection) return
         const state = this.peerConnection.connectionState
         this.callbacks.onConnectionStateChange(this.peerId, state)
-        
+
         if (state === 'connected') {
           this.logSelectedCandidatePair()
         }
@@ -132,12 +134,12 @@ export class WebRTCConnection {
 
       if (!selectedPair?.localCandidateId || !selectedPair.remoteCandidateId) return
 
-      const localCandidate = reports.find(
-        (r) => r.id === selectedPair.localCandidateId,
-      ) as IceCandidateStats | undefined
-      const remoteCandidate = reports.find(
-        (r) => r.id === selectedPair.remoteCandidateId,
-      ) as IceCandidateStats | undefined
+      const localCandidate = reports.find((r) => r.id === selectedPair.localCandidateId) as
+        | IceCandidateStats
+        | undefined
+      const remoteCandidate = reports.find((r) => r.id === selectedPair.remoteCandidateId) as
+        | IceCandidateStats
+        | undefined
 
       const localType = localCandidate?.candidateType ?? 'unknown'
       const remoteType = remoteCandidate?.candidateType ?? 'unknown'
@@ -196,7 +198,7 @@ export class WebRTCConnection {
 
   async addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
     if (!this.peerConnection) throw new Error('Peer connection not initialized')
-    
+
     if (!this.remoteDescriptionSet) {
       this.pendingIceCandidates.push(candidate)
       return

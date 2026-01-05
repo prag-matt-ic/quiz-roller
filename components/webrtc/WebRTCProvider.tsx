@@ -149,7 +149,8 @@ export function useWebRTC() {
 
       const mergedConfig: WebRTCConfig = {
         iceServers: connectionConfig?.iceServers ?? providerConfig?.iceServers ?? iceServers,
-        dataChannelLabel: connectionConfig?.dataChannelLabel ?? providerConfig?.dataChannelLabel,
+        dataChannelLabel:
+          connectionConfig?.dataChannelLabel ?? providerConfig?.dataChannelLabel,
         iceTransportPolicy:
           connectionConfig?.iceTransportPolicy ??
           providerConfig?.iceTransportPolicy ??

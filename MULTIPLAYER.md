@@ -150,13 +150,14 @@ http://localhost:3000/multiplayer?room=game-room-1
 ## Performance Optimizations
 
 ### 1. **Pre-allocated Objects (No GC Pressure)**
+
 ```typescript
 // RemotePlayer.tsx - reused every frame
 const currentPos = useRef(new Vector3())
 const targetPos = useRef(new Vector3())
 const currentQuat = useRef(new Quaternion())
 const targetQuat = useRef(new Quaternion())
-````
+```
 
 ### 2. **Position Throttling (Reduced Bandwidth)**
 
@@ -188,29 +189,34 @@ currentQuat.current.slerp(targetQuat.current, LERP_FACTOR)
 ## Troubleshooting
 
 ### "Signaling: disconnected"
+
 - ✅ Check server running: `cd signaling-server && npm run dev`
 - ✅ Verify URL: `ws://localhost:8080`
 - ✅ Check firewall/port blocking
 
 ### "Connection: failed"
+
 - ✅ Browser console for WebRTC errors
 - ✅ Use Chrome/Firefox (best WebRTC support)
 - ✅ Check STUN server accessibility
 - ✅ Try incognito mode (extensions can interfere)
 
 ### Remote player not visible
+
 - ✅ Verify "Connected Players: 2" in UI
 - ✅ Both players must be moving (stationary = invisible initially)
 - ✅ Check browser console for position messages
 - ✅ Confirm `remotePlayers` Map has entries
 
 ### Position lag/jitter
+
 - ✅ Increase `LERP_FACTOR` (0.2 → 0.3) for responsiveness
 - ✅ Decrease `throttleMs` (50 → 30ms) for more frequent updates
 - ✅ Check network latency in DevTools
 - ✅ Ensure 60fps rendering (check performance monitor)
 
 ### Auto-join not working
+
 - ✅ Confirm URL has `?room=` parameter
 - ✅ Check 500ms delay hasn't been cleared prematurely
 - ✅ Verify `localPeerId` and `isSignalingServerConnected` are true
@@ -222,8 +228,8 @@ currentQuat.current.slerp(targetQuat.current, LERP_FACTOR)
 
 ```tsx
 import { GameProvider } from '@/components/GameProvider'
-import { MultiplayerWrapper } from '@/components/MultiplayerWrapper'
 import Main from '@/components/Main'
+import { MultiplayerWrapper } from '@/components/MultiplayerWrapper'
 
 export default function YourPage() {
   return (
@@ -240,12 +246,14 @@ export default function YourPage() {
 ## Limitations & Known Issues
 
 ### Current Limitations
+
 - **2 players max** (enforced by WebRTCProvider)
 - **Peer-to-peer only** (no dedicated server, requires direct connection)
 - **No game state sync** (collectibles, rings, mode changes not synchronized)
 - **Physics drift** (each client simulates independently, minor deviations possible)
 
 ### Known Issues
+
 1. **Sender identification:** Messages don't include sender ID (assumes 2-player only)
 2. **Auto-join re-triggering:** Multiple dependency changes can cause re-join attempts
 3. **Connection errors suppressed:** Failed ICE candidates log but don't surface to UI
@@ -254,6 +262,7 @@ export default function YourPage() {
 ## Future Enhancements
 
 ### Phase 1: UX Improvements
+
 - [ ] **Visual differentiation:** Unique colors/patterns for each player
 - [ ] **Player names:** Display usernames above marbles
 - [ ] **Connection indicators:** Show ping/latency in UI
@@ -261,12 +270,14 @@ export default function YourPage() {
 - [ ] **Auto-reconnect:** Retry connection on failure
 
 ### Phase 2: Game State Sync
+
 - [ ] **Collectible sync:** Share ring/checkpoint collection
 - [ ] **Mode sync:** Coordinate speedrun/learn mode
 - [ ] **Leaderboards:** Multiplayer race times
 - [ ] **Spectator mode:** Watch other players
 
 ### Phase 3: Scalability
+
 - [ ] **3-4 players:** Mesh networking or relay server
 - [ ] **Room discovery:** Lobby/matchmaking system
 - [x] **TURN server:** Better NAT traversal (Metered.ca integration)
@@ -281,6 +292,7 @@ npm run test
 ```
 
 Key test files:
+
 - `tests/webrtc/WebRTCProvider.test.tsx`
 - `tests/webrtc/useSignaling.test.ts`
 

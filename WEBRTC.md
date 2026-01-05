@@ -155,8 +155,9 @@ function App() {
 ```tsx
 'use client'
 import { useState } from 'react'
-import { useSignaling } from '@/hooks/useSignaling'
+
 import { useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
+import { useSignaling } from '@/hooks/useSignaling'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 
 export function MultiplayerGame() {
@@ -396,6 +397,7 @@ Finds the best network path between peers.
 - **Candidates**: Possible network routes
 
 **ICE Server Configuration**:
+
 - STUN: Google's public STUN servers (fallback)
 - TURN: Fetched from `/api/turn-credentials` (Metered.ca)
 - Transport policy: Configurable via `NEXT_PUBLIC_WEBRTC_ICE_TRANSPORT_POLICY` ("all" or "relay")
