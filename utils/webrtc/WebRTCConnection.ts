@@ -120,6 +120,20 @@ export class WebRTCConnection {
       iceServers: config.iceServers,
       iceTransportPolicy: config.iceTransportPolicy,
     }
+
+    // Log ICE server configuration
+    const serverCount = config.iceServers?.length ?? 0
+    const turnServers = config.iceServers?.filter(s => 
+      typeof s.urls === 'string' ? s.urls.startsWith('turn') : s.urls.some(u => u.startsWith('turn'))
+    ).length ?? 0
+    console.log(`[WebRTC][${peerId}] Created with ${serverCount} ICE servers (${turnServers} TURN)`)
+    console.log(`[WebRTC][${peerId}] ICE transport policy: ${config.iceTransportPolicy ?? 'default (all)'}`)
+    if (config.iceServers) {
+      config.iceServers.forEach((server, i) => {
+        const urls = Array.isArray(server.urls) ? server.urls.join(', ') : server.urls
+        console.log(`[WebRTC][${peerId}]   Server ${i + 1}: ${urls}`)
+      })
+    }
   }
 
   /**
@@ -131,10 +145,12 @@ export class WebRTCConnection {
    * - Initiate the connection handshake
    */
   initAsHost(): void {
+    console.log(`[WebRTC][${this.peerId}] Initializing as HOST`)
     this.createPeerConnection()
     if (!this.peerConnection) return
 
     // Host creates the data channel
+    console.log(`[WebRTC][${this.peerId}] Creating data channel: ${this.dataChannelLabel}`)
     this.dataChannel = this.peerConnection.createDataChannel(this.dataChannelLabel)
     this.setupDataChannelHandlers(this.dataChannel)
   }
@@ -147,12 +163,13 @@ export class WebRTCConnection {
    * - Generate and send SDP answer in response to offer
    */
   initAsClient(): void {
+    console.log(`[WebRTC][${this.peerId}] Initializing as CLIENT`)
     this.createPeerConnection()
     if (!this.peerConnection) return
 
     // Client waits for data channel from host via ondatachannel event
     this.peerConnection.ondatachannel = (event) => {
-      console.warn(`[${this.peerId}] Received data channel from host`)
+      console.log(`[WebRTC][${this.peerId}] Received data channel from host: ${event.channel.label}`)
       this.dataChannel = event.channel
       this.setupDataChannelHandlers(this.dataChannel)
     }
@@ -168,12 +185,19 @@ export class WebRTCConnection {
    */
   private createPeerConnection(): void {
     try {
+      console.log(`[WebRTC][${this.peerId}] Creating RTCPeerConnection...`)
       this.peerConnection = new RTCPeerConnection(this.config)
+      console.log(`[WebRTC][${this.peerId}] RTCPeerConnection created successfully`)
 
       // ICE candidate generated - send to peer via signaling
       this.peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
+          const candidateType = event.candidate.type ?? 'unknown'
+          const protocol = event.candidate.protocol ?? 'unknown'
+          console.log(`[WebRTC][${this.peerId}] ICE candidate: type=${candidateType}, protocol=${protocol}, address=${event.candidate.address ?? 'hidden'}`)
           this.callbacks.onIceCandidate(event.candidate)
+        } else {
+          console.log(`[WebRTC][${this.peerId}] ICE gathering complete`)
         }
       }
 
@@ -189,15 +213,31 @@ export class WebRTCConnection {
 
       this.peerConnection.onconnectionstatechange = () => {
         if (this.peerConnection) {
-          this.callbacks.onConnectionStateChange(
-            this.peerId,
-            this.peerConnection.connectionState,
-          )
-          if (this.peerConnection.connectionState === 'connected') {
+          const state = this.peerConnection.connectionState
+          console.log(`[WebRTC][${this.peerId}] Connection state: ${state}`)
+          this.callbacks.onConnectionStateChange(this.peerId, state)
+          if (state === 'connected') {
+            console.log(`[WebRTC][${this.peerId}] ✅ CONNECTION ESTABLISHED`)
             this.logSelectedCandidatePair().catch((error) => {
-              console.warn(`[${this.peerId}] Failed to read ICE stats`, error)
+              console.warn(`[WebRTC][${this.peerId}] Failed to read ICE stats`, error)
             })
+          } else if (state === 'failed') {
+            console.error(`[WebRTC][${this.peerId}] ❌ CONNECTION FAILED`)
           }
+        }
+      }
+
+      // Add ICE connection state logging
+      this.peerConnection.oniceconnectionstatechange = () => {
+        if (this.peerConnection) {
+          console.log(`[WebRTC][${this.peerId}] ICE connection state: ${this.peerConnection.iceConnectionState}`)
+        }
+      }
+
+      // Add ICE gathering state logging
+      this.peerConnection.onicegatheringstatechange = () => {
+        if (this.peerConnection) {
+          console.log(`[WebRTC][${this.peerId}] ICE gathering state: ${this.peerConnection.iceGatheringState}`)
         }
       }
 

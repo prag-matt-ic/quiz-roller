@@ -95,20 +95,33 @@ export const WebRTCProvider: FC<Props> = ({ children, config }) => {
   // Fetch TURN credentials from our API route (keeps API key server-side)
   useEffect(() => {
     const fetchIceServers = async () => {
+      console.log('[WebRTCProvider] Fetching ICE servers from /api/turn-credentials...')
       try {
         const response = await fetch('/api/turn-credentials')
-        if (!response.ok) throw new Error('Failed to fetch TURN credentials')
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
         const servers = await response.json()
+        console.log('[WebRTCProvider] API response:', JSON.stringify(servers, null, 2))
+        
         if (Array.isArray(servers) && servers.length > 0) {
-          // Add Google STUN servers as fallback
-          setIceServers([{ urls: 'stun:stun.l.google.com:19302' }, ...servers])
-          console.warn('[WebRTCProvider] Loaded TURN credentials from API')
+          const allServers = [{ urls: 'stun:stun.l.google.com:19302' }, ...servers]
+          setIceServers(allServers)
+          
+          // Log details about loaded servers
+          const turnCount = servers.filter((s: RTCIceServer) => {
+            const urls = Array.isArray(s.urls) ? s.urls : [s.urls]
+            return urls.some(u => u.startsWith('turn'))
+          }).length
+          console.log(`[WebRTCProvider] ✅ Loaded ${servers.length} servers from API (${turnCount} TURN)`)
+          servers.forEach((s: RTCIceServer, i: number) => {
+            const urls = Array.isArray(s.urls) ? s.urls.join(', ') : s.urls
+            console.log(`[WebRTCProvider]   ${i + 1}. ${urls}`)
+          })
+        } else {
+          console.warn('[WebRTCProvider] API returned empty/invalid response, using fallback STUN only')
         }
       } catch (error) {
-        console.error(
-          '[WebRTCProvider] Failed to fetch TURN credentials, using fallback:',
-          error,
-        )
+        console.error('[WebRTCProvider] ❌ Failed to fetch TURN credentials:', error)
+        console.warn('[WebRTCProvider] Using fallback STUN servers only (P2P may not work across NATs)')
       }
     }
     fetchIceServers()
@@ -305,6 +318,10 @@ export function useWebRTC() {
           providerConfig?.iceTransportPolicy ??
           ENV_ICE_TRANSPORT_POLICY,
       }
+      
+      console.log(`[useWebRTC] Creating peer connection for ${peerId} as ${role === PeerRole.HOST ? 'HOST' : 'CLIENT'}`)
+      console.log(`[useWebRTC] Using ${mergedConfig.iceServers?.length ?? 0} ICE servers, policy: ${mergedConfig.iceTransportPolicy ?? 'all'}`)
+      
       const connection = new WebRTCConnection(peerId, callbacks, mergedConfig)
 
       // Initialize as host or client (determines who creates data channel)
