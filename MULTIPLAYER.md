@@ -124,31 +124,11 @@ http://localhost:3000/multiplayer?room=game-room-1
 
 ### Step 4: Play Together
 
-- Each player controls their own marble with keyboard/joystick
-
-### Step 4: Play Together
-
 - Each player controls **only their own marble** (keyboard/touch controls)
 - Remote player's ball appears in **blue** for visual distinction
 - Positions synchronized ~20 times per second (20Hz)
 - Marbles can **collide** with each other (kinematic physics)
 - Each client runs independent physics simulation
-  The system uses a simple message protocol:
-
-### Player Position Update
-
-```typescript
-{
-  type: 'player-position',
-  data: {
-    position: { x: number, y: number, z: number },
-    rotation: { x: number, y: number, z: number, w: number } // quaternion
-  }
-}
-```
-
-Sent: ~20 times per second (50ms throttle)
-Purpose: Keep remote player position in sync
 
 ## Message Protocol
 
@@ -167,12 +147,6 @@ Purpose: Keep remote player position in sync
 - Sent: ~20 times/second (50ms throttle)
 - Purpose: Synchronize position and rotation
 
-### Player Joined (future)
-
-````typescript
-{
-  type: 'player-joined',
-  data: { peerId: string }
 ## Performance Optimizations
 
 ### 1. **Pre-allocated Objects (No GC Pressure)**
@@ -209,72 +183,8 @@ currentQuat.current.slerp(targetQuat.current, LERP_FACTOR)
 
 - Remote players use `type="kinematicPosition"`
 - Can collide with local player but not affected by gravity/forces
-- Position set via `setNextKinematicTranslation()`typescript
-  const newRemotePlayers = new Map(state.remotePlayers)
-  newRemotePlayers.set(peerId, updatedData)
-  return { remotePlayers: newRemotePlayers }
+- Position set via `setNextKinematicTranslation()`
 
-````
-
-### 4. **Interpolation**
-Linear interpolation smooths movement between position updates:
-
-## Code Improvements & Recommendations
-
-### Current Issues
-
-**1. Duplicate Component Numbering**
-```typescript
-// MULTIPLAYER.md has duplicate "### 3." for MultiplayerSlice
-### 3. **MultiplayerSlice** (twice)
-### 4. **Position Broadcasting** (twice)
-````
-
-**Fix:** Already resolved in this update - removed duplicates
-
-**2. Complex Auto-Join Logic**
-
-```typescript
-// MultiplayerControls.tsx - nested dependencies
-useEffect(() => {
-  if (roomFromUrl && localPeerId && isSignalingServerConnected && !signalingConnected) {
-    const timer = setTimeout(() => joinRoom(roomFromUrl), 500)
-    return () => clearTimeout(timer)
-  }
-}, [roomFromUrl, localPeerId, isSignalingServerConnected, signalingConnected, joinRoom])
-```
-
-**Concern:** Many dependencies could cause extra re-runs
-**Suggestion:** Consider using a ref to track "hasAttemptedJoin" to prevent re-joining
-
-**3. Position Inferrence**
-
-```typescript
-// useMultiplayerSync.ts
-const peers = webrtcStore.getState().peers
-const peerId = Array.from(peers.keys())[0] // Assumes only 1 peer
-```
-
-**Issue:** Doesn't scale beyond 2 players, no sender identification
-**Suggestion:** Include `senderId` in message protocol:
-
-```typescript
-type PlayerPositionMessage = {
-  type: 'player-position'
-  from: string // Add sender peerId
-  data: { position; rotation }
-}
-```
-
-**4. setState in useEffect**
-
-````typescript
-// MultiplayerControls.tsx (FIXED)
-useEffect(() => {
-  if (isPeerConnected) {
-    queueMicrotask(() => setIsMinimized(true)) // Now deferred
-  }
-}, [isPeerConnected])
 ## Troubleshooting
 
 ### "Signaling: disconnected"
@@ -304,7 +214,7 @@ useEffect(() => {
 - ✅ Confirm URL has `?room=` parameter
 - ✅ Check 500ms delay hasn't been cleared prematurely
 - ✅ Verify `localPeerId` and `isSignalingServerConnected` are true
-- ✅ Look for errors in `useEffect` dependencieserControls and MultiplayerButton
+- ✅ Look for errors in `useEffect` dependencies
 
 ## Integration Examples
 
@@ -323,6 +233,10 @@ export default function YourPage() {
         {/* Optional: Add MultiplayerButton or MultiplayerControls */}
       </MultiplayerWrapper>
     </GameProvider>
+  )
+}
+```
+
 ## Limitations & Known Issues
 
 ### Current Limitations
@@ -330,7 +244,6 @@ export default function YourPage() {
 - **Peer-to-peer only** (no dedicated server, requires direct connection)
 - **No game state sync** (collectibles, rings, mode changes not synchronized)
 - **Physics drift** (each client simulates independently, minor deviations possible)
-- **NAT traversal** (may fail on restrictive networks without TURN server)
 
 ### Known Issues
 1. **Sender identification:** Messages don't include sender ID (assumes 2-player only)
@@ -356,21 +269,8 @@ export default function YourPage() {
 ### Phase 3: Scalability
 - [ ] **3-4 players:** Mesh networking or relay server
 - [ ] **Room discovery:** Lobby/matchmaking system
-- [ ] **TURN server:** Better NAT traversal
+- [x] **TURN server:** Better NAT traversal (Metered.ca integration)
 - [ ] **Message compression:** Reduce bandwidth
-
-## Additional Resources
-
-- [WEBRTC.md](./WEBRTC.md) - Complete WebRTC technical documentation
-- [AGENTS.md](./AGENTS.md) - Project architecture and coding guidelines
-- [MDN WebRTC Guide](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
-- [Signaling Server README](./signaling-server/README.md)
-    if (message.type === 'custom-event') {
-      console.log('Received:', message.data)
-    }
-  })
-}
-````
 
 ## Testing
 
@@ -381,12 +281,12 @@ npm run test
 ```
 
 Key test files:
-
 - `tests/webrtc/WebRTCProvider.test.tsx`
 - `tests/webrtc/useSignaling.test.ts`
 
 ## Additional Resources
 
-- [WebRTC.md](../WEBRTC.md) - Complete WebRTC documentation
-- [AGENTS.md](../AGENTS.md) - Project architecture guidelines
+- [WEBRTC.md](./WEBRTC.md) - Complete WebRTC technical documentation
+- [AGENTS.md](./AGENTS.md) - Project architecture and coding guidelines
 - [MDN WebRTC Guide](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
+- [Signaling Server README](./signaling-server/README.md)

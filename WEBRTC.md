@@ -62,9 +62,10 @@ npm run dev
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │          WebRTCProvider (Context + Zustand)          │  │
-│  │  • Manages peer connections (Map in ref)             │  │
-│  │  • Stores reactive state (Zustand)                   │  │
+│  │          WebRTCProvider (Single Context)             │  │
+│  │  • Unified context: store + connectionsRef +         │  │
+│  │    iceServers + config                               │  │
+│  │  • Fetches TURN credentials from /api/turn-credentials│  │
 │  │  • Generates local peer ID                           │  │
 │  │  • Enforces 2-player limit                           │  │
 │  └──────────────────────────────────────────────────────┘  │
@@ -294,12 +295,14 @@ sendMessage(peerId, {
 
 ### WebRTCProvider
 
-Root provider for WebRTC state. Manages peer connections, Zustand store, and local peer ID.
+Root provider for WebRTC state. Single unified context containing store, connections ref, ICE servers, and config.
 
-**Pattern**: Context + ref for connections (no re-renders) + Zustand for reactive state
+**Pattern**: Single context with ref for connections (no re-renders) + Zustand for reactive state
 
 **Features**:
 
+- Single unified context (no nested providers)
+- Fetches TURN credentials from `/api/turn-credentials` (Metered.ca)
 - Enforces 2-player connection limit
 - Generates unique peer IDs
 - Handles cleanup on unmount
@@ -319,7 +322,7 @@ Low-level peer connection management hook.
 
 ### useSignaling()
 
-High-level signaling + automatic peer setup hook.
+High-level signaling + automatic peer setup hook. Streamlined implementation with minimal logging.
 
 **Methods**:
 
@@ -333,6 +336,8 @@ High-level signaling + automatic peer setup hook.
 - `onRoomCreated` - Room successfully created
 - `onRoomJoined` - Joined room with peer list
 - `onRoomFull` - Room at capacity (2 players)
+
+**Note**: Logging is minimal - only errors are logged to console.
 
 ### useWebRTCMessages()
 
@@ -387,7 +392,13 @@ Describes peer capabilities and media/data configuration.
 Finds the best network path between peers.
 
 - **STUN**: Discovers public IP (for NAT traversal)
+- **TURN**: Relay server for restrictive NATs (via Metered.ca)
 - **Candidates**: Possible network routes
+
+**ICE Server Configuration**:
+- STUN: Google's public STUN servers (fallback)
+- TURN: Fetched from `/api/turn-credentials` (Metered.ca)
+- Transport policy: Configurable via `NEXT_PUBLIC_WEBRTC_ICE_TRANSPORT_POLICY` ("all" or "relay")
 
 ### Data Channel
 
@@ -610,7 +621,7 @@ const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL
 
 Before deploying:
 
-- [ ] Add TURN server for restrictive firewalls
+- [x] Add TURN server for restrictive firewalls (Metered.ca integration)
 - [ ] Implement message validation
 - [ ] Add authentication to signaling server
 - [ ] Set up error reporting (Sentry, etc.)
