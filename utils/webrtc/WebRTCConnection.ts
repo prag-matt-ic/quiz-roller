@@ -12,33 +12,30 @@ import type { WebRTCMessage } from '@/stores/webrtc/types'
  * Using public TURN servers from Open Relay Project and Metered.
  * For production with high traffic, consider running your own TURN server (coturn).
  */
-const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
-  // STUN servers for discovering public IP
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  
-  // TURN servers for relaying traffic when direct connection fails
-  // Open Relay Project - free public TURN server
-  {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-  {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  },
-]
+
+type CandidatePairStats = {
+  id: string
+  type: 'candidate-pair'
+  state?: string
+  selected?: boolean
+  nominated?: boolean
+  localCandidateId?: string
+  remoteCandidateId?: string
+}
+
+type IceCandidateStats = {
+  id: string
+  candidateType?: string
+}
+
+type StatsReportWithType = {
+  type?: string
+}
 
 export type WebRTCConfig = {
   iceServers?: RTCIceServer[] // Custom STUN/TURN servers
   dataChannelLabel?: string // Custom label for the data channel
+  iceTransportPolicy?: RTCIceTransportPolicy // Set to 'relay' to force TURN (debug)
 }
 
 export type SendMessageFn = (message: Omit<WebRTCMessage, 'timestamp'>) => boolean
@@ -120,7 +117,8 @@ export class WebRTCConnection {
     this.callbacks = callbacks
     this.dataChannelLabel = config.dataChannelLabel ?? 'game-data'
     this.config = {
-      iceServers: config.iceServers ?? DEFAULT_ICE_SERVERS,
+      iceServers: config.iceServers,
+      iceTransportPolicy: config.iceTransportPolicy,
     }
   }
 
@@ -195,6 +193,11 @@ export class WebRTCConnection {
             this.peerId,
             this.peerConnection.connectionState,
           )
+          if (this.peerConnection.connectionState === 'connected') {
+            this.logSelectedCandidatePair().catch((error) => {
+              console.warn(`[${this.peerId}] Failed to read ICE stats`, error)
+            })
+          }
         }
       }
 
@@ -206,6 +209,43 @@ export class WebRTCConnection {
     } catch (error) {
       this.callbacks.onError(
         `Failed to create peer connection: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  private async logSelectedCandidatePair(): Promise<void> {
+    if (!this.peerConnection) return
+
+    const stats = await this.peerConnection.getStats()
+    const reports = Array.from(stats.values())
+    const selectedPair = reports.find((report) => {
+      const reportType = (report as StatsReportWithType).type
+      if (reportType !== 'candidate-pair') return false
+      const pair = report as CandidatePairStats
+      const isSelected = pair.selected ?? pair.nominated ?? false
+      return pair.state === 'succeeded' && isSelected
+    }) as CandidatePairStats | undefined
+
+    if (!selectedPair?.localCandidateId || !selectedPair.remoteCandidateId) return
+
+    const localCandidate = reports.find(
+      (report) => report.id === selectedPair.localCandidateId,
+    ) as IceCandidateStats | undefined
+    const remoteCandidate = reports.find(
+      (report) => report.id === selectedPair.remoteCandidateId,
+    ) as IceCandidateStats | undefined
+
+    const localType = localCandidate?.candidateType ?? 'unknown'
+    const remoteType = remoteCandidate?.candidateType ?? 'unknown'
+    const relayUsed = localType === 'relay' || remoteType === 'relay'
+
+    if (relayUsed) {
+      console.warn(
+        `[${this.peerId}] Connected via TURN (relay candidate). Local: ${localType}, Remote: ${remoteType}`,
+      )
+    } else {
+      console.warn(
+        `[${this.peerId}] Connected without TURN. Local: ${localType}, Remote: ${remoteType}`,
       )
     }
   }

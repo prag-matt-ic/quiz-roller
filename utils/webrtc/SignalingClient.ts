@@ -68,8 +68,20 @@ export class SignalingClient {
   private reconnectTimeout: NodeJS.Timeout | null = null
   private isDisconnecting = false
 
+  private static normalizeWebSocketUrl(url: string): string {
+    try {
+      const parsed = new URL(url)
+      if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+        if (parsed.protocol === 'ws:') parsed.protocol = 'wss:'
+      }
+      return parsed.toString()
+    } catch {
+      return url
+    }
+  }
+
   constructor(url: string, peerId: string, handlers: SignalingEventHandlers = {}) {
-    this.url = url
+    this.url = SignalingClient.normalizeWebSocketUrl(url)
     this.peerId = peerId
     this.handlers = handlers
   }

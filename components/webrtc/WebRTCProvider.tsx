@@ -19,8 +19,32 @@ import {
   WebRTCConnection,
 } from '@/utils/webrtc/WebRTCConnection'
 
+/**
+ * Fallback ICE servers if API fetch fails
+ * Google STUN servers only - no TURN relay capability
+ */
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+]
+
+const parseIceTransportPolicy = (
+  value: string | undefined,
+): RTCIceTransportPolicy | undefined => {
+  const normalized = value?.trim().toLowerCase()
+  if (normalized === 'relay' || normalized === 'all') return normalized
+  return undefined
+}
+
+const ENV_ICE_TRANSPORT_POLICY = parseIceTransportPolicy(
+  process.env.NEXT_PUBLIC_WEBRTC_ICE_TRANSPORT_POLICY,
+)
+
 // Context for the Zustand store - provides reactive state across the component tree
 const WebRTCContext = createContext<ReturnType<typeof createWebRTCStore>>(undefined!)
+const WebRTCConfigContext = createContext<WebRTCConfig | undefined>(undefined)
+// Context for ICE servers fetched from API
+const IceServersContext = createContext<RTCIceServer[]>(FALLBACK_ICE_SERVERS)
 
 // Context for active peer connections - uses ref to avoid re-renders when connections change
 // This is a Map of peerId -> WebRTCConnection instances
@@ -60,12 +84,35 @@ type Props = PropsWithChildren<{
  * Note: SignalingClient should be managed separately via useSignaling hook
  * to avoid duplicate connections and provide more control over connection lifecycle.
  */
-export const WebRTCProvider: FC<Props> = ({ children }) => {
+export const WebRTCProvider: FC<Props> = ({ children, config }) => {
   // Create store once on mount - contains all reactive WebRTC state
   const [store] = useState(() => createWebRTCStore())
+  const [iceServers, setIceServers] = useState<RTCIceServer[]>(FALLBACK_ICE_SERVERS)
 
   // Ref-based map of peer connections - doesn't cause re-renders when connections added/removed
   const connectionsRef = useRef<Map<string, WebRTCConnection>>(new Map())
+
+  // Fetch TURN credentials from our API route (keeps API key server-side)
+  useEffect(() => {
+    const fetchIceServers = async () => {
+      try {
+        const response = await fetch('/api/turn-credentials')
+        if (!response.ok) throw new Error('Failed to fetch TURN credentials')
+        const servers = await response.json()
+        if (Array.isArray(servers) && servers.length > 0) {
+          // Add Google STUN servers as fallback
+          setIceServers([{ urls: 'stun:stun.l.google.com:19302' }, ...servers])
+          console.warn('[WebRTCProvider] Loaded TURN credentials from API')
+        }
+      } catch (error) {
+        console.error(
+          '[WebRTCProvider] Failed to fetch TURN credentials, using fallback:',
+          error,
+        )
+      }
+    }
+    fetchIceServers()
+  }, [])
 
   useEffect(() => {
     const connections = connectionsRef.current
@@ -86,11 +133,15 @@ export const WebRTCProvider: FC<Props> = ({ children }) => {
   }, [store])
 
   return (
-    <WebRTCContext value={store}>
-      <ConnectionsContext.Provider value={connectionsRef}>
-        {children}
-      </ConnectionsContext.Provider>
-    </WebRTCContext>
+    <WebRTCContext.Provider value={store}>
+      <WebRTCConfigContext.Provider value={config}>
+        <IceServersContext.Provider value={iceServers}>
+          <ConnectionsContext.Provider value={connectionsRef}>
+            {children}
+          </ConnectionsContext.Provider>
+        </IceServersContext.Provider>
+      </WebRTCConfigContext.Provider>
+    </WebRTCContext.Provider>
   )
 }
 
@@ -160,6 +211,8 @@ export function useWebRTCStoreAPI() {
 export function useWebRTC() {
   const store = useWebRTCStoreAPI()
   const connectionsRef = useContext(ConnectionsContext)
+  const providerConfig = useContext(WebRTCConfigContext)
+  const iceServers = useContext(IceServersContext)
   if (!connectionsRef) throw new Error('Missing WebRTCProvider in the tree')
 
   // Ref to hold ICE candidate handler - allows signaling layer to send candidates to server
@@ -232,7 +285,7 @@ export function useWebRTC() {
    * @throws Error if MAX_PEERS limit is exceeded
    */
   const createPeerConnection = useCallback(
-    (peerId: string, role: PeerRole, config?: WebRTCConfig) => {
+    (peerId: string, role: PeerRole, connectionConfig?: WebRTCConfig) => {
       // Enforce 2-player limit for the game
       if (connectionsRef.current.size >= MAX_PEERS) {
         const error = `Maximum peers (${MAX_PEERS}) exceeded. Cannot add peer ${peerId}.`
@@ -242,7 +295,17 @@ export function useWebRTC() {
       }
 
       const callbacks = createCallbacks(peerId)
-      const connection = new WebRTCConnection(peerId, callbacks, config)
+      const mergedConfig: WebRTCConfig = {
+        // Use ICE servers from API (fetched on mount) or fallback
+        iceServers: connectionConfig?.iceServers ?? providerConfig?.iceServers ?? iceServers,
+        dataChannelLabel:
+          connectionConfig?.dataChannelLabel ?? providerConfig?.dataChannelLabel,
+        iceTransportPolicy:
+          connectionConfig?.iceTransportPolicy ??
+          providerConfig?.iceTransportPolicy ??
+          ENV_ICE_TRANSPORT_POLICY,
+      }
+      const connection = new WebRTCConnection(peerId, callbacks, mergedConfig)
 
       // Initialize as host or client (determines who creates data channel)
       if (role === PeerRole.HOST) {
@@ -258,7 +321,7 @@ export function useWebRTC() {
 
       return connection
     },
-    [store, createCallbacks, connectionsRef],
+    [store, createCallbacks, connectionsRef, providerConfig, iceServers],
   )
 
   /**
