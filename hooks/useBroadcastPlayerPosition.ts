@@ -45,7 +45,7 @@ export function useBroadcastPlayerPosition(
 
     // Read fresh values from store
     const state = gameStoreAPI.getState()
-    
+
     // Player position IS the world position now (ball moves in world space)
     const position: Position3D = {
       x: state.playerPosition[0],

@@ -474,9 +474,16 @@ const Platform: FC = () => {
     if (Math.random() < 0.017) {
       const minRowZ = Math.min(...rowZByIndex.current)
       const maxRowZ = Math.max(...rowZByIndex.current)
-      console.log('[Platform] scrollOffset:', playerScrollOffset.current.toFixed(2),
-        'rowZ range:', minRowZ.toFixed(1), 'to', maxRowZ.toFixed(1),
-        'nextRowDataIdx:', nextRowDataIndex.current)
+      console.log(
+        '[Platform] scrollOffset:',
+        playerScrollOffset.current.toFixed(2),
+        'rowZ range:',
+        minRowZ.toFixed(1),
+        'to',
+        maxRowZ.toFixed(1),
+        'nextRowDataIdx:',
+        nextRowDataIndex.current,
+      )
     }
   }
 

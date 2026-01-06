@@ -151,13 +151,13 @@ function getBestSafeRowSelection(
   for (let i = 0; i < ROWS_RENDERED; i++) {
     const selection = selectSafeRow(rows, zValues, i, preferredX)
     if (!selection) continue
-    
+
     // Prefer rows behind the player (positive rowZ in visual space)
     // Add a small penalty for rows ahead to prefer rows behind
     const rawDistance = Math.abs(selection.rowZ - playerZ)
     const isBehindPlayer = selection.rowZ > playerZ
     const distance = isBehindPlayer ? rawDistance : rawDistance + 2.0
-    
+
     if (distance < minDistance) {
       minDistance = distance
       bestSelection = selection
@@ -196,7 +196,14 @@ export function usePlayerRespawn({
     const playerZ = -scrollPos
     const preferredX = preferredRespawnX.current
 
-    console.log('[Respawn] scrollPos:', scrollPos, 'playerZ:', playerZ, 'preferredX:', preferredX)
+    console.log(
+      '[Respawn] scrollPos:',
+      scrollPos,
+      'playerZ:',
+      playerZ,
+      'preferredX:',
+      preferredX,
+    )
     console.log('[Respawn] zValues:', zValues.slice(0, 5), '...')
 
     // 1. Try to find the closest row (current row)

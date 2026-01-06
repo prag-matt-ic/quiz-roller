@@ -9,11 +9,13 @@ The multiplayer system uses WebRTC data channels for real-time position synchron
 ### Movement Architecture
 
 The game uses a **ball-movement** architecture where:
+
 - The player's marble moves through world space (in the -Z direction for forward movement)
 - Platform tiles wrap around based on the player's Z position
 - Camera follows the player's position
 
 This greatly simplifies multiplayer synchronization:
+
 - **Position IS world position** - no coordinate transformation needed
 - Remote player positions are used directly for rendering
 - No dual-source update problem (local scroll + network updates)
