@@ -52,6 +52,10 @@ const ATTRACTOR_CONTAINER_CLASSES =
 
 const ATTRACTOR_GLOW_CLASSES = 'size-20 rounded-full bg-teal-600/40 blur-2xl opacity-0'
 
+//     animation: spin 3s
+// linear infinite;
+//     background: conic-gradient(from 0 at 50% 50%, #06090A 100deg, #FF0137 180deg, #06090A 260deg);
+
 const Button: FC<ButtonProps> = ({
   variant = 'primary',
   size = 'lg',
