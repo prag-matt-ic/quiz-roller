@@ -35,8 +35,6 @@ const MultiplayerSync: FC = () => {
  * </GameProvider>
  */
 export const MultiplayerWrapper: FC<PropsWithChildren> = ({ children }) => {
-  console.warn('HAS UPDATED!!!!!!')
-
   return (
     <WebRTCProvider>
       <MultiplayerSync />

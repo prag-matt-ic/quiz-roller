@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef } from 'react'
+import { type RefObject, useRef } from 'react'
 
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import { usePlayerPosition } from '@/hooks/usePlayerPosition'
@@ -151,7 +151,13 @@ function getBestSafeRowSelection(
   for (let i = 0; i < ROWS_RENDERED; i++) {
     const selection = selectSafeRow(rows, zValues, i, preferredX)
     if (!selection) continue
-    const distance = Math.abs(selection.rowZ - playerZ)
+    
+    // Prefer rows behind the player (positive rowZ in visual space)
+    // Add a small penalty for rows ahead to prefer rows behind
+    const rawDistance = Math.abs(selection.rowZ - playerZ)
+    const isBehindPlayer = selection.rowZ > playerZ
+    const distance = isBehindPlayer ? rawDistance : rawDistance + 2.0
+    
     if (distance < minDistance) {
       minDistance = distance
       bestSelection = selection
@@ -173,8 +179,6 @@ export function usePlayerRespawn({
   isPlatformReady: boolean
 }) {
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
-  const targetScrollPosition = useRef<number | null>(null)
-  const pendingRespawnX = useRef<number | null>(null)
   const preferredRespawnX = useRef(PLAYER_INITIAL_POSITION[0])
 
   usePlayerPosition((pos) => {
@@ -188,20 +192,25 @@ export function usePlayerRespawn({
 
     if (!rows || !zValues) return
 
-    targetScrollPosition.current = null
-    pendingRespawnX.current = null
-
-    const playerZ = PLAYER_INITIAL_POSITION[2]
+    // With ball movement, playerZ = -scrollPos (player position in world space)
+    const playerZ = -scrollPos
     const preferredX = preferredRespawnX.current
 
-    // 1. Try to find the closest row (current row)
-    const closestRowIndex = getClosestRowIndex(zValues, playerZ)
+    console.log('[Respawn] scrollPos:', scrollPos, 'playerZ:', playerZ, 'preferredX:', preferredX)
+    console.log('[Respawn] zValues:', zValues.slice(0, 5), '...')
 
-    const queueRespawn = (selection: SafeRowSelection) => {
-      const diff = playerZ - selection.rowZ
-      const targetScroll = scrollPos + diff
-      targetScrollPosition.current = targetScroll
-      pendingRespawnX.current = selection.safeX
+    // 1. Try to find the closest row (current row)
+    const closestRowIndex = getClosestRowIndex(zValues, 0) // Rows are relative to player at origin
+    console.log('[Respawn] closestRowIndex:', closestRowIndex)
+
+    const executeRespawn = (selection: SafeRowSelection) => {
+      // With ball movement, we respawn the player at the actual world Z position
+      // rowZ is the row's visual position (relative to player at origin)
+      // worldZ = playerZ + rowZ (add because rowZ is relative offset from player)
+      const worldZ = playerZ + selection.rowZ
+      console.log('[Respawn] selection:', selection, 'worldZ:', worldZ)
+      // Immediately respawn player at the calculated position
+      respawnPlayer([selection.safeX, PLAYER_INITIAL_POSITION[1], worldZ])
     }
 
     if (closestRowIndex !== -1) {
@@ -212,7 +221,7 @@ export function usePlayerRespawn({
         preferredX,
       )
       if (currentRowSelection) {
-        queueRespawn(currentRowSelection)
+        executeRespawn(currentRowSelection)
         return
       }
 
@@ -227,7 +236,7 @@ export function usePlayerRespawn({
       )
 
       if (shiftedSelection) {
-        queueRespawn(shiftedSelection)
+        executeRespawn(shiftedSelection)
         return
       }
     }
@@ -235,8 +244,9 @@ export function usePlayerRespawn({
     // 2. Current row is not safe (or invalid). Find the nearest safe row.
     // We scan all rows to ensure we find the spatially closest one,
     // rather than relying on index proximity which might be misleading in a ring buffer.
+    // Use 0 as reference since rows are positioned relative to player
     const bestSelection = ensureMinimumRowSelection(
-      getBestSafeRowSelection(rows, zValues, playerZ, preferredX),
+      getBestSafeRowSelection(rows, zValues, 0, preferredX),
       rows,
       zValues,
       preferredX,
@@ -244,13 +254,12 @@ export function usePlayerRespawn({
 
     if (!bestSelection) {
       console.warn('[Platform] Respawn: No valid safe row found in active set to snap to.')
-      // Fallback to current position
-      targetScrollPosition.current = scrollPos
-      pendingRespawnX.current = 0
+      // Fallback to respawn at current X position, same Z
+      respawnPlayer([preferredX, PLAYER_INITIAL_POSITION[1], playerZ])
       return
     }
 
-    queueRespawn(bestSelection)
+    executeRespawn(bestSelection)
   }
 
   const onPlayerStatusChange = (playerStatus: PlayerStatus) => {
@@ -260,17 +269,6 @@ export function usePlayerRespawn({
 
   usePlayerStatus(onPlayerStatusChange)
 
-  const onRespawnScrollComplete = useCallback(() => {
-    targetScrollPosition.current = null
-    if (pendingRespawnX.current === null) return
-
-    respawnPlayer([
-      pendingRespawnX.current,
-      PLAYER_INITIAL_POSITION[1],
-      PLAYER_INITIAL_POSITION[2],
-    ])
-    pendingRespawnX.current = null
-  }, [respawnPlayer])
-
-  return { targetScrollPosition, onRespawnScrollComplete }
+  // Return empty object - respawn is now immediate, no scroll completion needed
+  return {}
 }

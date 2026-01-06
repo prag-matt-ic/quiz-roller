@@ -4,7 +4,6 @@ import { BallCollider, type RapierRigidBody, RigidBody } from '@react-three/rapi
 import { useRef } from 'react'
 import { type Mesh } from 'three'
 
-import { useGameStoreAPI } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -14,7 +13,6 @@ import {
   createInterpolationState,
   interpolatePosition,
   interpolateRotation,
-  toLocalPosition,
 } from '@/utils/multiplayer'
 
 // Time-based interpolation for consistent smoothing across framerates
@@ -28,8 +26,8 @@ const INTERPOLATION_TIME_S = 0.15 // Match responsiveness of local player input 
  * POSITIONING LOGIC (REF-BASED - NO RE-RENDERS):
  * - Position data stored in positionRef (updated directly, no state changes)
  * - useGameFrame reads fresh position from ref every frame
- * - Converts world position to local position using utility function
- * - This keeps the remote marble locked to the platform as we move
+ * - Position is now directly the world position (ball moves in world space)
+ * - No coordinate transformation needed!
  *
  * PERFORMANCE:
  * - Zero re-renders from position updates (ref-based)
@@ -39,7 +37,6 @@ const INTERPOLATION_TIME_S = 0.15 // Match responsiveness of local player input 
 const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const sphereMeshRef = useRef<Mesh>(null)
-  const gameStoreAPI = useGameStoreAPI()
 
   // Pre-allocated interpolation state (performance optimization)
   const interpolation = useRef(createInterpolationState(0, 4, 0))
@@ -54,15 +51,12 @@ const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
 
     const { worldPosition, rotation } = positionData
 
-    // Get local platform scroll
-    const localPlatformScroll = gameStoreAPI.getState().platformScrollPosition
-
-    // Convert world position to local visual position
-    const localPos = toLocalPosition(worldPosition, localPlatformScroll)
+    // Position IS the visual position (ball moves in world space)
+    // No coordinate transformation needed!
 
     // Initialize position on first valid frame
     if (!hasInitialized.current) {
-      interpolation.current.currentPos.set(localPos.x, localPos.y, localPos.z)
+      interpolation.current.currentPos.set(worldPosition.x, worldPosition.y, worldPosition.z)
       hasInitialized.current = true
     }
 
@@ -73,9 +67,9 @@ const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
     // Smoothly interpolate position
     const currentPos = interpolatePosition(
       interpolation.current,
-      localPos.x,
-      localPos.y,
-      localPos.z,
+      worldPosition.x,
+      worldPosition.y,
+      worldPosition.z,
       lerpFactor,
     )
 

@@ -3,7 +3,7 @@
 import { type InstancedRigidBodyProps } from '@react-three/rapier'
 import { type FC, memo, useCallback, useEffect, useRef } from 'react'
 
-import { Stage, useGameStore } from '@/components/GameProvider'
+import { Stage, useGameStore, useGameStoreAPI } from '@/components/GameProvider'
 import FloatingTiles, {
   type FloatingTilesHandle,
 } from '@/components/floatingTiles/FloatingTiles'
@@ -18,8 +18,6 @@ import InfoZones, { type InfoZonesHandle } from '@/components/platform/infoZones
 import Rings, { type RingsHandle } from '@/components/platform/rings/Rings'
 import { PlatformTiles, type TilesHandle } from '@/components/platform/tiles/Tiles'
 import { useGameFrame } from '@/hooks/useGameFrame'
-import { usePlayerInput } from '@/hooks/usePlayerInput'
-import usePlayerSpeed from '@/hooks/usePlayerSpeed'
 import useStage from '@/hooks/useStage'
 import { GameMode } from '@/stores/types'
 import {
@@ -96,12 +94,14 @@ const Platform: FC = () => {
   const rowsData = useGameStore((s) => s.rowsData)
   const setPlatformScrollPosition = useGameStore((s) => s.setPlatformScrollPosition)
   const stageRef = useStage()
+  const gameStoreAPI = useGameStoreAPI()
 
-  const { input } = usePlayerInput()
-  const { speedUnits: playerSpeedUnits } = usePlayerSpeed()
+  // Track previous player Z for delta calculations
+  const previousPlayerZ = useRef(0)
 
-  // Deterministic scrolling state
-  const currentScrollPosition = useRef(0)
+  // Player-based scrolling: tiles wrap based on player Z position
+  // playerScrollOffset = -playerZ (negated because player moves in -Z direction)
+  const playerScrollOffset = useRef(0)
   const baseZByRow = useRef<number[]>([])
   const wrapCountByRow = useRef<number[]>([])
   const rowZByIndex = useRef<number[]>([])
@@ -147,7 +147,8 @@ const Platform: FC = () => {
     rowIsVisible.current = []
     xByBodyIndex.current = []
     yByBodyIndex.current = []
-    currentScrollPosition.current = 0
+    playerScrollOffset.current = 0
+    previousPlayerZ.current = 0
 
     const tileInstances: InstancedRigidBodyProps[] = []
 
@@ -209,7 +210,7 @@ const Platform: FC = () => {
 
     tilesHandle.setTileInstances(tileInstances)
     floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
-    floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
+    floatingTilesHandle.current?.setScrollOffset(playerScrollOffset.current)
     nextRowDataIndex.current = ROWS_RENDERED
     markInstanceAttributesDirty()
     setIsPlatformReady(true)
@@ -242,10 +243,11 @@ const Platform: FC = () => {
 
   const { readyChangeHandlers } = useReadyState(checkReady, [resetPlatformTick, rowsData])
 
-  const { targetScrollPosition, onRespawnScrollComplete } = usePlayerRespawn({
+  // Respawn is now immediate (player position set directly)
+  usePlayerRespawn({
     activeRowsData,
     rowZByIndex,
-    currentScrollPosition,
+    currentScrollPosition: playerScrollOffset,
     isPlatformReady,
   })
 
@@ -410,9 +412,10 @@ const Platform: FC = () => {
     const maxZ = ROW_VISIBILITY_HALF_SPAN
     const minZ = -ROW_VISIBILITY_HALF_SPAN
     let rowBasesChanged = false
+    let totalWraps = 0
 
     for (let rowIndex = 0; rowIndex < ROWS_RENDERED; rowIndex++) {
-      let rowZ = baseZByRow.current[rowIndex] + currentScrollPosition.current
+      let rowZ = baseZByRow.current[rowIndex] + playerScrollOffset.current
       let wraps = 0
 
       while (rowZ >= maxZ) {
@@ -428,20 +431,23 @@ const Platform: FC = () => {
       const previousWraps = wrapCountByRow.current[rowIndex]
       if (wraps > previousWraps) {
         applyForwardRowWraps(rowIndex, wraps - previousWraps)
+        totalWraps += wraps - previousWraps
       } else if (wraps < previousWraps) {
         applyBackwardRowWraps(rowIndex, previousWraps - wraps)
+        totalWraps += previousWraps - wraps
       }
       wrapCountByRow.current[rowIndex] = wraps
 
       setTileTranslations(rowIndex, rowZ)
       rowZByIndex.current[rowIndex] = rowZ
-      const rowBase = rowZ - currentScrollPosition.current
+      const rowBase = rowZ - playerScrollOffset.current
       if (rowBaseWithoutScroll.current[rowIndex] !== rowBase) {
         rowBaseWithoutScroll.current[rowIndex] = rowBase
         rowBasesChanged = true
       }
 
       const wasVisible = rowIsVisible.current[rowIndex] === true
+      // Player is always visually at origin (tiles wrap around them)
       const rowAlpha = getRowAlpha(rowZ, 0)
       const isVisible = rowAlpha > TILE_PLAYER_FADE_MIN_ALPHA
       if (wasVisible !== isVisible) {
@@ -463,6 +469,15 @@ const Platform: FC = () => {
     if (rowBasesChanged) {
       floatingTilesHandle.current?.setRowWorldPositions(rowBaseWithoutScroll.current)
     }
+
+    // Debug: log every 60 frames (~1 second)
+    if (Math.random() < 0.017) {
+      const minRowZ = Math.min(...rowZByIndex.current)
+      const maxRowZ = Math.max(...rowZByIndex.current)
+      console.log('[Platform] scrollOffset:', playerScrollOffset.current.toFixed(2),
+        'rowZ range:', minRowZ.toFixed(1), 'to', maxRowZ.toFixed(1),
+        'nextRowDataIdx:', nextRowDataIndex.current)
+    }
   }
 
   useGameFrame((_, delta) => {
@@ -475,37 +490,24 @@ const Platform: FC = () => {
     if (!isSpeedRunMode && !collectibles.current) return
     if (!isSpeedRunMode && !infoZones.current) return
 
-    tiles.current.shader.uScrollZ = currentScrollPosition.current
+    // Get current player Z position from store
+    // Player moves in -Z direction, so we negate for scroll offset
+    const playerZ = gameStoreAPI.getState().playerPosition[2]
+    playerScrollOffset.current = -playerZ
 
-    const inputDirectionZ = input.current.up - input.current.down
-    const speedUnits = playerSpeedUnits.current
-    const zStep = inputDirectionZ * speedUnits * delta
+    tiles.current.shader.uScrollZ = playerScrollOffset.current
 
-    const previousScroll = currentScrollPosition.current
+    const previousScroll = previousPlayerZ.current
+    previousPlayerZ.current = playerScrollOffset.current
 
-    currentScrollPosition.current += zStep
+    // Update store with platform scroll position (now derived from player position)
+    // This is still needed for multiplayer coordinate sync
+    setPlatformScrollPosition([0, 0, playerScrollOffset.current])
 
-    // Update store with current scroll position for multiplayer sync
-    // Platform only scrolls in Z direction, X and Y are always 0
-    setPlatformScrollPosition([0, 0, currentScrollPosition.current])
-
-    // Scroll platform towards target position if set
-    if (!!targetScrollPosition.current) {
-      currentScrollPosition.current = lerp(
-        currentScrollPosition.current,
-        targetScrollPosition.current,
-        10.0 * delta,
-      )
-      if (Math.abs(currentScrollPosition.current - targetScrollPosition.current) < 0.01) {
-        currentScrollPosition.current = targetScrollPosition.current
-        onRespawnScrollComplete()
-      }
-    }
-
-    const totalScrollDelta = currentScrollPosition.current - previousScroll
+    const totalScrollDelta = playerScrollOffset.current - previousScroll
 
     updateTiles()
-    floatingTilesHandle.current?.setScrollOffset(currentScrollPosition.current)
+    floatingTilesHandle.current?.setScrollOffset(playerScrollOffset.current)
     floatingTilesHandle.current?.step(delta)
 
     if (Math.abs(totalScrollDelta) < EPSILON.SMALL) return

@@ -103,10 +103,13 @@ const Camera: FC<Props> = ({ isMobile, position }) => {
     // Look left or right based on player input
     const lookAtX = lookAt[0] + (input.current.right - input.current.left) * 1.5
 
+    // Camera follows player Z position (ball now moves in world space)
+    const cameraZ = playerPosition.current[2] + position.z + positionZOffset + overlayZOffset
+
     cameraControls.current.setLookAt(
       playerPosition.current[0],
       position.y + overlayYOffset,
-      position.z + positionZOffset + overlayZOffset,
+      cameraZ,
       lookAtX,
       3,
       lookAt[2],

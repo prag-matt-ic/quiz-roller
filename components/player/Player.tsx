@@ -60,7 +60,6 @@ const Player: FC = () => {
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
   const playerVelocity = useRef(new Vector3())
-  const terrainDisplacement = useRef(new Vector3())
   const rollAxis = useRef(new Vector3())
   const worldScale = useRef(new Vector3())
 
@@ -85,15 +84,18 @@ const Player: FC = () => {
 
     // Resolve player input into a clamped direction vector
     const inputDirectionX = input.current.right - input.current.left
-    const inputDirectionZ = input.current.down - input.current.up
-    const platformScrollDirection = input.current.up - input.current.down
+    // Forward movement: up input moves ball forward (negative Z in Three.js)
+    const forwardDirection = input.current.up - input.current.down
     const canMove = playerStatus === 'safe'
-    const resolvedDirection = resolveInputDirection(inputDirectionX, inputDirectionZ, canMove)
+    const resolvedDirectionX = canMove ? Math.max(-1, Math.min(1, inputDirectionX)) : 0
+    const resolvedForward = canMove ? Math.max(-1, Math.min(1, forwardDirection)) : 0
 
-    // Calculate desired movement including gravity
-    desiredMovement.current.x = resolvedDirection.x * speedUnits * deltaTime
+    // Calculate desired movement including gravity and forward motion
+    // Ball now moves in Z direction (world space) instead of platform scrolling
+    // X = lateral movement, Z = forward/backward (negative Z is forward in Three.js)
+    desiredMovement.current.x = resolvedDirectionX * speedUnits * deltaTime
     desiredMovement.current.y = GRAVITY_ACCELERATION * deltaTime
-    desiredMovement.current.z = resolvedDirection.z * speedUnits * deltaTime
+    desiredMovement.current.z = -resolvedForward * speedUnits * deltaTime
 
     // Use character controller to compute collision-aware movement
     controllerRef.current.computeColliderMovement(
@@ -104,21 +106,16 @@ const Player: FC = () => {
 
     const correctedMovement = controllerRef.current.computedMovement()
 
-    // Platform scroll input shifts the ground underneath the player; capture that displacement
-    terrainDisplacement.current.set(0, 0, platformScrollDirection * speedUnits * deltaTime)
-
-    // Apply corrected movement to kinematic rigid body
+    // Apply corrected movement to kinematic rigid body (ball now moves in Z)
     nextPosition.current.x = currentPosition.x + correctedMovement.x
     nextPosition.current.y = currentPosition.y + correctedMovement.y
+    nextPosition.current.z = currentPosition.z + correctedMovement.z
 
     bodyRef.current.setNextKinematicTranslation(nextPosition.current)
 
     // Calculate physics for rolling animation
-    frameDisplacement.current.set(
-      correctedMovement.x,
-      correctedMovement.y,
-      correctedMovement.z - terrainDisplacement.current.z,
-    )
+    // Ball movement now directly reflects world Z change
+    frameDisplacement.current.set(correctedMovement.x, correctedMovement.y, correctedMovement.z)
     const maxFrameDistance = speedUnits * deltaTime
     const frameDistance = frameDisplacement.current.length()
     if (frameDistance > maxFrameDistance && frameDistance > EPSILON.SMALL) {

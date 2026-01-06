@@ -6,7 +6,19 @@ This guide explains the multiplayer system that allows two players to connect pe
 
 The multiplayer system uses WebRTC data channels for real-time position synchronization between two players. Each player runs their own physics simulation locally and broadcasts their position to the connected peer.
 
-### Architecture
+### Movement Architecture
+
+The game uses a **ball-movement** architecture where:
+- The player's marble moves through world space (in the -Z direction for forward movement)
+- Platform tiles wrap around based on the player's Z position
+- Camera follows the player's position
+
+This greatly simplifies multiplayer synchronization:
+- **Position IS world position** - no coordinate transformation needed
+- Remote player positions are used directly for rendering
+- No dual-source update problem (local scroll + network updates)
+
+### System Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -15,9 +27,9 @@ The multiplayer system uses WebRTC data channels for real-time position synchron
 │  GameProvider                                                │
 │  └─ MultiplayerWrapper (WebRTCProvider)                      │
 │     ├─ Player (local physics simulation)                     │
-│     │  └─ Broadcasts position every ~50ms                    │
+│     │  └─ Broadcasts world position every ~50ms              │
 │     └─ RemotePlayer (renders Player B's position)            │
-│        └─ Receives position updates via WebRTC               │
+│        └─ Uses received position directly (no transform)     │
 └──────────────────────────────────────────────────────────────┘
                               │
                 WebRTC Data Channel (P2P)
@@ -28,9 +40,9 @@ The multiplayer system uses WebRTC data channels for real-time position synchron
 │  GameProvider                                                │
 │  └─ MultiplayerWrapper (WebRTCProvider)                      │
 │     ├─ Player (local physics simulation)                     │
-│     │  └─ Broadcasts position every ~50ms                    │
+│     │  └─ Broadcasts world position every ~50ms              │
 │     └─ RemotePlayer (renders Player A's position)            │
-│        └─ Receives position updates via WebRTC               │
+│        └─ Uses received position directly (no transform)     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -40,7 +52,7 @@ The multiplayer system uses WebRTC data channels for real-time position synchron
 
 - Renders remote player's marble with **kinematic physics** (can collide but not affected by forces)
 - Uses linear interpolation for smooth movement between network updates
-- Position controlled by WebRTC messages from the peer
+- Position received via WebRTC is used directly (no coordinate transformation)
 - **Blue tint** to distinguish from local player
 
 ### 2. **MultiplayerSlice** (`stores/multiplayerSlice.ts`)
@@ -54,6 +66,7 @@ The multiplayer system uses WebRTC data channels for real-time position synchron
 - Sends local player position to all connected peers
 - Throttled to 20Hz (50ms interval) to reduce network traffic
 - Includes position (Vector3) and rotation (Quaternion)
+- Position is directly the world position (ball moves in world space)
 
 ### 4. **Position Sync** (`hooks/useMultiplayerSync.ts`)
 
