@@ -14,6 +14,8 @@ uniform bool uEnableVeins;
 uniform mediump int uPaletteIndex; // 0,1,2: selected palette
 uniform mediump int uConfirmingPaletteIndex; // -1 when not confirming
 uniform mediump float uSpeed;
+uniform mediump vec2 uPaletteRange; // [min, max] range for palette sampling
+uniform mediump vec3 uTint; // Color tint multiplier
 
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
@@ -67,7 +69,9 @@ void main() {
   noiseValue = noiseValue * 0.5 + 0.5;
 
   float paletteT = clamp(noiseValue, 0.0, 1.0);
-  vec3 baseColor = samplePlayerPalette(paletteT, uPaletteIndex);
+  // Remap paletteT to the specified range for player distinction
+  float remappedT = mix(uPaletteRange.x, uPaletteRange.y, paletteT);
+  vec3 baseColor = samplePlayerPalette(remappedT, uPaletteIndex) * uTint;
   vec3 marbleColor = applyConfirmingReveal(baseColor, paletteT, unitLocalPos);
 
   if (uIsFlat) {

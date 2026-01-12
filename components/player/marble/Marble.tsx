@@ -25,6 +25,9 @@ export type MarbleShaderUniforms = {
   uPaletteIndex: number
   uConfirmingPaletteIndex: number
   uSpeed: number
+  uPaletteRange: [number, number]
+  uDistanceFadeEnabled: number
+  uTint: [number, number, number]
 }
 
 const INITIAL_UNIFORMS: MarbleShaderUniforms = {
@@ -35,6 +38,9 @@ const INITIAL_UNIFORMS: MarbleShaderUniforms = {
   uPaletteIndex: 0,
   uConfirmingPaletteIndex: -1,
   uSpeed: 0,
+  uPaletteRange: [0.0, 1.0],
+  uDistanceFadeEnabled: 0,
+  uTint: [1.0, 1.0, 1.0],
 }
 
 const MarbleShader = shaderMaterial(INITIAL_UNIFORMS, vertex, fragment)
@@ -42,9 +48,17 @@ export const MarbleShaderMaterial = extend(MarbleShader)
 
 type MarbleProps = {
   ref: RefObject<Mesh | null>
+  paletteRange?: [number, number]
+  distanceFadeEnabled?: boolean
+  tint?: [number, number, number]
 }
 
-export const Marble: FC<MarbleProps> = ({ ref }) => {
+export const Marble: FC<MarbleProps> = ({
+  ref,
+  paletteRange = [0.0, 1.0],
+  distanceFadeEnabled = false,
+  tint = [1.0, 1.0, 1.0],
+}) => {
   const config = usePerformanceStore((s) => s.sceneConfig.marble)
   const isLowQuality = usePerformanceStore((s) => s.sceneQuality === SceneQuality.LOW)
   const { segments, isFlat, enableVeins } = config
@@ -97,6 +111,9 @@ export const Marble: FC<MarbleProps> = ({ ref }) => {
           uPaletteIndex={paletteIndex}
           uConfirmingPaletteIndex={confirmingPaletteIndex}
           uSpeed={INITIAL_UNIFORMS.uSpeed}
+          uPaletteRange={paletteRange}
+          uDistanceFadeEnabled={distanceFadeEnabled ? 1 : 0}
+          uTint={tint}
           transparent
         />
       </Suspense>

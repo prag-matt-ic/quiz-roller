@@ -207,7 +207,7 @@ const Player: FC = () => {
         ref={ballColliderRef}
         collisionGroups={COLLISION_GROUPS.player}
       />
-      <Marble ref={sphereMeshRef} paletteRange={isMultiplayer ? [0.0, 0.35] : undefined} />
+      <Marble ref={sphereMeshRef} tint={isMultiplayer ? [1.0, 0.6, 0.2] : undefined} />
       <PlayerHUD />
     </RigidBody>
   )
