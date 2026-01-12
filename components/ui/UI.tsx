@@ -8,6 +8,7 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI from '@/components/ui/CollectiblesUI'
+import MultiplayerButton from '@/components/ui/MultiplayerButton'
 import SpeedUI from '@/components/ui/SpeedUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
@@ -97,6 +98,10 @@ const UI: FC<Props> = ({ isMobile }) => {
           />
         )}
       </button>
+
+      <div className="fixed top-2 left-1/2 -translate-x-1/2">
+        <MultiplayerButton />
+      </div>
 
       <MiniMap />
 

@@ -8,12 +8,14 @@ import gsap from 'gsap'
 import { type FC, Suspense, useMemo } from 'react'
 
 import Camera, { CAMERA_POSITION_DESKTOP, CAMERA_POSITION_MOBILE } from '@/components/Camera'
+import { useGameStore } from '@/components/GameProvider'
 import InputSmoother from '@/components/InputSmoother'
 import { usePerformanceStore } from '@/components/PerformanceProvider'
 import Backdrop from '@/components/backdrop/Backdrop'
 import OutOfBounds from '@/components/platform/OutOfBounds'
 import Platform from '@/components/platform/Platform'
 import Player from '@/components/player/Player'
+import RemotePlayer from '@/components/player/RemotePlayer'
 import PostProcessing from '@/components/postProcessing/Effects'
 
 gsap.registerPlugin(useGSAP)
@@ -29,6 +31,9 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
   const onPerformanceChange = usePerformanceStore((s) => s.onPerformanceChange)
   const isPhysicsDebug = usePerformanceStore((s) => s.isPhysicsDebug)
   const physicsTimeStep = simFps === 0 ? 'vary' : 1 / simFps
+
+  // Get remote players from game store
+  const remotePlayers = useGameStore((s) => s.remotePlayers)
 
   const cameraPosition = isMobile ? CAMERA_POSITION_MOBILE : CAMERA_POSITION_DESKTOP
 
@@ -74,6 +79,9 @@ const Game: FC<Props> = ({ isDebug, isMobile }) => {
               <OutOfBounds />
               <Platform />
               <Player />
+              {Array.from(remotePlayers.values()).map((remotePlayer) => (
+                <RemotePlayer key={remotePlayer.peerId} {...remotePlayer} />
+              ))}
             </Physics>
           </PostProcessing>
         </Suspense>

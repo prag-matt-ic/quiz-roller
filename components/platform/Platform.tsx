@@ -100,6 +100,7 @@ const Platform: FC = () => {
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN
   const rowsData = useGameStore((s) => s.rowsData)
+  const setPlatformScrollPosition = useGameStore((s) => s.setPlatformScrollPosition)
   const stageRef = useStage()
 
   const { input } = usePlayerInput()
@@ -493,6 +494,10 @@ const Platform: FC = () => {
     const previousScroll = currentScrollPosition.current
 
     currentScrollPosition.current += zStep
+
+    // Update store with current scroll position for multiplayer sync
+    // Platform only scrolls in Z direction, X and Y are always 0
+    setPlatformScrollPosition([0, 0, currentScrollPosition.current])
 
     // Scroll platform towards target position if set
     if (!!targetScrollPosition.current) {

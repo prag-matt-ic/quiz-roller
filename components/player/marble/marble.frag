@@ -20,6 +20,7 @@ varying mediump vec3 vNormal;
 varying mediump vec2 vUv;
 varying highp vec3 vViewPosition;
 varying mediump float vRespawnFade;
+varying mediump float vDistanceFade;
 
 // -------- Surface lighting constants --------
 const vec3 LIGHT_DIR = normalize(vec3(1.0, 1.0, 1.0));
@@ -70,7 +71,7 @@ void main() {
   vec3 marbleColor = applyConfirmingReveal(baseColor, paletteT, unitLocalPos);
 
   if (uIsFlat) {
-    gl_FragColor = vec4(marbleColor, vRespawnFade);
+    gl_FragColor = vec4(marbleColor, vRespawnFade * vDistanceFade);
     return;
   }
 
@@ -101,5 +102,5 @@ void main() {
   float specular = specular8 * specular2; // specularBase^10
   vec3 litSurface = marbleColor * (AMBIENT_STRENGTH + diffuse * DIFFUSE_STRENGTH) + specular * SPECULAR_STRENGTH;
 
-  gl_FragColor = vec4(litSurface, vRespawnFade);
+  gl_FragColor = vec4(litSurface, vRespawnFade * vDistanceFade);
 }

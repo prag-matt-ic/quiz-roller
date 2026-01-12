@@ -1,3 +1,5 @@
+import { Vector3Tuple } from 'three'
+
 import { PLATFORM_DATA } from '@/resources/rowsData'
 import type { RowData } from '@/utils/tiles'
 
@@ -39,6 +41,7 @@ export const RESET_GAME_STATE = {
   currentRow: 0,
   cameraLookAtPosition: null,
   isPlatformReady: false,
+  platformScrollPosition: [0, 0, 0] as Vector3Tuple,
   rowsData: DEFAULT_PLATFORM_DATA.rowsData,
 }
 
@@ -69,6 +72,9 @@ export const createGameSlice =
     },
     setCurrentRow: (currentRow) => {
       set({ currentRow })
+    },
+    setPlatformScrollPosition: (platformScrollPosition) => {
+      set({ platformScrollPosition })
     },
     setCameraLookAtPosition: (cameraLookAtPosition) => {
       set({ cameraLookAtPosition })

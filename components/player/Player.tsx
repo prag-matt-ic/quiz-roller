@@ -15,6 +15,7 @@ import { Mesh, type Object3D, Vector3 } from 'three'
 import { PLAYER_INITIAL_POSITION, useGameStore } from '@/components/GameProvider'
 import PlayerHUD, { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
+import { useBroadcastPlayerPosition } from '@/hooks/useBroadcastPlayerPosition'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import usePlayerController from '@/hooks/usePlayerController'
 import { usePlayerInput } from '@/hooks/usePlayerInput'
@@ -42,6 +43,8 @@ const Player: FC = () => {
   const playerRespawnTick = useGameStore((s) => s.playerRespawnTick)
   const spawnPosition = useGameStore((s) => s.spawnPosition)
   const onRespawnComplete = useGameStore((s) => s.onRespawnComplete)
+  const remotePlayers = useGameStore((s) => s.remotePlayers)
+  const isMultiplayer = remotePlayers.size > 0
 
   const { input } = usePlayerInput()
   const { controllerRef } = usePlayerController()
@@ -51,6 +54,9 @@ const Player: FC = () => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const ballColliderRef = useRef<RapierCollider | null>(null)
   const sphereMeshRef = useRef<Mesh>(null)
+
+  // Broadcast position to connected peers
+  useBroadcastPlayerPosition(sphereMeshRef)
 
   // Preallocated vectors for physics calculations (performance optimization)
   const frameDisplacement = useRef(new Vector3())
@@ -201,7 +207,7 @@ const Player: FC = () => {
         ref={ballColliderRef}
         collisionGroups={COLLISION_GROUPS.player}
       />
-      <Marble ref={sphereMeshRef} />
+      <Marble ref={sphereMeshRef} paletteRange={isMultiplayer ? [0.0, 0.35] : undefined} />
       <PlayerHUD />
     </RigidBody>
   )

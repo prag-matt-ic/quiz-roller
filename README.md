@@ -17,6 +17,7 @@ The core mechanic is pretty simple, you navigate your marble over terrain, answe
 - **Zustand** _for state management_
 - **GSAP** _for animations_
 - **Tailwind** _for UI styling_
+- **WebRTC** _for peer-to-peer multiplayer_ → [See WebRTC Documentation](WEBRTC.md)
 
 ## Colour Palette 🌈
 
