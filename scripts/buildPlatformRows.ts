@@ -88,6 +88,10 @@ const MODE_SOURCES: Record<GameMode, SectionSource[]> = {
     { file: 'test.png', stage: Stage.HOME },
     { file: 'cta.png', stage: Stage.CTA },
   ],
+  [GameMode.SPEEDRUN_MULTIPLAYER]: [
+    ...CORE_SOURCES,
+    { file: 'cta.png', stage: Stage.SPEED_RUN_FINISH },
+  ],
 }
 
 const COLOUR_CODES = {
@@ -762,6 +766,10 @@ async function main() {
     [GameMode.LEARN]: await buildModeData(directory, MODE_SOURCES[GameMode.LEARN]),
     [GameMode.SPEEDRUN]: await buildModeData(directory, MODE_SOURCES[GameMode.SPEEDRUN]),
     [GameMode.DEV]: await buildModeData(directory, MODE_SOURCES[GameMode.DEV]),
+    [GameMode.SPEEDRUN_MULTIPLAYER]: await buildModeData(
+      directory,
+      MODE_SOURCES[GameMode.SPEEDRUN_MULTIPLAYER],
+    ),
   }
 
   writeMiniMapAssets(modes, version)

@@ -15,6 +15,7 @@ const MINI_MAP_ASSET_PATHS: Record<GameMode, string> = {
   [GameMode.LEARN]: `${MINI_MAP_ASSET_BASE}/learn.svg`,
   [GameMode.SPEEDRUN]: `${MINI_MAP_ASSET_BASE}/speedrun.svg`,
   [GameMode.DEV]: `${MINI_MAP_ASSET_BASE}/dev.svg`,
+  [GameMode.SPEEDRUN_MULTIPLAYER]: `${MINI_MAP_ASSET_BASE}/speedrun.svg`,
 }
 
 const BASE_PLAYER_SIZE_PX = 8
