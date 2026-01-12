@@ -95,10 +95,6 @@ const UI: FC<Props> = ({ isMobile }) => {
         </button>
       </div>
 
-      <div className="fixed top-2 left-1/2 -translate-x-1/2">
-        <MultiplayerButton />
-      </div>
-
       <MiniMap />
 
       <MovementControls />

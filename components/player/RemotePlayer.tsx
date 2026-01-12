@@ -104,7 +104,7 @@ const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
   return (
     <RigidBody ref={bodyRef} type="kinematicPosition" colliders={false} position={[4, 0, 0]}>
       <BallCollider args={[PLAYER_RADIUS]} collisionGroups={COLLISION_GROUPS.player} />
-      <Marble ref={sphereMeshRef} paletteRange={[0.65, 1.0]} distanceFadeEnabled />
+      <Marble ref={sphereMeshRef} tint={[0.4, 0.8, 1.0]} distanceFadeEnabled />
     </RigidBody>
   )
 }

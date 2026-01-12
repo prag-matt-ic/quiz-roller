@@ -5,10 +5,6 @@
 
 uniform mediump float uDistanceFadeEnabled;
 
-#pragma glslify: fadeDistance = require('../../../resources/glsl/fadeDistance.glsl')
-
-uniform mediump float uDistanceFadeEnabled;
-
 varying highp vec3 vLocalPos;
 varying mediump vec3 vNormal;
 varying mediump vec2 vUv;
