@@ -42,6 +42,7 @@ const GAME_MODE_BACKGROUND_TRACKS: Record<
   [GameMode.LEARN]: SoundFX.BACKGROUND,
   [GameMode.SPEEDRUN]: SoundFX.BACKGROUND_SPEEDRUN,
   [GameMode.DEV]: SoundFX.BACKGROUND,
+  [GameMode.SPEEDRUN_MULTIPLAYER]: SoundFX.BACKGROUND_SPEEDRUN,
 }
 
 type Buffers = Partial<Record<SoundFX, AudioBuffer>>
@@ -51,7 +52,7 @@ export type SoundState = {
   isLoading: boolean
   isMuted: boolean
   backgroundTrack: SoundFX | null
-  setIsMuted: (isMuted: boolean, mode?: GameMode) => void
+  setIsMuted: (isMuted: boolean, mode: GameMode) => void
   initialise: () => Promise<void>
   playSoundFX: PlaySoundFX
   stopSoundFX: (fx: SoundFX) => void
@@ -129,10 +130,9 @@ const createSoundStore = () => {
 
   async function ensureContext() {
     if (!audioContext) {
-      audioContext = new (
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      )()
+      audioContext = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext)()
       masterGain = audioContext.createGain()
       masterGain.connect(audioContext.destination)
       masterGain.gain.value = DEFAULT_MASTER_GAIN
@@ -180,7 +180,7 @@ const createSoundStore = () => {
           await initialisationPromise
         },
 
-        setIsMuted: (isMuted: boolean, mode?: GameMode) => {
+        setIsMuted: (isMuted: boolean, mode: GameMode) => {
           const { playSoundFX, stopAllSounds } = get()
 
           if (!isMuted) {

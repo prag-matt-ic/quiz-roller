@@ -7,7 +7,7 @@ import { GameMode } from '@/stores/types'
 
 const Timer: FC = () => {
   const mode = useGameStore((s) => s.mode)
-  const isSpeedRunMode = mode === GameMode.SPEEDRUN
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
   const isSpeedRunTiming = useGameStore((s) => s.speedRunStage === 'running')
   const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()

@@ -52,6 +52,7 @@ export enum SpeedRunStage {
 export enum GameMode {
   LEARN = 'learn',
   SPEEDRUN = 'speedrun',
+  SPEEDRUN_MULTIPLAYER = 'speedrun-multiplayer',
   DEV = 'dev',
 }
 
@@ -62,6 +63,7 @@ export type TimeSlice = {
   speedRunStage: SpeedRunStage
 
   startCountdown: () => void // Sets mode to SPEEDRUN, sets speed run stage to countdown
+  startMultiplayerCountdown: () => void // Sets mode to SPEEDRUN_MULTIPLAYER, sets speed run stage to countdown
   onCountdownComplete: () => void // sets speedRunStage to running
   finishSpeedRun: () => void // sets speedRunStage to submitting, submits speedrun and then speedRunStage to end
 

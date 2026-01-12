@@ -35,6 +35,12 @@ export const createTimeSlice =
         speedRunStage: SpeedRunStage.COUNTDOWN,
       })
     },
+    startMultiplayerCountdown: () => {
+      get().resetGame({
+        mode: GameMode.SPEEDRUN_MULTIPLAYER,
+        speedRunStage: SpeedRunStage.COUNTDOWN,
+      })
+    },
     onCountdownComplete: () => {
       const speedRunStage = SpeedRunStage.RUNNING
       set({

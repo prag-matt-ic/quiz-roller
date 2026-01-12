@@ -69,7 +69,7 @@ const SpeedRunLine: FC<Props> = ({ ref, width, height }) => {
 
   const hasTriggeredStart = useRef(false)
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const isSpeedRunMode = mode === GameMode.SPEEDRUN
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
   const isStartLine = !isSpeedRunMode
 
   const onIntersectionEnter: IntersectionEnterHandler = (event) => {

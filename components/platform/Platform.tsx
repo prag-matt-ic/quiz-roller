@@ -98,7 +98,7 @@ const Platform: FC = () => {
   const goToStage = useGameStore((s) => s.goToStage)
   const setCurrentRow = useGameStore((s) => s.setCurrentRow)
   const mode = useGameStore((s) => s.mode)
-  const isSpeedRunMode = mode === GameMode.SPEEDRUN
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
   const rowsData = useGameStore((s) => s.rowsData)
   const setPlatformScrollPosition = useGameStore((s) => s.setPlatformScrollPosition)
   const stageRef = useStage()
@@ -225,7 +225,7 @@ const Platform: FC = () => {
   const checkReady = useCallback(
     (currentReadyState: ReadyState) => {
       if (isPlatformReady || rowsData.length === 0) return
-      const isSpeedRunMode = mode === GameMode.SPEEDRUN
+      const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
 
       const shouldSkipReadyCheck = (key: ReadyStateKey): boolean => {
         if (isSpeedRunMode && key === 'headings') return true

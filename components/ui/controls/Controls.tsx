@@ -10,7 +10,7 @@ import { GameMode, InputType, Overlay, SpeedRunStage } from '@/stores/types'
 
 function useControls() {
   const mode = useGameStore((s) => s.mode)
-  const isSpeedRunMode = mode === GameMode.SPEEDRUN
+  const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
   const speedRunStage = useGameStore((s) => s.speedRunStage)
   const DISABLED_STAGES: SpeedRunStage[] = [
     SpeedRunStage.START,

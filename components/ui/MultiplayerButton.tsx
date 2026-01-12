@@ -2,7 +2,7 @@
 
 import { Users } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { type FC, useState } from 'react'
+import { type FC, useEffect, useState } from 'react'
 
 import Button from '@/components/ui/Button'
 import { useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
@@ -10,18 +10,30 @@ import { useSignaling } from '@/hooks/useSignaling'
 
 const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
 
+type Props = {
+  alwaysExpanded?: boolean // When true, always shows expanded panel (for embedding in overlays)
+  hideToggle?: boolean // When true, hides the close button in expanded view
+  onConnectionChange?: (isConnected: boolean) => void // Callback when peer connection state changes
+}
+
 /**
  * MultiplayerButton
  *
  * Compact multiplayer controls that integrate into the main game UI.
  * Shows in top-right corner with connection status and room management.
+ * Can be embedded in expanded mode via alwaysExpanded prop.
  */
-const MultiplayerButton: FC = () => {
+const MultiplayerButton: FC<Props> = ({
+  alwaysExpanded = false,
+  hideToggle = false,
+  onConnectionChange,
+}) => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const roomFromUrl = searchParams.get('room')
 
   const [isExpanded, setIsExpanded] = useState(false)
+  const isExpandedComputed = alwaysExpanded || isExpanded
   const [roomId, setRoomId] = useState(() => roomFromUrl || 'game-room-1')
   const [signalingConnected, setSignalingConnected] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
@@ -48,6 +60,11 @@ const MultiplayerButton: FC = () => {
   )
   const isPeerConnected = peers.size > 0 && hasAnyPeerConnected
 
+  // Notify parent of connection state changes
+  // useEffect(() => {
+  //   onConnectionChange?.(isPeerConnected)
+  // }, [isPeerConnected, onConnectionChange])
+
   const handleCreateRoom = () => {
     if (!localPeerId || !isSignalingServerConnected) return
     createRoom(roomId)
@@ -67,7 +84,9 @@ const MultiplayerButton: FC = () => {
     setSignalingConnected(false)
     setShareUrl('')
     router.push('/')
-    setIsExpanded(false)
+    if (!alwaysExpanded) {
+      setIsExpanded(false)
+    }
   }
 
   const handleCopyLink = async () => {
@@ -80,7 +99,7 @@ const MultiplayerButton: FC = () => {
     }
   }
 
-  if (!isExpanded) {
+  if (!isExpandedComputed) {
     return (
       <button
         onClick={() => setIsExpanded(true)}
@@ -103,11 +122,13 @@ const MultiplayerButton: FC = () => {
           <Users className="size-4 text-white" />
           <h3 className="text-sm font-bold text-white">Multiplayer</h3>
         </div>
-        <button
-          onClick={() => setIsExpanded(false)}
-          className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white">
-          ✕
-        </button>
+        {!hideToggle && (
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="rounded p-1 text-white/70 hover:bg-white/10 hover:text-white">
+            ✕
+          </button>
+        )}
       </div>
 
       <div className="mb-3 space-y-2 text-xs">

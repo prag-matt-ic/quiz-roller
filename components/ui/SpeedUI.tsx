@@ -8,7 +8,7 @@ import SpeedBoostDial from '@/components/ui/SpeedBoostDial'
 import { GameMode } from '@/stores/types'
 
 const SpeedUI: FC = () => {
-  const isSpeedRunMode = useGameStore((s) => s.mode === GameMode.SPEEDRUN)
+  const isSpeedRunMode = useGameStore((s) => s.mode === GameMode.SPEEDRUN || s.mode === GameMode.SPEEDRUN_MULTIPLAYER)
   const collectedRings = useGameStore((s) => s.collectedRings)
   // const totalRingsCount = useGameStore((s) => s.totalCounts.rings)
   const collectedRingCount = Object.keys(collectedRings).length
