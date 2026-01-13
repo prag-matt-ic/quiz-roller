@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useWebRTC, PeerRole, RoomState } from '@/components/WebRTCProvider'
+import { PeerRole, RoomState, useWebRTC } from '@/components/WebRTCProvider'
 import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 
 const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
@@ -24,7 +24,8 @@ const useSignaling = ({
   autoConnect?: boolean
 } = {}) => {
   const { state, actions, store } = useWebRTC()
-  const { localPeerId, peers, dataChannelStates, roomState, currentRoomId, isHost, error } = state
+  const { localPeerId, peers, dataChannelStates, roomState, currentRoomId, isHost, error } =
+    state
 
   const signalingClientRef = useRef<SignalingClient | null>(null)
 
