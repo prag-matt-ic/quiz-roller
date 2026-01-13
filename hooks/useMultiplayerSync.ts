@@ -1,97 +1,96 @@
 import { useEffect, useRef } from 'react'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
-import { useWebRTCStoreAPI } from '@/components/WebRTCProvider'
-import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
+import { useWebRTC } from '@/components/WebRTCProvider'
 import type { RemotePlayerData } from '@/stores/types'
-import type { WebRTCMessage } from '@/stores/webrtc/types'
-import { type MultiplayerMessage, isGameStartMessage } from '@/utils/multiplayer'
+import { MultiplayerMessage } from '@/utils/multiplayer/messages'
 
 /**
  * useMultiplayerSync
  *
- * Hook to synchronize player positions via WebRTC for 2-player multiplayer.
- *
- * RESPONSIBILITIES:
- * - Listen for incoming position updates from the remote player
- * - Update game store with remote player position/rotation
- * - Handle game-start messages to synchronize race start
- * - Clean up remote players when peer disconnects
- *
- * ARCHITECTURE:
- * This system supports exactly 2 players (enforced by MAX_PEERS = 2).
- * Each player sees one remote player (the other peer).
- * Messages include explicit sender ID for proper identification.
+ * Synchronizes player positions via WebRTC for 2-player multiplayer.
+ * Handles incoming position updates and game-start messages.
  */
 export function useMultiplayerSync() {
-  const webrtcStore = useWebRTCStoreAPI()
+  const { store } = useWebRTC()
   const gameStoreAPI = useGameStoreAPI()
 
   // Track position refs for each peer
   const peerPositionRefs = useRef(new Map<string, RemotePlayerData['positionRef']>())
 
   // Handle incoming WebRTC messages
-  useWebRTCMessages((message: WebRTCMessage) => {
-    const typedMessage = message as MultiplayerMessage
+  useEffect(() => {
+    const unsubscribe = store.subscribe(
+      (state) => state.messagesReceived,
+      (newMessages, prevMessages) => {
+        if (newMessages.length === 0) return
 
-    switch (typedMessage.type) {
-      case 'player-position': {
-        const { from, data } = typedMessage
-        if (!from) {
-          console.warn('[useMultiplayerSync] Received player-position without from field')
-          return
-        }
+        const lastMessage = newMessages[newMessages.length - 1]
+        const prevLastMessage = prevMessages[prevMessages.length - 1]
 
-        const { position, rotation, platformScroll } = data
+        // Only process if there's a new message
+        if (newMessages.length <= prevMessages.length && lastMessage === prevLastMessage) return
 
-        // Get or create position ref for this peer
-        let positionRef = peerPositionRefs.current.get(from)
-        if (!positionRef) {
-          positionRef = { current: { worldPosition: position, platformScroll, rotation } }
-          peerPositionRefs.current.set(from, positionRef)
-          gameStoreAPI.getState().addRemotePlayer(from, positionRef)
-        } else {
-          // Update ref directly (no re-render)
-          positionRef.current = { worldPosition: position, platformScroll, rotation }
-        }
-        break
-      }
+        switch (lastMessage.type) {
+          case MultiplayerMessage.PLAYER_POSITION: {
+            const { from, data } = lastMessage
+            if (!from) {
+              console.warn('[useMultiplayerSync] Received player-position without from field')
+              return
+            }
 
-      case 'player-joined': {
-        const { peerId } = typedMessage.data
-        if (!peerPositionRefs.current.has(peerId)) {
-          const positionRef = {
-            current: {
-              worldPosition: { x: 4, y: 0, z: 0 },
-              platformScroll: { x: 0, y: 0, z: 0 },
-            },
+            const { position, rotation, platformScroll } = data
+
+            // Get or create position ref for this peer
+            let positionRef = peerPositionRefs.current.get(from)
+            if (!positionRef) {
+              positionRef = { current: { worldPosition: position, platformScroll, rotation } }
+              peerPositionRefs.current.set(from, positionRef)
+              gameStoreAPI.getState().addRemotePlayer(from, positionRef)
+            } else {
+              // Update ref directly (no re-render)
+              positionRef.current = { worldPosition: position, platformScroll, rotation }
+            }
+            break
           }
-          peerPositionRefs.current.set(peerId, positionRef)
-          gameStoreAPI.getState().addRemotePlayer(peerId, positionRef)
-        }
-        break
-      }
 
-      case 'player-left': {
-        const { peerId } = typedMessage.data
-        gameStoreAPI.getState().removeRemotePlayer(peerId)
-        peerPositionRefs.current.delete(peerId)
-        break
-      }
+          case MultiplayerMessage.PLAYER_JOINED: {
+            const { peerId } = lastMessage.data
+            if (!peerPositionRefs.current.has(peerId)) {
+              const positionRef = {
+                current: {
+                  worldPosition: { x: 4, y: 0, z: 0 },
+                  platformScroll: { x: 0, y: 0, z: 0 },
+                },
+              }
+              peerPositionRefs.current.set(peerId, positionRef)
+              gameStoreAPI.getState().addRemotePlayer(peerId, positionRef)
+            }
+            break
+          }
 
-      case 'game-start': {
-        if (isGameStartMessage(typedMessage)) {
-          // Received game-start from host, start as guest (spawn on the right)
-          gameStoreAPI.getState().startMultiplayerCountdown(false)
+          case MultiplayerMessage.PLAYER_LEFT: {
+            const { peerId } = lastMessage.data
+            gameStoreAPI.getState().removeRemotePlayer(peerId)
+            peerPositionRefs.current.delete(peerId)
+            break
+          }
+
+          case MultiplayerMessage.GAME_START: {
+            // Received game-start from host, start as guest (spawn on the right)
+            gameStoreAPI.getState().startMultiplayerCountdown(false)
+            break
+          }
         }
-        break
-      }
-    }
-  })
+      },
+    )
+
+    return unsubscribe
+  }, [store, gameStoreAPI])
 
   // Clean up remote players when peers disconnect
   useEffect(() => {
-    const unsubscribe = webrtcStore.subscribe(
+    const unsubscribe = store.subscribe(
       (state) => state.peers,
       (newPeers) => {
         const currentPeerIds = Array.from(newPeers.keys())
@@ -107,5 +106,5 @@ export function useMultiplayerSync() {
     )
 
     return unsubscribe
-  }, [webrtcStore, gameStoreAPI])
+  }, [store, gameStoreAPI])
 }

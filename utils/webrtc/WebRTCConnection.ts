@@ -1,4 +1,4 @@
-import type { WebRTCMessage } from '@/stores/webrtc/types'
+import type { MultiplayerMessageUnion } from '@/utils/multiplayer/messages'
 
 type CandidatePairStats = {
   id: string
@@ -25,7 +25,7 @@ export type WebRTCConfig = {
   iceTransportPolicy?: RTCIceTransportPolicy
 }
 
-export type SendMessageFn = (message: Omit<WebRTCMessage, 'timestamp'>) => boolean
+export type SendMessageFn = (message: MultiplayerMessageUnion) => boolean
 
 export type PeerConnectionCallbacks = {
   onConnectionStateChange: (peerId: string, state: RTCPeerConnectionState) => void
@@ -33,7 +33,7 @@ export type PeerConnectionCallbacks = {
   onIceCandidate: (candidate: RTCIceCandidate) => void
   onDataChannelOpen: () => void
   onDataChannelClose: () => void
-  onDataChannelMessage: (message: WebRTCMessage) => void
+  onDataChannelMessage: (message: MultiplayerMessageUnion) => void
   onError: (error: string) => void
 }
 
@@ -159,7 +159,7 @@ export class WebRTCConnection {
     channel.onerror = (event) => this.callbacks.onError(`Data channel error: ${event}`)
     channel.onmessage = (event) => {
       try {
-        this.callbacks.onDataChannelMessage(JSON.parse(event.data) as WebRTCMessage)
+        this.callbacks.onDataChannelMessage(JSON.parse(event.data) as MultiplayerMessageUnion)
       } catch (error) {
         this.callbacks.onError(`Failed to parse message: ${error}`)
       }
@@ -211,11 +211,11 @@ export class WebRTCConnection {
     }
   }
 
-  sendMessage(message: Omit<WebRTCMessage, 'timestamp'>): boolean {
+  sendMessage(message: MultiplayerMessageUnion): boolean {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') return false
 
     try {
-      this.dataChannel.send(JSON.stringify({ ...message, timestamp: Date.now() }))
+      this.dataChannel.send(JSON.stringify(message))
       return true
     } catch (error) {
       this.callbacks.onError(`Failed to send message: ${error}`)

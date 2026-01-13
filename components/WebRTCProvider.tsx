@@ -10,14 +10,32 @@ import {
   useState,
 } from 'react'
 import { useStore } from 'zustand'
+import { useShallow } from 'zustand/shallow'
 
-import { createWebRTCStore } from '@/stores/webrtc/createWebRTCStore'
-import { ConnectionState, PeerRole, type WebRTCStore } from '@/stores/webrtc/types'
+import {
+  ConnectionState,
+  PeerRole,
+  RoomState,
+  type WebRTCStore,
+  createWebRTCStore,
+} from '@/stores/webrtcStore'
+import type { MultiplayerMessageUnion } from '@/utils/multiplayer/messages'
 import {
   type PeerConnectionCallbacks,
   type WebRTCConfig,
   WebRTCConnection,
 } from '@/utils/webrtc/WebRTCConnection'
+
+/**
+ * WebRTC Provider - Simplified Architecture
+ *
+ * SINGLE HOOK API:
+ * const { state, actions, store } = useWebRTC()
+ *
+ * - state: Reactive state (triggers re-renders)
+ * - actions: Methods for connection management
+ * - store: Raw Zustand store API for callbacks/effects
+ */
 
 const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -31,7 +49,6 @@ const ENV_ICE_TRANSPORT_POLICY = (() => {
 
 const MAX_PEERS = 2
 
-// Single unified context containing all WebRTC state and refs
 type WebRTCContextValue = {
   store: ReturnType<typeof createWebRTCStore>
   connectionsRef: React.MutableRefObject<Map<string, WebRTCConnection>>
@@ -44,14 +61,14 @@ const WebRTCContext = createContext<WebRTCContextValue | null>(null)
 type Props = PropsWithChildren<{ config?: WebRTCConfig }>
 
 /**
- * WebRTCProvider - Root provider for WebRTC multiplayer functionality
+ * WebRTCProvider - Root provider for WebRTC multiplayer
  */
 export const WebRTCProvider: FC<Props> = ({ children, config }) => {
   const [store] = useState(() => createWebRTCStore())
   const [iceServers, setIceServers] = useState<RTCIceServer[]>(FALLBACK_ICE_SERVERS)
   const connectionsRef = useRef<Map<string, WebRTCConnection>>(new Map())
 
-  // Fetch TURN credentials from API (keeps API key server-side)
+  // Fetch TURN credentials
   useEffect(() => {
     fetch('/api/turn-credentials')
       .then((res) => {
@@ -63,12 +80,10 @@ export const WebRTCProvider: FC<Props> = ({ children, config }) => {
           setIceServers([{ urls: 'stun:stun.l.google.com:19302' }, ...servers])
         }
       })
-      .catch(() => {
-        // Fallback to STUN only - logged in API route
-      })
+      .catch(() => {})
   }, [])
 
-  // Generate peer ID and cleanup on unmount
+  // Generate peer ID and cleanup
   useEffect(() => {
     const connections = connectionsRef.current
     const localId = `peer-${Math.random().toString(36).substring(2, 11)}`
@@ -94,22 +109,47 @@ function useWebRTCContext() {
   return ctx
 }
 
-/** Access reactive WebRTC state via selector */
-export function useWebRTCStore<T>(selector: (state: WebRTCStore) => T): T {
-  const { store } = useWebRTCContext()
-  return useStore(store, selector)
-}
-
-/** Access raw Zustand store API */
-export function useWebRTCStoreAPI() {
-  return useWebRTCContext().store
-}
-
 /**
- * Hook to manage WebRTC peer connections and data channels
+ * useWebRTC - Single unified hook for all WebRTC functionality
+ *
+ * USAGE:
+ * const { state, actions, store } = useWebRTC()
+ *
+ * // Reactive state (re-renders on change)
+ * const { localPeerId, peers, roomState, isHost } = state
+ *
+ * // Actions (stable references)
+ * actions.sendMessage(peerId, { type: 'position', data: {...} })
+ * actions.createRoom('my-room')
+ *
+ * // Store API (for effects/callbacks - non-reactive)
+ * store.getState().setRoomState(RoomState.IDLE)
+ * store.subscribe((s) => s.messagesReceived, callback)
  */
 export function useWebRTC() {
   const { store, connectionsRef, iceServers, config: providerConfig } = useWebRTCContext()
+
+  // ============================================================================
+  // REACTIVE STATE (with shallow comparison to prevent unnecessary re-renders)
+  // ============================================================================
+  const storeState = useStore(
+    store,
+    useShallow((s) => ({
+      localPeerId: s.localPeerId,
+      peers: s.peers,
+      connectionState: s.connectionState,
+      error: s.error,
+      roomState: s.roomState,
+      currentRoomId: s.currentRoomId,
+      isHost: s.isHost,
+      dataChannelStates: s.dataChannelStates,
+      messagesReceived: s.messagesReceived,
+    })),
+  )
+
+  // ============================================================================
+  // CONNECTION MANAGEMENT
+  // ============================================================================
   const iceCandidateHandlerRef = useRef<
     ((peerId: string, candidate: RTCIceCandidate) => void) | null
   >(null)
@@ -215,21 +255,12 @@ export function useWebRTC() {
   )
 
   const sendMessage = useCallback(
-    (peerId: string, message: { type: string; data: unknown }): boolean => {
+    (peerId: string, message: MultiplayerMessageUnion): boolean => {
       const connection = connectionsRef.current.get(peerId)
       if (!connection || !connection.isDataChannelOpen()) return false
-
-      const sent = connection.sendMessage(message)
-      if (sent) {
-        store.getState().addSentMessage({
-          ...message,
-          timestamp: Date.now(),
-          from: store.getState().localPeerId || 'unknown',
-        })
-      }
-      return sent
+      return connection.sendMessage(message)
     },
-    [store, connectionsRef],
+    [connectionsRef],
   )
 
   const closePeerConnection = useCallback(
@@ -261,14 +292,27 @@ export function useWebRTC() {
   )
 
   return {
-    createPeerConnection,
-    createOffer,
-    createAnswer,
-    setRemoteDescription,
-    addIceCandidate,
-    sendMessage,
-    closePeerConnection,
-    closeAllConnections,
-    setIceCandidateHandler,
+    // Reactive state
+    state: storeState,
+
+    // Actions (stable references via useCallback)
+    actions: {
+      createPeerConnection,
+      createOffer,
+      createAnswer,
+      setRemoteDescription,
+      addIceCandidate,
+      sendMessage,
+      closePeerConnection,
+      closeAllConnections,
+      setIceCandidateHandler,
+    },
+
+    // Raw store API for effects/callbacks
+    store,
   }
 }
+
+// Re-export types and enums for consumers
+export { RoomState, PeerRole, ConnectionState }
+export type { WebRTCStore }

@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useWebRTC, useWebRTCStore } from '@/components/WebRTCProvider'
-import { PeerRole } from '@/stores/webrtc/types'
+import { useWebRTC, PeerRole, RoomState } from '@/components/WebRTCProvider'
 import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 
 const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
 
-export enum RoomState {
-  Idle = 'idle',
-  Creating = 'creating',
-  Joining = 'joining',
-  InRoom = 'in-room',
-}
-
+/**
+ * useSignaling
+ *
+ * Hook for managing WebRTC signaling and room-based matchmaking.
+ *
+ * FLOW:
+ * 1. Connect to signaling server on mount (if autoConnect=true)
+ * 2. Create/join room → server notifies other peers
+ * 3. When peer joins, initiate WebRTC handshake (offer/answer/ICE exchange)
+ * 4. Once data channel opens, peers can send game messages directly
+ */
 const useSignaling = ({
   signalingUrl = SIGNALING_URL,
   autoConnect = true,
@@ -20,19 +23,15 @@ const useSignaling = ({
   signalingUrl?: string
   autoConnect?: boolean
 } = {}) => {
-  const localPeerId = useWebRTCStore((s) => s.localPeerId)
-  const peers = useWebRTCStore((s) => s.peers)
-  const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
+  const { state, actions, store } = useWebRTC()
+  const { localPeerId, peers, dataChannelStates, roomState, currentRoomId, isHost, error } = state
+
   const signalingClientRef = useRef<SignalingClient | null>(null)
 
-  // Connection & room state managed internally
+  // Local signaling connection state (ephemeral - not in store)
   const [isSignalingConnected, setIsSignalingConnected] = useState(false)
-  const [roomState, setRoomState] = useState<RoomState>(RoomState.Idle)
-  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
-  const [isHost, setIsHost] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  // Derive peer connection state from WebRTC store
+  // Derive peer connection state
   const connectedPeers = useMemo(() => {
     return Array.from(peers.keys()).filter((peerId) => dataChannelStates.get(peerId))
   }, [peers, dataChannelStates])
@@ -40,19 +39,10 @@ const useSignaling = ({
   const isPeerConnected = connectedPeers.length > 0
   const connectedPeerCount = connectedPeers.length
 
-  const {
-    createPeerConnection,
-    createOffer,
-    createAnswer,
-    setRemoteDescription,
-    addIceCandidate,
-    setIceCandidateHandler,
-  } = useWebRTC()
-
   useEffect(() => {
     if (!localPeerId || !signalingUrl) return
 
-    setIceCandidateHandler((peerId, candidate) => {
+    actions.setIceCandidateHandler((peerId, candidate) => {
       if (signalingClientRef.current?.isConnected()) {
         signalingClientRef.current.sendIceCandidate(peerId, candidate)
       }
@@ -62,52 +52,54 @@ const useSignaling = ({
       onConnected: () => setIsSignalingConnected(true),
       onDisconnected: () => {
         setIsSignalingConnected(false)
-        setRoomState(RoomState.Idle)
-        setCurrentRoomId(null)
+        store.getState().setRoomState(RoomState.IDLE)
+        store.getState().setCurrentRoomId(null)
       },
 
       onPeerJoined: async (peerId) => {
-        createPeerConnection(peerId, PeerRole.HOST)
-        const offer = await createOffer(peerId)
+        // We're the host - create offer and send to joining peer
+        actions.createPeerConnection(peerId, PeerRole.HOST)
+        const offer = await actions.createOffer(peerId)
         signalingClientRef.current?.sendOffer(peerId, offer)
       },
 
       onPeerLeft: () => {},
 
       onOffer: async (from, offer) => {
-        createPeerConnection(from, PeerRole.CLIENT)
-        await setRemoteDescription(from, offer)
-        const answer = await createAnswer(from)
+        // We're the client - create answer and send back
+        actions.createPeerConnection(from, PeerRole.CLIENT)
+        await actions.setRemoteDescription(from, offer)
+        const answer = await actions.createAnswer(from)
         signalingClientRef.current?.sendAnswer(from, answer)
       },
 
       onAnswer: async (from, answer) => {
-        await setRemoteDescription(from, answer)
+        await actions.setRemoteDescription(from, answer)
       },
 
       onIceCandidate: async (from, candidate) => {
-        await addIceCandidate(from, candidate)
+        await actions.addIceCandidate(from, candidate)
       },
 
       onRoomCreated: (roomId) => {
-        setCurrentRoomId(roomId)
-        setRoomState(RoomState.InRoom)
-        setIsHost(true)
-        setError(null)
+        store.getState().setCurrentRoomId(roomId)
+        store.getState().setRoomState(RoomState.IN_ROOM)
+        store.getState().setIsHost(true)
+        store.getState().setError(null)
       },
       onRoomJoined: (roomId) => {
-        setCurrentRoomId(roomId)
-        setRoomState(RoomState.InRoom)
-        setIsHost(false)
-        setError(null)
+        store.getState().setCurrentRoomId(roomId)
+        store.getState().setRoomState(RoomState.IN_ROOM)
+        store.getState().setIsHost(false)
+        store.getState().setError(null)
       },
       onRoomFull: () => {
-        setRoomState(RoomState.Idle)
-        setError('Room is full. Try a different room name.')
+        store.getState().setRoomState(RoomState.IDLE)
+        store.getState().setError('Room is full. Try a different room name.')
       },
       onError: (message) => {
         console.error('[Signaling]', message)
-        setError(message)
+        store.getState().setError(message)
       },
     }
 
@@ -128,14 +120,14 @@ const useSignaling = ({
 
   // API for room management
   const createRoom = (roomId: string) => {
-    setRoomState(RoomState.Creating)
-    setError(null)
+    store.getState().setRoomState(RoomState.CREATING)
+    store.getState().setError(null)
     signalingClientRef.current?.createRoom(roomId)
   }
 
   const joinRoom = (roomId: string) => {
-    setRoomState(RoomState.Joining)
-    setError(null)
+    store.getState().setRoomState(RoomState.JOINING)
+    store.getState().setError(null)
     signalingClientRef.current?.joinRoom(roomId)
   }
 
@@ -143,17 +135,17 @@ const useSignaling = ({
     if (currentRoomId) {
       signalingClientRef.current?.leaveRoom(currentRoomId)
     }
-    setRoomState(RoomState.Idle)
-    setCurrentRoomId(null)
-    setIsHost(false)
-    setError(null)
+    store.getState().setRoomState(RoomState.IDLE)
+    store.getState().setCurrentRoomId(null)
+    store.getState().setIsHost(false)
+    store.getState().setError(null)
   }
 
   return {
     isSignalingConnected,
     roomState,
-    isInRoom: roomState === RoomState.InRoom,
-    isRoomIdle: roomState === RoomState.Idle,
+    isInRoom: roomState === RoomState.IN_ROOM,
+    isRoomIdle: roomState === RoomState.IDLE,
     currentRoomId,
     isHost,
     error,
@@ -166,3 +158,6 @@ const useSignaling = ({
 }
 
 export default useSignaling
+
+// Re-export RoomState for consumers
+export { RoomState }

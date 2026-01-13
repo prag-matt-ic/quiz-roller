@@ -11,7 +11,7 @@ import {
   SpeedRunDatabase,
 } from '@/model/schema'
 import type { TotalCounts } from '@/stores/totalCounts'
-import type { Position3D, Rotation } from '@/utils/multiplayer'
+import type { Position3D, Rotation } from '@/utils/multiplayer/position'
 import type { RowData } from '@/utils/tiles'
 
 export enum Stage {
