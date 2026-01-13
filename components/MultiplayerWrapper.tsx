@@ -16,7 +16,7 @@ import { MultiplayerMessage, type PlayerLeftMessage } from '@/utils/multiplayer/
  */
 const MultiplayerSync: FC = () => {
   useMultiplayerSync()
-  
+
   const { store, actions } = useWebRTC()
   const mode = useGameStore((s) => s.mode)
 
