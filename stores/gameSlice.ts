@@ -126,7 +126,11 @@ export const createGameSlice =
       let spawnPos: Vector3Tuple = [...PLAYER_INITIAL_POSITION]
       if (isMultiplayerMode && isHost !== undefined) {
         const xOffset = isHost ? -1.5 : 1.5
-        spawnPos = [PLAYER_INITIAL_POSITION[0] + xOffset, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]]
+        spawnPos = [
+          PLAYER_INITIAL_POSITION[0] + xOffset,
+          PLAYER_INITIAL_POSITION[1],
+          PLAYER_INITIAL_POSITION[2],
+        ]
       }
 
       set((s) => {
@@ -141,8 +145,16 @@ export const createGameSlice =
           overlay: nextOverlay,
           outOfBoundsEvents: [],
           // For speedrun modes, always transition to respawning to trigger spawn
-          playerStatus: isAnySpeedRunMode ? 'respawning' : (s.playerStatus === 'idle' ? 'idle' : 'respawning'),
-          spawnPosition: isAnySpeedRunMode ? spawnPos : (s.playerStatus === 'idle' ? null : spawnPos),
+          playerStatus: isAnySpeedRunMode
+            ? 'respawning'
+            : s.playerStatus === 'idle'
+              ? 'idle'
+              : 'respawning',
+          spawnPosition: isAnySpeedRunMode
+            ? spawnPos
+            : s.playerStatus === 'idle'
+              ? null
+              : spawnPos,
           playerRespawnTick: s.playerRespawnTick + 1,
           playerPosition: spawnPos,
           resetPlatformTick: s.resetPlatformTick + 1,

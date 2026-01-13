@@ -5,7 +5,7 @@ import { useWebRTCStoreAPI } from '@/components/webrtc/WebRTCProvider'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 import type { RemotePlayerData } from '@/stores/types'
 import type { WebRTCMessage } from '@/stores/webrtc/types'
-import { isGameStartMessage, type MultiplayerMessage } from '@/utils/multiplayer'
+import { type MultiplayerMessage, isGameStartMessage } from '@/utils/multiplayer'
 
 /**
  * useMultiplayerSync

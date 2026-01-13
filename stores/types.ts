@@ -188,7 +188,11 @@ export type GameSlice = {
   setCurrentRow: (row: number) => void
 
   mode: GameMode
-  resetGame: (params: { mode: GameMode; speedRunStage?: SpeedRunStage; isHost?: boolean }) => void
+  resetGame: (params: {
+    mode: GameMode
+    speedRunStage?: SpeedRunStage
+    isHost?: boolean
+  }) => void
 
   cameraLookAtPosition: Vector3Tuple | null
   setCameraLookAtPosition: (pos: Vector3Tuple | null) => void
