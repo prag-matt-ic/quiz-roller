@@ -194,6 +194,7 @@ export const PLATFORM_DATA: PlatformRowsData = {
     [GameMode.LEARN]: ${formatModeData(modes[GameMode.LEARN])},
     [GameMode.SPEEDRUN]: ${formatModeData(modes[GameMode.SPEEDRUN])},
     [GameMode.DEV]: ${formatModeData(modes[GameMode.DEV])},
+    [GameMode.SPEEDRUN_MULTIPLAYER]: ${formatModeData(modes[GameMode.SPEEDRUN_MULTIPLAYER])},
   },
 }
 export const PLATFORM_VERSION = PLATFORM_DATA.version

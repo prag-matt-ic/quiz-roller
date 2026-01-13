@@ -8,7 +8,6 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import CollectiblesUI from '@/components/ui/CollectiblesUI'
-import MultiplayerButton from '@/components/ui/MultiplayerButton'
 import SpeedUI from '@/components/ui/SpeedUI'
 import MovementControls from '@/components/ui/controls/Controls'
 import { Dashboard } from '@/components/ui/dashboard/Dashboard'
@@ -74,26 +73,23 @@ const UI: FC<Props> = ({ isMobile }) => {
         <SpeedUI />
       </div>
 
-      {/* Top Right - Multiplayer & Dashboard */}
-      <div className="fixed top-2 right-2 z-300 flex items-center gap-2">
-        <MultiplayerButton />
-        <button
-          type="button"
-          onClick={() => {
-            if (overlay === Overlay.DASHBOARD) setOverlay(Overlay.NONE)
-            else setOverlay(Overlay.DASHBOARD)
-          }}
-          className={twJoin(
-            'pointer-events-auto flex items-center rounded-xl p-3 text-xs text-neutral-300 uppercase transition-all hover:bg-black/20',
-            overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
-          )}>
-          {overlay === Overlay.DASHBOARD ? (
-            <XIcon className="size-6 xl:size-8" />
-          ) : (
-            <LayoutDashboardIcon className="size-6 xl:size-8" strokeWidth={1.5} />
-          )}
-        </button>
-      </div>
+      {/* Top Right - Dashboard */}
+      <button
+        type="button"
+        onClick={() => {
+          if (overlay === Overlay.DASHBOARD) setOverlay(Overlay.NONE)
+          else setOverlay(Overlay.DASHBOARD)
+        }}
+        className={twJoin(
+          'pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-xl p-3 text-xs text-neutral-300 uppercase transition-all hover:bg-black/20',
+          overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
+        )}>
+        {overlay === Overlay.DASHBOARD ? (
+          <XIcon className="size-6 xl:size-8" />
+        ) : (
+          <LayoutDashboardIcon className="size-6 xl:size-8" strokeWidth={1.5} />
+        )}
+      </button>
 
       <MiniMap />
 

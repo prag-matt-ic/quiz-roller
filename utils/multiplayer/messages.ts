@@ -33,7 +33,19 @@ export type PlayerLeftMessage = {
   }
 }
 
-export type MultiplayerMessage = PlayerPositionMessage | PlayerJoinedMessage | PlayerLeftMessage
+export type GameStartMessage = {
+  type: 'game-start'
+  data: {
+    /** Timestamp when the game should start (synchronized) */
+    startTime: number
+  }
+}
+
+export type MultiplayerMessage =
+  | PlayerPositionMessage
+  | PlayerJoinedMessage
+  | PlayerLeftMessage
+  | GameStartMessage
 
 /**
  * Type guards for message handling
@@ -57,4 +69,8 @@ export function isPlayerJoinedMessage(msg: unknown): msg is PlayerJoinedMessage 
 
 export function isPlayerLeftMessage(msg: unknown): msg is PlayerLeftMessage {
   return typeof msg === 'object' && msg !== null && 'type' in msg && msg.type === 'player-left'
+}
+
+export function isGameStartMessage(msg: unknown): msg is GameStartMessage {
+  return typeof msg === 'object' && msg !== null && 'type' in msg && msg.type === 'game-start'
 }

@@ -5,7 +5,7 @@ import { useWebRTCStoreAPI } from '@/components/webrtc/WebRTCProvider'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 import type { RemotePlayerData } from '@/stores/types'
 import type { WebRTCMessage } from '@/stores/webrtc/types'
-import type { MultiplayerMessage } from '@/utils/multiplayer'
+import { isGameStartMessage, type MultiplayerMessage } from '@/utils/multiplayer'
 
 /**
  * useMultiplayerSync
@@ -15,6 +15,7 @@ import type { MultiplayerMessage } from '@/utils/multiplayer'
  * RESPONSIBILITIES:
  * - Listen for incoming position updates from the remote player
  * - Update game store with remote player position/rotation
+ * - Handle game-start messages to synchronize race start
  * - Clean up remote players when peer disconnects
  *
  * ARCHITECTURE:
@@ -75,6 +76,14 @@ export function useMultiplayerSync() {
         const { peerId } = typedMessage.data
         gameStoreAPI.getState().removeRemotePlayer(peerId)
         peerPositionRefs.current.delete(peerId)
+        break
+      }
+
+      case 'game-start': {
+        if (isGameStartMessage(typedMessage)) {
+          // Received game-start from host, start as guest (spawn on the right)
+          gameStoreAPI.getState().startMultiplayerCountdown(false)
+        }
         break
       }
     }

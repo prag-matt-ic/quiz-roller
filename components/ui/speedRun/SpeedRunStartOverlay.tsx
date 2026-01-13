@@ -6,11 +6,11 @@ import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import Button from '@/components/ui/Button'
-import MultiplayerButton from '@/components/ui/MultiplayerButton'
 import { PointerProvider } from '@/components/ui/PointerProvider'
-import SpeedPanel, { RingBoostInfo } from '@/components/ui/dashboard/SpeedPanel'
+import { RingBoostInfo } from '@/components/ui/dashboard/SpeedPanel'
 import { Input } from '@/components/ui/input/Input'
 import { useUsernameInput } from '@/components/ui/input/useUsernameInput'
+import MultiplayerSetup from '@/components/ui/speedRun/MultiplayerSetup'
 import { Overlay } from '@/stores/types'
 
 type Props = {
@@ -23,13 +23,11 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const isMobile = useGameStore((s) => s.isMobile)
   const username = useGameStore((s) => s.username)
   const startCountdown = useGameStore((s) => s.startCountdown)
-  const startMultiplayerCountdown = useGameStore((s) => s.startMultiplayerCountdown)
   const setOverlay = useGameStore((s) => s.setOverlay)
   const usernameInput = useRef<HTMLInputElement>(null)
   const inputProps = useUsernameInput()
 
   const [showMultiplayerSetup, setShowMultiplayerSetup] = useState(false)
-  const [isPeerConnected, setIsPeerConnected] = useState(false)
 
   const startSpeedRun = () => {
     if (!inputProps.isValid) return
@@ -39,11 +37,6 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
   const handleMultiplayerClick = () => {
     if (!inputProps.isValid) return
     setShowMultiplayerSetup(true)
-  }
-
-  const startMultiplayerRace = () => {
-    if (!inputProps.isValid || !isPeerConnected) return
-    startMultiplayerCountdown()
   }
 
   useEffect(() => {
@@ -124,63 +117,22 @@ export const SpeedRunStartOverlay: FC<Props> = ({ ref, transitionStatus }) => {
               </div>
 
               <RingBoostInfo />
+
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setOverlay(Overlay.NONE)}
+                size="sm"
+                aria-label="Cancel"
+                endIcon={X}>
+                Cancel
+              </Button>
             </>
           ) : (
-            <>
-              {/* Multiplayer Setup Section */}
-              <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-4">
-                <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold text-purple-300">
-                  <Users className="size-5" />
-                  Multiplayer Setup
-                </h3>
-
-                {/* Use MultiplayerButton in always-expanded mode */}
-                <div className="[&>div]:w-full [&>div]:border-none [&>div]:bg-transparent [&>div]:p-0">
-                  <MultiplayerButton
-                    alwaysExpanded
-                    hideToggle
-                    onConnectionChange={setIsPeerConnected}
-                  />
-                </div>
-
-                {isPeerConnected && (
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      onClick={() => setShowMultiplayerSetup(false)}
-                      variant="secondary"
-                      className="flex-1 text-sm">
-                      Back
-                    </Button>
-                    <Button
-                      onClick={startMultiplayerRace}
-                      disabled={!inputProps.isValid}
-                      className="flex-1 bg-emerald-500/20 text-sm text-emerald-300 hover:bg-emerald-500/30">
-                      Start Race
-                    </Button>
-                  </div>
-                )}
-                {!isPeerConnected && (
-                  <Button
-                    onClick={() => setShowMultiplayerSetup(false)}
-                    variant="secondary"
-                    className="mt-3 w-full text-sm">
-                    Back
-                  </Button>
-                )}
-              </div>
-            </>
+            <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-4">
+              <MultiplayerSetup onBack={() => setShowMultiplayerSetup(false)} />
+            </div>
           )}
-
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setOverlay(Overlay.NONE)}
-            className=""
-            size="sm"
-            aria-label="Cancel"
-            endIcon={X}>
-            Cancel
-          </Button>
         </section>
       </div>
     </PointerProvider>

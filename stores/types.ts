@@ -63,7 +63,7 @@ export type TimeSlice = {
   speedRunStage: SpeedRunStage
 
   startCountdown: () => void // Sets mode to SPEEDRUN, sets speed run stage to countdown
-  startMultiplayerCountdown: () => void // Sets mode to SPEEDRUN_MULTIPLAYER, sets speed run stage to countdown
+  startMultiplayerCountdown: (isHost: boolean) => void // Sets mode to SPEEDRUN_MULTIPLAYER, sets speed run stage to countdown, isHost determines spawn position
   onCountdownComplete: () => void // sets speedRunStage to running
   finishSpeedRun: () => void // sets speedRunStage to submitting, submits speedrun and then speedRunStage to end
 
@@ -188,7 +188,7 @@ export type GameSlice = {
   setCurrentRow: (row: number) => void
 
   mode: GameMode
-  resetGame: (params: { mode: GameMode; speedRunStage?: SpeedRunStage }) => void
+  resetGame: (params: { mode: GameMode; speedRunStage?: SpeedRunStage; isHost?: boolean }) => void
 
   cameraLookAtPosition: Vector3Tuple | null
   setCameraLookAtPosition: (pos: Vector3Tuple | null) => void

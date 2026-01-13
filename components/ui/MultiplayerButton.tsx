@@ -6,7 +6,7 @@ import { type FC, useEffect, useState } from 'react'
 
 import Button from '@/components/ui/Button'
 import { useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
-import { useSignaling } from '@/hooks/useSignaling'
+import useSignaling from '@/hooks/useSignaling'
 
 const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
 
@@ -34,25 +34,20 @@ const MultiplayerButton: FC<Props> = ({
 
   const [isExpanded, setIsExpanded] = useState(false)
   const isExpandedComputed = alwaysExpanded || isExpanded
-  const [roomId, setRoomId] = useState(() => roomFromUrl || 'game-room-1')
-  const [signalingConnected, setSignalingConnected] = useState(false)
-  const [shareUrl, setShareUrl] = useState('')
+  const [roomIdInput, setRoomIdInput] = useState(() => roomFromUrl || 'game-room-1')
 
   const localPeerId = useWebRTCStore((s) => s.localPeerId)
   const peers = useWebRTCStore((s) => s.peers)
   const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
 
-  const {
-    isSignalingConnected: isSignalingServerConnected,
-    createRoom,
-    joinRoom,
-    leaveRoom,
-  } = useSignaling({
-    signalingUrl: SIGNALING_URL,
-    autoConnect: true,
-    onRoomCreated: () => setSignalingConnected(true),
-    onRoomJoined: () => setSignalingConnected(true),
-  })
+  const { isSignalingConnected, isInRoom, currentRoomId, createRoom, joinRoom, leaveRoom } =
+    useSignaling({
+      signalingUrl: SIGNALING_URL,
+      autoConnect: true,
+    })
+
+  // Derive share URL from current room
+  const shareUrl = currentRoomId ? `${window.location.origin}/?room=${currentRoomId}` : ''
 
   // Check if any peer has an open data channel
   const hasAnyPeerConnected = Array.from(peers.keys()).some((peerId) =>
@@ -61,28 +56,29 @@ const MultiplayerButton: FC<Props> = ({
   const isPeerConnected = peers.size > 0 && hasAnyPeerConnected
 
   // Notify parent of connection state changes
-  // useEffect(() => {
-  //   onConnectionChange?.(isPeerConnected)
-  // }, [isPeerConnected, onConnectionChange])
+  useEffect(() => {
+    onConnectionChange?.(isPeerConnected)
+  }, [isPeerConnected, onConnectionChange])
+
+  // Update URL when room changes
+  useEffect(() => {
+    if (currentRoomId) {
+      router.push(`/?room=${currentRoomId}`)
+    }
+  }, [currentRoomId, router])
 
   const handleCreateRoom = () => {
-    if (!localPeerId || !isSignalingServerConnected) return
-    createRoom(roomId)
-    router.push(`/?room=${roomId}`)
-    const url = `${window.location.origin}/?room=${roomId}`
-    setShareUrl(url)
+    if (!localPeerId || !isSignalingConnected) return
+    createRoom(roomIdInput)
   }
 
   const handleJoinRoom = () => {
-    if (!localPeerId || !isSignalingServerConnected) return
-    joinRoom(roomId)
-    router.push(`/?room=${roomId}`)
+    if (!localPeerId || !isSignalingConnected) return
+    joinRoom(roomIdInput)
   }
 
   const handleLeaveRoom = () => {
-    leaveRoom(roomId)
-    setSignalingConnected(false)
-    setShareUrl('')
+    leaveRoom()
     router.push('/')
     if (!alwaysExpanded) {
       setIsExpanded(false)
@@ -134,8 +130,8 @@ const MultiplayerButton: FC<Props> = ({
       <div className="mb-3 space-y-2 text-xs">
         <div className="flex justify-between">
           <span className="text-gray-400">Server:</span>
-          <span className={isSignalingServerConnected ? 'text-green-400' : 'text-red-400'}>
-            {isSignalingServerConnected ? 'Connected' : 'Offline'}
+          <span className={isSignalingConnected ? 'text-green-400' : 'text-red-400'}>
+            {isSignalingConnected ? 'Connected' : 'Offline'}
           </span>
         </div>
         {isPeerConnected && (
@@ -146,26 +142,26 @@ const MultiplayerButton: FC<Props> = ({
         )}
       </div>
 
-      {!signalingConnected ? (
+      {!isInRoom ? (
         <>
           <input
             type="text"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
+            value={roomIdInput}
+            onChange={(e) => setRoomIdInput(e.target.value)}
             placeholder="Room ID"
-            disabled={!isSignalingServerConnected}
+            disabled={!isSignalingConnected}
             className="mb-2 w-full rounded border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-gray-500 disabled:opacity-50"
           />
           <div className="flex gap-2">
             <Button
               onClick={handleCreateRoom}
-              disabled={!localPeerId || !isSignalingServerConnected}
+              disabled={!localPeerId || !isSignalingConnected}
               className="flex-1 text-xs">
               Create
             </Button>
             <Button
               onClick={handleJoinRoom}
-              disabled={!localPeerId || !isSignalingServerConnected}
+              disabled={!localPeerId || !isSignalingConnected}
               className="flex-1 text-xs">
               Join
             </Button>
@@ -201,7 +197,7 @@ const MultiplayerButton: FC<Props> = ({
         </>
       )}
 
-      {!isSignalingServerConnected && (
+      {!isSignalingConnected && (
         <p className="mt-2 text-xs text-red-400">
           Start server: cd signaling-server && npm run dev
         </p>

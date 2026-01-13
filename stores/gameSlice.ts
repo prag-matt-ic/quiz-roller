@@ -99,7 +99,7 @@ export const createGameSlice =
         set({ stage: Stage.CTA })
       }
     },
-    resetGame: ({ mode: targetMode, speedRunStage }) => {
+    resetGame: ({ mode: targetMode, speedRunStage, isHost }) => {
       const { stopConfirmation, mode, overlay } = get()
 
       stopConfirmation()
@@ -110,13 +110,24 @@ export const createGameSlice =
       const nextModeData = getPlatformDataForMode(targetMode)
 
       const isSpeedRunMode = targetMode === GameMode.SPEEDRUN
+      const isMultiplayerMode = targetMode === GameMode.SPEEDRUN_MULTIPLAYER
+      const isAnySpeedRunMode = isSpeedRunMode || isMultiplayerMode
       const isShowingLandingOverlay = overlay === Overlay.LANDING
 
-      const nextOverlay = isSpeedRunMode
+      const nextOverlay = isAnySpeedRunMode
         ? getOverlayForSpeedRunStage(speedRunStage ?? SpeedRunStage.START)
         : isShowingLandingOverlay
           ? Overlay.LANDING
           : Overlay.NONE
+
+      // Calculate spawn position:
+      // - For multiplayer: host spawns on left (-1.5), guest spawns on right (+1.5)
+      // - For other modes: use default center position
+      let spawnPos: Vector3Tuple = [...PLAYER_INITIAL_POSITION]
+      if (isMultiplayerMode && isHost !== undefined) {
+        const xOffset = isHost ? -1.5 : 1.5
+        spawnPos = [PLAYER_INITIAL_POSITION[0] + xOffset, PLAYER_INITIAL_POSITION[1], PLAYER_INITIAL_POSITION[2]]
+      }
 
       set((s) => {
         return {
@@ -129,10 +140,11 @@ export const createGameSlice =
           totalCounts: isModeChange ? nextModeData.totalCounts : s.totalCounts,
           overlay: nextOverlay,
           outOfBoundsEvents: [],
-          playerStatus: s.playerStatus === 'idle' ? 'idle' : 'respawning',
-          spawnPosition: s.playerStatus === 'idle' ? null : [...PLAYER_INITIAL_POSITION],
+          // For speedrun modes, always transition to respawning to trigger spawn
+          playerStatus: isAnySpeedRunMode ? 'respawning' : (s.playerStatus === 'idle' ? 'idle' : 'respawning'),
+          spawnPosition: isAnySpeedRunMode ? spawnPos : (s.playerStatus === 'idle' ? null : spawnPos),
           playerRespawnTick: s.playerRespawnTick + 1,
-          playerPosition: PLAYER_INITIAL_POSITION,
+          playerPosition: spawnPos,
           resetPlatformTick: s.resetPlatformTick + 1,
         }
       })

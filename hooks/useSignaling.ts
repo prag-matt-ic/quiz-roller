@@ -1,27 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import { PeerRole } from '@/stores/webrtc/types'
 import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 
-type UseSignalingOptions = {
-  signalingUrl: string
-  autoConnect?: boolean
-  onRoomCreated?: (roomId: string) => void
-  onRoomJoined?: (roomId: string, peers: string[]) => void
-  onRoomFull?: (roomId: string) => void
+const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
+
+export enum RoomState {
+  Idle = 'idle',
+  Creating = 'creating',
+  Joining = 'joining',
+  InRoom = 'in-room',
 }
 
-export function useSignaling({
-  signalingUrl,
+const useSignaling = ({
+  signalingUrl = SIGNALING_URL,
   autoConnect = true,
-  onRoomCreated,
-  onRoomJoined,
-  onRoomFull,
-}: UseSignalingOptions) {
+}: {
+  signalingUrl?: string
+  autoConnect?: boolean
+} = {}) => {
   const localPeerId = useWebRTCStore((s) => s.localPeerId)
+  const peers = useWebRTCStore((s) => s.peers)
+  const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
   const signalingClientRef = useRef<SignalingClient | null>(null)
+
+  // Connection & room state managed internally
   const [isSignalingConnected, setIsSignalingConnected] = useState(false)
+  const [roomState, setRoomState] = useState<RoomState>(RoomState.Idle)
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
+  const [isHost, setIsHost] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Derive peer connection state from WebRTC store
+  const connectedPeers = useMemo(() => {
+    return Array.from(peers.keys()).filter((peerId) => dataChannelStates.get(peerId))
+  }, [peers, dataChannelStates])
+
+  const isPeerConnected = connectedPeers.length > 0
+  const connectedPeerCount = connectedPeers.length
 
   const {
     createPeerConnection,
@@ -43,7 +60,11 @@ export function useSignaling({
 
     const handlers: SignalingEventHandlers = {
       onConnected: () => setIsSignalingConnected(true),
-      onDisconnected: () => setIsSignalingConnected(false),
+      onDisconnected: () => {
+        setIsSignalingConnected(false)
+        setRoomState(RoomState.Idle)
+        setCurrentRoomId(null)
+      },
 
       onPeerJoined: async (peerId) => {
         createPeerConnection(peerId, PeerRole.HOST)
@@ -68,10 +89,26 @@ export function useSignaling({
         await addIceCandidate(from, candidate)
       },
 
-      onRoomCreated: (roomId) => onRoomCreated?.(roomId),
-      onRoomJoined: (roomId, peers) => onRoomJoined?.(roomId, peers),
-      onRoomFull: (roomId) => onRoomFull?.(roomId),
-      onError: (message) => console.error('[Signaling]', message),
+      onRoomCreated: (roomId) => {
+        setCurrentRoomId(roomId)
+        setRoomState(RoomState.InRoom)
+        setIsHost(true)
+        setError(null)
+      },
+      onRoomJoined: (roomId) => {
+        setCurrentRoomId(roomId)
+        setRoomState(RoomState.InRoom)
+        setIsHost(false)
+        setError(null)
+      },
+      onRoomFull: () => {
+        setRoomState(RoomState.Idle)
+        setError('Room is full. Try a different room name.')
+      },
+      onError: (message) => {
+        console.error('[Signaling]', message)
+        setError(message)
+      },
     }
 
     signalingClientRef.current = new SignalingClient(signalingUrl, localPeerId, handlers)
@@ -86,41 +123,46 @@ export function useSignaling({
       signalingClientRef.current?.disconnect()
       signalingClientRef.current = null
     }
-  }, [
-    localPeerId,
-    signalingUrl,
-    autoConnect,
-    createPeerConnection,
-    createOffer,
-    createAnswer,
-    setRemoteDescription,
-    addIceCandidate,
-    setIceCandidateHandler,
-    onRoomCreated,
-    onRoomJoined,
-    onRoomFull,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localPeerId, signalingUrl, autoConnect])
 
   // API for room management
   const createRoom = (roomId: string) => {
+    setRoomState(RoomState.Creating)
+    setError(null)
     signalingClientRef.current?.createRoom(roomId)
   }
 
   const joinRoom = (roomId: string) => {
+    setRoomState(RoomState.Joining)
+    setError(null)
     signalingClientRef.current?.joinRoom(roomId)
   }
 
-  const leaveRoom = (roomId: string) => {
-    signalingClientRef.current?.leaveRoom(roomId)
+  const leaveRoom = () => {
+    if (currentRoomId) {
+      signalingClientRef.current?.leaveRoom(currentRoomId)
+    }
+    setRoomState(RoomState.Idle)
+    setCurrentRoomId(null)
+    setIsHost(false)
+    setError(null)
   }
-
-  const isConnected = () => isSignalingConnected
 
   return {
     isSignalingConnected,
+    roomState,
+    isInRoom: roomState === RoomState.InRoom,
+    isRoomIdle: roomState === RoomState.Idle,
+    currentRoomId,
+    isHost,
+    error,
+    isPeerConnected,
+    connectedPeerCount,
     createRoom,
     joinRoom,
     leaveRoom,
-    isConnected,
   }
 }
+
+export default useSignaling
