@@ -12,6 +12,7 @@ export enum MultiplayerMessage {
   PLAYER_JOINED = 'player-joined',
   PLAYER_LEFT = 'player-left',
   GAME_START = 'game-start',
+  RACE_FINISHED = 'race-finished',
 }
 
 export type PlayerPositionData = {
@@ -51,12 +52,22 @@ export type GameStartMessage = {
   }
 }
 
+export type RaceFinishedMessage = {
+  type: MultiplayerMessage.RACE_FINISHED
+  from?: string
+  data: {
+    /** Time in centiseconds */
+    timeCS: number
+  }
+}
+
 /** Union of all multiplayer message types */
 export type MultiplayerMessageUnion =
   | PlayerPositionMessage
   | PlayerJoinedMessage
   | PlayerLeftMessage
   | GameStartMessage
+  | RaceFinishedMessage
 
 /**
  * Type guards for message handling
@@ -96,5 +107,14 @@ export function isGameStartMessage(msg: unknown): msg is GameStartMessage {
     msg !== null &&
     'type' in msg &&
     msg.type === MultiplayerMessage.GAME_START
+  )
+}
+
+export function isRaceFinishedMessage(msg: unknown): msg is RaceFinishedMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'type' in msg &&
+    msg.type === MultiplayerMessage.RACE_FINISHED
   )
 }

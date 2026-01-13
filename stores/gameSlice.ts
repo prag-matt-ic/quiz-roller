@@ -100,7 +100,7 @@ export const createGameSlice =
       }
     },
     resetGame: ({ mode: targetMode, speedRunStage, isHost }) => {
-      const { stopConfirmation, mode, overlay } = get()
+      const { stopConfirmation, mode, overlay, resetMultiplayerRaceState } = get()
 
       stopConfirmation()
       const isModeChange = targetMode !== mode
@@ -114,6 +114,11 @@ export const createGameSlice =
       const isAnySpeedRunMode = isSpeedRunMode || isMultiplayerMode
       const isShowingLandingOverlay = overlay === Overlay.LANDING
 
+      // Reset multiplayer race completion state when starting a new multiplayer race
+      if (isMultiplayerMode) {
+        resetMultiplayerRaceState()
+      }
+
       const nextOverlay = isAnySpeedRunMode
         ? getOverlayForSpeedRunStage(speedRunStage ?? SpeedRunStage.START)
         : isShowingLandingOverlay
@@ -121,11 +126,12 @@ export const createGameSlice =
           : Overlay.NONE
 
       // Calculate spawn position:
-      // - For multiplayer: host spawns on left (-1.5), guest spawns on right (+1.5)
+      // - For multiplayer: host spawns on right (+1.5), guest spawns on left (-1.5)
       // - For other modes: use default center position
       let spawnPos: Vector3Tuple = [...PLAYER_INITIAL_POSITION]
-      if (isMultiplayerMode && isHost !== undefined) {
-        const xOffset = isHost ? -1.5 : 1.5
+      if (isMultiplayerMode) {
+        // Host spawns on the right, guest on the left
+        const xOffset = isHost ? 1.5 : -1.5
         spawnPos = [
           PLAYER_INITIAL_POSITION[0] + xOffset,
           PLAYER_INITIAL_POSITION[1],

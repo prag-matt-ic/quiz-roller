@@ -15,6 +15,7 @@ import MiniMap from '@/components/ui/miniMap/MiniMap'
 import { GameMode, Overlay } from '@/stores/types'
 
 import { SubscribeOverlay } from './SubscribeOverlay'
+import { MultiplayerRaceEndOverlay } from './speedRun/MultiplayerRaceEndOverlay'
 import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
 import { SpeedRunStartOverlay } from './speedRun/SpeedRunStartOverlay'
@@ -37,6 +38,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const speedRunStartOverlay = useRef<HTMLDivElement>(null)
   const speedRunCountdownOverlay = useRef<HTMLDivElement>(null)
   const speedRunEndOverlay = useRef<HTMLDivElement>(null)
+  const multiplayerRaceEndOverlay = useRef<HTMLDivElement>(null)
 
   return (
     <>
@@ -166,6 +168,21 @@ const UI: FC<Props> = ({ isMobile }) => {
         {(status) => (
           <SpeedrunEndOverlay
             ref={speedRunEndOverlay}
+            transitionStatus={status}
+            isMobile={isMobile}
+          />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.MULTIPLAYER_RACE_END}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={multiplayerRaceEndOverlay}>
+        {(status) => (
+          <MultiplayerRaceEndOverlay
+            ref={multiplayerRaceEndOverlay}
             transitionStatus={status}
             isMobile={isMobile}
           />
