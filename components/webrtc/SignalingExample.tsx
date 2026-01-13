@@ -2,32 +2,20 @@
 import { type FC, useState } from 'react'
 
 import { WebRTCProvider, useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
-import { useSignaling } from '@/hooks/useSignaling'
+import useSignaling, { RoomState } from '@/hooks/useSignaling'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
-import { ConnectionState } from '@/stores/webrtc/types'
-
-const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? 'ws://localhost:8080'
 
 /**
  * Example multiplayer lobby with automatic signaling
  */
 const MultiplayerLobby: FC = () => {
-  const [roomId, setRoomId] = useState('')
-  const [currentRoom, setCurrentRoom] = useState<string | null>(null)
+  const [roomIdInput, setRoomIdInput] = useState('')
   const [messageText, setMessageText] = useState('')
 
   // Subscribe to WebRTC state
   const localPeerId = useWebRTCStore((s) => s.localPeerId)
-  const connectionState = useWebRTCStore((s) => s.connectionState)
-  const dataChannelStates = useWebRTCStore((s) => s.dataChannelStates)
   const peers = useWebRTCStore((s) => s.peers)
-  const error = useWebRTCStore((s) => s.error)
   const messagesReceived = useWebRTCStore((s) => s.messagesReceived)
-
-  // Check if any peer has an open data channel
-  const hasAnyDataChannelOpen = Array.from(peers.keys()).some((peerId) =>
-    dataChannelStates.get(peerId),
-  )
 
   // Subscribe to messages
   useWebRTCMessages((message) => {
@@ -38,43 +26,38 @@ const MultiplayerLobby: FC = () => {
   const { sendMessage } = useWebRTC()
 
   // Use signaling hook for automatic connection management
-  const { createRoom, joinRoom, leaveRoom, isConnected } = useSignaling({
-    signalingUrl: SIGNALING_URL,
-    autoConnect: true,
-    onRoomCreated: (id) => {
-      setCurrentRoom(id)
-      console.warn('Room created:', id)
-    },
-    onRoomJoined: (id, peersList) => {
-      setCurrentRoom(id)
-      console.warn('Joined room:', id, 'with peers:', peersList)
-    },
-    onRoomFull: (id) => {
-      alert(`Room ${id} is full`)
-    },
-  })
+  const {
+    isSignalingConnected,
+    roomState,
+    isInRoom,
+    currentRoomId,
+    isHost,
+    error,
+    isPeerConnected,
+    connectedPeerCount,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+  } = useSignaling({ autoConnect: true })
 
   const handleCreateRoom = () => {
-    if (!roomId.trim()) {
+    if (!roomIdInput.trim()) {
       alert('Please enter a room ID')
       return
     }
-    createRoom(roomId)
+    createRoom(roomIdInput)
   }
 
   const handleJoinRoom = () => {
-    if (!roomId.trim()) {
+    if (!roomIdInput.trim()) {
       alert('Please enter a room ID')
       return
     }
-    joinRoom(roomId)
+    joinRoom(roomIdInput)
   }
 
   const handleLeaveRoom = () => {
-    if (currentRoom) {
-      leaveRoom(currentRoom)
-      setCurrentRoom(null)
-    }
+    leaveRoom()
   }
 
   const handleSendMessage = () => {
@@ -85,7 +68,7 @@ const MultiplayerLobby: FC = () => {
       return
     }
 
-    if (!hasAnyDataChannelOpen) {
+    if (!isPeerConnected) {
       console.error('Data channel not open yet - please wait for connection to establish')
       return
     }
@@ -110,8 +93,18 @@ const MultiplayerLobby: FC = () => {
     }
   }
 
-  const isInRoom = currentRoom !== null
-  const isConnectedToPeers = connectionState === ConnectionState.CONNECTED
+  const getRoomStateLabel = () => {
+    switch (roomState) {
+      case RoomState.Creating:
+        return 'Creating room...'
+      case RoomState.Joining:
+        return 'Joining room...'
+      case RoomState.InRoom:
+        return `In room: ${currentRoomId}`
+      default:
+        return 'Not in a room'
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl p-8 text-black">
@@ -127,7 +120,7 @@ const MultiplayerLobby: FC = () => {
           <div>
             <p className="text-sm text-gray-600">Signaling Server</p>
             <p className="text-sm">
-              {isConnected() ? (
+              {isSignalingConnected ? (
                 <span className="text-green-600">✓ Connected</span>
               ) : (
                 <span className="text-red-600">✗ Disconnected</span>
@@ -135,14 +128,20 @@ const MultiplayerLobby: FC = () => {
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Current Room</p>
-            <p className="font-mono text-sm">{currentRoom ?? 'Not in a room'}</p>
+            <p className="text-sm text-gray-600">Room State</p>
+            <p className="font-mono text-sm">{getRoomStateLabel()}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Role</p>
+            <p className="text-sm">
+              {isInRoom ? (isHost ? '👑 Host' : '🎮 Guest') : '-'}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Peer Connection</p>
             <p className="text-sm">
-              {isConnectedToPeers ? (
-                <span className="text-green-600">✓ Connected to {peers.size} peer(s)</span>
+              {isPeerConnected ? (
+                <span className="text-green-600">✓ Connected to {connectedPeerCount} peer(s)</span>
               ) : (
                 <span className="text-gray-500">Waiting for peers...</span>
               )}
@@ -151,7 +150,7 @@ const MultiplayerLobby: FC = () => {
           <div>
             <p className="text-sm text-gray-600">Data Channel</p>
             <p className="text-sm">
-              {hasAnyDataChannelOpen ? (
+              {isPeerConnected ? (
                 <span className="text-green-600">✓ Open</span>
               ) : (
                 <span className="text-gray-500">Not ready</span>
@@ -173,38 +172,40 @@ const MultiplayerLobby: FC = () => {
           <div className="flex gap-2">
             <input
               type="text"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
+              value={roomIdInput}
+              onChange={(e) => setRoomIdInput(e.target.value)}
               placeholder="Enter room ID (e.g., my-game-room)"
               className="flex-1 rounded border px-4 py-2"
-              disabled={!isConnected()}
+              disabled={!isSignalingConnected}
             />
             <button
               onClick={handleCreateRoom}
               className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:bg-gray-300"
-              disabled={!isConnected() || !roomId.trim()}>
+              disabled={!isSignalingConnected || !roomIdInput.trim()}>
               Create
             </button>
             <button
               onClick={handleJoinRoom}
               className="rounded bg-green-500 px-6 py-2 text-white hover:bg-green-600 disabled:bg-gray-300"
-              disabled={!isConnected() || !roomId.trim()}>
+              disabled={!isSignalingConnected || !roomIdInput.trim()}>
               Join
             </button>
           </div>
-          {!isConnected() && (
+          {!isSignalingConnected && (
             <p className="mt-2 text-sm text-gray-600">
-              Connecting to signaling server at {SIGNALING_URL}...
+              Connecting to signaling server...
             </p>
           )}
         </div>
       ) : (
         <div className="mb-6 rounded-lg border-2 border-green-200 bg-green-50 p-6">
-          <h2 className="mb-2 text-xl font-semibold">In Room: {currentRoom}</h2>
+          <h2 className="mb-2 text-xl font-semibold">
+            {isHost ? '👑 Hosting' : '🎮 In'} Room: {currentRoomId}
+          </h2>
           <p className="mb-4 text-sm text-gray-600">
-            {peers.size === 0
+            {connectedPeerCount === 0
               ? 'Waiting for other players...'
-              : `${peers.size} peer(s) connected`}
+              : `${connectedPeerCount} peer(s) connected`}
           </p>
           <button
             onClick={handleLeaveRoom}
@@ -236,7 +237,7 @@ const MultiplayerLobby: FC = () => {
       )}
 
       {/* Chat/Messages (when data channel is open) */}
-      {hasAnyDataChannelOpen && (
+      {isPeerConnected && (
         <div className="mb-6 rounded-lg border p-4">
           <h2 className="mb-3 text-lg font-semibold">Messages</h2>
           <div className="mb-4 max-h-64 space-y-2 overflow-y-auto rounded bg-gray-50 p-3">
@@ -265,7 +266,7 @@ const MultiplayerLobby: FC = () => {
             />
             <button
               onClick={handleSendMessage}
-              disabled={peers.size === 0 || !hasAnyDataChannelOpen}
+              disabled={!isPeerConnected}
               className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300">
               Send
             </button>
