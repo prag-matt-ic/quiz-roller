@@ -133,15 +133,15 @@ const MultiplayerLobby: FC = () => {
           </div>
           <div>
             <p className="text-sm text-gray-600">Role</p>
-            <p className="text-sm">
-              {isInRoom ? (isHost ? '👑 Host' : '🎮 Guest') : '-'}
-            </p>
+            <p className="text-sm">{isInRoom ? (isHost ? '👑 Host' : '🎮 Guest') : '-'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Peer Connection</p>
             <p className="text-sm">
               {isPeerConnected ? (
-                <span className="text-green-600">✓ Connected to {connectedPeerCount} peer(s)</span>
+                <span className="text-green-600">
+                  ✓ Connected to {connectedPeerCount} peer(s)
+                </span>
               ) : (
                 <span className="text-gray-500">Waiting for peers...</span>
               )}
@@ -192,9 +192,7 @@ const MultiplayerLobby: FC = () => {
             </button>
           </div>
           {!isSignalingConnected && (
-            <p className="mt-2 text-sm text-gray-600">
-              Connecting to signaling server...
-            </p>
+            <p className="mt-2 text-sm text-gray-600">Connecting to signaling server...</p>
           )}
         </div>
       ) : (
