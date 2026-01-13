@@ -1,4 +1,4 @@
-import type { Position3D, Rotation } from './coordinates'
+import type { Position3D, Rotation } from './position'
 
 /**
  * Multiplayer Message Types
@@ -7,6 +7,13 @@ import type { Position3D, Rotation } from './coordinates'
  * This ensures type safety and consistency across the codebase.
  */
 
+export enum MultiplayerMessage {
+  PLAYER_POSITION = 'player-position',
+  PLAYER_JOINED = 'player-joined',
+  PLAYER_LEFT = 'player-left',
+  GAME_START = 'game-start',
+}
+
 export type PlayerPositionData = {
   position: Position3D
   rotation?: Rotation
@@ -14,34 +21,38 @@ export type PlayerPositionData = {
 }
 
 export type PlayerPositionMessage = {
-  type: 'player-position'
-  from: string
+  type: MultiplayerMessage.PLAYER_POSITION
+  from?: string
   data: PlayerPositionData
 }
 
 export type PlayerJoinedMessage = {
-  type: 'player-joined'
+  type: MultiplayerMessage.PLAYER_JOINED
+  from?: string
   data: {
     peerId: string
   }
 }
 
 export type PlayerLeftMessage = {
-  type: 'player-left'
+  type: MultiplayerMessage.PLAYER_LEFT
+  from?: string
   data: {
     peerId: string
   }
 }
 
 export type GameStartMessage = {
-  type: 'game-start'
+  type: MultiplayerMessage.GAME_START
+  from?: string
   data: {
     /** Timestamp when the game should start (synchronized) */
     startTime: number
   }
 }
 
-export type MultiplayerMessage =
+/** Union of all multiplayer message types */
+export type MultiplayerMessageUnion =
   | PlayerPositionMessage
   | PlayerJoinedMessage
   | PlayerLeftMessage
@@ -55,7 +66,7 @@ export function isPlayerPositionMessage(msg: unknown): msg is PlayerPositionMess
     typeof msg === 'object' &&
     msg !== null &&
     'type' in msg &&
-    msg.type === 'player-position' &&
+    msg.type === MultiplayerMessage.PLAYER_POSITION &&
     'data' in msg &&
     typeof msg.data === 'object'
   )
@@ -63,14 +74,27 @@ export function isPlayerPositionMessage(msg: unknown): msg is PlayerPositionMess
 
 export function isPlayerJoinedMessage(msg: unknown): msg is PlayerJoinedMessage {
   return (
-    typeof msg === 'object' && msg !== null && 'type' in msg && msg.type === 'player-joined'
+    typeof msg === 'object' &&
+    msg !== null &&
+    'type' in msg &&
+    msg.type === MultiplayerMessage.PLAYER_JOINED
   )
 }
 
 export function isPlayerLeftMessage(msg: unknown): msg is PlayerLeftMessage {
-  return typeof msg === 'object' && msg !== null && 'type' in msg && msg.type === 'player-left'
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'type' in msg &&
+    msg.type === MultiplayerMessage.PLAYER_LEFT
+  )
 }
 
 export function isGameStartMessage(msg: unknown): msg is GameStartMessage {
-  return typeof msg === 'object' && msg !== null && 'type' in msg && msg.type === 'game-start'
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'type' in msg &&
+    msg.type === MultiplayerMessage.GAME_START
+  )
 }

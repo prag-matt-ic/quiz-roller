@@ -15,7 +15,7 @@ import {
   interpolatePosition,
   interpolateRotation,
   toLocalPosition,
-} from '@/utils/multiplayer'
+} from '@/utils/multiplayer/position'
 
 // Time-based interpolation for consistent smoothing across framerates
 const INTERPOLATION_TIME_S = 0.15 // Match responsiveness of local player input smoothing

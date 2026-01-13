@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
-import { useWebRTC, useWebRTCStore } from '@/components/WebRTCProvider'
+import { useWebRTC } from '@/components/WebRTCProvider'
 import Button from '@/components/ui/Button'
 import useSignaling from '@/hooks/useSignaling'
-import type { GameStartMessage } from '@/utils/multiplayer'
+import { type GameStartMessage, MultiplayerMessage } from '@/utils/multiplayer/messages'
 
 /** Generate a random room ID */
 function generateRoomId(): string {
@@ -65,8 +65,8 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
   } = useSignaling()
 
   // WebRTC for sending game-start message
-  const { sendMessage } = useWebRTC()
-  const peers = useWebRTCStore((s) => s.peers)
+  const { state: webrtcState, actions } = useWebRTC()
+  const { peers } = webrtcState
 
   // Derive share URL from current room
   const shareUrl = useMemo(
@@ -119,16 +119,16 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
   const handleStartRace = useCallback(() => {
     // Send game-start message to all peers
     const message: GameStartMessage = {
-      type: 'game-start',
+      type: MultiplayerMessage.GAME_START,
       data: { startTime: Date.now() },
     }
     peers.forEach((_, peerId) => {
-      sendMessage(peerId, message)
+      actions.sendMessage(peerId, message)
     })
 
     // Start local countdown (host spawns on the left)
     startMultiplayerCountdown(isHost)
-  }, [peers, sendMessage, startMultiplayerCountdown, isHost])
+  }, [peers, actions, startMultiplayerCountdown, isHost])
 
   return (
     <div className="w-full space-y-4">
