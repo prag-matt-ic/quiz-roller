@@ -214,7 +214,7 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
                     <Button
                       onClick={handleCreateRoom}
                       disabled={!isSignalingConnected || !roomIdInput}
-                      className="flex-1 whitespace-nowrap bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
+                      className="flex-1 bg-purple-500/20 whitespace-nowrap text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
                       Create Room
                     </Button>
                     <Button
@@ -233,7 +233,7 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
                       'min-h-1 text-center text-xs text-gray-500',
                       'transition-opacity duration-200 ease-out motion-reduce:transition-none',
                       isSignalingConnected
-                        ? 'pointer-events-none select-none opacity-0'
+                        ? 'pointer-events-none opacity-0 select-none'
                         : 'opacity-100',
                     )}>
                     Start server: cd signaling-server && npm run dev
@@ -331,7 +331,7 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
                     </Button>
                     <Button
                       onClick={handleStartRace}
-                      className="flex-1 whitespace-nowrap bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30">
+                      className="flex-1 bg-emerald-500/20 whitespace-nowrap text-emerald-300 hover:bg-emerald-500/30">
                       Start Race!
                     </Button>
                   </div>
