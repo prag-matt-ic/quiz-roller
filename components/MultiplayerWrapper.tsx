@@ -2,7 +2,7 @@
 
 import { type FC, type PropsWithChildren } from 'react'
 
-import { WebRTCProvider } from '@/components/webrtc/WebRTCProvider'
+import { WebRTCProvider } from '@/components/WebRTCProvider'
 import { useMultiplayerSync } from '@/hooks/useMultiplayerSync'
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { useWebRTCStoreAPI } from '@/components/webrtc/WebRTCProvider'
+import { useWebRTCStoreAPI } from '@/components/WebRTCProvider'
 import type { WebRTCMessage } from '@/stores/webrtc/types'
 
 /**
