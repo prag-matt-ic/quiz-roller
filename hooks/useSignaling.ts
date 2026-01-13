@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
+import { useWebRTC, useWebRTCStore } from '@/components/WebRTCProvider'
 import { PeerRole } from '@/stores/webrtc/types'
 import { SignalingClient, type SignalingEventHandlers } from '@/utils/webrtc/SignalingClient'
 

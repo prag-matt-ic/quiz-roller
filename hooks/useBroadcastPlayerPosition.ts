@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import type { Mesh } from 'three'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
-import { useWebRTC, useWebRTCStoreAPI } from '@/components/webrtc/WebRTCProvider'
+import { useWebRTC, useWebRTCStoreAPI } from '@/components/WebRTCProvider'
 import { useGameFrame } from '@/hooks/useGameFrame'
 import { type Rotation, hasPositionChanged, toWorldPosition } from '@/utils/multiplayer'
 

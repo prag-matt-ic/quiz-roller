@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
+import { useWebRTC, useWebRTCStore } from '@/components/WebRTCProvider'
 import Button from '@/components/ui/Button'
-import { useWebRTC, useWebRTCStore } from '@/components/webrtc/WebRTCProvider'
 import useSignaling from '@/hooks/useSignaling'
 import type { GameStartMessage } from '@/utils/multiplayer'
 

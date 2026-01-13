@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
-import { useWebRTCStoreAPI } from '@/components/webrtc/WebRTCProvider'
+import { useWebRTCStoreAPI } from '@/components/WebRTCProvider'
 import { useWebRTCMessages } from '@/hooks/useWebRTCMessages'
 import type { RemotePlayerData } from '@/stores/types'
 import type { WebRTCMessage } from '@/stores/webrtc/types'
