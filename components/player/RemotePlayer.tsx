@@ -1,10 +1,10 @@
 'use client'
 
 import { BallCollider, type RapierRigidBody, RigidBody } from '@react-three/rapier'
-import { useRef } from 'react'
-import { type Mesh } from 'three'
+import { useMemo, useRef } from 'react'
+import { type Mesh, type Vector3Tuple } from 'three'
 
-import { useGameStoreAPI } from '@/components/GameProvider'
+import { PLAYER_INITIAL_POSITION, useGameStoreAPI } from '@/components/GameProvider'
 import { PLAYER_RADIUS } from '@/components/player/PlayerHUD'
 import { Marble } from '@/components/player/marble/Marble'
 import { useGameFrame } from '@/hooks/useGameFrame'
@@ -41,8 +41,24 @@ const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
   const sphereMeshRef = useRef<Mesh>(null)
   const gameStoreAPI = useGameStoreAPI()
 
+  // Remote player spawns on the opposite side from the local player
+  // If local is host (right +1.5), remote is guest (left -1.5) and vice versa
+  const initialPosition = useMemo((): Vector3Tuple => {
+    const localSpawnPos = gameStoreAPI.getState().spawnPosition
+    const localXOffset = localSpawnPos ? localSpawnPos[0] - PLAYER_INITIAL_POSITION[0] : 0
+    // Remote is on the opposite side
+    const remoteXOffset = -localXOffset
+    return [
+      PLAYER_INITIAL_POSITION[0] + remoteXOffset,
+      PLAYER_INITIAL_POSITION[1],
+      PLAYER_INITIAL_POSITION[2],
+    ]
+  }, [gameStoreAPI])
+
   // Pre-allocated interpolation state (performance optimization)
-  const interpolation = useRef(createInterpolationState(0, 4, 0))
+  const interpolation = useRef(
+    createInterpolationState(initialPosition[0], initialPosition[1], initialPosition[2]),
+  )
   const hasInitialized = useRef(false)
 
   useGameFrame((_, deltaTime) => {
@@ -102,7 +118,11 @@ const RemotePlayer = ({ positionRef }: RemotePlayerData) => {
   })
 
   return (
-    <RigidBody ref={bodyRef} type="kinematicPosition" colliders={false} position={[4, 0, 0]}>
+    <RigidBody
+      ref={bodyRef}
+      type="kinematicPosition"
+      colliders={false}
+      position={initialPosition}>
       <BallCollider args={[PLAYER_RADIUS]} collisionGroups={COLLISION_GROUPS.player} />
       <Marble ref={sphereMeshRef} tint={[0.4, 0.8, 1.0]} distanceFadeEnabled />
     </RigidBody>

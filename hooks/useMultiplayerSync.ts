@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import { useGameStoreAPI } from '@/components/GameProvider'
 import { useWebRTC } from '@/components/WebRTCProvider'
 import type { RemotePlayerData } from '@/stores/types'
-import { MultiplayerMessage } from '@/utils/multiplayer/messages'
+import { MultiplayerMessage, type RaceFinishedMessage } from '@/utils/multiplayer/messages'
 
 /**
  * useMultiplayerSync
@@ -12,7 +12,7 @@ import { MultiplayerMessage } from '@/utils/multiplayer/messages'
  * Handles incoming position updates and game-start messages.
  */
 export function useMultiplayerSync() {
-  const { store } = useWebRTC()
+  const { store, actions } = useWebRTC()
   const gameStoreAPI = useGameStoreAPI()
 
   // Track position refs for each peer
@@ -77,8 +77,15 @@ export function useMultiplayerSync() {
           }
 
           case MultiplayerMessage.GAME_START: {
-            // Received game-start from host, start as guest (spawn on the right)
+            // Received game-start from host, start as guest (spawn on the left)
             gameStoreAPI.getState().startMultiplayerCountdown(false)
+            break
+          }
+
+          case MultiplayerMessage.RACE_FINISHED: {
+            // Received race-finished from peer
+            const { timeCS } = lastMessage.data
+            gameStoreAPI.getState().onRemotePlayerFinished(timeCS)
             break
           }
         }
@@ -107,4 +114,28 @@ export function useMultiplayerSync() {
 
     return unsubscribe
   }, [store, gameStoreAPI])
+
+  // Send RACE_FINISHED message when local player finishes
+  useEffect(() => {
+    const unsubscribe = gameStoreAPI.subscribe(
+      (state) => state.localPlayerFinishedTimeCS,
+      (localFinishTime, prevFinishTime) => {
+        // Only send when transitioning from null to a value
+        if (localFinishTime === null || prevFinishTime !== null) return
+
+        const message: RaceFinishedMessage = {
+          type: MultiplayerMessage.RACE_FINISHED,
+          data: { timeCS: localFinishTime },
+        }
+
+        // Send to all connected peers
+        const peers = store.getState().peers
+        peers.forEach((_, peerId) => {
+          actions.sendMessage(peerId, message)
+        })
+      },
+    )
+
+    return unsubscribe
+  }, [store, gameStoreAPI, actions])
 }

@@ -193,13 +193,16 @@ const Player: FC = () => {
 
   if (!isPlatformReady) return null
 
+  // Use spawn position if available (multiplayer has offset), otherwise use default center
+  const initialPosition = spawnPosition ?? PLAYER_INITIAL_POSITION
+
   return (
     <RigidBody
       ref={bodyRef}
       type="kinematicPosition"
       userData={PLAYER_USER_DATA}
       colliders={false}
-      position={PLAYER_INITIAL_POSITION}
+      position={initialPosition}
       onIntersectionEnter={onIntersectionEnter}
       onIntersectionExit={onIntersectionExit}>
       <BallCollider

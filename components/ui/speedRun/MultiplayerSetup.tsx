@@ -1,14 +1,15 @@
 'use client'
 
 import { Copy, Loader2, Users, Wifi, WifiOff } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
 import { useWebRTC } from '@/components/WebRTCProvider'
 import Button from '@/components/ui/Button'
 import useSignaling from '@/hooks/useSignaling'
 import { type GameStartMessage, MultiplayerMessage } from '@/utils/multiplayer/messages'
+import { removeQueryParam, setQueryParam } from '@/utils/urlParams'
 
 /** Generate a random room ID */
 function generateRoomId(): string {
@@ -40,14 +41,15 @@ type Props = {
  * Handles room creation, sharing links, peer connection, and starting the race.
  */
 const MultiplayerSetup: FC<Props> = ({ onBack }) => {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const roomFromUrl = searchParams.get('room')
+  const roomFromUrl = useSearchParams().get('room')
   const startMultiplayerCountdown = useGameStore((s) => s.startMultiplayerCountdown)
 
   // Local state
   const [roomIdInput, setRoomIdInput] = useState(() => roomFromUrl || generateRoomId())
   const [copied, setCopied] = useState(false)
+
+  // Track whether we've attempted to auto-join from URL (ref to avoid lint issues with setState in effects)
+  const autoJoinAttemptedRef = useRef(false)
 
   // All multiplayer state from useSignaling
   const {
@@ -55,7 +57,6 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
     isInRoom,
     isRoomIdle,
     currentRoomId,
-    isHost,
     error,
     isPeerConnected,
     connectedPeerCount,
@@ -76,13 +77,21 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
 
   // Update URL when room changes
   useEffect(() => {
-    if (currentRoomId) router.push(`/?room=${currentRoomId}`)
-  }, [currentRoomId, router])
+    if (currentRoomId) setQueryParam('room', currentRoomId)
+  }, [currentRoomId])
 
-  // Auto-join if room is in URL
+  // Auto-join if room is in URL (only attempt once)
   useEffect(() => {
-    if (roomFromUrl && isSignalingConnected && isRoomIdle) joinRoom(roomFromUrl)
+    if (roomFromUrl && isSignalingConnected && isRoomIdle && !autoJoinAttemptedRef.current) {
+      autoJoinAttemptedRef.current = true
+      joinRoom(roomFromUrl)
+    }
   }, [roomFromUrl, isSignalingConnected, isRoomIdle, joinRoom])
+
+  // Reset URL when room doesn't exist (error when auto-joining from URL)
+  useEffect(() => {
+    if (error && autoJoinAttemptedRef.current && isRoomIdle) removeQueryParam('room')
+  }, [error, isRoomIdle])
 
   const handleCreateRoom = useCallback(() => {
     if (!isSignalingConnected) return
@@ -96,8 +105,8 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
 
   const handleLeaveRoom = useCallback(() => {
     leaveRoom()
-    router.push('/')
-  }, [router, leaveRoom])
+    removeQueryParam('room')
+  }, [leaveRoom])
 
   const handleCopyLink = useCallback(async () => {
     if (!shareUrl) return
@@ -115,7 +124,7 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
     onBack()
   }, [isInRoom, handleLeaveRoom, onBack])
 
-  // Start race: host sends game-start message to peer, both start countdown
+  // Start race: send game-start message to peer, both start countdown
   const handleStartRace = useCallback(() => {
     // Send game-start message to all peers
     const message: GameStartMessage = {
@@ -126,9 +135,9 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
       actions.sendMessage(peerId, message)
     })
 
-    // Start local countdown (host spawns on the left)
-    startMultiplayerCountdown(isHost)
-  }, [peers, actions, startMultiplayerCountdown, isHost])
+    // Start local countdown as host (spawns on the right)
+    startMultiplayerCountdown(true)
+  }, [peers, actions, startMultiplayerCountdown])
 
   return (
     <div className="w-full space-y-4">

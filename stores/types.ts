@@ -63,7 +63,7 @@ export type TimeSlice = {
   speedRunStage: SpeedRunStage
 
   startCountdown: () => void // Sets mode to SPEEDRUN, sets speed run stage to countdown
-  startMultiplayerCountdown: (isHost: boolean) => void // Sets mode to SPEEDRUN_MULTIPLAYER, sets speed run stage to countdown, isHost determines spawn position
+  startMultiplayerCountdown: (isHost: boolean) => void // Sets mode to SPEEDRUN_MULTIPLAYER, sets speed run stage to countdown, host spawns right, guest spawns left
   onCountdownComplete: () => void // sets speedRunStage to running
   finishSpeedRun: () => void // sets speedRunStage to submitting, submits speedrun and then speedRunStage to end
 
@@ -103,6 +103,7 @@ export enum Overlay {
   SPEEDRUN_START = 'speedrun-start',
   SPEEDRUN_COUNTDOWN = 'speedrun-countdown',
   SPEEDRUN_END = 'speedrun-end',
+  MULTIPLAYER_RACE_END = 'multiplayer-race-end',
 }
 
 export const getOverlayForSpeedRunStage = (speedRunStage: SpeedRunStage): Overlay => {
@@ -191,7 +192,7 @@ export type GameSlice = {
   resetGame: (params: {
     mode: GameMode
     speedRunStage?: SpeedRunStage
-    isHost?: boolean
+    isHost?: boolean // For multiplayer: host spawns right, guest spawns left
   }) => void
 
   cameraLookAtPosition: Vector3Tuple | null
@@ -228,6 +229,13 @@ export type MultiplayerSlice = {
   addRemotePlayer: (peerId: string, positionRef: React.RefObject<any>) => void
   removeRemotePlayer: (peerId: string) => void
   clearRemotePlayers: () => void
+
+  // Race completion tracking
+  localPlayerFinishedTimeCS: number | null
+  remotePlayerFinishedTimeCS: number | null
+  onLocalPlayerFinished: (timeCS: number) => void
+  onRemotePlayerFinished: (timeCS: number) => void
+  resetMultiplayerRaceState: () => void
 }
 
 export type GameStore = TimeSlice &

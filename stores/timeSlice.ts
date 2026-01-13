@@ -51,13 +51,23 @@ export const createTimeSlice =
     },
     finishSpeedRun: async () => {
       const {
+        mode,
         speedRunTimeCS,
         username,
         inputType,
         platformVersion,
         outOfBoundsEvents,
         collectedRings,
+        onLocalPlayerFinished,
       } = get()
+
+      // For multiplayer, just record the finish and let the multiplayer slice handle the rest
+      if (mode === GameMode.SPEEDRUN_MULTIPLAYER) {
+        onLocalPlayerFinished(speedRunTimeCS)
+        return
+      }
+
+      // Single-player speed run logic
       if (!username) return
       const speedRunStage = SpeedRunStage.SUBMITTING
 

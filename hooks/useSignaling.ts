@@ -100,6 +100,8 @@ const useSignaling = ({
       onError: (message) => {
         console.error('[Signaling]', message)
         store.getState().setError(message)
+        // Reset to idle state on error (e.g., room not found when trying to join)
+        store.getState().setRoomState(RoomState.IDLE)
       },
     }
 
