@@ -72,6 +72,7 @@ export function useMultiplayerSync() {
           case MultiplayerMessage.PLAYER_LEFT: {
             const { peerId } = lastMessage.data
             gameStoreAPI.getState().removeRemotePlayer(peerId)
+            gameStoreAPI.getState().setRemotePlayerLeft(true)
             peerPositionRefs.current.delete(peerId)
             break
           }

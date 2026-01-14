@@ -2,11 +2,15 @@ import { type GameSliceCreator, type MultiplayerSlice, Overlay } from './types'
 
 export const RESET_MULTIPLAYER_STATE: Pick<
   MultiplayerSlice,
-  'remotePlayers' | 'localPlayerFinishedTimeCS' | 'remotePlayerFinishedTimeCS'
+  | 'remotePlayers'
+  | 'localPlayerFinishedTimeCS'
+  | 'remotePlayerFinishedTimeCS'
+  | 'remotePlayerLeft'
 > = {
   remotePlayers: new Map(),
   localPlayerFinishedTimeCS: null,
   remotePlayerFinishedTimeCS: null,
+  remotePlayerLeft: false,
 }
 
 export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, get) => ({
@@ -32,6 +36,10 @@ export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, 
       newRemotePlayers.delete(peerId)
       return { remotePlayers: newRemotePlayers }
     })
+  },
+
+  setRemotePlayerLeft: (left) => {
+    set({ remotePlayerLeft: left })
   },
 
   clearRemotePlayers: () => {
@@ -64,6 +72,7 @@ export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, 
     set({
       localPlayerFinishedTimeCS: null,
       remotePlayerFinishedTimeCS: null,
+      remotePlayerLeft: false,
     })
   },
 })
