@@ -15,7 +15,9 @@ import MiniMap from '@/components/ui/miniMap/MiniMap'
 import { GameMode, Overlay } from '@/stores/types'
 
 import { SubscribeOverlay } from './SubscribeOverlay'
+import { MultiplayerDisconnectOverlay } from './speedRun/MultiplayerDisconnectOverlay'
 import { MultiplayerRaceEndOverlay } from './speedRun/MultiplayerRaceEndOverlay'
+import { MultiplayerSpeedRunControls } from './speedRun/MultiplayerSpeedRunUI'
 import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
 import { SpeedRunStartOverlay } from './speedRun/SpeedRunStartOverlay'
@@ -30,6 +32,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const overlay = useGameStore((s) => s.overlay)
   const setOverlay = useGameStore((s) => s.setOverlay)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
+  const isMultiplayerMode = mode === GameMode.SPEEDRUN_MULTIPLAYER
 
   const infoContainer = useRef<HTMLDivElement>(null)
   const overlayBackdropRef = useRef<HTMLDivElement>(null)
@@ -39,6 +42,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const speedRunCountdownOverlay = useRef<HTMLDivElement>(null)
   const speedRunEndOverlay = useRef<HTMLDivElement>(null)
   const multiplayerRaceEndOverlay = useRef<HTMLDivElement>(null)
+  const multiplayerDisconnectOverlay = useRef<HTMLDivElement>(null)
 
   return (
     <>
@@ -64,7 +68,15 @@ const UI: FC<Props> = ({ isMobile }) => {
                     status === 'entering' && 'opacity-100',
                     status === 'entered' && 'opacity-100',
                   )}>
-                  {isSpeedRunMode ? <SpeedRunControls /> : <CollectiblesUI />}
+                  {isSpeedRunMode ? (
+                    isMultiplayerMode ? (
+                      <MultiplayerSpeedRunControls />
+                    ) : (
+                      <SpeedRunControls />
+                    )
+                  ) : (
+                    <CollectiblesUI />
+                  )}
                 </section>
               )
             }}
@@ -183,6 +195,21 @@ const UI: FC<Props> = ({ isMobile }) => {
         {(status) => (
           <MultiplayerRaceEndOverlay
             ref={multiplayerRaceEndOverlay}
+            transitionStatus={status}
+            isMobile={isMobile}
+          />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.MULTIPLAYER_DISCONNECT}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={multiplayerDisconnectOverlay}>
+        {(status) => (
+          <MultiplayerDisconnectOverlay
+            ref={multiplayerDisconnectOverlay}
             transitionStatus={status}
             isMobile={isMobile}
           />

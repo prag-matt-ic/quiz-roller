@@ -104,6 +104,7 @@ export enum Overlay {
   SPEEDRUN_COUNTDOWN = 'speedrun-countdown',
   SPEEDRUN_END = 'speedrun-end',
   MULTIPLAYER_RACE_END = 'multiplayer-race-end',
+  MULTIPLAYER_DISCONNECT = 'multiplayer-disconnect',
 }
 
 export const getOverlayForSpeedRunStage = (speedRunStage: SpeedRunStage): Overlay => {
@@ -234,9 +235,11 @@ export type MultiplayerSlice = {
   localPlayerFinishedTimeCS: number | null
   remotePlayerFinishedTimeCS: number | null
   remotePlayerLeft: boolean
+  raceEndedEarly: boolean
   onLocalPlayerFinished: (timeCS: number) => void
   onRemotePlayerFinished: (timeCS: number) => void
   setRemotePlayerLeft: (left: boolean) => void
+  setRaceEndedEarly: (ended: boolean) => void
   resetMultiplayerRaceState: () => void
 }
 

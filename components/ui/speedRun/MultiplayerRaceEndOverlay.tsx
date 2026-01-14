@@ -11,7 +11,7 @@ import { PointerProvider } from '@/components/ui/PointerProvider'
 import Panel from '@/components/ui/panel/Panel'
 import useSignaling from '@/hooks/useSignaling'
 import { GameMode } from '@/stores/types'
-import { MultiplayerMessage } from '@/utils/multiplayer/messages'
+import { type GameStartMessage, MultiplayerMessage } from '@/utils/multiplayer/messages'
 
 type Props = {
   ref: RefObject<HTMLDivElement | null>
@@ -32,10 +32,12 @@ function formatTime(centiseconds: number): string {
 // Fullscreen overlay shown at the end of a multiplayer race
 export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, isMobile }) => {
   const startMultiplayerCountdown = useGameStore((s) => s.startMultiplayerCountdown)
+  const resetMultiplayerRaceState = useGameStore((s) => s.resetMultiplayerRaceState)
   const resetGame = useGameStore((s) => s.resetGame)
   const localPlayerFinishedTimeCS = useGameStore((s) => s.localPlayerFinishedTimeCS)
   const remotePlayerFinishedTimeCS = useGameStore((s) => s.remotePlayerFinishedTimeCS)
   const remotePlayerLeft = useGameStore((s) => s.remotePlayerLeft)
+  const raceEndedEarly = useGameStore((s) => s.raceEndedEarly)
 
   const { state: webrtcState, actions: webrtcActions } = useWebRTC()
   const { isHost, peers } = webrtcState
@@ -43,6 +45,15 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
   const { leaveRoom } = useSignaling()
 
   const result = useMemo(() => {
+    // Check if race was ended early by either player
+    if (raceEndedEarly) {
+      return {
+        winner: null,
+        heading: 'Race Ended',
+        description: 'The race was ended before completion.',
+      }
+    }
+
     // Check if opponent left the race
     if (remotePlayerLeft) {
       return {
@@ -80,11 +91,26 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
       heading: 'You Lost',
       description: 'Better luck next time! Your opponent was faster this round.',
     }
-  }, [localPlayerFinishedTimeCS, remotePlayerFinishedTimeCS, remotePlayerLeft])
+  }, [localPlayerFinishedTimeCS, remotePlayerFinishedTimeCS, remotePlayerLeft, raceEndedEarly])
 
   const handleRetry = () => {
+    // Reset the race ended early flag
+    if (raceEndedEarly) {
+      resetMultiplayerRaceState()
+    }
+
     // Only host can start a new race
     if (isHost) {
+      // Send GAME_START message to all peers
+      const message: GameStartMessage = {
+        type: MultiplayerMessage.GAME_START,
+        data: { startTime: Date.now() },
+      }
+      peers.forEach((_, peerId) => {
+        webrtcActions.sendMessage(peerId, message)
+      })
+
+      // Start local countdown as host (spawns on the right)
       startMultiplayerCountdown(true)
     }
   }
@@ -129,46 +155,48 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
             </p>
           </Panel>
 
-          <Panel strength={3} attractorClassName="bg-emerald-400/15">
-            <div className="mb-4 flex items-center gap-2">
-              <Trophy className="size-5 text-amber-400" />
-              <h3 className="text-lg font-semibold">Race Results</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div
-                className={twJoin(
-                  'rounded-lg p-4',
-                  result.winner === 'local' ? 'bg-amber-500/20' : 'bg-white/5',
-                )}>
-                <p className="mb-1 text-sm text-white/60">You</p>
-                <p className="text-2xl font-bold">
-                  {localPlayerFinishedTimeCS !== null
-                    ? formatTime(localPlayerFinishedTimeCS)
-                    : '--'}
-                </p>
-                {result.winner === 'local' && (
-                  <span className="text-xs font-semibold text-amber-400">WINNER</span>
-                )}
+          {!raceEndedEarly && (
+            <Panel strength={3} attractorClassName="bg-emerald-400/15">
+              <div className="mb-4 flex items-center gap-2">
+                <Trophy className="size-5 text-amber-400" />
+                <h3 className="text-lg font-semibold">Race Results</h3>
               </div>
 
-              <div
-                className={twJoin(
-                  'rounded-lg p-4',
-                  result.winner === 'remote' ? 'bg-amber-500/20' : 'bg-white/5',
-                )}>
-                <p className="mb-1 text-sm text-white/60">Opponent</p>
-                <p className="text-2xl font-bold">
-                  {remotePlayerFinishedTimeCS !== null
-                    ? formatTime(remotePlayerFinishedTimeCS)
-                    : '--'}
-                </p>
-                {result.winner === 'remote' && (
-                  <span className="text-xs font-semibold text-amber-400">WINNER</span>
-                )}
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div
+                  className={twJoin(
+                    'rounded-lg p-4',
+                    result.winner === 'local' ? 'bg-amber-500/20' : 'bg-white/5',
+                  )}>
+                  <p className="mb-1 text-sm text-white/60">You</p>
+                  <p className="text-2xl font-bold">
+                    {localPlayerFinishedTimeCS !== null
+                      ? formatTime(localPlayerFinishedTimeCS)
+                      : '--'}
+                  </p>
+                  {result.winner === 'local' && (
+                    <span className="text-xs font-semibold text-amber-400">WINNER</span>
+                  )}
+                </div>
+
+                <div
+                  className={twJoin(
+                    'rounded-lg p-4',
+                    result.winner === 'remote' ? 'bg-amber-500/20' : 'bg-white/5',
+                  )}>
+                  <p className="mb-1 text-sm text-white/60">Opponent</p>
+                  <p className="text-2xl font-bold">
+                    {remotePlayerFinishedTimeCS !== null
+                      ? formatTime(remotePlayerFinishedTimeCS)
+                      : '--'}
+                  </p>
+                  {result.winner === 'remote' && (
+                    <span className="text-xs font-semibold text-amber-400">WINNER</span>
+                  )}
+                </div>
               </div>
-            </div>
-          </Panel>
+            </Panel>
+          )}
 
           <Panel
             className="mx-auto flex w-fit items-center justify-center gap-3 rounded-full"
@@ -178,7 +206,7 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
                 Race Again
               </Button>
             )}
-            {!remotePlayerLeft && !isHost && (
+            {!remotePlayerLeft && !raceEndedEarly && !isHost && (
               <p className="px-4 text-sm text-white/60">
                 Waiting for host to start next race...
               </p>

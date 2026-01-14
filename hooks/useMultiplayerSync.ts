@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import { useGameStoreAPI } from '@/components/GameProvider'
 import { useWebRTC } from '@/components/WebRTCProvider'
-import type { RemotePlayerData } from '@/stores/types'
+import { GameMode, Overlay, type RemotePlayerData, SpeedRunStage } from '@/stores/types'
 import { MultiplayerMessage, type RaceFinishedMessage } from '@/utils/multiplayer/messages'
 
 /**
@@ -89,6 +89,13 @@ export function useMultiplayerSync() {
             gameStoreAPI.getState().onRemotePlayerFinished(timeCS)
             break
           }
+
+          case MultiplayerMessage.RACE_ENDED: {
+            // Opponent ended the race early
+            gameStoreAPI.getState().setRaceEndedEarly(true)
+            gameStoreAPI.getState().setOverlay(Overlay.MULTIPLAYER_RACE_END)
+            break
+          }
         }
       },
     )
@@ -100,14 +107,29 @@ export function useMultiplayerSync() {
   useEffect(() => {
     const unsubscribe = store.subscribe(
       (state) => state.peers,
-      (newPeers) => {
+      (newPeers, prevPeers) => {
         const currentPeerIds = Array.from(newPeers.keys())
+        const prevPeerIds = Array.from(prevPeers.keys())
 
-        // Remove players that are no longer connected
-        peerPositionRefs.current.forEach((_, peerId) => {
+        // Check if any peers disconnected
+        prevPeerIds.forEach((peerId) => {
           if (!currentPeerIds.includes(peerId)) {
+            // Peer disconnected
             gameStoreAPI.getState().removeRemotePlayer(peerId)
             peerPositionRefs.current.delete(peerId)
+
+            // Check if disconnect happened during active multiplayer race
+            const gameState = gameStoreAPI.getState()
+            const isMultiplayerRace = gameState.mode === GameMode.SPEEDRUN_MULTIPLAYER
+            const isRaceActive =
+              gameState.speedRunStage === SpeedRunStage.RUNNING ||
+              gameState.speedRunStage === SpeedRunStage.COUNTDOWN
+
+            // Show disconnect overlay if peer left during active race
+            if (isMultiplayerRace && isRaceActive) {
+              console.log('[useMultiplayerSync] Peer disconnected during race, showing overlay')
+              gameStoreAPI.getState().setOverlay(Overlay.MULTIPLAYER_DISCONNECT)
+            }
           }
         })
       },
