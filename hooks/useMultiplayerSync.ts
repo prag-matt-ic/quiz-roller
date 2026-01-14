@@ -31,6 +31,19 @@ export function useMultiplayerSync() {
         // Only process if there's a new message
         if (newMessages.length <= prevMessages.length && lastMessage === prevLastMessage) return
 
+        // Get current state actions once per message
+        const {
+          addRemotePlayer,
+          removeRemotePlayer,
+          setRemotePlayerLeft,
+          startMultiplayerCountdown,
+          onRemotePlayerFinished,
+          setRaceEndedEarly,
+          setOverlay,
+          setRacePaused,
+          resetMultiplayerRaceState,
+        } = gameStoreAPI.getState()
+
         switch (lastMessage.type) {
           case MultiplayerMessage.PLAYER_POSITION: {
             const { from, data } = lastMessage
@@ -46,7 +59,7 @@ export function useMultiplayerSync() {
             if (!positionRef) {
               positionRef = { current: { worldPosition: position, platformScroll, rotation } }
               peerPositionRefs.current.set(from, positionRef)
-              gameStoreAPI.getState().addRemotePlayer(from, positionRef)
+              addRemotePlayer(from, positionRef)
             } else {
               // Update ref directly (no re-render)
               positionRef.current = { worldPosition: position, platformScroll, rotation }
@@ -64,36 +77,67 @@ export function useMultiplayerSync() {
                 },
               }
               peerPositionRefs.current.set(peerId, positionRef)
-              gameStoreAPI.getState().addRemotePlayer(peerId, positionRef)
+              addRemotePlayer(peerId, positionRef)
             }
             break
           }
 
           case MultiplayerMessage.PLAYER_LEFT: {
             const { peerId } = lastMessage.data
-            gameStoreAPI.getState().removeRemotePlayer(peerId)
-            gameStoreAPI.getState().setRemotePlayerLeft(true)
+            removeRemotePlayer(peerId)
+            setRemotePlayerLeft(true)
             peerPositionRefs.current.delete(peerId)
             break
           }
 
           case MultiplayerMessage.GAME_START: {
             // Received game-start from host, start as guest (spawn on the left)
-            gameStoreAPI.getState().startMultiplayerCountdown(false)
+            startMultiplayerCountdown(false)
             break
           }
 
           case MultiplayerMessage.RACE_FINISHED: {
             // Received race-finished from peer
             const { timeCS } = lastMessage.data
-            gameStoreAPI.getState().onRemotePlayerFinished(timeCS)
+            onRemotePlayerFinished(timeCS)
             break
           }
 
           case MultiplayerMessage.RACE_ENDED: {
             // Opponent ended the race early
-            gameStoreAPI.getState().setRaceEndedEarly(true)
-            gameStoreAPI.getState().setOverlay(Overlay.MULTIPLAYER_RACE_END)
+            setRaceEndedEarly(true)
+            setOverlay(Overlay.MULTIPLAYER_RACE_END)
+            break
+          }
+
+          case MultiplayerMessage.RACE_PAUSED: {
+            // Opponent paused the race
+            const { peerId } = lastMessage.data
+            setRacePaused(true, peerId)
+            setOverlay(Overlay.MULTIPLAYER_GAME_PAUSED)
+            break
+          }
+
+          case MultiplayerMessage.RACE_RESUMED: {
+            // Opponent resumed the race
+            setRacePaused(false, null)
+            setOverlay(Overlay.NONE)
+            break
+          }
+
+          case MultiplayerMessage.RACE_RESTART: {
+            // Opponent requested race restart
+            const { fromCurrentPosition } = lastMessage.data
+
+            if (fromCurrentPosition) {
+              // Resume from current position
+              setRacePaused(false, null)
+              setOverlay(Overlay.NONE)
+            } else {
+              // Restart from beginning - reset and start countdown as guest
+              resetMultiplayerRaceState()
+              startMultiplayerCountdown(false)
+            }
             break
           }
         }
@@ -114,21 +158,31 @@ export function useMultiplayerSync() {
         // Check if any peers disconnected
         prevPeerIds.forEach((peerId) => {
           if (!currentPeerIds.includes(peerId)) {
+            // Get current state once
+            const { removeRemotePlayer, setRemotePlayerLeft, setOverlay, ...gameState } =
+              gameStoreAPI.getState()
+
             // Peer disconnected
-            gameStoreAPI.getState().removeRemotePlayer(peerId)
+            removeRemotePlayer(peerId)
             peerPositionRefs.current.delete(peerId)
 
             // Check if disconnect happened during active multiplayer race
-            const gameState = gameStoreAPI.getState()
             const isMultiplayerRace = gameState.mode === GameMode.SPEEDRUN_MULTIPLAYER
             const isRaceActive =
               gameState.speedRunStage === SpeedRunStage.RUNNING ||
               gameState.speedRunStage === SpeedRunStage.COUNTDOWN
+            const isRacePaused = gameState.isRacePaused
 
             // Show disconnect overlay if peer left during active race
+            // If race is paused, keep the pause overlay but update remotePlayerLeft state
             if (isMultiplayerRace && isRaceActive) {
-              console.log('[useMultiplayerSync] Peer disconnected during race, showing overlay')
-              gameStoreAPI.getState().setOverlay(Overlay.MULTIPLAYER_DISCONNECT)
+              console.warn('[useMultiplayerSync] Peer disconnected during race')
+              if (isRacePaused) {
+                // Keep pause overlay open, it will show opponent left message
+                setRemotePlayerLeft(true)
+              } else {
+                setOverlay(Overlay.MULTIPLAYER_DISCONNECT)
+              }
             }
           }
         })
