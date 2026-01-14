@@ -1,5 +1,5 @@
 'use client'
-import { XIcon } from 'lucide-react'
+import { PauseIcon } from 'lucide-react'
 import { type FC } from 'react'
 
 import { useGameStore } from '@/components/GameProvider'
@@ -12,26 +12,25 @@ import { SpeedRunTimer } from './SpeedRunUI'
 
 export const MultiplayerSpeedRunControls: FC = () => {
   const setOverlay = useGameStore((s) => s.setOverlay)
-  const setRaceEndedEarly = useGameStore((s) => s.setRaceEndedEarly)
+  const setRacePaused = useGameStore((s) => s.setRacePaused)
 
   const { state: webrtcState, actions: webrtcActions } = useWebRTC()
-  const { peers } = webrtcState
+  const { localPeerId, peers } = webrtcState
 
-  const handleEndRace = () => {
-    // Send RACE_ENDED message to opponent
-    const localPeerId = webrtcState.localPeerId
+  const handlePauseRace = () => {
+    // Send RACE_PAUSED message to opponent
     peers.forEach((_, peerId) => {
       webrtcActions.sendMessage(peerId, {
-        type: MultiplayerMessage.RACE_ENDED,
+        type: MultiplayerMessage.RACE_PAUSED,
         data: { peerId: localPeerId || '' },
       })
     })
 
-    // Mark that race was ended early
-    setRaceEndedEarly(true)
+    // Mark that race is paused
+    setRacePaused(true, localPeerId)
 
-    // Show multiplayer race end overlay
-    setOverlay(Overlay.MULTIPLAYER_RACE_END)
+    // Show multiplayer game paused overlay
+    setOverlay(Overlay.MULTIPLAYER_GAME_PAUSED)
   }
 
   return (
@@ -39,10 +38,10 @@ export const MultiplayerSpeedRunControls: FC = () => {
       <Button
         size="sm"
         variant="secondary"
-        title="End Race"
+        title="Pause Race"
         className="aspect-square!"
-        onClick={handleEndRace}>
-        <XIcon size={20} strokeWidth={2} />
+        onClick={handlePauseRace}>
+        <PauseIcon size={20} strokeWidth={2} />
       </Button>
 
       <SpeedRunTimer />

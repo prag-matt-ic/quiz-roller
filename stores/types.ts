@@ -105,6 +105,7 @@ export enum Overlay {
   SPEEDRUN_END = 'speedrun-end',
   MULTIPLAYER_RACE_END = 'multiplayer-race-end',
   MULTIPLAYER_DISCONNECT = 'multiplayer-disconnect',
+  MULTIPLAYER_GAME_PAUSED = 'multiplayer-game-paused',
 }
 
 export const getOverlayForSpeedRunStage = (speedRunStage: SpeedRunStage): Overlay => {
@@ -241,6 +242,11 @@ export type MultiplayerSlice = {
   setRemotePlayerLeft: (left: boolean) => void
   setRaceEndedEarly: (ended: boolean) => void
   resetMultiplayerRaceState: () => void
+
+  // Race pause tracking
+  isRacePaused: boolean
+  pausedByPeerId: string | null
+  setRacePaused: (paused: boolean, peerId: string | null) => void
 }
 
 export type GameStore = TimeSlice &

@@ -16,6 +16,7 @@ import { GameMode, Overlay } from '@/stores/types'
 
 import { SubscribeOverlay } from './SubscribeOverlay'
 import { MultiplayerDisconnectOverlay } from './speedRun/MultiplayerDisconnectOverlay'
+import { MultiplayerGamePausedOverlay } from './speedRun/MultiplayerGamePausedOverlay'
 import { MultiplayerRaceEndOverlay } from './speedRun/MultiplayerRaceEndOverlay'
 import { MultiplayerSpeedRunControls } from './speedRun/MultiplayerSpeedRunUI'
 import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
@@ -43,6 +44,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const speedRunEndOverlay = useRef<HTMLDivElement>(null)
   const multiplayerRaceEndOverlay = useRef<HTMLDivElement>(null)
   const multiplayerDisconnectOverlay = useRef<HTMLDivElement>(null)
+  const multiplayerGamePausedOverlay = useRef<HTMLDivElement>(null)
 
   return (
     <>
@@ -211,6 +213,21 @@ const UI: FC<Props> = ({ isMobile }) => {
         {(status) => (
           <MultiplayerDisconnectOverlay
             ref={multiplayerDisconnectOverlay}
+            transitionStatus={status}
+            isMobile={isMobile}
+          />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.MULTIPLAYER_GAME_PAUSED}
+        timeout={{ enter: 0, exit: 300 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={multiplayerGamePausedOverlay}>
+        {(status) => (
+          <MultiplayerGamePausedOverlay
+            ref={multiplayerGamePausedOverlay}
             transitionStatus={status}
             isMobile={isMobile}
           />

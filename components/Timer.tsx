@@ -3,12 +3,13 @@
 import { type FC, useEffect } from 'react'
 
 import { useGameStore, useGameStoreAPI } from '@/components/GameProvider'
-import { GameMode } from '@/stores/types'
+import { GameMode, SpeedRunStage } from '@/stores/types'
 
 const Timer: FC = () => {
   const mode = useGameStore((s) => s.mode)
   const isSpeedRunMode = mode === GameMode.SPEEDRUN || mode === GameMode.SPEEDRUN_MULTIPLAYER
-  const isSpeedRunTiming = useGameStore((s) => s.speedRunStage === 'running')
+  const isSpeedRunTiming = useGameStore((s) => s.speedRunStage === SpeedRunStage.RUNNING)
+  const isRacePaused = useGameStore((s) => s.isRacePaused)
   const _isHydrated = useGameStore((s) => s._isHydrated)
   const gameStoreAPI = useGameStoreAPI()
 
@@ -29,7 +30,7 @@ const Timer: FC = () => {
   }, [gameStoreAPI, _isHydrated])
 
   useEffect(() => {
-    if (!isSpeedRunMode || !isSpeedRunTiming) return
+    if (!isSpeedRunMode || !isSpeedRunTiming || isRacePaused) return
     let previous = performance.now()
 
     const intervalId = window.setInterval(() => {
@@ -42,7 +43,7 @@ const Timer: FC = () => {
     }, 10)
 
     return () => window.clearInterval(intervalId)
-  }, [isSpeedRunMode, isSpeedRunTiming, gameStoreAPI])
+  }, [isSpeedRunMode, isSpeedRunTiming, isRacePaused, gameStoreAPI])
 
   return null
 }
