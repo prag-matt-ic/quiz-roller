@@ -233,8 +233,10 @@ export type MultiplayerSlice = {
   // Race completion tracking
   localPlayerFinishedTimeCS: number | null
   remotePlayerFinishedTimeCS: number | null
+  remotePlayerLeft: boolean
   onLocalPlayerFinished: (timeCS: number) => void
   onRemotePlayerFinished: (timeCS: number) => void
+  setRemotePlayerLeft: (left: boolean) => void
   resetMultiplayerRaceState: () => void
 }
 

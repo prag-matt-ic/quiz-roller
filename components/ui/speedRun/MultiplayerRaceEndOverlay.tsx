@@ -9,7 +9,9 @@ import { useWebRTC } from '@/components/WebRTCProvider'
 import Button from '@/components/ui/Button'
 import { PointerProvider } from '@/components/ui/PointerProvider'
 import Panel from '@/components/ui/panel/Panel'
+import useSignaling from '@/hooks/useSignaling'
 import { GameMode } from '@/stores/types'
+import { MultiplayerMessage } from '@/utils/multiplayer/messages'
 
 type Props = {
   ref: RefObject<HTMLDivElement | null>
@@ -33,11 +35,23 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
   const resetGame = useGameStore((s) => s.resetGame)
   const localPlayerFinishedTimeCS = useGameStore((s) => s.localPlayerFinishedTimeCS)
   const remotePlayerFinishedTimeCS = useGameStore((s) => s.remotePlayerFinishedTimeCS)
+  const remotePlayerLeft = useGameStore((s) => s.remotePlayerLeft)
 
-  const { state: webrtcState } = useWebRTC()
-  const { isHost } = webrtcState
+  const { state: webrtcState, actions: webrtcActions } = useWebRTC()
+  const { isHost, peers } = webrtcState
+
+  const { leaveRoom } = useSignaling()
 
   const result = useMemo(() => {
+    // Check if opponent left the race
+    if (remotePlayerLeft) {
+      return {
+        winner: 'local',
+        heading: 'Opponent Left',
+        description: 'Your opponent has left multiplayer mode. Return to free roam!',
+      }
+    }
+
     if (localPlayerFinishedTimeCS === null || remotePlayerFinishedTimeCS === null) {
       return { winner: null, heading: 'Race Complete!', description: 'Calculating results...' }
     }
@@ -66,13 +80,35 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
       heading: 'You Lost',
       description: 'Better luck next time! Your opponent was faster this round.',
     }
-  }, [localPlayerFinishedTimeCS, remotePlayerFinishedTimeCS])
+  }, [localPlayerFinishedTimeCS, remotePlayerFinishedTimeCS, remotePlayerLeft])
 
   const handleRetry = () => {
     // Only host can start a new race
     if (isHost) {
       startMultiplayerCountdown(true)
     }
+  }
+
+  const handleLeave = () => {
+    // Send PLAYER_LEFT message to opponent before disconnecting
+    const localPeerId = webrtcState.localPeerId
+    peers.forEach((_, peerId) => {
+      webrtcActions.sendMessage(peerId, {
+        type: MultiplayerMessage.PLAYER_LEFT,
+        data: { peerId: localPeerId || '' },
+      })
+    })
+
+    // Close individual peer connections
+    peers.forEach((_, peerId) => {
+      webrtcActions.closePeerConnection(peerId)
+    })
+
+    // Leave the room (but keep signaling connection alive)
+    leaveRoom()
+
+    // Reset game to free roam mode
+    resetGame({ mode: GameMode.LEARN })
   }
 
   return (
@@ -137,21 +173,17 @@ export const MultiplayerRaceEndOverlay: FC<Props> = ({ ref, transitionStatus, is
           <Panel
             className="mx-auto flex w-fit items-center justify-center gap-3 rounded-full"
             strength={3}>
-            {isHost && (
+            {!remotePlayerLeft && isHost && (
               <Button variant="primary" onClick={handleRetry} endIcon={RotateCcwIcon}>
                 Race Again
               </Button>
             )}
-            {!isHost && (
+            {!remotePlayerLeft && !isHost && (
               <p className="px-4 text-sm text-white/60">
                 Waiting for host to start next race...
               </p>
             )}
-            <Button
-              size="md"
-              variant="secondary"
-              endIcon={LogOutIcon}
-              onClick={() => resetGame({ mode: GameMode.LEARN })}>
+            <Button size="md" variant="secondary" endIcon={LogOutIcon} onClick={handleLeave}>
               Leave
             </Button>
           </Panel>
