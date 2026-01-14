@@ -6,11 +6,13 @@ export const RESET_MULTIPLAYER_STATE: Pick<
   | 'localPlayerFinishedTimeCS'
   | 'remotePlayerFinishedTimeCS'
   | 'remotePlayerLeft'
+  | 'raceEndedEarly'
 > = {
   remotePlayers: new Map(),
   localPlayerFinishedTimeCS: null,
   remotePlayerFinishedTimeCS: null,
   remotePlayerLeft: false,
+  raceEndedEarly: false,
 }
 
 export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, get) => ({
@@ -40,6 +42,10 @@ export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, 
 
   setRemotePlayerLeft: (left) => {
     set({ remotePlayerLeft: left })
+  },
+
+  setRaceEndedEarly: (ended) => {
+    set({ raceEndedEarly: ended })
   },
 
   clearRemotePlayers: () => {
@@ -73,6 +79,7 @@ export const createMultiplayerSlice: GameSliceCreator<MultiplayerSlice> = (set, 
       localPlayerFinishedTimeCS: null,
       remotePlayerFinishedTimeCS: null,
       remotePlayerLeft: false,
+      raceEndedEarly: false,
     })
   },
 })

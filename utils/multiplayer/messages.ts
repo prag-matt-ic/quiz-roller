@@ -13,6 +13,7 @@ export enum MultiplayerMessage {
   PLAYER_LEFT = 'player-left',
   GAME_START = 'game-start',
   RACE_FINISHED = 'race-finished',
+  RACE_ENDED = 'race-ended',
 }
 
 export type PlayerPositionData = {
@@ -21,45 +22,59 @@ export type PlayerPositionData = {
   platformScroll: Position3D
 }
 
-export type PlayerPositionMessage = {
-  type: MultiplayerMessage.PLAYER_POSITION
+/**
+ * Base type for all multiplayer messages
+ */
+export type BaseMultiplayerMessage<
+  T extends MultiplayerMessage,
+  D = Record<string, unknown>,
+> = {
+  type: T
   from?: string
-  data: PlayerPositionData
+  data: D
 }
 
-export type PlayerJoinedMessage = {
-  type: MultiplayerMessage.PLAYER_JOINED
-  from?: string
-  data: {
+export type PlayerPositionMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.PLAYER_POSITION,
+  PlayerPositionData
+>
+
+export type PlayerJoinedMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.PLAYER_JOINED,
+  {
     peerId: string
   }
-}
+>
 
-export type PlayerLeftMessage = {
-  type: MultiplayerMessage.PLAYER_LEFT
-  from?: string
-  data: {
+export type PlayerLeftMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.PLAYER_LEFT,
+  {
     peerId: string
   }
-}
+>
 
-export type GameStartMessage = {
-  type: MultiplayerMessage.GAME_START
-  from?: string
-  data: {
+export type GameStartMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.GAME_START,
+  {
     /** Timestamp when the game should start (synchronized) */
     startTime: number
   }
-}
+>
 
-export type RaceFinishedMessage = {
-  type: MultiplayerMessage.RACE_FINISHED
-  from?: string
-  data: {
+export type RaceFinishedMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.RACE_FINISHED,
+  {
     /** Time in centiseconds */
     timeCS: number
   }
-}
+>
+
+export type RaceEndedMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.RACE_ENDED,
+  {
+    peerId: string
+  }
+>
 
 /** Union of all multiplayer message types */
 export type MultiplayerMessageUnion =
@@ -68,6 +83,7 @@ export type MultiplayerMessageUnion =
   | PlayerLeftMessage
   | GameStartMessage
   | RaceFinishedMessage
+  | RaceEndedMessage
 
 /**
  * Type guards for message handling
@@ -116,5 +132,14 @@ export function isRaceFinishedMessage(msg: unknown): msg is RaceFinishedMessage 
     msg !== null &&
     'type' in msg &&
     msg.type === MultiplayerMessage.RACE_FINISHED
+  )
+}
+
+export function isRaceEndedMessage(msg: unknown): msg is RaceEndedMessage {
+  return (
+    typeof msg === 'object' &&
+    msg !== null &&
+    'type' in msg &&
+    msg.type === MultiplayerMessage.RACE_ENDED
   )
 }
