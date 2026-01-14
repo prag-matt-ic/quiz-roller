@@ -98,7 +98,9 @@ const UI: FC<Props> = ({ isMobile }) => {
         }}
         className={twJoin(
           'pointer-events-auto fixed top-2 right-2 z-300 flex items-center rounded-xl p-3 text-xs text-neutral-300 uppercase transition-all hover:bg-black/20',
-          overlay === Overlay.LANDING ? 'opacity-0' : 'opacity-100',
+          (overlay !== Overlay.NONE && overlay !== Overlay.DASHBOARD) || isSpeedRunMode
+            ? 'opacity-0'
+            : 'opacity-100',
         )}>
         {overlay === Overlay.DASHBOARD ? (
           <XIcon className="size-6 xl:size-8" />

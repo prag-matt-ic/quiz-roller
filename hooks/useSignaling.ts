@@ -64,7 +64,11 @@ const useSignaling = ({
         signalingClientRef.current?.sendOffer(peerId, offer)
       },
 
-      onPeerLeft: () => {},
+      onPeerLeft: (peerId) => {
+        console.warn(`[Signaling] Peer left: ${peerId}`)
+        // The WebRTC provider will handle cleanup through connection state changes
+        // and useMultiplayerSync will detect the peer removal and show disconnect overlay
+      },
 
       onOffer: async (from, offer) => {
         // We're the client - create answer and send back
