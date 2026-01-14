@@ -160,8 +160,20 @@ export function useWebRTC() {
         store.getState().updatePeerConnectionState(id, state)
         if (state === 'connected') {
           store.getState().setConnectionState(ConnectionState.CONNECTED)
-        } else if (state === 'failed' || state === 'closed') {
+        } else if (state === 'failed' || state === 'closed' || state === 'disconnected') {
+          console.warn(`[WebRTC] Peer ${id} connection state changed to: ${state}`)
           store.getState().setConnectionState(ConnectionState.FAILED)
+          // Remove the peer to trigger cleanup in useMultiplayerSync
+          // This ensures the disconnect overlay shows during active races
+          if (state === 'failed' || state === 'closed') {
+            setTimeout(() => {
+              const currentState = connectionsRef.current.get(id)?.getConnectionState()
+              // Only remove if still in failed/closed state (not reconnecting)
+              if (currentState === 'failed' || currentState === 'closed') {
+                store.getState().removePeer(id)
+              }
+            }, 2000) // Give 2 seconds for potential reconnection
+          }
         }
       },
       onSignalingStateChange: (state) => store.getState().setSignalingState(state),
@@ -176,7 +188,7 @@ export function useWebRTC() {
       },
       onError: (error) => store.getState().setError(error),
     }),
-    [store],
+    [store, connectionsRef],
   )
 
   const createPeerConnection = useCallback(

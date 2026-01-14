@@ -17,6 +17,7 @@ export enum MultiplayerMessage {
   RACE_PAUSED = 'race-paused',
   RACE_RESUMED = 'race-resumed',
   RACE_RESTART = 'race-restart',
+  HEARTBEAT = 'heartbeat',
 }
 
 export type PlayerPositionData = {
@@ -103,6 +104,14 @@ export type RaceRestartMessage = BaseMultiplayerMessage<
   }
 >
 
+export type HeartbeatMessage = BaseMultiplayerMessage<
+  MultiplayerMessage.HEARTBEAT,
+  {
+    /** Timestamp of the heartbeat */
+    timestamp: number
+  }
+>
+
 /** Union of all multiplayer message types */
 export type MultiplayerMessageUnion =
   | PlayerPositionMessage
@@ -114,6 +123,7 @@ export type MultiplayerMessageUnion =
   | RacePausedMessage
   | RaceResumedMessage
   | RaceRestartMessage
+  | HeartbeatMessage
 
 /**
  * Type guards for message handling

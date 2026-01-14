@@ -1,9 +1,12 @@
 'use client'
 
-import { type FC, type PropsWithChildren } from 'react'
+import { type FC, type PropsWithChildren, useEffect } from 'react'
 
-import { WebRTCProvider } from '@/components/WebRTCProvider'
+import { useGameStore } from '@/components/GameProvider'
+import { WebRTCProvider, useWebRTC } from '@/components/WebRTCProvider'
 import { useMultiplayerSync } from '@/hooks/useMultiplayerSync'
+import { GameMode } from '@/stores/types'
+import { MultiplayerMessage, type PlayerLeftMessage } from '@/utils/multiplayer/messages'
 
 /**
  * MultiplayerSync
@@ -13,6 +16,32 @@ import { useMultiplayerSync } from '@/hooks/useMultiplayerSync'
  */
 const MultiplayerSync: FC = () => {
   useMultiplayerSync()
+  
+  const { store, actions } = useWebRTC()
+  const mode = useGameStore((s) => s.mode)
+
+  // Handle page unload/reload - send PLAYER_LEFT message
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only send if in multiplayer mode
+      if (mode !== GameMode.SPEEDRUN_MULTIPLAYER) return
+
+      // Send PLAYER_LEFT message to all connected peers
+      const { peers, localPeerId } = store.getState()
+      const message: PlayerLeftMessage = {
+        type: MultiplayerMessage.PLAYER_LEFT,
+        data: { peerId: localPeerId || 'unknown' },
+      }
+
+      peers.forEach((_, peerId) => {
+        actions.sendMessage(peerId, message)
+      })
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [mode, store, actions])
+
   return null
 }
 
