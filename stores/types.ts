@@ -103,6 +103,7 @@ export enum Overlay {
   SPEEDRUN_START = 'speedrun-start',
   SPEEDRUN_COUNTDOWN = 'speedrun-countdown',
   SPEEDRUN_END = 'speedrun-end',
+  MULTIPLAYER_SETUP = 'multiplayer-setup',
   MULTIPLAYER_RACE_END = 'multiplayer-race-end',
   MULTIPLAYER_DISCONNECT = 'multiplayer-disconnect',
   MULTIPLAYER_GAME_PAUSED = 'multiplayer-game-paused',

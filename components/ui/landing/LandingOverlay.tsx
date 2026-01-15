@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { type FC, type TransitionEvent, useLayoutEffect, useState } from 'react'
 import { twJoin } from 'tailwind-merge'
 
@@ -26,6 +27,8 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
   const respawnPlayer = useGameStore((s) => s.respawnPlayer)
   const inputType = useGameStore((s) => s.inputType)
 
+  const roomFromUrl = useSearchParams().get('room')
+
   const [isExiting, setIsExiting] = useState(false)
 
   const isLoaded = isHydrated && isPlatformReady
@@ -42,7 +45,11 @@ const LandingOverlay: FC<Props> = ({ isMobile }) => {
   const onTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (!isExiting) return
     if (e.target !== e.currentTarget) return
-    setOverlay(Overlay.NONE)
+
+    // If room parameter exists, transition to multiplayer setup overlay
+    if (roomFromUrl) setOverlay(Overlay.MULTIPLAYER_SETUP)
+    else setOverlay(Overlay.NONE)
+
     respawnPlayer(PLAYER_INITIAL_POSITION, MOVE_HUD_CONFIG[inputType])
   }
 
