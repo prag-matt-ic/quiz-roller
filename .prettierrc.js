@@ -1,6 +1,6 @@
 /**
  * @see https://prettier.io/docs/configuration
- * @type {import("prettier").Config}
+ * @type {import('prettier').Config}
  */
 
 const config = {
@@ -17,4 +17,4 @@ const config = {
   importOrderSortSpecifiers: true,
 }
 
-export default config
+module.exports = config

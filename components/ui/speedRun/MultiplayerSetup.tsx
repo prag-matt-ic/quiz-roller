@@ -3,6 +3,8 @@
 import { Copy, Loader2, Users, Wifi, WifiOff } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { SwitchTransition, Transition } from 'react-transition-group'
+import { twJoin } from 'tailwind-merge'
 
 import { useGameStore } from '@/components/GameProvider'
 import { useWebRTC } from '@/components/WebRTCProvider'
@@ -51,6 +53,11 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
   // Track whether we've attempted to auto-join from URL (ref to avoid lint issues with setState in effects)
   const autoJoinAttemptedRef = useRef(false)
 
+  // nodeRefs (avoid findDOMNode)
+  const idleRef = useRef<HTMLDivElement>(null)
+  const waitingRef = useRef<HTMLDivElement>(null)
+  const connectedRef = useRef<HTMLDivElement>(null)
+
   // All multiplayer state from useSignaling
   const {
     isSignalingConnected,
@@ -64,6 +71,21 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
     joinRoom,
     leaveRoom,
   } = useSignaling()
+
+  // View switching (idle -> waiting -> connected)
+  type View = 'idle' | 'waiting' | 'connected'
+  const view: View = isPeerConnected ? 'connected' : isRoomIdle ? 'idle' : 'waiting'
+
+  const animatedPanelClass = (status: string) =>
+    twJoin(
+      // base
+      'transform-gpu w-80 translate-y-2 opacity-0',
+      'transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none motion-reduce:transform-none',
+      // enter/entered
+      (status === 'entering' || status === 'entered') && 'translate-y-0 opacity-100',
+      // exit/exited
+      (status === 'exiting' || status === 'exited') && 'translate-y-2 opacity-0',
+    )
 
   // WebRTC for sending game-start message
   const { state: webrtcState, actions } = useWebRTC()
@@ -140,7 +162,7 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
   }, [peers, actions, startMultiplayerCountdown])
 
   return (
-    <div className="w-full space-y-4">
+    <div className="min-h-80 w-full space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-purple-300">
           <Users className="size-5" />
@@ -163,116 +185,161 @@ const MultiplayerSetup: FC<Props> = ({ onBack }) => {
           )}
         </div>
 
-        {/* Idle state - room creation/joining */}
-        {isRoomIdle && (
-          <>
-            <div>
-              <label className="mb-1 block text-sm text-gray-400">Room Name</label>
-              <input
-                type="text"
-                value={roomIdInput}
-                onChange={(e) =>
-                  setRoomIdInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
-                }
-                placeholder="Enter room name"
-                disabled={!isSignalingConnected}
-                className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-purple-500/50 focus:outline-none disabled:opacity-50"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleCreateRoom}
-                disabled={!isSignalingConnected || !roomIdInput}
-                className="flex-1 whitespace-nowrap bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
-                Create Room
-              </Button>
-              <Button
-                onClick={handleJoinRoom}
-                disabled={!isSignalingConnected || !roomIdInput}
-                className="flex-1 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
-                Join Room
-              </Button>
-            </div>
-
-            {error && <p className="text-center text-sm text-red-400">{error}</p>}
-
-            {!isSignalingConnected && (
-              <p className="text-center text-xs text-gray-500">
-                Start server: cd signaling-server && npm run dev
-              </p>
-            )}
-
-            <Button onClick={handleBack} variant="secondary" className="w-full">
-              Back
-            </Button>
-          </>
-        )}
-
-        {/* Waiting state - share link and wait for peer */}
-        {!isRoomIdle && !isPeerConnected && (
-          <>
-            <div className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin text-purple-400" />
-                <span className="text-sm font-medium text-purple-300">
-                  Waiting for opponent...
-                </span>
-              </div>
-
-              {shareUrl && (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-400">Share this link with your opponent:</p>
-                  <div className="flex gap-2">
+        <SwitchTransition mode="out-in">
+          {view === 'idle' ? (
+            <Transition
+              key="idle"
+              nodeRef={idleRef}
+              timeout={{ enter: 200, exit: 200 }}
+              mountOnEnter
+              unmountOnExit
+              appear>
+              {(status) => (
+                <div ref={idleRef} className={animatedPanelClass(status)}>
+                  <div>
+                    <label className="mb-1 block text-sm text-gray-400">Room Name</label>
                     <input
                       type="text"
-                      value={shareUrl}
-                      readOnly
-                      onClick={(e) => e.currentTarget.select()}
-                      className="flex-1 rounded border border-purple-500/30 bg-purple-900/20 px-3 py-2 text-sm text-purple-200"
+                      value={roomIdInput}
+                      onChange={(e) =>
+                        setRoomIdInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                      }
+                      placeholder="Enter room name"
+                      disabled={!isSignalingConnected}
+                      className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-white placeholder-gray-500 transition-colors focus:border-purple-500/50 focus:outline-none disabled:opacity-50"
                     />
+                  </div>
+
+                  <div className="mt-4 flex gap-3">
                     <Button
-                      onClick={handleCopyLink}
-                      className="flex items-center gap-1 bg-purple-500/20 px-3 text-purple-300 hover:bg-purple-500/30">
-                      <Copy className="size-4" />
-                      {copied ? 'Copied!' : 'Copy'}
+                      onClick={handleCreateRoom}
+                      disabled={!isSignalingConnected || !roomIdInput}
+                      className="flex-1 bg-purple-500/20 whitespace-nowrap text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
+                      Create Room
+                    </Button>
+                    <Button
+                      onClick={handleJoinRoom}
+                      disabled={!isSignalingConnected || !roomIdInput}
+                      className="flex-1 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 disabled:opacity-50">
+                      Join Room
+                    </Button>
+                  </div>
+
+                  {error && <p className="mt-3 text-center text-sm text-red-400">{error}</p>}
+
+                  <p
+                    aria-hidden={isSignalingConnected}
+                    className={twJoin(
+                      'min-h-1 text-center text-xs text-gray-500',
+                      'transition-opacity duration-200 ease-out motion-reduce:transition-none',
+                      isSignalingConnected
+                        ? 'pointer-events-none opacity-0 select-none'
+                        : 'opacity-100',
+                    )}>
+                    Start server: cd signaling-server && npm run dev
+                  </p>
+
+                  {/* Slight Y enter/exit on the Back CTA (handleBack) */}
+                  <Button
+                    onClick={handleBack}
+                    variant="secondary"
+                    className={twJoin(
+                      'mt-4 w-full transform-gpu transition-transform ease-out motion-reduce:transition-none',
+                      (status === 'entering' || status === 'entered') &&
+                        'translate-y-0 duration-200',
+                      (status === 'exiting' || status === 'exited') &&
+                        'translate-y-1 duration-200',
+                    )}>
+                    Back
+                  </Button>
+                </div>
+              )}
+            </Transition>
+          ) : view === 'waiting' ? (
+            <Transition
+              key="waiting"
+              nodeRef={waitingRef}
+              timeout={{ enter: 200, exit: 200 }}
+              mountOnEnter
+              unmountOnExit
+              appear>
+              {(status) => (
+                <div ref={waitingRef} className={animatedPanelClass(status)}>
+                  <div className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin text-purple-400" />
+                      <span className="text-sm font-medium text-purple-300">
+                        Waiting for opponent...
+                      </span>
+                    </div>
+
+                    {shareUrl && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-400">
+                          Share this link with your opponent:
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={shareUrl}
+                            readOnly
+                            onClick={(e) => e.currentTarget.select()}
+                            className="flex-1 rounded border border-purple-500/30 bg-purple-900/20 px-3 py-2 text-sm text-purple-200"
+                          />
+                          <Button
+                            onClick={handleCopyLink}
+                            className="flex items-center gap-1 bg-purple-500/20 px-3 text-purple-300 hover:bg-purple-500/30">
+                            <Copy className="size-4" />
+                            {copied ? 'Copied!' : 'Copy'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button onClick={handleLeaveRoom} variant="secondary" className="mt-4 w-full">
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </Transition>
+          ) : (
+            <Transition
+              key="connected"
+              nodeRef={connectedRef}
+              timeout={{ enter: 200, exit: 200 }}
+              mountOnEnter
+              unmountOnExit
+              appear>
+              {(status) => (
+                <div ref={connectedRef} className={animatedPanelClass(status)}>
+                  <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="size-5 text-green-400" />
+                        <span className="font-medium text-green-300">Opponent connected!</span>
+                      </div>
+                      <span className="text-sm text-green-400">
+                        {connectedPeerCount + 1} players
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex gap-3">
+                    <Button onClick={handleLeaveRoom} variant="secondary" className="flex-1">
+                      Leave
+                    </Button>
+                    <Button
+                      onClick={handleStartRace}
+                      className="flex-1 bg-emerald-500/20 whitespace-nowrap text-emerald-300 hover:bg-emerald-500/30">
+                      Start Race!
                     </Button>
                   </div>
                 </div>
               )}
-            </div>
-
-            <Button onClick={handleLeaveRoom} variant="secondary" className="w-full">
-              Cancel
-            </Button>
-          </>
-        )}
-
-        {/* Connected state - ready to start */}
-        {isPeerConnected && (
-          <>
-            <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="size-5 text-green-400" />
-                  <span className="font-medium text-green-300">Opponent connected!</span>
-                </div>
-                <span className="text-sm text-green-400">{connectedPeerCount + 1} players</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button onClick={handleLeaveRoom} variant="secondary" className="flex-1">
-                Leave
-              </Button>
-              <Button
-                onClick={handleStartRace}
-                className="flex-1 whitespace-nowrap bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30">
-                Start Race!
-              </Button>
-            </div>
-          </>
-        )}
+            </Transition>
+          )}
+        </SwitchTransition>
       </div>
     </div>
   )

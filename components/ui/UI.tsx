@@ -151,7 +151,8 @@ const UI: FC<Props> = ({ isMobile }) => {
 
       <Transition
         in={overlay === Overlay.SPEEDRUN_START}
-        timeout={{ enter: 0, exit: 500 }}
+        timeout={{ enter: 300, exit: 500 }}
+        appear={true}
         mountOnEnter={true}
         unmountOnExit={true}
         nodeRef={speedRunStartOverlay}>
