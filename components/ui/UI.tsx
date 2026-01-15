@@ -18,6 +18,7 @@ import { SubscribeOverlay } from './SubscribeOverlay'
 import { MultiplayerDisconnectOverlay } from './speedRun/MultiplayerDisconnectOverlay'
 import { MultiplayerGamePausedOverlay } from './speedRun/MultiplayerGamePausedOverlay'
 import { MultiplayerRaceEndOverlay } from './speedRun/MultiplayerRaceEndOverlay'
+import { MultiplayerSetupOverlay } from './speedRun/MultiplayerSetupOverlay'
 import { MultiplayerSpeedRunControls } from './speedRun/MultiplayerSpeedRunUI'
 import { SpeedRunCountdownOverlay } from './speedRun/SpeedRunCountdownOverlay'
 import { SpeedrunEndOverlay } from './speedRun/SpeedRunEndOverlay'
@@ -42,6 +43,7 @@ const UI: FC<Props> = ({ isMobile }) => {
   const speedRunStartOverlay = useRef<HTMLDivElement>(null)
   const speedRunCountdownOverlay = useRef<HTMLDivElement>(null)
   const speedRunEndOverlay = useRef<HTMLDivElement>(null)
+  const multiplayerSetupOverlay = useRef<HTMLDivElement>(null)
   const multiplayerRaceEndOverlay = useRef<HTMLDivElement>(null)
   const multiplayerDisconnectOverlay = useRef<HTMLDivElement>(null)
   const multiplayerGamePausedOverlay = useRef<HTMLDivElement>(null)
@@ -187,6 +189,17 @@ const UI: FC<Props> = ({ isMobile }) => {
             transitionStatus={status}
             isMobile={isMobile}
           />
+        )}
+      </Transition>
+
+      <Transition
+        in={overlay === Overlay.MULTIPLAYER_SETUP}
+        timeout={{ enter: 0, exit: 500 }}
+        mountOnEnter={true}
+        unmountOnExit={true}
+        nodeRef={multiplayerSetupOverlay}>
+        {(status) => (
+          <MultiplayerSetupOverlay ref={multiplayerSetupOverlay} transitionStatus={status} />
         )}
       </Transition>
 
